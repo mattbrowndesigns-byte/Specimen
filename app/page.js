@@ -1,15 +1,26 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const FACET_LABELS = {
+  vertical: "Vertical",
+  page_type: "Page Type",
+  block_pattern: "Block / Pattern",
+  aesthetic: "Aesthetic",
+};
+const FACETS = Object.keys(FACET_LABELS);
 
 export default function Home() {
   const [sites, setSites] = useState([]);
+  const [allTags, setAllTags] = useState([]);
+  const [selectedTagIds, setSelectedTagIds] = useState(new Set());
   const [url, setUrl] = useState("");
+  const [query, setQuery] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [loaded, setLoaded] = useState(false);
 
-  async function loadSites() {
-    const res = await fetch("/api/sites");
+  async function loadSites(q) {
+    const res = await fetch(`/api/sites${q ? `?q=${encodeURIComponent(q)}` : ""}`);
     if (res.ok) {
       const data = await res.json();
       setSites(data.sites || []);
@@ -17,11 +28,27 @@ export default function Home() {
     setLoaded(true);
   }
 
+  async function loadTags() {
+    const res = await fetch("/api/tags");
+    if (res.ok) {
+      const data = await res.json();
+      setAllTags((data.tags || []).filter((t) => t.is_approved));
+    }
+  }
+
   useEffect(() => {
-    loadSites();
-    const interval = setInterval(loadSites, 5000);
-    return () => clearInterval(interval);
+    loadTags();
   }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => loadSites(query), 300);
+    return () => clearTimeout(timeout);
+  }, [query]);
+
+  useEffect(() => {
+    const interval = setInterval(() => loadSites(query), 5000);
+    return () => clearInterval(interval);
+  }, [query]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -48,6 +75,36 @@ export default function Home() {
     }
   }
 
+  function toggleTag(id) {
+    setSelectedTagIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const tagsByFacet = useMemo(
+    () => FACETS.map((facet) => ({ facet, tags: allTags.filter((t) => t.facet === facet) })),
+    [allTags]
+  );
+
+  const visibleSites = useMemo(() => {
+    if (selectedTagIds.size === 0) return sites;
+    const selectedByFacet = {};
+    for (const tag of allTags) {
+      if (selectedTagIds.has(tag.id)) {
+        (selectedByFacet[tag.facet] ||= new Set()).add(tag.id);
+      }
+    }
+    return sites.filter((site) => {
+      const siteTagIds = new Set((site.tags || []).map((t) => t.id));
+      return Object.values(selectedByFacet).every((ids) => [...ids].some((id) => siteTagIds.has(id)));
+    });
+  }, [sites, selectedTagIds, allTags]);
+
+  const needsReviewCount = sites.filter((s) => s.needs_review).length;
+
   function desktopThumb(site) {
     const capture = (site.capture || []).find((c) => c.viewport === "desktop");
     return capture?.thumb_url || null;
@@ -57,7 +114,14 @@ export default function Home() {
     <main className="page">
       <div className="top-nav">
         <h1>Inspiration Library</h1>
-        <a href="/tags">Manage tags →</a>
+        <div className="nav-links">
+          {needsReviewCount > 0 && (
+            <a href="/review" className="review-badge">
+              {needsReviewCount} to review
+            </a>
+          )}
+          <a href="/tags">Manage tags →</a>
+        </div>
       </div>
       <form className="save-form" onSubmit={handleSubmit}>
         <input
@@ -71,29 +135,62 @@ export default function Home() {
           {submitting ? "Saving…" : "Save"}
         </button>
       </form>
+
+      <input
+        type="text"
+        className="search-input"
+        placeholder="Search name, summary, notes, tags…"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+
+      {allTags.length > 0 && (
+        <div className="filter-chips">
+          {tagsByFacet.map(
+            ({ facet, tags }) =>
+              tags.length > 0 && (
+                <div className="filter-facet" key={facet}>
+                  {tags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      className={`chip chip-filter${selectedTagIds.has(tag.id) ? " chip-selected" : ""}`}
+                      onClick={() => toggleTag(tag.id)}
+                    >
+                      {tag.label}
+                    </button>
+                  ))}
+                </div>
+              )
+          )}
+        </div>
+      )}
+
       {error && <p className="error">{error}</p>}
 
       {loaded && sites.length === 0 && (
         <p className="empty">Paste your first URL above to start your library.</p>
       )}
+      {loaded && sites.length > 0 && visibleSites.length === 0 && (
+        <p className="empty">Nothing matches those filters.</p>
+      )}
 
       <div className="grid">
-        {sites.map((site) => {
+        {visibleSites.map((site) => {
           const thumb = desktopThumb(site);
           return (
             <div className="card" key={site.id}>
-              <div className="thumb">
+              <a className="thumb" href={`/sites/${site.id}`}>
                 {thumb ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={thumb} alt={site.name || site.domain} />
                 ) : (
                   <div className="placeholder">Capturing…</div>
                 )}
-              </div>
+              </a>
               <div className="card-footer">
-                <span className="name" title={site.summary || undefined}>
+                <a className="name" href={`/sites/${site.id}`} title={site.summary || undefined}>
                   {site.name || site.domain}
-                </span>
+                </a>
                 <a
                   className="visit"
                   href={site.url}

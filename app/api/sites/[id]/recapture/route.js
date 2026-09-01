@@ -12,7 +12,7 @@ export async function POST(request, { params }) {
   }
 
   try {
-    await dispatchCapture({ siteId: site.id, url: site.url });
+    await dispatchCapture({ targetId: site.id, url: site.url });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 502 });
   }

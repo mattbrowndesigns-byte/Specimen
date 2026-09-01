@@ -11,18 +11,35 @@ export async function POST(request) {
   }
 
   const body = await request.json();
-  const { site_id, captures } = body;
+  const { target_id, target_type, captures } = body;
 
-  if (!site_id || !Array.isArray(captures)) {
+  if (!target_id || !Array.isArray(captures)) {
     return NextResponse.json({ error: "invalid payload" }, { status: 400 });
   }
 
   const supabase = supabaseAdmin();
+  const desktop = captures.find((c) => c.viewport === "desktop" && c.full_url);
+
+  if (target_type === "component_source") {
+    const { error } = await supabase
+      .from("component_capture")
+      .update({
+        full_url: desktop?.full_url ?? null,
+        page_height: desktop?.page_height ?? null,
+        status: desktop ? "ready" : "failed",
+      })
+      .eq("id", target_id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true });
+  }
 
   for (const capture of captures) {
     const { error } = await supabase.from("capture").upsert(
       {
-        site_id,
+        site_id: target_id,
         viewport: capture.viewport,
         full_url: capture.full_url,
         thumb_url: capture.thumb_url ?? null,
@@ -36,10 +53,9 @@ export async function POST(request) {
     }
   }
 
-  const hasDesktop = captures.some((c) => c.viewport === "desktop" && c.full_url);
-  if (hasDesktop) {
+  if (desktop) {
     try {
-      await runEnrichment(site_id);
+      await runEnrichment(target_id);
     } catch (err) {
       console.error("Enrichment failed:", err);
     }

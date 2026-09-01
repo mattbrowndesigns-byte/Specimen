@@ -28,7 +28,8 @@ jobs:
       - name: Upload to Supabase and notify the app
         run: node scripts/deliver-capture.js
         env:
-          SITE_ID: ${{ github.event.client_payload.site_id }}
+          TARGET_ID: ${{ github.event.client_payload.target_id }}
+          TARGET_TYPE: ${{ github.event.client_payload.target_type }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           CALLBACK_URL: ${{ secrets.CALLBACK_URL }}

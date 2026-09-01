@@ -60,7 +60,7 @@ export async function POST(request) {
   }
 
   try {
-    await dispatchCapture({ siteId: site.id, url: site.url });
+    await dispatchCapture({ targetId: site.id, url: site.url });
   } catch (err) {
     console.error("Failed to dispatch capture job:", err);
   }

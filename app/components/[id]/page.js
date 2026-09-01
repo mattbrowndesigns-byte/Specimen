@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, use as usePromise } from "react";
+import CropTool from "../../_ui/CropTool";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -9,36 +10,27 @@ const FACET_LABELS = {
 };
 const FACETS = Object.keys(FACET_LABELS);
 
-function archiveUrl(url, savedAt) {
-  const d = new Date(savedAt);
-  const stamp = `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}${String(
-    d.getUTCDate()
-  ).padStart(2, "0")}`;
-  return `https://web.archive.org/web/${stamp}/${url}`;
-}
-
-export default function SiteDetailPage({ params }) {
+export default function ComponentDetailPage({ params }) {
   const { id } = usePromise(params);
 
-  const [site, setSite] = useState(null);
+  const [component, setComponent] = useState(null);
   const [allTags, setAllTags] = useState([]);
-  const [components, setComponents] = useState([]);
-  const [viewport, setViewport] = useState("desktop");
   const [summaryDraft, setSummaryDraft] = useState("");
   const [notesDraft, setNotesDraft] = useState("");
   const [nameDraft, setNameDraft] = useState("");
   const [savingField, setSavingField] = useState(null);
-  const [recapturing, setRecapturing] = useState(false);
+  const [recropping, setRecropping] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
   async function load() {
-    const res = await fetch(`/api/sites/${id}`);
+    const res = await fetch(`/api/components/${id}`);
     if (res.ok) {
       const data = await res.json();
-      setSite(data.site);
-      setSummaryDraft(data.site.summary || "");
-      setNotesDraft(data.site.notes || "");
-      setNameDraft(data.site.name || "");
+      setComponent(data.component);
+      setSummaryDraft(data.component.summary || "");
+      setNotesDraft(data.component.notes || "");
+      setNameDraft(data.component.name || "");
     }
   }
 
@@ -50,30 +42,15 @@ export default function SiteDetailPage({ params }) {
     }
   }
 
-  async function loadComponents() {
-    const res = await fetch(`/api/components?siteId=${id}`);
-    if (res.ok) {
-      const data = await res.json();
-      setComponents(data.components || []);
-    }
-  }
-
   useEffect(() => {
     load();
     loadTags();
-    loadComponents();
   }, [id]);
-
-  useEffect(() => {
-    if (!recapturing) return;
-    const interval = setInterval(load, 4000);
-    return () => clearInterval(interval);
-  }, [recapturing]);
 
   async function saveField(field, value) {
     setSavingField(field);
     setError(null);
-    const res = await fetch(`/api/sites/${id}`, {
+    const res = await fetch(`/api/components/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ [field]: value }),
@@ -90,7 +67,7 @@ export default function SiteDetailPage({ params }) {
   async function addTag(facet, tagId) {
     if (!tagId) return;
     setError(null);
-    const res = await fetch(`/api/sites/${id}/tags`, {
+    const res = await fetch(`/api/components/${id}/tags`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tagId }),
@@ -105,7 +82,7 @@ export default function SiteDetailPage({ params }) {
 
   async function removeTag(tagId) {
     setError(null);
-    const res = await fetch(`/api/sites/${id}/tags/${tagId}`, { method: "DELETE" });
+    const res = await fetch(`/api/components/${id}/tags/${tagId}`, { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error || "Failed to remove tag");
@@ -118,18 +95,33 @@ export default function SiteDetailPage({ params }) {
     await saveField("needs_review", false);
   }
 
-  async function recapture() {
+  async function handleRecrop(cropRect) {
+    setSaving(true);
     setError(null);
-    setRecapturing(true);
-    const res = await fetch(`/api/sites/${id}/recapture`, { method: "POST" });
+    const res = await fetch(`/api/components/${id}/recrop`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cropRect }),
+    });
+    setSaving(false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Failed to start re-capture");
-      setRecapturing(false);
+      setError(data.error || "Re-crop failed");
+      return;
+    }
+    setRecropping(false);
+    await load();
+  }
+
+  async function handleDelete() {
+    if (!confirm("Delete this component?")) return;
+    const res = await fetch(`/api/components/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      window.location.href = "/";
     }
   }
 
-  if (!site) {
+  if (!component) {
     return (
       <main className="page">
         <p>Loading…</p>
@@ -137,13 +129,11 @@ export default function SiteDetailPage({ params }) {
     );
   }
 
-  const capture = (site.capture || []).find((c) => c.viewport === viewport);
-  const hasMobile = (site.capture || []).some((c) => c.viewport === "mobile");
   const tagsByFacet = FACETS.map((facet) => ({
     facet,
-    assigned: (site.tags || []).filter((t) => t.facet === facet),
+    assigned: (component.tags || []).filter((t) => t.facet === facet),
     available: allTags.filter(
-      (t) => t.facet === facet && t.is_approved && !(site.tags || []).some((st) => st.id === t.id)
+      (t) => t.facet === facet && t.is_approved && !(component.tags || []).some((ct) => ct.id === t.id)
     ),
   }));
 
@@ -151,7 +141,7 @@ export default function SiteDetailPage({ params }) {
     <main className="page detail-page">
       <div className="top-nav">
         <a href="/">← Back to library</a>
-        {site.needs_review && (
+        {component.needs_review && (
           <button className="mark-reviewed" onClick={markReviewed}>
             Mark reviewed
           </button>
@@ -165,52 +155,41 @@ export default function SiteDetailPage({ params }) {
           className="name-input"
           value={nameDraft}
           onChange={(e) => setNameDraft(e.target.value)}
-          onBlur={() => nameDraft !== site.name && saveField("name", nameDraft)}
+          onBlur={() => nameDraft !== component.name && saveField("name", nameDraft)}
         />
         <div className="detail-actions">
-          <a className="visit-btn" href={site.url} target="_blank" rel="noopener noreferrer">
-            Visit site ↗
+          <a className="visit-btn" href={component.source_url} target="_blank" rel="noopener noreferrer">
+            Visit source ↗
           </a>
-          <button onClick={recapture} disabled={recapturing}>
-            {recapturing ? "Re-capturing…" : "Re-capture"}
-          </button>
+          {!recropping && <button onClick={() => setRecropping(true)}>Edit crop</button>}
+          <button onClick={handleDelete}>Delete</button>
         </div>
       </div>
 
-      <p className="meta-line">
-        Saved {new Date(site.saved_at).toLocaleDateString()} ·{" "}
-        <a href={archiveUrl(site.url, site.saved_at)} target="_blank" rel="noopener noreferrer">
-          View on the Wayback Machine
-        </a>
-      </p>
+      <p className="meta-line">Saved {new Date(component.created_at).toLocaleDateString()}</p>
 
-      {hasMobile && (
-        <div className="viewport-toggle">
-          <button className={viewport === "desktop" ? "active" : ""} onClick={() => setViewport("desktop")}>
-            Desktop
-          </button>
-          <button className={viewport === "mobile" ? "active" : ""} onClick={() => setViewport("mobile")}>
-            Mobile
-          </button>
+      {recropping ? (
+        <CropTool
+          imageUrl={component.source_image_url}
+          initialRect={component.crop_rect}
+          onCancel={() => setRecropping(false)}
+          onSave={handleRecrop}
+          saving={saving}
+        />
+      ) : (
+        <div className="detail-capture component-detail-capture">
+          {component.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={component.image_url} alt={component.name || "Component"} />
+          ) : (
+            <div className="placeholder">Processing…</div>
+          )}
         </div>
       )}
 
-      <div className="detail-capture">
-        {capture?.full_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={capture.full_url} alt={site.name} />
-        ) : (
-          <div className="placeholder">{recapturing ? "Capturing…" : "No capture yet"}</div>
-        )}
-      </div>
-
       <section className="detail-section">
         <h2>Summary</h2>
-        <textarea
-          value={summaryDraft}
-          onChange={(e) => setSummaryDraft(e.target.value)}
-          rows={4}
-        />
+        <textarea value={summaryDraft} onChange={(e) => setSummaryDraft(e.target.value)} rows={3} />
         <button disabled={savingField === "summary"} onClick={() => saveField("summary", summaryDraft)}>
           {savingField === "summary" ? "Saving…" : "Save summary"}
         </button>
@@ -254,29 +233,6 @@ export default function SiteDetailPage({ params }) {
           {savingField === "notes" ? "Saving…" : "Save notes"}
         </button>
       </section>
-
-      {components.length > 0 && (
-        <section className="detail-section">
-          <h2>Components from this site</h2>
-          <div className="grid">
-            {components.map((c) => (
-              <a className="card component-card" key={c.id} href={`/components/${c.id}`}>
-                <div className="thumb">
-                  {c.image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.image_url} alt={c.name || "Component"} />
-                  ) : (
-                    <div className="placeholder">Processing…</div>
-                  )}
-                </div>
-                <div className="card-footer">
-                  <span className="name">{c.name || "Untitled component"}</span>
-                </div>
-              </a>
-            ))}
-          </div>
-        </section>
-      )}
     </main>
   );
 }

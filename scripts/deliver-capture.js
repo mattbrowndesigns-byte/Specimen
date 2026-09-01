@@ -10,14 +10,15 @@ const fs = require("fs");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
 
-const SITE_ID = process.env.SITE_ID;
+const TARGET_ID = process.env.TARGET_ID;
+const TARGET_TYPE = process.env.TARGET_TYPE || "site";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const CALLBACK_URL = process.env.CALLBACK_URL;
 const CALLBACK_SECRET = process.env.CALLBACK_SECRET;
 
 for (const [key, value] of Object.entries({
-  SITE_ID,
+  TARGET_ID,
   SUPABASE_URL,
   SUPABASE_SERVICE_ROLE_KEY,
   CALLBACK_URL,
@@ -71,13 +72,13 @@ async function uploadFile(localPath, storagePath) {
       continue;
     }
 
-    const fullUrl = await uploadFile(fullLocal, `${SITE_ID}/${viewport}-full-${stamp}.webp`);
+    const fullUrl = await uploadFile(fullLocal, `${TARGET_ID}/${viewport}-full-${stamp}.webp`);
 
     let thumbUrl = null;
     if (files.thumb) {
       const thumbLocal = path.join("out", files.thumb);
       if (fs.existsSync(thumbLocal)) {
-        thumbUrl = await uploadFile(thumbLocal, `${SITE_ID}/${viewport}-thumb-${stamp}.webp`);
+        thumbUrl = await uploadFile(thumbLocal, `${TARGET_ID}/${viewport}-thumb-${stamp}.webp`);
       }
     }
 
@@ -95,7 +96,7 @@ async function uploadFile(localPath, storagePath) {
       "Content-Type": "application/json",
       "x-callback-secret": CALLBACK_SECRET,
     },
-    body: JSON.stringify({ site_id: SITE_ID, captures }),
+    body: JSON.stringify({ target_id: TARGET_ID, target_type: TARGET_TYPE, captures }),
   });
 
   if (!res.ok) {
@@ -103,7 +104,7 @@ async function uploadFile(localPath, storagePath) {
     throw new Error(`Callback failed: ${res.status} ${text}`);
   }
 
-  console.log(`Delivered ${captures.length} capture(s) for site ${SITE_ID}`);
+  console.log(`Delivered ${captures.length} capture(s) for ${TARGET_TYPE} ${TARGET_ID}`);
 })().catch((err) => {
   console.error(err);
   process.exit(1);

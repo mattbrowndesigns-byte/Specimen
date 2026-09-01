@@ -10,15 +10,24 @@ const FACET_LABELS = {
 
 export default function ReviewPage() {
   const [sites, setSites] = useState([]);
+  const [components, setComponents] = useState([]);
   const [pendingTags, setPendingTags] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(null);
 
   async function load() {
-    const [sitesRes, tagsRes] = await Promise.all([fetch("/api/sites"), fetch("/api/tags")]);
+    const [sitesRes, componentsRes, tagsRes] = await Promise.all([
+      fetch("/api/sites"),
+      fetch("/api/components"),
+      fetch("/api/tags"),
+    ]);
     if (sitesRes.ok) {
       const data = await sitesRes.json();
       setSites((data.sites || []).filter((s) => s.needs_review));
+    }
+    if (componentsRes.ok) {
+      const data = await componentsRes.json();
+      setComponents((data.components || []).filter((c) => c.needs_review));
     }
     if (tagsRes.ok) {
       const data = await tagsRes.json();
@@ -31,9 +40,9 @@ export default function ReviewPage() {
     load();
   }, []);
 
-  async function markReviewed(id) {
+  async function markReviewed(kind, id) {
     setError(null);
-    const res = await fetch(`/api/sites/${id}`, {
+    const res = await fetch(`/api/${kind}/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ needs_review: false }),
@@ -72,6 +81,8 @@ export default function ReviewPage() {
     await load();
   }
 
+  const nothingToReview = loaded && sites.length === 0 && components.length === 0 && pendingTags.length === 0;
+
   return (
     <main className="page">
       <div className="top-nav">
@@ -80,6 +91,8 @@ export default function ReviewPage() {
       </div>
 
       {error && <p className="error">{error}</p>}
+
+      {nothingToReview && <p className="empty-small">Nothing needs review right now.</p>}
 
       {pendingTags.length > 0 && (
         <section className="tag-section">
@@ -99,41 +112,74 @@ export default function ReviewPage() {
         </section>
       )}
 
-      <section className="tag-section">
-        <h2>Sites to review ({sites.length})</h2>
-        {loaded && sites.length === 0 && pendingTags.length === 0 && (
-          <p className="empty-small">Nothing needs review right now.</p>
-        )}
-        <div className="review-list">
-          {sites.map((site) => {
-            const thumb = (site.capture || []).find((c) => c.viewport === "desktop")?.thumb_url;
-            return (
-              <div className="review-row" key={site.id}>
+      {sites.length > 0 && (
+        <section className="tag-section">
+          <h2>Sites to review ({sites.length})</h2>
+          <div className="review-list">
+            {sites.map((site) => {
+              const thumb = (site.capture || []).find((c) => c.viewport === "desktop")?.thumb_url;
+              return (
+                <div className="review-row" key={site.id}>
+                  <div className="review-thumb">
+                    {thumb ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={thumb} alt={site.name} />
+                    ) : (
+                      <div className="placeholder">No image</div>
+                    )}
+                  </div>
+                  <div className="review-info">
+                    <a href={`/sites/${site.id}`}>{site.name || site.domain}</a>
+                    {site.summary && <p className="review-summary">{site.summary}</p>}
+                    <div className="card-tags">
+                      {(site.tags || []).map((tag, i) => (
+                        <span className={`chip${tag.is_approved ? "" : " chip-pending"}`} key={i}>
+                          {tag.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <button onClick={() => markReviewed("sites", site.id)}>Mark reviewed</button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {components.length > 0 && (
+        <section className="tag-section">
+          <h2>Components to review ({components.length})</h2>
+          <div className="review-list">
+            {components.map((c) => (
+              <div className="review-row" key={c.id}>
                 <div className="review-thumb">
-                  {thumb ? (
+                  {c.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={thumb} alt={site.name} />
+                    <img src={c.image_url} alt={c.name || "Component"} />
                   ) : (
                     <div className="placeholder">No image</div>
                   )}
                 </div>
                 <div className="review-info">
-                  <a href={`/sites/${site.id}`}>{site.name || site.domain}</a>
-                  {site.summary && <p className="review-summary">{site.summary}</p>}
+                  <a href={c.source_url} target="_blank" rel="noopener noreferrer">
+                    {c.name || "Untitled component"}
+                  </a>
+                  {c.summary && <p className="review-summary">{c.summary}</p>}
                   <div className="card-tags">
-                    {(site.tags || []).map((tag, i) => (
+                    {(c.tags || []).map((tag, i) => (
                       <span className={`chip${tag.is_approved ? "" : " chip-pending"}`} key={i}>
                         {tag.label}
                       </span>
                     ))}
                   </div>
                 </div>
-                <button onClick={() => markReviewed(site.id)}>Mark reviewed</button>
+                <button onClick={() => markReviewed("components", c.id)}>Mark reviewed</button>
               </div>
-            );
-          })}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

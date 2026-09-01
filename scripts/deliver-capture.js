@@ -52,10 +52,10 @@ function heightsFromLog() {
 async function uploadFile(localPath, storagePath) {
   const data = fs.readFileSync(localPath);
   const { error } = await supabase.storage
-    .from("captures")
+    .from("Captures")
     .upload(storagePath, data, { contentType: "image/webp", upsert: true });
   if (error) throw new Error(`Upload failed for ${storagePath}: ${error.message}`);
-  const { data: pub } = supabase.storage.from("captures").getPublicUrl(storagePath);
+  const { data: pub } = supabase.storage.from("Captures").getPublicUrl(storagePath);
   return pub.publicUrl;
 }
 

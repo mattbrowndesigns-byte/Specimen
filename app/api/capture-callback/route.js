@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { after } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { runEnrichment } from "@/lib/enrich";
 
@@ -39,7 +38,11 @@ export async function POST(request) {
 
   const hasDesktop = captures.some((c) => c.viewport === "desktop" && c.full_url);
   if (hasDesktop) {
-    after(() => runEnrichment(site_id));
+    try {
+      await runEnrichment(site_id);
+    } catch (err) {
+      console.error("Enrichment failed:", err);
+    }
   }
 
   return NextResponse.json({ ok: true });

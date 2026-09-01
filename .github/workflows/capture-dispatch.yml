@@ -1,0 +1,35 @@
+name: Capture and deliver
+
+on:
+  repository_dispatch:
+    types: [capture-site]
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: |
+          npm init -y
+          npm install playwright sharp @supabase/supabase-js
+          npx playwright install --with-deps chromium
+
+      - name: Capture
+        run: node capture.js 2>&1 | tee capture.log
+        env:
+          TARGET_URL: ${{ github.event.client_payload.url }}
+
+      - name: Upload to Supabase and notify the app
+        run: node scripts/deliver-capture.js
+        env:
+          SITE_ID: ${{ github.event.client_payload.site_id }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
+          CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET }}

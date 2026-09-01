@@ -55,7 +55,10 @@ export default function Home() {
 
   return (
     <main className="page">
-      <h1>Inspiration Library</h1>
+      <div className="top-nav">
+        <h1>Inspiration Library</h1>
+        <a href="/tags">Manage tags →</a>
+      </div>
       <form className="save-form" onSubmit={handleSubmit}>
         <input
           type="text"
@@ -88,7 +91,9 @@ export default function Home() {
                 )}
               </div>
               <div className="card-footer">
-                <span className="name">{site.name || site.domain}</span>
+                <span className="name" title={site.summary || undefined}>
+                  {site.name || site.domain}
+                </span>
                 <a
                   className="visit"
                   href={site.url}
@@ -99,6 +104,15 @@ export default function Home() {
                   ↗
                 </a>
               </div>
+              {site.tags?.length > 0 && (
+                <div className="card-tags">
+                  {site.tags.map((tag, i) => (
+                    <span className={`chip${tag.is_approved ? "" : " chip-pending"}`} key={i}>
+                      {tag.label}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}

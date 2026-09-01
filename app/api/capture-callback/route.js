@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { after } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { runEnrichment } from "@/lib/enrich";
 
 // Called by the GitHub Actions workflow (scripts/deliver-capture.js) once
 // screenshots are uploaded to Supabase Storage. Not user-facing.
@@ -33,6 +35,11 @@ export async function POST(request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+  }
+
+  const hasDesktop = captures.some((c) => c.viewport === "desktop" && c.full_url);
+  if (hasDesktop) {
+    after(() => runEnrichment(site_id));
   }
 
   return NextResponse.json({ ok: true });

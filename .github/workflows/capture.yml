@@ -1,0 +1,37 @@
+name: Capture site
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Full URL to capture, including https://"
+        required: true
+        default: "https://www.apple.com"
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: |
+          npm init -y
+          npm install playwright sharp
+          npx playwright install --with-deps chromium
+
+      - name: Capture
+        run: node capture.js
+        env:
+          TARGET_URL: ${{ inputs.url }}
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures
+          path: out/
+          retention-days: 7

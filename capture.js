@@ -127,6 +127,7 @@ async function captureOne(browser, vp) {
   }
 
   await context.close();
+  return height;
 }
 
 (async () => {
@@ -135,7 +136,11 @@ async function captureOne(browser, vp) {
 
   for (const vp of VIEWPORTS) {
     try {
-      await captureOne(browser, vp);
+      const h = await captureOne(browser, vp);
+      if (vp.mobile && h <= vp.height * 1.2) {
+        console.log("[mobile] retrying without mobile emulation");
+        await captureOne(browser, { ...vp, mobile: false, ua: UA_DESKTOP });
+      }
     } catch (err) {
       console.error(`[${vp.name}] FAILED: ${err.message}`);
     }

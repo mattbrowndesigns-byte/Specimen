@@ -220,24 +220,26 @@ export default function SiteDetailPage({ params }) {
         </a>
       </p>
 
-      {hasMobile && (
-        <div className="viewport-toggle">
-          <button className={viewport === "desktop" ? "active" : ""} onClick={() => setViewport("desktop")}>
-            Desktop
-          </button>
-          <button className={viewport === "mobile" ? "active" : ""} onClick={() => setViewport("mobile")}>
-            Mobile
-          </button>
-        </div>
-      )}
-
-      <div className="detail-capture">
-        {capture?.full_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={capture.full_url} alt={site.name} />
-        ) : (
-          <div className="placeholder">{recapturing ? "Capturing…" : "No capture yet"}</div>
+      <div className="capture-panel">
+        {hasMobile && (
+          <div className="viewport-toggle">
+            <button className={viewport === "desktop" ? "active" : ""} onClick={() => setViewport("desktop")}>
+              Desktop
+            </button>
+            <button className={viewport === "mobile" ? "active" : ""} onClick={() => setViewport("mobile")}>
+              Mobile
+            </button>
+          </div>
         )}
+
+        <div className="detail-capture">
+          {capture?.full_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={capture.full_url} alt={site.name} />
+          ) : (
+            <div className="placeholder">{recapturing ? "Capturing…" : "No capture yet"}</div>
+          )}
+        </div>
       </div>
 
       <section className="detail-section">

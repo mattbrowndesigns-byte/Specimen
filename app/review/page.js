@@ -162,9 +162,7 @@ export default function ReviewPage() {
                   )}
                 </div>
                 <div className="review-info">
-                  <a href={c.source_url} target="_blank" rel="noopener noreferrer">
-                    {c.name || "Untitled component"}
-                  </a>
+                  <a href={`/components/${c.id}`}>{c.name || "Untitled component"}</a>
                   {c.summary && <p className="review-summary">{c.summary}</p>}
                   <div className="card-tags">
                     {(c.tags || []).map((tag, i) => (

@@ -129,18 +129,18 @@ export default function ComponentsTab() {
         <div className="grid">
           {components.map((c) => (
             <div className="card component-card" key={c.id}>
-              <div className="thumb">
+              <a className="thumb" href={`/components/${c.id}`}>
                 {c.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={c.image_url} alt={c.name || "Component"} />
                 ) : (
                   <div className="placeholder">Processing…</div>
                 )}
-              </div>
+              </a>
               <div className="card-footer">
-                <span className="name" title={c.summary || undefined}>
+                <a className="name" href={`/components/${c.id}`} title={c.summary || undefined}>
                   {c.name || "Untitled component"}
-                </span>
+                </a>
                 <a
                   className="visit"
                   href={c.source_url}

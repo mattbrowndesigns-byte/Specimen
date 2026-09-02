@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, use as usePromise } from "react";
 import CropTool from "../../_ui/CropTool";
+import TagCombobox from "../../_ui/TagCombobox";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -89,6 +90,22 @@ export default function ComponentDetailPage({ params }) {
       return;
     }
     await load();
+  }
+
+  async function createTag(facet, label) {
+    setError(null);
+    const res = await fetch("/api/tags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ facet, label }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Failed to create tag");
+      return;
+    }
+    await addTag(facet, data.tag.id);
+    await loadTags();
   }
 
   async function markReviewed() {
@@ -200,28 +217,13 @@ export default function ComponentDetailPage({ params }) {
         {tagsByFacet.map(({ facet, assigned, available }) => (
           <div className="facet-row" key={facet}>
             <span className="facet-name">{FACET_LABELS[facet]}</span>
-            <div className="facet-tags">
-              {assigned.map((tag) => (
-                <span className={`chip${tag.is_approved ? "" : " chip-pending"}`} key={tag.id}>
-                  {tag.label}
-                  <button className="chip-remove" onClick={() => removeTag(tag.id)}>
-                    ×
-                  </button>
-                </span>
-              ))}
-              {available.length > 0 && (
-                <select defaultValue="" onChange={(e) => addTag(facet, e.target.value)}>
-                  <option value="" disabled>
-                    + Add…
-                  </option>
-                  {available.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
+            <TagCombobox
+              assigned={assigned}
+              available={available}
+              onAdd={(tagId) => addTag(facet, tagId)}
+              onRemove={removeTag}
+              onCreate={(label) => createTag(facet, label)}
+            />
           </div>
         ))}
       </section>

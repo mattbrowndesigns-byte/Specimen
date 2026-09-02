@@ -17,7 +17,17 @@ export async function GET(request, { params }) {
   }
 
   const [withExtras] = await attachCapturesAndTags(supabase, [site]);
-  return NextResponse.json({ site: withExtras });
+
+  const { data: pages, error: pagesError } = await supabase
+    .from("page")
+    .select("id, url, label, page_type")
+    .eq("site_id", id)
+    .order("label", { ascending: true });
+  if (pagesError) {
+    return NextResponse.json({ error: pagesError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ site: { ...withExtras, pages: pages || [] } });
 }
 
 export async function PATCH(request, { params }) {

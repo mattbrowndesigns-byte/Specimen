@@ -30,6 +30,8 @@ export default function SiteDetailPage({ params }) {
   const [savingField, setSavingField] = useState(null);
   const [recapturing, setRecapturing] = useState(false);
   const [error, setError] = useState(null);
+  const [promoting, setPromoting] = useState(null);
+  const [promoted, setPromoted] = useState({});
 
   async function load() {
     const res = await fetch(`/api/sites/${id}`);
@@ -118,6 +120,26 @@ export default function SiteDetailPage({ params }) {
     await saveField("needs_review", false);
   }
 
+  async function promotePage(page) {
+    setPromoting(page.id);
+    setError(null);
+    try {
+      const res = await fetch("/api/sites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: page.url }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to promote page");
+        return;
+      }
+      setPromoted((prev) => ({ ...prev, [page.id]: data.site.id }));
+    } finally {
+      setPromoting(null);
+    }
+  }
+
   async function recapture() {
     setError(null);
     setRecapturing(true);
@@ -136,6 +158,20 @@ export default function SiteDetailPage({ params }) {
       </main>
     );
   }
+
+  const pageTypeLabel = (slug) => {
+    if (!slug) return "Unclassified";
+    const match = allTags.find((t) => t.facet === "page_type" && t.slug === slug);
+    return match?.label || slug;
+  };
+
+  const pagesByType = new Map();
+  for (const page of site.pages || []) {
+    const key = page.page_type || "";
+    if (!pagesByType.has(key)) pagesByType.set(key, []);
+    pagesByType.get(key).push(page);
+  }
+  const pageGroups = [...pagesByType.entries()].sort((a, b) => pageTypeLabel(a[0]).localeCompare(pageTypeLabel(b[0])));
 
   const capture = (site.capture || []).find((c) => c.viewport === viewport);
   const hasMobile = (site.capture || []).some((c) => c.viewport === "mobile");
@@ -254,6 +290,39 @@ export default function SiteDetailPage({ params }) {
           {savingField === "notes" ? "Saving…" : "Save notes"}
         </button>
       </section>
+
+      {pageGroups.length > 0 && (
+        <section className="detail-section">
+          <h2>Discovered pages</h2>
+          {pageGroups.map(([typeSlug, pages]) => (
+            <div className="page-group" key={typeSlug || "none"}>
+              <h3>{pageTypeLabel(typeSlug)}</h3>
+              <ul className="page-list">
+                {pages.map((page) => (
+                  <li key={page.id}>
+                    <a href={page.url} target="_blank" rel="noopener noreferrer">
+                      {page.label || page.url}
+                    </a>
+                    {promoted[page.id] ? (
+                      <a className="promote-link" href={`/sites/${promoted[page.id]}`}>
+                        View full capture →
+                      </a>
+                    ) : (
+                      <button
+                        className="promote-btn"
+                        disabled={promoting === page.id}
+                        onClick={() => promotePage(page)}
+                      >
+                        {promoting === page.id ? "Capturing…" : "Promote to full capture"}
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+      )}
 
       {components.length > 0 && (
         <section className="detail-section">

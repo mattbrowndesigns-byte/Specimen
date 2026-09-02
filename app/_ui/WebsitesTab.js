@@ -126,7 +126,7 @@ export default function WebsitesTab() {
       <input
         type="text"
         className="search-input"
-        placeholder="Search name, summary, notes, tags…"
+        placeholder="Search name, summary, notes, tags, discovered pages…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />

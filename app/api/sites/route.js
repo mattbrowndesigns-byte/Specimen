@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { dispatchCapture } from "@/lib/github";
-import { fetchPageName } from "@/lib/pageName";
+import { fetchPageMeta } from "@/lib/pageMeta";
 import { guessSiteName } from "@/lib/ai";
 import { HARDCODED_USER_ID } from "@/lib/constants";
 import { fetchSitesList } from "@/lib/siteQueries";
@@ -37,7 +37,7 @@ export async function POST(request) {
   }
 
   const domain = parsed.hostname.replace(/^www\./, "");
-  let { name, textSnippet } = await fetchPageName(parsed.toString());
+  let { name, textSnippet, links } = await fetchPageMeta(parsed.toString());
 
   if (!name) {
     name = await guessSiteName({ domain, textSnippet });
@@ -57,6 +57,15 @@ export async function POST(request) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (links?.length) {
+    const { error: pagesError } = await supabase
+      .from("page")
+      .insert(links.map((link) => ({ site_id: site.id, url: link.url, label: link.label })));
+    if (pagesError) {
+      console.error("Failed to store discovered pages:", pagesError.message);
+    }
   }
 
   try {

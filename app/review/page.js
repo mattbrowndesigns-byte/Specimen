@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { latestCapture } from "@/lib/captures";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -117,7 +118,7 @@ export default function ReviewPage() {
           <h2>Sites to review ({sites.length})</h2>
           <div className="review-list">
             {sites.map((site) => {
-              const thumb = (site.capture || []).find((c) => c.viewport === "desktop")?.thumb_url;
+              const thumb = latestCapture(site.capture, "desktop")?.thumb_url;
               return (
                 <div className="review-row" key={site.id}>
                   <div className="review-thumb">

@@ -59,3 +59,42 @@ export async function PATCH(request, { params }) {
   }
   return NextResponse.json({ site: data });
 }
+
+// Captures and discovered pages cascade via foreign keys. Tag links don't --
+// taggable is polymorphic, so it has no FK to cascade through. Components keep
+// existing with site_id set to null, since a crop is worth keeping on its own.
+export async function DELETE(request, { params }) {
+  const { id } = await params;
+  const supabase = supabaseAdmin();
+
+  const { data: captures } = await supabase.from("capture").select("full_url, thumb_url").eq("site_id", id);
+
+  const paths = [];
+  for (const capture of captures || []) {
+    for (const url of [capture.full_url, capture.thumb_url]) {
+      const path = storagePathFromUrl(url);
+      if (path) paths.push(path);
+    }
+  }
+  if (paths.length) {
+    const { error: storageError } = await supabase.storage.from("Captures").remove(paths);
+    if (storageError) {
+      console.error("Failed to remove capture files:", storageError.message);
+    }
+  }
+
+  await supabase.from("taggable").delete().eq("target_type", "site").eq("target_id", id);
+
+  const { error } = await supabase.from("site").delete().eq("id", id);
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true });
+}
+
+function storagePathFromUrl(url) {
+  if (!url) return null;
+  const marker = "/object/public/Captures/";
+  const index = url.indexOf(marker);
+  return index === -1 ? null : decodeURIComponent(url.slice(index + marker.length));
+}

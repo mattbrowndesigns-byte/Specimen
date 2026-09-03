@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { latestCapture } from "@/lib/captures";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -104,8 +105,7 @@ export default function WebsitesTab() {
   }, [sites, selectedTagIds, allTags]);
 
   function desktopThumb(site) {
-    const capture = (site.capture || []).find((c) => c.viewport === "desktop");
-    return capture?.thumb_url || null;
+    return latestCapture(site.capture, "desktop")?.thumb_url || null;
   }
 
   return (

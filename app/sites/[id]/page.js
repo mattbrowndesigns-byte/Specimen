@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, use as usePromise } from "react";
 import TagCombobox from "../../_ui/TagCombobox";
+import { captureTimeline } from "@/lib/captures";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -33,6 +34,7 @@ export default function SiteDetailPage({ params }) {
   const [error, setError] = useState(null);
   const [promoting, setPromoting] = useState(null);
   const [promoted, setPromoted] = useState({});
+  const [selectedRun, setSelectedRun] = useState(null);
 
   async function load() {
     const res = await fetch(`/api/sites/${id}`);
@@ -137,6 +139,17 @@ export default function SiteDetailPage({ params }) {
     await saveField("needs_review", false);
   }
 
+  async function handleDelete() {
+    if (!confirm(`Delete "${site.name || site.domain}" and all of its captures? This can't be undone.`)) return;
+    const res = await fetch(`/api/sites/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Failed to delete");
+      return;
+    }
+    window.location.href = "/";
+  }
+
   async function promotePage(page) {
     setPromoting(page.id);
     setError(null);
@@ -190,8 +203,10 @@ export default function SiteDetailPage({ params }) {
   }
   const pageGroups = [...pagesByType.entries()].sort((a, b) => pageTypeLabel(a[0]).localeCompare(pageTypeLabel(b[0])));
 
-  const capture = (site.capture || []).find((c) => c.viewport === viewport);
-  const hasMobile = (site.capture || []).some((c) => c.viewport === "mobile");
+  const timeline = captureTimeline(site.capture);
+  const activeRun = timeline.find((r) => r.capturedAt === selectedRun) || timeline[0];
+  const capture = activeRun?.byViewport[viewport] || null;
+  const hasMobile = Boolean(activeRun?.byViewport.mobile);
   const tagsByFacet = FACETS.map((facet) => ({
     facet,
     assigned: (site.tags || []).filter((t) => t.facet === facet),
@@ -227,6 +242,7 @@ export default function SiteDetailPage({ params }) {
           <button onClick={recapture} disabled={recapturing}>
             {recapturing ? "Re-capturing…" : "Re-capture"}
           </button>
+          <button onClick={handleDelete}>Delete</button>
         </div>
       </div>
 
@@ -238,6 +254,31 @@ export default function SiteDetailPage({ params }) {
       </p>
 
       <div className="capture-panel">
+        {timeline.length > 1 && (
+          <div className="capture-timeline">
+            {timeline
+              .slice()
+              .reverse()
+              .map((run, i, arr) => {
+                const isLatest = i === arr.length - 1;
+                return (
+                  <button
+                    key={run.capturedAt}
+                    className={run.capturedAt === activeRun?.capturedAt ? "active" : ""}
+                    onClick={() => setSelectedRun(run.capturedAt)}
+                    title={new Date(run.capturedAt).toLocaleString()}
+                  >
+                    {new Date(run.capturedAt).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                    {isLatest && <span className="timeline-latest">Latest</span>}
+                  </button>
+                );
+              })}
+          </div>
+        )}
+
         {hasMobile && (
           <div className="viewport-toggle">
             <button className={viewport === "desktop" ? "active" : ""} onClick={() => setViewport("desktop")}>

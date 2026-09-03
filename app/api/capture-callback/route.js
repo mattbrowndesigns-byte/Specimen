@@ -36,21 +36,23 @@ export async function POST(request) {
     return NextResponse.json({ ok: true });
   }
 
-  for (const capture of captures) {
-    const { error } = await supabase.from("capture").upsert(
-      {
-        site_id: target_id,
-        viewport: capture.viewport,
-        full_url: capture.full_url,
-        thumb_url: capture.thumb_url ?? null,
-        page_height: capture.page_height ?? null,
-        captured_at: new Date().toISOString(),
-      },
-      { onConflict: "site_id,viewport" }
-    );
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+  // One timestamp for the whole run, so the desktop and mobile shots taken
+  // together group into a single point on the site's capture timeline.
+  const capturedAt = new Date().toISOString();
+
+  const { error: insertError } = await supabase.from("capture").insert(
+    captures.map((capture) => ({
+      site_id: target_id,
+      viewport: capture.viewport,
+      full_url: capture.full_url,
+      thumb_url: capture.thumb_url ?? null,
+      page_height: capture.page_height ?? null,
+      captured_at: capturedAt,
+    }))
+  );
+
+  if (insertError) {
+    return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
   if (desktop) {

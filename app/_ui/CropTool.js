@@ -1,21 +1,82 @@
 "use client";
 import { useRef, useState } from "react";
 
+const MIN_SIZE = 24;
+const HANDLES = ["nw", "n", "ne", "w", "e", "sw", "s", "se"];
+
+function clampRect(rect, bounds) {
+  const x = Math.max(0, Math.min(rect.x, bounds.width - MIN_SIZE));
+  const y = Math.max(0, Math.min(rect.y, bounds.height - MIN_SIZE));
+  const width = Math.max(MIN_SIZE, Math.min(rect.width, bounds.width - x));
+  const height = Math.max(MIN_SIZE, Math.min(rect.height, bounds.height - y));
+  return { x, y, width, height };
+}
+
+// Applies a drag delta to one handle of a rect, keeping the opposite edge fixed.
+function resizeRect(base, handle, dx, dy) {
+  let { x, y, width, height } = base;
+  if (handle.includes("w")) {
+    width = base.width - dx;
+    x = base.x + dx;
+  }
+  if (handle.includes("e")) {
+    width = base.width + dx;
+  }
+  if (handle.includes("n")) {
+    height = base.height - dy;
+    y = base.y + dy;
+  }
+  if (handle.includes("s")) {
+    height = base.height + dy;
+  }
+  if (width < MIN_SIZE) {
+    if (handle.includes("w")) x = base.x + base.width - MIN_SIZE;
+    width = MIN_SIZE;
+  }
+  if (height < MIN_SIZE) {
+    if (handle.includes("n")) y = base.y + base.height - MIN_SIZE;
+    height = MIN_SIZE;
+  }
+  return { x, y, width, height };
+}
+
+const HANDLE_CURSORS = {
+  nw: "nwse-resize",
+  n: "ns-resize",
+  ne: "nesw-resize",
+  w: "ew-resize",
+  e: "ew-resize",
+  sw: "nesw-resize",
+  s: "ns-resize",
+  se: "nwse-resize",
+};
+
 export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRect }) {
   const containerRef = useRef(null);
   const imgRef = useRef(null);
   const [rect, setRect] = useState(null);
-  const [dragStart, setDragStart] = useState(null);
+  const [imageBounds, setImageBounds] = useState(null);
+  const dragState = useRef(null);
 
   function handleImageLoad() {
-    if (!initialRect || !imgRef.current) return;
-    const scale = imgRef.current.clientWidth / imgRef.current.naturalWidth;
-    setRect({
-      x: initialRect.x * scale,
-      y: initialRect.y * scale,
-      width: initialRect.width * scale,
-      height: initialRect.height * scale,
-    });
+    const img = imgRef.current;
+    if (!img) return;
+    const bounds = { width: img.clientWidth, height: img.clientHeight };
+    setImageBounds(bounds);
+    if (initialRect) {
+      const scale = img.clientWidth / img.naturalWidth;
+      setRect(
+        clampRect(
+          {
+            x: initialRect.x * scale,
+            y: initialRect.y * scale,
+            width: initialRect.width * scale,
+            height: initialRect.height * scale,
+          },
+          bounds
+        )
+      );
+    }
   }
 
   function getPoint(e) {
@@ -27,29 +88,58 @@ export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRe
     };
   }
 
-  function handleMouseDown(e) {
+  function startDraw(e) {
     const point = getPoint(e);
-    setDragStart(point);
+    dragState.current = { mode: "draw", start: point };
     setRect({ x: point.x, y: point.y, width: 0, height: 0 });
   }
 
+  function startMove(e) {
+    e.stopPropagation();
+    dragState.current = { mode: "move", start: getPoint(e), base: rect };
+  }
+
+  function startResize(handle) {
+    return (e) => {
+      e.stopPropagation();
+      dragState.current = { mode: "resize", handle, start: getPoint(e), base: rect };
+    };
+  }
+
   function handleMouseMove(e) {
-    if (!dragStart) return;
+    const drag = dragState.current;
+    if (!drag || !imageBounds) return;
     const point = getPoint(e);
-    setRect({
-      x: Math.min(dragStart.x, point.x),
-      y: Math.min(dragStart.y, point.y),
-      width: Math.abs(point.x - dragStart.x),
-      height: Math.abs(point.y - dragStart.y),
-    });
+
+    if (drag.mode === "draw") {
+      setRect(
+        clampRect(
+          {
+            x: Math.min(drag.start.x, point.x),
+            y: Math.min(drag.start.y, point.y),
+            width: Math.abs(point.x - drag.start.x),
+            height: Math.abs(point.y - drag.start.y),
+          },
+          imageBounds
+        )
+      );
+    } else if (drag.mode === "move") {
+      const dx = point.x - drag.start.x;
+      const dy = point.y - drag.start.y;
+      setRect(clampRect({ ...drag.base, x: drag.base.x + dx, y: drag.base.y + dy }, imageBounds));
+    } else if (drag.mode === "resize") {
+      const dx = point.x - drag.start.x;
+      const dy = point.y - drag.start.y;
+      setRect(clampRect(resizeRect(drag.base, drag.handle, dx, dy), imageBounds));
+    }
   }
 
   function handleMouseUp() {
-    setDragStart(null);
+    dragState.current = null;
   }
 
   function handleSave() {
-    if (!rect || !imgRef.current || rect.width < 5 || rect.height < 5) return;
+    if (!rect || !imgRef.current || rect.width < MIN_SIZE || rect.height < MIN_SIZE) return;
     const scale = imgRef.current.naturalWidth / imgRef.current.clientWidth;
     onSave({
       x: Math.round(rect.x * scale),
@@ -61,11 +151,15 @@ export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRe
 
   return (
     <div className="crop-tool">
-      <p className="crop-hint">Drag a rectangle over the region you want to save as a component.</p>
+      <p className="crop-hint">
+        {rect
+          ? "Drag the handles to resize, or drag inside the box to move it."
+          : "Drag a rectangle over the region you want to save as a component."}
+      </p>
       <div
-        className="crop-container"
+        className={`crop-container${rect ? "" : " crop-drawing"}`}
         ref={containerRef}
-        onMouseDown={handleMouseDown}
+        onMouseDown={rect ? undefined : startDraw}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
@@ -73,21 +167,58 @@ export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRe
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img ref={imgRef} src={imageUrl} alt="Page capture" draggable={false} onLoad={handleImageLoad} />
         {rect && (
-          <div className="crop-rect" style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }} />
+          <>
+            <div className="crop-mask" style={{ clipPath: maskClipPath(rect, imageBounds) }} />
+            <div
+              className="crop-rect"
+              style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
+              onMouseDown={startMove}
+            >
+              {HANDLES.map((h) => (
+                <div
+                  key={h}
+                  className={`crop-handle crop-handle-${h}`}
+                  style={{ cursor: HANDLE_CURSORS[h] }}
+                  onMouseDown={startResize(h)}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
       <div className="crop-actions">
+        {rect && (
+          <button
+            className="crop-reset"
+            onClick={() => setRect(null)}
+            disabled={saving}
+          >
+            Redraw
+          </button>
+        )}
         <button onClick={onCancel} disabled={saving}>
           Cancel
         </button>
         <button
           className="crop-save"
           onClick={handleSave}
-          disabled={saving || !rect || rect.width < 5 || rect.height < 5}
+          disabled={saving || !rect || rect.width < MIN_SIZE || rect.height < MIN_SIZE}
         >
           {saving ? "Saving…" : "Save component"}
         </button>
       </div>
     </div>
   );
+}
+
+// Dims everything outside the current crop rect, like a photo editor's crop mask.
+function maskClipPath(rect, bounds) {
+  if (!bounds) return undefined;
+  const outer = "0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%";
+  const x1 = (rect.x / bounds.width) * 100;
+  const y1 = (rect.y / bounds.height) * 100;
+  const x2 = ((rect.x + rect.width) / bounds.width) * 100;
+  const y2 = ((rect.y + rect.height) / bounds.height) * 100;
+  const inner = `${x1}% ${y1}%, ${x1}% ${y2}%, ${x2}% ${y2}%, ${x2}% ${y1}%, ${x1}% ${y1}%`;
+  return `polygon(evenodd, ${outer}, ${inner})`;
 }

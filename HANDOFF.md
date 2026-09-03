@@ -36,7 +36,10 @@ saved → real GitHub Actions capture → real AI enrichment) before moving on:
 
 Then, at the owner's request (post-M5, off-spec):
 - Capture **history timeline** — re-capture no longer overwrites; the detail
-  page shows a date strip and you can view the site as it looked then.
+  page shows a horizontally scrolling strip of full dates ("Sep 3, 2026"),
+  newest on the right, and you can view the site as it looked then. Each
+  capture carries its own Wayback Machine link for that date and can be
+  deleted on its own (rows plus stored image files).
 - **Delete a saved site** (previously only components could be deleted).
 - Tag editing rebuilt as an inline **combobox** (chips in the field, live
   filter, usage counts, type-to-create).
@@ -44,43 +47,42 @@ Then, at the owner's request (post-M5, off-spec):
 
 ## Known issues / half-finished
 
-1. **Timeline shows one legacy capture run as two entries.** Site
-   `a5d0e856` (vercel.com/about) renders "Sep 1 / Sep 1 / Sep 3 Latest" — three
-   entries for two real runs. Its older run predates the shared-timestamp
-   change, so its desktop and mobile rows are 70ms apart (`.028` vs `.098`) and
-   `captureTimeline()` groups by *exact* `captured_at`. Only affects captures
-   taken before 3 Sep; all new runs group correctly. **This is the next
-   concrete step** — group runs within a small time window (say 2 minutes)
-   instead of exact equality, in `lib/captures.js`.
-2. **Two sites are permanently stuck at "Capturing…"**:
+1. **Two sites are permanently stuck at "Capturing…"**:
    `966cf119` (stripe.com) and `274d081f` (ramp.com). They have zero capture
    rows because they were saved before the `Captures` bucket-name bug was
    fixed, and were never re-captured. Either hit Re-capture on each, or delete
    them (site delete now exists). They're the only records with no captures.
-3. **A pending component capture isn't resumable.** If you close or refresh the
+2. **A pending component capture isn't resumable.** If you close or refresh the
    tab while a component's page capture is running, there's no way back to the
    crop step — the `component_capture` row is orphaned and invisible. Sites
    don't have this problem because the site row exists immediately.
-4. **Capture history grows storage unboundedly.** Each re-capture now adds
-   ~400–970 KB instead of replacing. Fine at current scale (10 capture rows) on
-   Supabase's free 1 GB, but there's no pruning. If it matters later, cap at
-   the last N runs per site.
+3. **Capture history grows storage unboundedly.** Each re-capture adds
+   ~400–970 KB instead of replacing. Fine at current scale (8 capture rows) on
+   Supabase's free 1 GB, and single runs can now be deleted by hand, but
+   nothing prunes automatically. If it matters later, cap at the last N runs.
+4. **Re-capture overwrites a hand-edited summary.** Enrichment re-runs on every
+   capture and rewrites `summary`, re-adds tags, and re-flags `needs_review`.
+   This is the owner's explicit choice (sites redesign, so descriptions should
+   refresh) — not a bug to "fix" without asking. Note tags are additive: the
+   AI never removes tags, so a manually removed tag can come back.
 5. **stripe.com mobile can't be captured** — returns exactly one viewport
    height and can't be fixed by scrolling or disabling emulation. The spec
    flags this as a category, not a one-off: some sites will only ever yield a
    desktop capture.
 6. Manual image upload as a capture fallback (spec calls it "required rather
    than optional") is **not built**. Re-capture is.
-7. Four sites currently sit in the review queue (`needs_review = true`). That's
+7. Deleting stored images leaves the old public URL served from Supabase's CDN
+   for a while. Harmless — nothing references it — but don't treat a 200 on an
+   old capture URL as proof the file survived. Check the storage listing.
+8. Four sites currently sit in the review queue (`needs_review = true`). That's
    expected state, not a bug.
 
 ## Next step
 
-Either the timeline grouping fix above (small, ~5 lines), or start **M6**:
-Supabase magic-link auth, invite codes on signup, RLS enabled and tested on
-every table, plus a public read-only view of the library at a stable URL as
-the portfolio piece. M6 is also where the spec says to migrate image storage
-to Cloudflare R2 — **not before**.
+Start **M6**: Supabase magic-link auth, invite codes on signup, RLS enabled and
+tested on every table, plus a public read-only view of the library at a stable
+URL as the portfolio piece. M6 is also where the spec says to migrate image
+storage to Cloudflare R2 — **not before**.
 
 Note the spec says to stop after M3 and use the app for two weeks before
 building more. The owner explicitly chose to keep going ("this just feels
@@ -107,6 +109,13 @@ incomplete to me right now"). Don't re-litigate that.
 - **Gemini, not Groq** — visual facets need vision.
 - **Page discovery is capped at 30 links** per site and takes no screenshots.
 - Deleting a site keeps its components (with `site_id` set to null).
+- **Timeline is a horizontal scroll strip**, not a dropdown, year grouping, or
+  a "show more" expander. Owner chose this explicitly over those three.
+- **Dates show the full year** ("Sep 3, 2026"), not a compact or
+  conditional-year format. These records are meant to outlive the year.
+- **Re-capture always regenerates the AI summary and tags** and re-flags for
+  review, rather than preserving manual edits or hiding behind a separate
+  button. Owner chose this knowing it overwrites hand-edited summaries.
 
 ## Environment notes
 

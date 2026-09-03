@@ -403,16 +403,18 @@ h1 {
 .capture-timeline {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
-  margin-bottom: 14px;
-  padding-bottom: 14px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
   border-bottom: 1px solid #dedee0;
   width: 100%;
-  justify-content: center;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .capture-timeline button {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -436,6 +438,32 @@ h1 {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   opacity: 0.65;
+}
+
+.capture-meta {
+  font-size: 12px;
+  color: #6b6b70;
+  margin: 0 0 14px;
+  text-align: center;
+}
+
+.capture-meta a {
+  color: #6b6b70;
+}
+
+.capture-delete {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: #c0392b;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.capture-delete:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .viewport-toggle {

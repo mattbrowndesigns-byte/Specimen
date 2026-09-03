@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState, use as usePromise } from "react";
+import { useEffect, useRef, useState, use as usePromise } from "react";
 import TagCombobox from "../../_ui/TagCombobox";
-import { captureTimeline } from "@/lib/captures";
+import { archiveUrl, captureTimeline, formatCaptureDate } from "@/lib/captures";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -10,14 +10,6 @@ const FACET_LABELS = {
   aesthetic: "Aesthetic",
 };
 const FACETS = Object.keys(FACET_LABELS);
-
-function archiveUrl(url, savedAt) {
-  const d = new Date(savedAt);
-  const stamp = `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}${String(
-    d.getUTCDate()
-  ).padStart(2, "0")}`;
-  return `https://web.archive.org/web/${stamp}/${url}`;
-}
 
 export default function SiteDetailPage({ params }) {
   const { id } = usePromise(params);
@@ -35,6 +27,8 @@ export default function SiteDetailPage({ params }) {
   const [promoting, setPromoting] = useState(null);
   const [promoted, setPromoted] = useState({});
   const [selectedRun, setSelectedRun] = useState(null);
+  const [deletingCapture, setDeletingCapture] = useState(false);
+  const timelineRef = useRef(null);
 
   async function load() {
     const res = await fetch(`/api/sites/${id}`);
@@ -74,6 +68,12 @@ export default function SiteDetailPage({ params }) {
     const interval = setInterval(load, 4000);
     return () => clearInterval(interval);
   }, [recapturing]);
+
+  // The strip runs oldest-to-newest, so start it scrolled to the newest end.
+  useEffect(() => {
+    const strip = timelineRef.current;
+    if (strip) strip.scrollLeft = strip.scrollWidth;
+  }, [site?.capture?.length]);
 
   async function saveField(field, value) {
     setSavingField(field);
@@ -137,6 +137,24 @@ export default function SiteDetailPage({ params }) {
 
   async function markReviewed() {
     await saveField("needs_review", false);
+  }
+
+  async function deleteCaptureRun(run) {
+    const when = formatCaptureDate(run.capturedAt);
+    if (!confirm(`Delete the capture from ${when}? The screenshots from that day are removed for good.`)) return;
+
+    setDeletingCapture(true);
+    setError(null);
+    const res = await fetch(`/api/sites/${id}/captures?ids=${run.ids.join(",")}`, { method: "DELETE" });
+    setDeletingCapture(false);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Failed to delete that capture");
+      return;
+    }
+    setSelectedRun(null);
+    await load();
   }
 
   async function handleDelete() {
@@ -246,16 +264,11 @@ export default function SiteDetailPage({ params }) {
         </div>
       </div>
 
-      <p className="meta-line">
-        Saved {new Date(site.saved_at).toLocaleDateString()} ·{" "}
-        <a href={archiveUrl(site.url, site.saved_at)} target="_blank" rel="noopener noreferrer">
-          View on the Wayback Machine
-        </a>
-      </p>
+      <p className="meta-line">Saved {formatCaptureDate(site.saved_at)}</p>
 
       <div className="capture-panel">
         {timeline.length > 1 && (
-          <div className="capture-timeline">
+          <div className="capture-timeline" ref={timelineRef}>
             {timeline
               .slice()
               .reverse()
@@ -268,15 +281,33 @@ export default function SiteDetailPage({ params }) {
                     onClick={() => setSelectedRun(run.capturedAt)}
                     title={new Date(run.capturedAt).toLocaleString()}
                   >
-                    {new Date(run.capturedAt).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {formatCaptureDate(run.capturedAt)}
                     {isLatest && <span className="timeline-latest">Latest</span>}
                   </button>
                 );
               })}
           </div>
+        )}
+
+        {activeRun && (
+          <p className="capture-meta">
+            Captured {formatCaptureDate(activeRun.capturedAt)} ·{" "}
+            <a
+              href={archiveUrl(site.url, activeRun.capturedAt)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View on the Wayback Machine
+            </a>{" "}
+            ·{" "}
+            <button
+              className="capture-delete"
+              onClick={() => deleteCaptureRun(activeRun)}
+              disabled={deletingCapture}
+            >
+              {deletingCapture ? "Deleting…" : "Delete this capture"}
+            </button>
+          </p>
         )}
 
         {hasMobile && (

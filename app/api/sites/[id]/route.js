@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachCapturesAndTags } from "@/lib/siteQueries";
+import { storagePathsForCaptures } from "@/lib/storage";
 
 export async function GET(request, { params }) {
   const { id } = await params;
@@ -69,13 +70,7 @@ export async function DELETE(request, { params }) {
 
   const { data: captures } = await supabase.from("capture").select("full_url, thumb_url").eq("site_id", id);
 
-  const paths = [];
-  for (const capture of captures || []) {
-    for (const url of [capture.full_url, capture.thumb_url]) {
-      const path = storagePathFromUrl(url);
-      if (path) paths.push(path);
-    }
-  }
+  const paths = storagePathsForCaptures(captures);
   if (paths.length) {
     const { error: storageError } = await supabase.storage.from("Captures").remove(paths);
     if (storageError) {
@@ -90,11 +85,4 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   return NextResponse.json({ ok: true });
-}
-
-function storagePathFromUrl(url) {
-  if (!url) return null;
-  const marker = "/object/public/Captures/";
-  const index = url.indexOf(marker);
-  return index === -1 ? null : decodeURIComponent(url.slice(index + marker.length));
 }

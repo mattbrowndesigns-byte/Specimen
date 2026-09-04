@@ -22,16 +22,22 @@ export default function Favicon({ url, faviconUrl, alt }) {
 
   if (!src) return null;
 
+  // Every icon sits in the same bordered circle, whatever shape or background
+  // the site's own file has. Otherwise a transparent PNG floats loose against
+  // a white card while a square favicon reads as a block, and a row of them
+  // has no common baseline.
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      className="favicon"
-      src={src}
-      alt={alt ? `${alt} icon` : ""}
-      width={16}
-      height={16}
-      loading="lazy"
-      onError={() => setSrc(src === declared && guessed && guessed !== declared ? guessed : null)}
-    />
+    <span className="favicon-badge">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="favicon"
+        src={src}
+        alt={alt ? `${alt} icon` : ""}
+        width={16}
+        height={16}
+        loading="lazy"
+        onError={() => setSrc(src === declared && guessed && guessed !== declared ? guessed : null)}
+      />
+    </span>
   );
 }

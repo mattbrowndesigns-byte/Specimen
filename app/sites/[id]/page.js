@@ -322,7 +322,7 @@ export default function SiteDetailPage({ params }) {
             onBlur={() => nameDraft !== site.name && saveField("name", nameDraft)}
           />
           <div className="detail-actions">
-            <SaveActions kind="site" id={site.id} name={site.name || site.domain} isFavorite={site.is_favorite} />
+            <SaveActions className="detail-save-actions" kind="site" id={site.id} name={site.name || site.domain} isFavorite={site.is_favorite} />
             {site.needs_review && <button onClick={markReviewed}>Mark reviewed</button>}
             <a className="visit-btn" href={site.url} target="_blank" rel="noopener noreferrer">
               Visit site ↗

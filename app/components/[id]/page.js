@@ -199,6 +199,7 @@ export default function ComponentDetailPage({ params }) {
           />
           <div className="detail-actions">
             <SaveActions
+              className="detail-save-actions"
               kind="component"
               id={component.id}
               name={component.name || "Untitled component"}

@@ -5,6 +5,7 @@ import LibraryBrowser from "./LibraryBrowser";
 
 const ADAPTER = {
   kind: "component",
+  date: (c) => c.created_at,
   href: (c) => `/components/${c.id}`,
   externalUrl: (c) => c.source_url,
   name: (c) => c.name || "Untitled component",

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LayoutGrid, List, AlignJustify, SlidersHorizontal } from "lucide-react";
+import { LayoutGrid, List, AlignJustify, SlidersHorizontal, ArrowDownUp, Check } from "lucide-react";
 import FilterModal from "./FilterModal";
 import SaveActions from "./SaveActions";
 import Favicon from "./Favicon";
@@ -14,6 +14,28 @@ const VIEWS = [
 // Cards keep tags to two rows; four labels plus a "+N more" chip is what
 // reliably fits at the grid's column width.
 const CARD_TAG_LIMIT = 4;
+
+// `date` reads whichever timestamp the adapter exposes, so sites (saved_at) and
+// components (created_at) sort the same way without the browser knowing which
+// it's holding.
+const SORTS = [
+  { id: "newest", label: "Newest first" },
+  { id: "oldest", label: "Oldest first" },
+  { id: "az", label: "Name A–Z" },
+  { id: "za", label: "Name Z–A" },
+];
+
+function sortItems(items, sortId, adapter) {
+  const byName = (a, b) =>
+    adapter.name(a).localeCompare(adapter.name(b), undefined, { sensitivity: "base" });
+  const byDate = (a, b) => new Date(adapter.date?.(b) || 0) - new Date(adapter.date?.(a) || 0);
+
+  const sorted = [...items];
+  if (sortId === "az") return sorted.sort(byName);
+  if (sortId === "za") return sorted.sort((a, b) => byName(b, a));
+  if (sortId === "oldest") return sorted.sort((a, b) => byDate(b, a));
+  return sorted.sort(byDate);
+}
 
 // Shared browse surface for both the Websites and Components tabs: search,
 // tag chips, filter modal and view modes. The parent owns the data and says
@@ -34,16 +56,46 @@ export default function LibraryBrowser({
   const [view, setView] = useState("cards");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [stripFade, setStripFade] = useState({ left: false, right: false });
+  const [sort, setSort] = useState("newest");
+  const [sortOpen, setSortOpen] = useState(false);
   const stripRef = useRef(null);
+  const sortRef = useRef(null);
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved && VIEWS.some((v) => v.id === saved)) setView(saved);
+      const savedSort = localStorage.getItem(`${storageKey}.sort`);
+      if (savedSort && SORTS.some((o) => o.id === savedSort)) setSort(savedSort);
     } catch {
-      // localStorage can be unavailable; the default view is fine.
+      // localStorage can be unavailable; the defaults are fine.
     }
   }, [storageKey]);
+
+  useEffect(() => {
+    function onDocClick(e) {
+      if (sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false);
+    }
+    function onKey(e) {
+      if (e.key === "Escape") setSortOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
+  function chooseSort(id) {
+    setSort(id);
+    setSortOpen(false);
+    try {
+      localStorage.setItem(`${storageKey}.sort`, id);
+    } catch {
+      // Not persisting the choice is survivable.
+    }
+  }
 
   function chooseView(id) {
     setView(id);
@@ -106,6 +158,8 @@ export default function LibraryBrowser({
       return Object.values(byFacet).every((set) => [...set].some((id) => ids.has(id)));
     });
   }, [items, selectedTagIds, allTags]);
+
+  const ordered = useMemo(() => sortItems(visible, sort, adapter), [visible, sort, adapter]);
 
   function renderTags(item, limit) {
     const tags = item.tags || [];
@@ -173,7 +227,30 @@ export default function LibraryBrowser({
         <span>
           {visible.length} {visible.length === 1 ? noun : `${noun}s`}
         </span>
-        <div className="view-switch">
+        <div className="results-controls">
+          <div className="sort-menu" ref={sortRef}>
+            <button className="sort-btn" onClick={() => setSortOpen((v) => !v)} aria-expanded={sortOpen}>
+              <ArrowDownUp size={14} />
+              {SORTS.find((o) => o.id === sort)?.label}
+            </button>
+            {sortOpen && (
+              <div className="sort-pop">
+                <span className="sort-pop-head">Sort by</span>
+                {SORTS.map((option) => (
+                  <button
+                    key={option.id}
+                    className={`sort-option${sort === option.id ? " sort-option-on" : ""}`}
+                    onClick={() => chooseSort(option.id)}
+                  >
+                    <span className="sort-check">{sort === option.id && <Check size={13} />}</span>
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="view-switch">
           {VIEWS.map(({ id, label, Icon }) => (
             <button
               key={id}
@@ -184,7 +261,8 @@ export default function LibraryBrowser({
               <Icon size={15} />
               <span>{label}</span>
             </button>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
@@ -193,7 +271,7 @@ export default function LibraryBrowser({
 
       {view === "cards" && (
         <div className="grid">
-          {visible.map((item) => (
+          {ordered.map((item) => (
             <div className="card" key={item.id}>
               <div className="card-media">
                 <a className={`thumb${adapter.naturalThumb ? " thumb-natural" : ""}`} href={adapter.href(item)}>
@@ -242,7 +320,7 @@ export default function LibraryBrowser({
 
       {view === "list" && (
         <div className="row-list">
-          {visible.map((item) => (
+          {ordered.map((item) => (
             <div className="row-item" key={item.id}>
               <a className="row-thumb" href={adapter.href(item)}>
                 {adapter.thumb(item) ? (
@@ -290,7 +368,7 @@ export default function LibraryBrowser({
 
       {view === "headlines" && (
         <div className="headline-list">
-          {visible.map((item) => (
+          {ordered.map((item) => (
             <div className="headline-item" key={item.id}>
               <Favicon
                 url={adapter.externalUrl(item)}

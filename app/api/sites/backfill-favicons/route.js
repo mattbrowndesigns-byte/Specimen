@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchPageMeta } from "@/lib/pageMeta";
-import { iconFillsFrame } from "@/lib/iconShape";
+import { iconFillsFrame, resolveFallbackIcon } from "@/lib/iconShape";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +31,10 @@ export async function POST(request) {
   const skipped = [];
 
   for (const site of sites || []) {
-    const { faviconUrl } = await fetchPageMeta(site.url);
+    const meta = await fetchPageMeta(site.url);
+    // Falling back here rather than in the browser means the icon gets measured
+    // like any other; left null it would default to filling the badge.
+    const faviconUrl = meta.faviconUrl || (await resolveFallbackIcon(site.url));
     if (!faviconUrl) {
       skipped.push(site.domain);
       continue;

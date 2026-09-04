@@ -5,6 +5,7 @@ import LibraryBrowser from "./LibraryBrowser";
 
 const ADAPTER = {
   kind: "site",
+  date: (site) => site.saved_at,
   href: (site) => `/sites/${site.id}`,
   externalUrl: (site) => site.url,
   name: (site) => site.name || site.domain,

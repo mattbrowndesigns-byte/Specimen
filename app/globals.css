@@ -2781,3 +2781,167 @@ a.card {
   align-items: center;
   gap: 14px;
 }
+
+/* Sort menu */
+
+.results-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sort-menu {
+  position: relative;
+}
+
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.sort-btn:hover {
+  background: var(--surface-hover);
+}
+
+.sort-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 40;
+  min-width: 190px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+}
+
+.sort-pop-head {
+  display: block;
+  padding: 4px 10px 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.sort-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sort-option:hover {
+  background: var(--surface-hover);
+}
+
+.sort-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+/* Collection covers */
+
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 22px;
+  margin-top: 20px;
+}
+
+.collection-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.collection-cover {
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-soft);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+}
+
+.collection-card:hover .collection-cover {
+  border-color: var(--border-strong-hover);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.collection-cover-hero {
+  display: block;
+  aspect-ratio: 16 / 10;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.collection-cover-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding-top: 2px;
+  background: var(--border-soft);
+}
+
+.collection-cover-tile {
+  display: block;
+  aspect-ratio: 1 / 1;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.collection-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+/* An empty slot is a plain panel rather than a gap, so a collection of one and
+   a collection of forty are the same shape. */
+.collection-cover-empty {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--surface-sunken);
+}
+
+.collection-card-name {
+  display: block;
+  margin-top: 12px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.collection-card-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-muted);
+}

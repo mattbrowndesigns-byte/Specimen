@@ -1,6 +1,7 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import UtilityBar from "../_ui/UtilityBar";
+import CollectionCard, { makeResolver } from "../_ui/CollectionCard";
 
 export default function CollectionsPage() {
   const [collections, setCollections] = useState(null);
@@ -8,8 +9,17 @@ export default function CollectionsPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
+  const [library, setLibrary] = useState({ sites: new Map(), components: new Map() });
+
+  // The collection rows carry member ids only, so the covers come from the two
+  // library lists -- the same resolve-on-the-client shape the collection detail
+  // page and Related use.
   const load = useCallback(async () => {
-    const res = await fetch("/api/collections");
+    const [res, sitesRes, componentsRes] = await Promise.all([
+      fetch("/api/collections"),
+      fetch("/api/sites"),
+      fetch("/api/components"),
+    ]);
     if (!res.ok) {
       setError("Couldn't load your collections");
       setCollections([]);
@@ -17,6 +27,18 @@ export default function CollectionsPage() {
     }
     const data = await res.json();
     setCollections(data.collections || []);
+
+    const sites = new Map();
+    const components = new Map();
+    if (sitesRes.ok) {
+      const payload = await sitesRes.json();
+      for (const site of payload.sites || []) sites.set(site.id, site);
+    }
+    if (componentsRes.ok) {
+      const payload = await componentsRes.json();
+      for (const c of payload.components || []) components.set(c.id, c);
+    }
+    setLibrary({ sites, components });
   }, []);
 
   useEffect(() => {
@@ -42,6 +64,11 @@ export default function CollectionsPage() {
     setName("");
     await load();
   }
+
+  const resolve = useMemo(
+    () => makeResolver(library.sites, library.components),
+    [library]
+  );
 
   return (
     <>
@@ -75,19 +102,9 @@ export default function CollectionsPage() {
         )}
 
         {collections !== null && collections.length > 0 && (
-          <div className="tag-list">
+          <div className="collection-grid">
             {collections.map((collection) => (
-              <div className="tag-row" key={collection.id}>
-                <a className="tag-label" href={`/collections/${collection.id}`}>
-                  {collection.name}
-                </a>
-                <span className="tag-facet">
-                  {collection.item_count} {collection.item_count === 1 ? "item" : "items"}
-                </span>
-                <a className="promote-btn" href={`/collections/${collection.id}`}>
-                  Open collection →
-                </a>
-              </div>
+              <CollectionCard key={collection.id} collection={collection} resolve={resolve} />
             ))}
           </div>
         )}

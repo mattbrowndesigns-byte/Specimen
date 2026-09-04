@@ -4,6 +4,9 @@ import { HARDCODED_USER_ID } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
+// One hero cover plus three below it, the way a collection reads as a stack.
+const PREVIEW_ITEMS = 4;
+
 // GET /api/collections
 // GET /api/collections?targetType=site&targetId=<id>
 //
@@ -25,17 +28,26 @@ export async function GET(request) {
 
   const { data: items, error: itemsError } = await supabase
     .from("collection_item")
-    .select("collection_id, target_type, target_id");
+    .select("collection_id, target_type, target_id, added_at")
+    .order("added_at", { ascending: false });
   if (itemsError) {
     return NextResponse.json({ error: itemsError.message }, { status: 500 });
   }
 
   const counts = new Map();
   const holding = new Set();
+  // Refs only, not resolved records: the client already holds the site and
+  // component lists, so it can look the thumbnails up itself.
+  const preview = new Map();
   for (const row of items || []) {
     counts.set(row.collection_id, (counts.get(row.collection_id) || 0) + 1);
     if (targetId && row.target_type === targetType && row.target_id === targetId) {
       holding.add(row.collection_id);
+    }
+    const covers = preview.get(row.collection_id) || [];
+    if (covers.length < PREVIEW_ITEMS) {
+      covers.push({ target_type: row.target_type, target_id: row.target_id });
+      preview.set(row.collection_id, covers);
     }
   }
 
@@ -44,6 +56,7 @@ export async function GET(request) {
       ...c,
       item_count: counts.get(c.id) || 0,
       contains_target: holding.has(c.id),
+      preview: preview.get(c.id) || [],
     })),
   });
 }

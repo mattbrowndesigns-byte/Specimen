@@ -71,15 +71,41 @@ Then, at the owner's request (post-M5, off-spec):
    desktop capture.
 6. Manual image upload as a capture fallback (spec calls it "required rather
    than optional") is **not built**. Re-capture is.
-7. Deleting stored images leaves the old public URL served from Supabase's CDN
+7. **Wayback Machine links sometimes return "429 Too Many Requests."** Not our
+   bug — archive.org rate-limits by IP and throttles aggressively after a few
+   quick clicks. Verified: both the `/web/YYYYMMDD/url` and the snapshot-list
+   URL form 429 together, from a different machine too. It clears on its own.
+   Don't rewrite the link format chasing this.
+8. Deleting stored images leaves the old public URL served from Supabase's CDN
    for a while. Harmless — nothing references it — but don't treat a 200 on an
    old capture URL as proof the file survived. Check the storage listing.
-8. Four sites currently sit in the review queue (`needs_review = true`). That's
+9. Four sites currently sit in the review queue (`needs_review = true`). That's
    expected state, not a bug.
+
+## Queued design feedback (not yet built)
+
+From the owner, 3 Sep, paused partway through on usage credits. The
+detail-page items are done; these three are the remaining batch, all
+about the browse/dashboard experience. Reference is maxibestof.one and
+Raindrop, screenshots were provided in that session.
+
+1. **Scrolling category strip with counts.** Like maxibestof.one: the tag
+   filter chips become one horizontally scrolling row, and each shows how
+   many items carry that tag (they reveal the count on hover, e.g.
+   "E-commerce 1.5k"). We already return `usage_count` per tag from
+   `GET /api/tags`, so the data side is done.
+2. **Filter modal.** A "Filters" button opening a modal over a blurred
+   backdrop, with grouped checkbox sections (our four facets), and
+   Clear / Apply buttons at the bottom. Owner flagged it might be
+   overkill — worth a check before building the whole thing.
+3. **View modes, like Raindrop.** Let the grid switch between Cards
+   (current), List (small thumbnail + title + metadata in rows), and
+   Headlines (title-only, dense). Raindrop persists the choice and offers
+   an "Apply to all" — persisting per-user is probably enough here.
 
 ## Next step
 
-Start **M6**: Supabase magic-link auth, invite codes on signup, RLS enabled and
+Pick up the three queued items above, or start **M6**: Supabase magic-link auth, invite codes on signup, RLS enabled and
 tested on every table, plus a public read-only view of the library at a stable
 URL as the portfolio piece. M6 is also where the spec says to migrate image
 storage to Cloudflare R2 — **not before**.

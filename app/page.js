@@ -95,45 +95,49 @@ export default function Home() {
   }
 
   return (
-    <main className="page">
-      <div className="top-nav">
-        <h1>Inspiration Library</h1>
-        <div className="nav-links">
-          {needsReviewCount > 0 && (
-            <a href="/review" className="review-badge">
-              {needsReviewCount} to review
-            </a>
-          )}
-          <a href="/tags">Manage tags</a>
-          <AddMenu onSubmit={handleAdd} />
+    <>
+      <header className="utility-bar">
+        <div className="utility-bar-inner">
+          <h1>Inspiration Library</h1>
+          <div className="nav-links">
+            {needsReviewCount > 0 && (
+              <a href="/review" className="review-badge">
+                {needsReviewCount} to review
+              </a>
+            )}
+            <a href="/tags">Manage tags</a>
+            <AddMenu onSubmit={handleAdd} />
+          </div>
         </div>
-      </div>
+      </header>
 
-      {error && <p className="error">{error}</p>}
+      <main className="page page-wide">
+        {error && <p className="error">{error}</p>}
 
-      {jobs.map((job) => (
-        <CaptureProgress key={job.key} job={job} onDone={(result) => finishJob(job, result)} />
-      ))}
+        {jobs.map((job) => (
+          <CaptureProgress key={job.key} job={job} onDone={(result) => finishJob(job, result)} />
+        ))}
 
-      <div className="tab-switcher">
-        <button className={tab === "websites" ? "active" : ""} onClick={() => setTab("websites")}>
-          Websites
-        </button>
-        <button className={tab === "components" ? "active" : ""} onClick={() => setTab("components")}>
-          Components
-        </button>
-      </div>
+        <div className="tab-switcher">
+          <button className={tab === "websites" ? "active" : ""} onClick={() => setTab("websites")}>
+            Websites
+          </button>
+          <button className={tab === "components" ? "active" : ""} onClick={() => setTab("components")}>
+            Components
+          </button>
+        </div>
 
-      {tab === "websites" ? (
-        <WebsitesTab allTags={allTags} refreshKey={refreshKey} />
-      ) : (
-        <ComponentsTab
-          allTags={allTags}
-          pendingCapture={pendingCapture}
-          setPendingCapture={setPendingCapture}
-          refreshKey={refreshKey}
-        />
-      )}
-    </main>
+        {tab === "websites" ? (
+          <WebsitesTab allTags={allTags} refreshKey={refreshKey} />
+        ) : (
+          <ComponentsTab
+            allTags={allTags}
+            pendingCapture={pendingCapture}
+            setPendingCapture={setPendingCapture}
+            refreshKey={refreshKey}
+          />
+        )}
+      </main>
+    </>
   );
 }

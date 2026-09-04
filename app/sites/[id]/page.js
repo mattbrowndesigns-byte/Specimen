@@ -11,6 +11,11 @@ const FACET_LABELS = {
 };
 const FACETS = Object.keys(FACET_LABELS);
 
+// Observed Actions round trip is roughly 60-75s: install deps, run Playwright
+// across both viewports, upload, call back. Used only to pace the progress
+// estimate -- completion is detected from new capture rows, not this clock.
+const CAPTURE_ESTIMATE_SECONDS = 75;
+
 export default function SiteDetailPage({ params }) {
   const { id } = usePromise(params);
 
@@ -337,11 +342,17 @@ export default function SiteDetailPage({ params }) {
       {recapturing && (
         <div className="capture-status">
           <div className="capture-status-bar">
-            <div className="capture-status-fill" />
+            <div
+              className="capture-status-fill"
+              style={{ width: `${Math.min(95, (captureElapsed / CAPTURE_ESTIMATE_SECONDS) * 100)}%` }}
+            />
           </div>
           <p>
-            Capturing this site… usually about a minute ({captureElapsed}s so far). This runs on a
-            server, so it'll finish even if you leave this page.
+            Capturing this site —{" "}
+            {captureElapsed < CAPTURE_ESTIMATE_SECONDS
+              ? `about ${CAPTURE_ESTIMATE_SECONDS - captureElapsed}s remaining`
+              : "finishing up, any moment now"}
+            . This runs on a server, so it'll finish even if you leave this page.
           </p>
         </div>
       )}

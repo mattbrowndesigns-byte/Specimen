@@ -21,10 +21,12 @@ export async function POST(request) {
   const desktop = captures.find((c) => c.viewport === "desktop" && c.full_url);
 
   if (target_type === "component_source") {
+    const mobile = captures.find((c) => c.viewport === "mobile" && c.full_url);
     const { error } = await supabase
       .from("component_capture")
       .update({
         full_url: desktop?.full_url ?? null,
+        mobile_full_url: mobile?.full_url ?? null,
         page_height: desktop?.page_height ?? null,
         status: desktop ? "ready" : "failed",
       })

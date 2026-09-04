@@ -819,19 +819,9 @@ h1 {
 
 .capture-status-fill {
   height: 100%;
-  width: 35%;
   background: #1a1a1a;
   border-radius: 999px;
-  animation: capture-slide 1.4s ease-in-out infinite;
-}
-
-@keyframes capture-slide {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(320%);
-  }
+  transition: width 1s linear;
 }
 
 .capture-status-done {

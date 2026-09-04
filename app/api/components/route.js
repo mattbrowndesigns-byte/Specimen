@@ -56,6 +56,7 @@ export async function POST(request) {
       site_id: matchingSite?.id || null,
       source_url: capture.url,
       source_image_url: capture.full_url,
+      mobile_source_image_url: capture.mobile_full_url || null,
       crop_rect: cropRect,
     })
     .select()

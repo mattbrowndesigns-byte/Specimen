@@ -23,6 +23,7 @@ export default function ComponentDetailPage({ params }) {
   const [recropping, setRecropping] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [viewport, setViewport] = useState("desktop");
 
   async function load() {
     const res = await fetch(`/api/components/${id}`);
@@ -118,7 +119,7 @@ export default function ComponentDetailPage({ params }) {
     const res = await fetch(`/api/components/${id}/recrop`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cropRect }),
+      body: JSON.stringify({ cropRect, viewport }),
     });
     setSaving(false);
     if (!res.ok) {
@@ -145,6 +146,11 @@ export default function ComponentDetailPage({ params }) {
       </main>
     );
   }
+
+  const activeImage = viewport === "mobile" ? component.mobile_image_url : component.image_url;
+  const activeSource =
+    viewport === "mobile" ? component.mobile_source_image_url : component.source_image_url;
+  const canCropHere = Boolean(activeSource);
 
   const tagsByFacet = FACETS.map((facet) => ({
     facet,
@@ -178,31 +184,67 @@ export default function ComponentDetailPage({ params }) {
           <a className="visit-btn" href={component.source_url} target="_blank" rel="noopener noreferrer">
             Visit source ↗
           </a>
-          {!recropping && <button onClick={() => setRecropping(true)}>Edit crop</button>}
           <button onClick={handleDelete}>Delete</button>
         </div>
       </div>
 
       <p className="meta-line">Saved {new Date(component.created_at).toLocaleDateString()}</p>
 
-      {recropping ? (
-        <CropTool
-          imageUrl={component.source_image_url}
-          initialRect={component.crop_rect}
-          onCancel={() => setRecropping(false)}
-          onSave={handleRecrop}
-          saving={saving}
-        />
-      ) : (
-        <div className="detail-capture component-detail-capture">
-          {component.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={component.image_url} alt={component.name || "Component"} />
-          ) : (
-            <div className="placeholder">Processing…</div>
-          )}
+      <div className="capture-panel">
+        <div className="viewport-toggle">
+          <button
+            className={viewport === "desktop" ? "active" : ""}
+            onClick={() => {
+              setViewport("desktop");
+              setRecropping(false);
+            }}
+          >
+            Desktop
+          </button>
+          <button
+            className={viewport === "mobile" ? "active" : ""}
+            onClick={() => {
+              setViewport("mobile");
+              setRecropping(false);
+            }}
+          >
+            Mobile
+          </button>
         </div>
-      )}
+
+        {recropping ? (
+          <CropTool
+            imageUrl={viewport === "mobile" ? component.mobile_source_image_url : component.source_image_url}
+            initialRect={viewport === "mobile" ? component.mobile_crop_rect : component.crop_rect}
+            onCancel={() => setRecropping(false)}
+            onSave={handleRecrop}
+            saving={saving}
+          />
+        ) : (
+          <>
+            <div className="detail-capture component-detail-capture">
+              {activeImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={activeImage} alt={component.name || "Component"} />
+              ) : (
+                <div className="placeholder">
+                  {viewport === "mobile"
+                    ? component.mobile_source_image_url
+                      ? "No mobile crop yet."
+                      : "No mobile screenshot was captured for this component."
+                    : "Processing…"}
+                </div>
+              )}
+            </div>
+
+            {canCropHere && (
+              <button className="capture-expand" onClick={() => setRecropping(true)}>
+                {activeImage ? `Edit ${viewport} crop` : `Add ${viewport} crop`}
+              </button>
+            )}
+          </>
+        )}
+      </div>
 
       <section className="detail-section">
         <h2>Summary</h2>

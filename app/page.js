@@ -75,6 +75,8 @@ export default function Home() {
           <CaptureProgress key={job.key} job={job} onDone={(result) => finishJob(job, result)} />
         ))}
 
+        <h2 className="page-hero">Save what inspires you. Find it when you need it.</h2>
+
         <div className="tab-switcher">
           <button className={tab === "websites" ? "active" : ""} onClick={() => setTab("websites")}>
             Websites

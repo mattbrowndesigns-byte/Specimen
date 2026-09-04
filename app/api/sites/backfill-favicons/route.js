@@ -9,15 +9,19 @@ export const dynamic = "force-dynamic";
 // a PNG and 404s on .ico. So this refetches each of those homepages once and
 // fills the column in.
 //
-// Idempotent and safe to re-run: it only looks at rows where favicon_url is
-// null, and a site whose page declares no icon is left null to fall back.
-export async function POST() {
+// Idempotent and safe to re-run: by default it only looks at rows where
+// favicon_url is null, and a site whose page declares no icon is left null so
+// the /favicon.ico fallback still applies.
+export async function POST(request) {
   const supabase = supabaseAdmin();
+  // ?force=1 re-reads every site, for when the *choice* of icon changes rather
+  // than just the rows that were missing one -- switching to apple-touch-icons
+  // means the stored URLs are stale, not absent.
+  const force = request.nextUrl.searchParams.get("force") === "1";
 
-  const { data: sites, error } = await supabase
-    .from("site")
-    .select("id, url, domain")
-    .is("favicon_url", null);
+  let query = supabase.from("site").select("id, url, domain");
+  if (!force) query = query.is("favicon_url", null);
+  const { data: sites, error } = await query;
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

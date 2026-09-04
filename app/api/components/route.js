@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachTags } from "@/lib/tagAttach";
+import { attachSiteFavicons } from "@/lib/componentFavicons";
 import { cropAndUpload, enrichAndSaveComponent } from "@/lib/componentCrop";
 import { HARDCODED_USER_ID } from "@/lib/constants";
 
@@ -23,7 +24,8 @@ export async function GET(request) {
   }
 
   const withTags = await attachTags(supabase, data, "component");
-  return NextResponse.json({ components: withTags });
+  const withFavicons = await attachSiteFavicons(supabase, withTags);
+  return NextResponse.json({ components: withFavicons });
 }
 
 // Creates a component by cropping a region out of a finished component_capture.

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachTags } from "@/lib/tagAttach";
+import { attachSiteFavicons } from "@/lib/componentFavicons";
 
 export async function GET(request, { params }) {
   const { id } = await params;
@@ -12,7 +13,8 @@ export async function GET(request, { params }) {
   }
 
   const [withTags] = await attachTags(supabase, [data], "component");
-  return NextResponse.json({ component: withTags });
+  const [withFavicon] = await attachSiteFavicons(supabase, [withTags]);
+  return NextResponse.json({ component: withFavicon });
 }
 
 export async function PATCH(request, { params }) {

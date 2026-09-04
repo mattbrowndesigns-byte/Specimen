@@ -2572,10 +2572,16 @@ a.card {
   overflow: hidden;
 }
 
+/* The image fills the badge rather than being inset in it, which is what makes
+   one rule cover both kinds of source. A brand tile (Airbnb, Vercel, Rippling)
+   crops to a solid coloured disc with its symbol centred. A bare glyph on
+   transparency (Apple, IBM) keeps its own generous internal padding, so the
+   mark still floats correctly inside the badge -- and renders far larger than
+   it did when the file was inset a second time on top of that padding. */
 .favicon {
-  width: 14px;
-  height: 14px;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .card-title,
@@ -2726,4 +2732,27 @@ a.card {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Dashboard hero */
+
+.page-hero {
+  max-width: 22ch;
+  margin: 4px 0 22px;
+  font-size: clamp(28px, 3.6vw, 44px);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+/* Names the checkbox in the bulk bar: an unlabelled tick in a header row
+   doesn't say what it would select. */
+.bulk-select-all-label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.bulk-select-all:hover .bulk-select-all-label {
+  color: var(--text);
 }

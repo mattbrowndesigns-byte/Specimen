@@ -299,6 +299,7 @@ function BulkBar({ title, total, selection, actions, busy }) {
           onChange={selection.toggleAll}
           aria-label={`Select all ${title.toLowerCase()}`}
         />
+        <span className="bulk-select-all-label">Select all</span>
         <h2>
           {title} ({total})
         </h2>

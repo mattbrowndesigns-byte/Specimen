@@ -5,6 +5,7 @@ import TagCombobox from "../../_ui/TagCombobox";
 import UtilityBar from "../../_ui/UtilityBar";
 import RelatedSection from "../../_ui/RelatedSection";
 import SaveActions from "../../_ui/SaveActions";
+import Favicon from "../../_ui/Favicon";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -191,6 +192,11 @@ export default function ComponentDetailPage({ params }) {
         {error && <p className="error">{error}</p>}
 
         <div className="detail-header">
+          <Favicon
+            url={component.source_url}
+            faviconUrl={component.favicon_url}
+            alt={component.name || "Component"}
+          />
           <input
             className="name-input"
             value={nameDraft}

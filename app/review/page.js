@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { latestCapture } from "@/lib/captures";
 import ReviewEditModal from "../_ui/ReviewEditModal";
+import UtilityBar from "../_ui/UtilityBar";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -89,84 +90,87 @@ export default function ReviewPage() {
   const nothingToReview = loaded && sites.length === 0 && components.length === 0 && pendingTags.length === 0;
 
   return (
-    <main className="page">
-      <div className="top-nav">
-        <h1>Review Queue</h1>
-        <a href="/">← Back to library</a>
-      </div>
+    <>
+      <UtilityBar onError={setError} />
 
-      {error && <p className="error">{error}</p>}
+      <main className="page page-wide">
+        <div className="top-nav">
+          <h1>Review Queue</h1>
+        </div>
 
-      {nothingToReview && <p className="empty-small">Nothing needs review right now.</p>}
+        {error && <p className="error">{error}</p>}
 
-      {pendingTags.length > 0 && (
-        <section className="tag-section">
-          <h2>Pending tags ({pendingTags.length})</h2>
-          <div className="tag-list">
-            {pendingTags.map((tag) => (
-              <div className="tag-row" key={tag.id}>
-                <span className="tag-facet">{FACET_LABELS[tag.facet]}</span>
-                <span className="tag-label">{tag.label}</span>
-                <div className="tag-actions">
-                  <button onClick={() => updateTag(tag.id, { is_approved: true })}>Approve</button>
-                  <button onClick={() => rejectTag(tag.id)}>Reject</button>
+        {nothingToReview && <p className="empty-small">Nothing needs review right now.</p>}
+
+        {pendingTags.length > 0 && (
+          <section className="tag-section">
+            <h2>Pending tags ({pendingTags.length})</h2>
+            <div className="tag-list">
+              {pendingTags.map((tag) => (
+                <div className="tag-row" key={tag.id}>
+                  <span className="tag-facet">{FACET_LABELS[tag.facet]}</span>
+                  <span className="tag-label">{tag.label}</span>
+                  <div className="tag-actions">
+                    <button onClick={() => updateTag(tag.id, { is_approved: true })}>Approve</button>
+                    <button onClick={() => rejectTag(tag.id)}>Reject</button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+              ))}
+            </div>
+          </section>
+        )}
 
-      {sites.length > 0 && (
-        <section className="tag-section">
-          <h2>Sites to review ({sites.length})</h2>
-          <div className="review-list">
-            {sites.map((site) => (
-              <ReviewRow
-                key={site.id}
-                item={site}
-                thumb={latestCapture(site.capture, "desktop")?.thumb_url}
-                fallbackName={site.domain}
-                onEdit={() => setEditing({ kind: "sites", item: { ...site, thumb: latestCapture(site.capture, "desktop")?.thumb_url } })}
-                onMarkReviewed={() => markReviewed("sites", site.id)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+        {sites.length > 0 && (
+          <section className="tag-section">
+            <h2>Sites to review ({sites.length})</h2>
+            <div className="review-list">
+              {sites.map((site) => (
+                <ReviewRow
+                  key={site.id}
+                  item={site}
+                  thumb={latestCapture(site.capture, "desktop")?.thumb_url}
+                  fallbackName={site.domain}
+                  onEdit={() => setEditing({ kind: "sites", item: { ...site, thumb: latestCapture(site.capture, "desktop")?.thumb_url } })}
+                  onMarkReviewed={() => markReviewed("sites", site.id)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
-      {components.length > 0 && (
-        <section className="tag-section">
-          <h2>Components to review ({components.length})</h2>
-          <div className="review-list">
-            {components.map((c) => (
-              <ReviewRow
-                key={c.id}
-                item={c}
-                thumb={c.image_url}
-                fallbackName="Untitled component"
-                onEdit={() => setEditing({ kind: "components", item: { ...c, thumb: c.image_url } })}
-                onMarkReviewed={() => markReviewed("components", c.id)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+        {components.length > 0 && (
+          <section className="tag-section">
+            <h2>Components to review ({components.length})</h2>
+            <div className="review-list">
+              {components.map((c) => (
+                <ReviewRow
+                  key={c.id}
+                  item={c}
+                  thumb={c.image_url}
+                  fallbackName="Untitled component"
+                  onEdit={() => setEditing({ kind: "components", item: { ...c, thumb: c.image_url } })}
+                  onMarkReviewed={() => markReviewed("components", c.id)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
-      {editing && (
-        <ReviewEditModal
-          item={editing.item}
-          kind={editing.kind}
-          allTags={allTags}
-          onClose={() => setEditing(null)}
-          onSaved={async () => {
-            setEditing(null);
-            await load();
-          }}
-        />
-      )}
+        {editing && (
+          <ReviewEditModal
+            item={editing.item}
+            kind={editing.kind}
+            allTags={allTags}
+            onClose={() => setEditing(null)}
+            onSaved={async () => {
+              setEditing(null);
+              await load();
+            }}
+          />
+        )}
 
-    </main>
+      </main>
+    </>
   );
 }
 

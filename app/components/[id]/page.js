@@ -2,6 +2,7 @@
 import { useEffect, useState, use as usePromise } from "react";
 import CropTool from "../../_ui/CropTool";
 import TagCombobox from "../../_ui/TagCombobox";
+import UtilityBar from "../../_ui/UtilityBar";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -158,9 +159,12 @@ export default function ComponentDetailPage({ params }) {
 
   if (!component) {
     return (
-      <main className="page">
-        <p>Loading…</p>
-      </main>
+      <>
+        <UtilityBar onError={setError} />
+        <main className="page detail-page">
+          <p>Loading…</p>
+        </main>
+      </>
     );
   }
 
@@ -178,162 +182,158 @@ export default function ComponentDetailPage({ params }) {
   }));
 
   return (
-    <main className="page detail-page">
-      <div className="top-nav">
-        <a href="/">← Back to library</a>
-        {component.needs_review && (
-          <button className="mark-reviewed" onClick={markReviewed}>
-            Mark reviewed
-          </button>
-        )}
-      </div>
+    <>
+      <UtilityBar onError={setError} />
 
-      {error && <p className="error">{error}</p>}
+      <main className="page detail-page">
+        {error && <p className="error">{error}</p>}
 
-      <div className="detail-header">
-        <input
-          className="name-input"
-          value={nameDraft}
-          onChange={(e) => setNameDraft(e.target.value)}
-          onBlur={() => nameDraft !== component.name && saveField("name", nameDraft)}
-        />
-        <div className="detail-actions">
-          <a className="visit-btn" href={component.source_url} target="_blank" rel="noopener noreferrer">
-            Visit source ↗
-          </a>
-          <button onClick={handleDelete}>Delete</button>
-        </div>
-      </div>
-
-      <p className="meta-line">Saved {new Date(component.created_at).toLocaleDateString()}</p>
-
-      <div className="capture-panel">
-        <div className="viewport-toggle">
-          <button
-            className={viewport === "desktop" ? "active" : ""}
-            onClick={() => {
-              setViewport("desktop");
-              setRecropping(false);
-            }}
-          >
-            Desktop
-          </button>
-          <button
-            className={viewport === "mobile" ? "active" : ""}
-            onClick={() => {
-              setViewport("mobile");
-              setRecropping(false);
-            }}
-          >
-            Mobile
-          </button>
-        </div>
-
-        {recropping ? (
-          <CropTool
-            imageUrl={viewport === "mobile" ? component.mobile_source_image_url : component.source_image_url}
-            initialRect={viewport === "mobile" ? component.mobile_crop_rect : component.crop_rect}
-            onCancel={() => setRecropping(false)}
-            onSave={handleRecrop}
-            saving={saving}
+        <div className="detail-header">
+          <input
+            className="name-input"
+            value={nameDraft}
+            onChange={(e) => setNameDraft(e.target.value)}
+            onBlur={() => nameDraft !== component.name && saveField("name", nameDraft)}
           />
-        ) : (
-          <>
-            <div className="detail-capture component-detail-capture">
-              {activeImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={activeImage} alt={component.name || "Component"} />
-              ) : (
-                <div className="placeholder">
-                  {viewport === "mobile"
-                    ? component.mobile_source_image_url
-                      ? "No mobile crop yet."
-                      : "No mobile screenshot was captured for this component."
-                    : "Processing…"}
-                </div>
+          <div className="detail-actions">
+            {component.needs_review && <button onClick={markReviewed}>Mark reviewed</button>}
+            <a className="visit-btn" href={component.source_url} target="_blank" rel="noopener noreferrer">
+              Visit source ↗
+            </a>
+            <button onClick={handleDelete}>Delete</button>
+          </div>
+        </div>
+
+        <p className="meta-line">Saved {new Date(component.created_at).toLocaleDateString()}</p>
+
+        <div className="capture-panel">
+          <div className="viewport-toggle">
+            <button
+              className={viewport === "desktop" ? "active" : ""}
+              onClick={() => {
+                setViewport("desktop");
+                setRecropping(false);
+              }}
+            >
+              Desktop
+            </button>
+            <button
+              className={viewport === "mobile" ? "active" : ""}
+              onClick={() => {
+                setViewport("mobile");
+                setRecropping(false);
+              }}
+            >
+              Mobile
+            </button>
+          </div>
+
+          {recropping ? (
+            <CropTool
+              imageUrl={viewport === "mobile" ? component.mobile_source_image_url : component.source_image_url}
+              initialRect={viewport === "mobile" ? component.mobile_crop_rect : component.crop_rect}
+              onCancel={() => setRecropping(false)}
+              onSave={handleRecrop}
+              saving={saving}
+            />
+          ) : (
+            <>
+              <div className="detail-capture component-detail-capture">
+                {activeImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={activeImage} alt={component.name || "Component"} />
+                ) : (
+                  <div className="placeholder">
+                    {viewport === "mobile"
+                      ? component.mobile_source_image_url
+                        ? "No mobile crop yet."
+                        : "No mobile screenshot was captured for this component."
+                      : "Processing…"}
+                  </div>
+                )}
+              </div>
+
+              {canCropHere && (
+                <button className="capture-expand" onClick={() => setRecropping(true)}>
+                  {activeImage ? `Edit ${viewport} crop` : `Add ${viewport} crop`}
+                </button>
               )}
-            </div>
-
-            {canCropHere && (
-              <button className="capture-expand" onClick={() => setRecropping(true)}>
-                {activeImage ? `Edit ${viewport} crop` : `Add ${viewport} crop`}
-              </button>
-            )}
-          </>
-        )}
-      </div>
-
-      <section className="detail-section">
-        <div className="section-head">
-          <h2>AI summary</h2>
-          {!editingSummary && (
-            <div className="section-head-actions">
-              <button onClick={() => setEditingSummary(true)}>Edit</button>
-              <button onClick={regenerateSummary} disabled={regenerating}>
-                {regenerating ? "Regenerating…" : "Regenerate"}
-              </button>
-            </div>
+            </>
           )}
         </div>
 
-        {editingSummary ? (
-          <>
-            <textarea value={summaryDraft} onChange={(e) => setSummaryDraft(e.target.value)} rows={3} />
-            <div className="section-head-actions">
-              <button
-                className="primary"
-                disabled={savingField === "summary"}
-                onClick={async () => {
-                  await saveField("summary", summaryDraft);
-                  setEditingSummary(false);
-                }}
-              >
-                {savingField === "summary" ? "Saving…" : "Save"}
-              </button>
-              <button
-                onClick={() => {
-                  setSummaryDraft(component.summary || "");
-                  setEditingSummary(false);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </>
-        ) : (
-          <p className="summary-text">
-            {component.summary || (
-              <span className="summary-empty">
-                No summary yet — use Regenerate to describe this crop.
-              </span>
+        <section className="detail-section">
+          <div className="section-head">
+            <h2>AI summary</h2>
+            {!editingSummary && (
+              <div className="section-head-actions">
+                <button onClick={() => setEditingSummary(true)}>Edit</button>
+                <button onClick={regenerateSummary} disabled={regenerating}>
+                  {regenerating ? "Regenerating…" : "Regenerate"}
+                </button>
+              </div>
             )}
-          </p>
-        )}
-      </section>
-
-      <section className="detail-section">
-        <h2>Tags</h2>
-        {tagsByFacet.map(({ facet, assigned, available }) => (
-          <div className="facet-row" key={facet}>
-            <span className="facet-name">{FACET_LABELS[facet]}</span>
-            <TagCombobox
-              assigned={assigned}
-              available={available}
-              onAdd={(tagId) => addTag(facet, tagId)}
-              onRemove={removeTag}
-              onCreate={(label) => createTag(facet, label)}
-            />
           </div>
-        ))}
-      </section>
 
-      <section className="detail-section">
-        <h2>Notes</h2>
-        <textarea value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} rows={4} />
-        <button disabled={savingField === "notes"} onClick={() => saveField("notes", notesDraft)}>
-          {savingField === "notes" ? "Saving…" : "Save notes"}
-        </button>
-      </section>
-    </main>
+          {editingSummary ? (
+            <>
+              <textarea value={summaryDraft} onChange={(e) => setSummaryDraft(e.target.value)} rows={3} />
+              <div className="section-head-actions">
+                <button
+                  className="primary"
+                  disabled={savingField === "summary"}
+                  onClick={async () => {
+                    await saveField("summary", summaryDraft);
+                    setEditingSummary(false);
+                  }}
+                >
+                  {savingField === "summary" ? "Saving…" : "Save"}
+                </button>
+                <button
+                  onClick={() => {
+                    setSummaryDraft(component.summary || "");
+                    setEditingSummary(false);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="summary-text">
+              {component.summary || (
+                <span className="summary-empty">
+                  No summary yet — use Regenerate to describe this crop.
+                </span>
+              )}
+            </p>
+          )}
+        </section>
+
+        <section className="detail-section">
+          <h2>Tags</h2>
+          {tagsByFacet.map(({ facet, assigned, available }) => (
+            <div className="facet-row" key={facet}>
+              <span className="facet-name">{FACET_LABELS[facet]}</span>
+              <TagCombobox
+                assigned={assigned}
+                available={available}
+                onAdd={(tagId) => addTag(facet, tagId)}
+                onRemove={removeTag}
+                onCreate={(label) => createTag(facet, label)}
+              />
+            </div>
+          ))}
+        </section>
+
+        <section className="detail-section">
+          <h2>Notes</h2>
+          <textarea value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} rows={4} />
+          <button disabled={savingField === "notes"} onClick={() => saveField("notes", notesDraft)}>
+            {savingField === "notes" ? "Saving…" : "Save notes"}
+          </button>
+        </section>
+      </main>
+    </>
   );
 }

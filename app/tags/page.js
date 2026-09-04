@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import UtilityBar from "../_ui/UtilityBar";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -86,102 +87,105 @@ export default function TagsPage() {
   const pending = tags.filter((t) => !t.is_approved);
 
   return (
-    <main className="page">
-      <div className="top-nav">
-        <h1>Tags</h1>
-        <a href="/">← Back to library</a>
-      </div>
+    <>
+      <UtilityBar onError={setError} />
 
-      {error && <p className="error">{error}</p>}
+      <main className="page page-wide">
+        <div className="top-nav">
+          <h1>Tags</h1>
+        </div>
 
-      {loaded && pending.length > 0 && (
-        <section className="tag-section">
-          <h2>Pending approval ({pending.length})</h2>
-          <div className="tag-list">
-            {pending.map((tag) => (
-              <div className="tag-row" key={tag.id}>
-                <span className="tag-facet">{FACET_LABELS[tag.facet]}</span>
-                <span className="tag-label">{tag.label}</span>
-                <div className="tag-actions">
-                  <button onClick={() => updateTag(tag.id, { is_approved: true })}>Approve</button>
-                  <button onClick={() => deleteTag(tag.id)}>Reject</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+        {error && <p className="error">{error}</p>}
 
-      {FACETS.map((facet) => {
-        const facetTags = tags.filter((t) => t.facet === facet && t.is_approved);
-        if (!loaded) return null;
-        return (
-          <section className="tag-section" key={facet}>
-            <h2>{FACET_LABELS[facet]}</h2>
+        {loaded && pending.length > 0 && (
+          <section className="tag-section">
+            <h2>Pending approval ({pending.length})</h2>
             <div className="tag-list">
-              {facetTags.map((tag) => (
+              {pending.map((tag) => (
                 <div className="tag-row" key={tag.id}>
-                  {editingId === tag.id ? (
-                    <input
-                      className="tag-edit-input"
-                      value={editLabel}
-                      onChange={(e) => setEditLabel(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && saveEdit(tag.id)}
-                      autoFocus
-                    />
-                  ) : (
-                    <span className="tag-label">{tag.label}</span>
-                  )}
-
-                  <select
-                    className="tag-facet-select"
-                    value={tag.facet}
-                    onChange={(e) => updateTag(tag.id, { facet: e.target.value })}
-                  >
-                    {FACETS.map((f) => (
-                      <option key={f} value={f}>
-                        {FACET_LABELS[f]}
-                      </option>
-                    ))}
-                  </select>
-
+                  <span className="tag-facet">{FACET_LABELS[tag.facet]}</span>
+                  <span className="tag-label">{tag.label}</span>
                   <div className="tag-actions">
-                    {editingId === tag.id ? (
-                      <button onClick={() => saveEdit(tag.id)}>Save</button>
-                    ) : (
-                      <button onClick={() => startEdit(tag)}>Rename</button>
-                    )}
-
-                    {mergeSourceId === tag.id ? (
-                      <select
-                        className="tag-merge-select"
-                        defaultValue=""
-                        onChange={(e) => e.target.value && mergeTags(tag.id, e.target.value)}
-                      >
-                        <option value="" disabled>
-                          Merge into…
-                        </option>
-                        {tags
-                          .filter((t) => t.id !== tag.id)
-                          .map((t) => (
-                            <option key={t.id} value={t.id}>
-                              {FACET_LABELS[t.facet]} / {t.label}
-                            </option>
-                          ))}
-                      </select>
-                    ) : (
-                      <button onClick={() => setMergeSourceId(tag.id)}>Merge</button>
-                    )}
-
-                    <button onClick={() => deleteTag(tag.id)}>Delete</button>
+                    <button onClick={() => updateTag(tag.id, { is_approved: true })}>Approve</button>
+                    <button onClick={() => deleteTag(tag.id)}>Reject</button>
                   </div>
                 </div>
               ))}
-              {facetTags.length === 0 && <p className="empty-small">No tags in this facet.</p>}
             </div>
           </section>
-        );
-      })}
-    </main>
+        )}
+
+        {FACETS.map((facet) => {
+          const facetTags = tags.filter((t) => t.facet === facet && t.is_approved);
+          if (!loaded) return null;
+          return (
+            <section className="tag-section" key={facet}>
+              <h2>{FACET_LABELS[facet]}</h2>
+              <div className="tag-list">
+                {facetTags.map((tag) => (
+                  <div className="tag-row" key={tag.id}>
+                    {editingId === tag.id ? (
+                      <input
+                        className="tag-edit-input"
+                        value={editLabel}
+                        onChange={(e) => setEditLabel(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && saveEdit(tag.id)}
+                        autoFocus
+                      />
+                    ) : (
+                      <span className="tag-label">{tag.label}</span>
+                    )}
+
+                    <select
+                      className="tag-facet-select"
+                      value={tag.facet}
+                      onChange={(e) => updateTag(tag.id, { facet: e.target.value })}
+                    >
+                      {FACETS.map((f) => (
+                        <option key={f} value={f}>
+                          {FACET_LABELS[f]}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="tag-actions">
+                      {editingId === tag.id ? (
+                        <button onClick={() => saveEdit(tag.id)}>Save</button>
+                      ) : (
+                        <button onClick={() => startEdit(tag)}>Rename</button>
+                      )}
+
+                      {mergeSourceId === tag.id ? (
+                        <select
+                          className="tag-merge-select"
+                          defaultValue=""
+                          onChange={(e) => e.target.value && mergeTags(tag.id, e.target.value)}
+                        >
+                          <option value="" disabled>
+                            Merge into…
+                          </option>
+                          {tags
+                            .filter((t) => t.id !== tag.id)
+                            .map((t) => (
+                              <option key={t.id} value={t.id}>
+                                {FACET_LABELS[t.facet]} / {t.label}
+                              </option>
+                            ))}
+                        </select>
+                      ) : (
+                        <button onClick={() => setMergeSourceId(tag.id)}>Merge</button>
+                      )}
+
+                      <button onClick={() => deleteTag(tag.id)}>Delete</button>
+                    </div>
+                  </div>
+                ))}
+                {facetTags.length === 0 && <p className="empty-small">No tags in this facet.</p>}
+              </div>
+            </section>
+          );
+        })}
+      </main>
+    </>
   );
 }

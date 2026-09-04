@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, use as usePromise } from "react";
 import TagCombobox from "../../_ui/TagCombobox";
+import UtilityBar from "../../_ui/UtilityBar";
 import { archiveUrl, captureTimeline, formatCaptureDate } from "@/lib/captures";
 
 const FACET_LABELS = {
@@ -274,9 +275,12 @@ export default function SiteDetailPage({ params }) {
 
   if (!site) {
     return (
-      <main className="page">
-        <p>Loading…</p>
-      </main>
+      <>
+        <UtilityBar onError={setError} />
+        <main className="page detail-page">
+          <p>Loading…</p>
+        </main>
+      </>
     );
   }
 
@@ -307,266 +311,262 @@ export default function SiteDetailPage({ params }) {
   }));
 
   return (
-    <main className="page detail-page">
-      <div className="top-nav">
-        <a href="/">← Back to library</a>
-        {site.needs_review && (
-          <button className="mark-reviewed" onClick={markReviewed}>
-            Mark reviewed
-          </button>
-        )}
-      </div>
+    <>
+      <UtilityBar onError={setError} />
 
-      {error && <p className="error">{error}</p>}
+      <main className="page detail-page">
+        {error && <p className="error">{error}</p>}
 
-      <div className="detail-header">
-        <input
-          className="name-input"
-          value={nameDraft}
-          onChange={(e) => setNameDraft(e.target.value)}
-          onBlur={() => nameDraft !== site.name && saveField("name", nameDraft)}
-        />
-        <div className="detail-actions">
-          <a className="visit-btn" href={site.url} target="_blank" rel="noopener noreferrer">
-            Visit site ↗
-          </a>
-          <button onClick={recapture} disabled={recapturing}>
-            {recapturing ? "Re-capturing…" : "Re-capture"}
-          </button>
-          <button onClick={handleDelete}>Delete</button>
-        </div>
-      </div>
-
-      <p className="meta-line">Saved {formatCaptureDate(site.saved_at)}</p>
-
-      {recapturing && (
-        <div className="capture-status">
-          <div className="capture-status-bar">
-            <div
-              className="capture-status-fill"
-              style={{ width: `${Math.min(95, (captureElapsed / CAPTURE_ESTIMATE_SECONDS) * 100)}%` }}
-            />
+        <div className="detail-header">
+          <input
+            className="name-input"
+            value={nameDraft}
+            onChange={(e) => setNameDraft(e.target.value)}
+            onBlur={() => nameDraft !== site.name && saveField("name", nameDraft)}
+          />
+          <div className="detail-actions">
+            {site.needs_review && <button onClick={markReviewed}>Mark reviewed</button>}
+            <a className="visit-btn" href={site.url} target="_blank" rel="noopener noreferrer">
+              Visit site ↗
+            </a>
+            <button onClick={recapture} disabled={recapturing}>
+              {recapturing ? "Re-capturing…" : "Re-capture"}
+            </button>
+            <button onClick={handleDelete}>Delete</button>
           </div>
-          <p>
-            Capturing this site —{" "}
-            {captureElapsed < CAPTURE_ESTIMATE_SECONDS
-              ? `about ${CAPTURE_ESTIMATE_SECONDS - captureElapsed}s remaining`
-              : "finishing up, any moment now"}
-            . This runs on a server, so it'll finish even if you leave this page.
-          </p>
         </div>
-      )}
 
-      {captureDone && (
-        <div className="capture-status capture-status-done">
-          <p>
-            ✓ New capture complete — added to the timeline below.
-            <button onClick={() => setCaptureDone(false)}>Dismiss</button>
-          </p>
-        </div>
-      )}
+        <p className="meta-line">Saved {formatCaptureDate(site.saved_at)}</p>
 
-      <div className="capture-panel">
-        {timeline.length > 1 && (
-          <div className="capture-timeline" ref={timelineRef}>
-            {timeline
-              .slice()
-              .reverse()
-              .map((run, i, arr) => {
-                const isLatest = i === arr.length - 1;
-                return (
-                  <button
-                    key={run.capturedAt}
-                    className={run.capturedAt === activeRun?.capturedAt ? "active" : ""}
-                    onClick={() => setSelectedRun(run.capturedAt)}
-                    title={new Date(run.capturedAt).toLocaleString()}
-                  >
-                    {formatCaptureDate(run.capturedAt)}
-                    {isLatest && <span className="timeline-latest">Latest</span>}
-                  </button>
-                );
-              })}
+        {recapturing && (
+          <div className="capture-status">
+            <div className="capture-status-bar">
+              <div
+                className="capture-status-fill"
+                style={{ width: `${Math.min(95, (captureElapsed / CAPTURE_ESTIMATE_SECONDS) * 100)}%` }}
+              />
+            </div>
+            <p>
+              Capturing this site —{" "}
+              {captureElapsed < CAPTURE_ESTIMATE_SECONDS
+                ? `about ${CAPTURE_ESTIMATE_SECONDS - captureElapsed}s remaining`
+                : "finishing up, any moment now"}
+              . This runs on a server, so it'll finish even if you leave this page.
+            </p>
           </div>
         )}
 
-        {activeRun && (
-          <p className="capture-meta">
-            Captured {formatCaptureDate(activeRun.capturedAt)} ·{" "}
-            {wayback.state === "found" ? (
-              <a href={wayback.url} target="_blank" rel="noopener noreferrer">
-                View on the Wayback Machine
-              </a>
-            ) : wayback.state === "loading" ? (
-              <span>Checking the Wayback Machine…</span>
+        {captureDone && (
+          <div className="capture-status capture-status-done">
+            <p>
+              ✓ New capture complete — added to the timeline below.
+              <button onClick={() => setCaptureDone(false)}>Dismiss</button>
+            </p>
+          </div>
+        )}
+
+        <div className="capture-panel">
+          {timeline.length > 1 && (
+            <div className="capture-timeline" ref={timelineRef}>
+              {timeline
+                .slice()
+                .reverse()
+                .map((run, i, arr) => {
+                  const isLatest = i === arr.length - 1;
+                  return (
+                    <button
+                      key={run.capturedAt}
+                      className={run.capturedAt === activeRun?.capturedAt ? "active" : ""}
+                      onClick={() => setSelectedRun(run.capturedAt)}
+                      title={new Date(run.capturedAt).toLocaleString()}
+                    >
+                      {formatCaptureDate(run.capturedAt)}
+                      {isLatest && <span className="timeline-latest">Latest</span>}
+                    </button>
+                  );
+                })}
+            </div>
+          )}
+
+          {activeRun && (
+            <p className="capture-meta">
+              Captured {formatCaptureDate(activeRun.capturedAt)} ·{" "}
+              {wayback.state === "found" ? (
+                <a href={wayback.url} target="_blank" rel="noopener noreferrer">
+                  View on the Wayback Machine
+                </a>
+              ) : wayback.state === "loading" ? (
+                <span>Checking the Wayback Machine…</span>
+              ) : (
+                <span title="archive.org has no snapshot near this date">No Wayback snapshot</span>
+              )}{" "}
+              ·{" "}
+              <button
+                className="capture-delete"
+                onClick={() => deleteCaptureRun(activeRun)}
+                disabled={deletingCapture}
+              >
+                {deletingCapture ? "Deleting…" : "Delete this capture"}
+              </button>
+            </p>
+          )}
+
+          {hasMobile && (
+            <div className="viewport-toggle">
+              <button className={viewport === "desktop" ? "active" : ""} onClick={() => setViewport("desktop")}>
+                Desktop
+              </button>
+              <button className={viewport === "mobile" ? "active" : ""} onClick={() => setViewport("mobile")}>
+                Mobile
+              </button>
+            </div>
+          )}
+
+          <div
+            className={`detail-capture${expandedCapture ? "" : " detail-capture-collapsed"}${
+              viewport === "mobile" ? " detail-capture-mobile" : ""
+            }`}
+          >
+            {capture?.full_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={capture.full_url} alt={site.name} />
             ) : (
-              <span title="archive.org has no snapshot near this date">No Wayback snapshot</span>
-            )}{" "}
-            ·{" "}
-            <button
-              className="capture-delete"
-              onClick={() => deleteCaptureRun(activeRun)}
-              disabled={deletingCapture}
-            >
-              {deletingCapture ? "Deleting…" : "Delete this capture"}
-            </button>
-          </p>
-        )}
-
-        {hasMobile && (
-          <div className="viewport-toggle">
-            <button className={viewport === "desktop" ? "active" : ""} onClick={() => setViewport("desktop")}>
-              Desktop
-            </button>
-            <button className={viewport === "mobile" ? "active" : ""} onClick={() => setViewport("mobile")}>
-              Mobile
-            </button>
+              <div className="placeholder">{recapturing ? "Capturing…" : "No capture yet"}</div>
+            )}
+            {!expandedCapture && capture?.full_url && <div className="capture-fade" />}
           </div>
-        )}
 
-        <div
-          className={`detail-capture${expandedCapture ? "" : " detail-capture-collapsed"}${
-            viewport === "mobile" ? " detail-capture-mobile" : ""
-          }`}
-        >
-          {capture?.full_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={capture.full_url} alt={site.name} />
-          ) : (
-            <div className="placeholder">{recapturing ? "Capturing…" : "No capture yet"}</div>
-          )}
-          {!expandedCapture && capture?.full_url && <div className="capture-fade" />}
-        </div>
-
-        {capture?.full_url && (
-          <button className="capture-expand" onClick={() => setExpandedCapture((v) => !v)}>
-            {expandedCapture ? "Collapse screenshot" : "Expand full screenshot"}
-          </button>
-        )}
-      </div>
-
-      <section className="detail-section">
-        <div className="section-head">
-          <h2>AI summary</h2>
-          {!editingSummary && (
-            <div className="section-head-actions">
-              <button onClick={() => setEditingSummary(true)}>Edit</button>
-              <button onClick={regenerateSummary} disabled={regenerating}>
-                {regenerating ? "Regenerating…" : "Regenerate"}
-              </button>
-            </div>
+          {capture?.full_url && (
+            <button className="capture-expand" onClick={() => setExpandedCapture((v) => !v)}>
+              {expandedCapture ? "Collapse screenshot" : "Expand full screenshot"}
+            </button>
           )}
         </div>
 
-        {editingSummary ? (
-          <>
-            <textarea value={summaryDraft} onChange={(e) => setSummaryDraft(e.target.value)} rows={4} />
-            <div className="section-head-actions">
-              <button
-                className="primary"
-                disabled={savingField === "summary"}
-                onClick={async () => {
-                  await saveField("summary", summaryDraft);
-                  setEditingSummary(false);
-                }}
-              >
-                {savingField === "summary" ? "Saving…" : "Save"}
-              </button>
-              <button
-                onClick={() => {
-                  setSummaryDraft(site.summary || "");
-                  setEditingSummary(false);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </>
-        ) : (
-          <p className="summary-text">
-            {site.summary || <span className="summary-empty">No summary yet.</span>}
-          </p>
-        )}
-      </section>
-
-      <section className="detail-section">
-        <h2>Tags</h2>
-        {tagsByFacet.map(({ facet, assigned, available }) => (
-          <div className="facet-row" key={facet}>
-            <span className="facet-name">{FACET_LABELS[facet]}</span>
-            <TagCombobox
-              assigned={assigned}
-              available={available}
-              onAdd={(tagId) => addTag(facet, tagId)}
-              onRemove={removeTag}
-              onCreate={(label) => createTag(facet, label)}
-            />
-          </div>
-        ))}
-      </section>
-
-      <section className="detail-section">
-        <h2>Notes</h2>
-        <textarea value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} rows={4} />
-        <button disabled={savingField === "notes"} onClick={() => saveField("notes", notesDraft)}>
-          {savingField === "notes" ? "Saving…" : "Save notes"}
-        </button>
-      </section>
-
-      {pageGroups.length > 0 && (
         <section className="detail-section">
-          <h2>Discovered pages</h2>
-          {pageGroups.map(([typeSlug, pages]) => (
-            <div className="page-group" key={typeSlug || "none"}>
-              <h3>{pageTypeLabel(typeSlug)}</h3>
-              <ul className="page-list">
-                {pages.map((page) => (
-                  <li key={page.id}>
-                    <a href={page.url} target="_blank" rel="noopener noreferrer">
-                      {page.label || page.url}
-                    </a>
-                    {promoted[page.id] ? (
-                      <a className="promote-link" href={`/sites/${promoted[page.id]}`}>
-                        View full capture →
-                      </a>
-                    ) : (
-                      <button
-                        className="promote-btn"
-                        disabled={promoting === page.id}
-                        onClick={() => promotePage(page)}
-                      >
-                        {promoting === page.id ? "Capturing…" : "Promote to full capture"}
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
+          <div className="section-head">
+            <h2>AI summary</h2>
+            {!editingSummary && (
+              <div className="section-head-actions">
+                <button onClick={() => setEditingSummary(true)}>Edit</button>
+                <button onClick={regenerateSummary} disabled={regenerating}>
+                  {regenerating ? "Regenerating…" : "Regenerate"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {editingSummary ? (
+            <>
+              <textarea value={summaryDraft} onChange={(e) => setSummaryDraft(e.target.value)} rows={4} />
+              <div className="section-head-actions">
+                <button
+                  className="primary"
+                  disabled={savingField === "summary"}
+                  onClick={async () => {
+                    await saveField("summary", summaryDraft);
+                    setEditingSummary(false);
+                  }}
+                >
+                  {savingField === "summary" ? "Saving…" : "Save"}
+                </button>
+                <button
+                  onClick={() => {
+                    setSummaryDraft(site.summary || "");
+                    setEditingSummary(false);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="summary-text">
+              {site.summary || <span className="summary-empty">No summary yet.</span>}
+            </p>
+          )}
+        </section>
+
+        <section className="detail-section">
+          <h2>Tags</h2>
+          {tagsByFacet.map(({ facet, assigned, available }) => (
+            <div className="facet-row" key={facet}>
+              <span className="facet-name">{FACET_LABELS[facet]}</span>
+              <TagCombobox
+                assigned={assigned}
+                available={available}
+                onAdd={(tagId) => addTag(facet, tagId)}
+                onRemove={removeTag}
+                onCreate={(label) => createTag(facet, label)}
+              />
             </div>
           ))}
         </section>
-      )}
 
-      {components.length > 0 && (
         <section className="detail-section">
-          <h2>Components from this site</h2>
-          <div className="grid">
-            {components.map((c) => (
-              <a className="card component-card" key={c.id} href={`/components/${c.id}`}>
-                <div className="thumb">
-                  {c.image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.image_url} alt={c.name || "Component"} />
-                  ) : (
-                    <div className="placeholder">Processing…</div>
-                  )}
-                </div>
-                <div className="card-footer">
-                  <span className="name">{c.name || "Untitled component"}</span>
-                </div>
-              </a>
-            ))}
-          </div>
+          <h2>Notes</h2>
+          <textarea value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} rows={4} />
+          <button disabled={savingField === "notes"} onClick={() => saveField("notes", notesDraft)}>
+            {savingField === "notes" ? "Saving…" : "Save notes"}
+          </button>
         </section>
-      )}
-    </main>
+
+        {pageGroups.length > 0 && (
+          <section className="detail-section">
+            <h2>Discovered pages</h2>
+            {pageGroups.map(([typeSlug, pages]) => (
+              <div className="page-group" key={typeSlug || "none"}>
+                <h3>{pageTypeLabel(typeSlug)}</h3>
+                <ul className="page-list">
+                  {pages.map((page) => (
+                    <li key={page.id}>
+                      <a href={page.url} target="_blank" rel="noopener noreferrer">
+                        {page.label || page.url}
+                      </a>
+                      {promoted[page.id] ? (
+                        <a className="promote-link" href={`/sites/${promoted[page.id]}`}>
+                          View full capture →
+                        </a>
+                      ) : (
+                        <button
+                          className="promote-btn"
+                          disabled={promoting === page.id}
+                          onClick={() => promotePage(page)}
+                        >
+                          {promoting === page.id ? "Capturing…" : "Promote to full capture"}
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </section>
+        )}
+
+        {components.length > 0 && (
+          <section className="detail-section">
+            <h2>Components from this site</h2>
+            <div className="grid">
+              {components.map((c) => (
+                <a className="card component-card" key={c.id} href={`/components/${c.id}`}>
+                  <div className="thumb">
+                    {c.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={c.image_url} alt={c.name || "Component"} />
+                    ) : (
+                      <div className="placeholder">Processing…</div>
+                    )}
+                  </div>
+                  <div className="card-footer">
+                    <span className="name">{c.name || "Untitled component"}</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+      </main>
+    </>
   );
 }

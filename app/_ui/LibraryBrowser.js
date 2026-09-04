@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LayoutGrid, List, AlignJustify, SlidersHorizontal } from "lucide-react";
 import FilterModal from "./FilterModal";
 
@@ -31,6 +31,8 @@ export default function LibraryBrowser({
   const [selectedTagIds, setSelectedTagIds] = useState(new Set());
   const [view, setView] = useState("cards");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [stripFade, setStripFade] = useState({ left: false, right: false });
+  const stripRef = useRef(null);
 
   useEffect(() => {
     try {
@@ -49,6 +51,29 @@ export default function LibraryBrowser({
       // Not persisting the choice is survivable.
     }
   }
+
+  // The tag strip scrolls sideways, so it fades out at whichever edge still has
+  // chips beyond it -- and stops fading once you reach the end, which is what
+  // tells you there's nothing more to scroll to.
+  useEffect(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    function update() {
+      const overflow = el.scrollWidth - el.clientWidth;
+      setStripFade({
+        left: el.scrollLeft > 4,
+        right: overflow > 4 && el.scrollLeft < overflow - 4,
+      });
+    }
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener("scroll", update);
+      observer.disconnect();
+    };
+  }, [allTags.length, selectedTagIds.size]);
 
   function toggleTag(id) {
     setSelectedTagIds((prev) => {
@@ -118,7 +143,12 @@ export default function LibraryBrowser({
       </div>
 
       {sortedTags.length > 0 && (
-        <div className="chip-strip">
+        <div
+          className={`chip-strip${stripFade.left ? " chip-strip-fade-left" : ""}${
+            stripFade.right ? " chip-strip-fade-right" : ""
+          }`}
+          ref={stripRef}
+        >
           {selectedTagIds.size > 0 && (
             <button className="chip chip-filter chip-clear" onClick={() => setSelectedTagIds(new Set())}>
               Clear

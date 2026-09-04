@@ -2,12 +2,12 @@
 import { useCallback, useEffect, useState } from "react";
 import WebsitesTab from "./_ui/WebsitesTab";
 import ComponentsTab from "./_ui/ComponentsTab";
-import AddMenu from "./_ui/AddMenu";
+import UtilityBar from "./_ui/UtilityBar";
 import CaptureProgress from "./_ui/CaptureProgress";
+import { addItem, jobFromSearch } from "@/lib/addItem";
 
 export default function Home() {
   const [tab, setTab] = useState("websites");
-  const [needsReviewCount, setNeedsReviewCount] = useState(0);
   const [allTags, setAllTags] = useState([]);
   const [pendingCapture, setPendingCapture] = useState(null);
   const [jobs, setJobs] = useState([]);
@@ -26,61 +26,31 @@ export default function Home() {
     loadTags();
   }, [loadTags, refreshKey]);
 
+  // An Add from another page arrives as ?job=…; pick it up so its progress bar
+  // shows here, then clean the URL so a refresh doesn't re-add it.
   useEffect(() => {
-    async function loadCount() {
-      const [sitesRes, componentsRes] = await Promise.all([fetch("/api/sites"), fetch("/api/components")]);
-      let count = 0;
-      if (sitesRes.ok) {
-        const data = await sitesRes.json();
-        count += (data.sites || []).filter((s) => s.needs_review).length;
-      }
-      if (componentsRes.ok) {
-        const data = await componentsRes.json();
-        count += (data.components || []).filter((c) => c.needs_review).length;
-      }
-      setNeedsReviewCount(count);
-    }
-    loadCount();
-    const interval = setInterval(loadCount, 5000);
-    return () => clearInterval(interval);
+    const job = jobFromSearch(window.location.search);
+    if (!job) return;
+    setTab(job.kind === "component" ? "components" : "websites");
+    setJobs((prev) => (prev.some((j) => j.key === job.key) ? prev : [...prev, job]));
+    window.history.replaceState({}, "", "/");
   }, []);
 
-  // Add is in the header rather than inside a tab, so saving never depends on
-  // which tab happens to be open. A component save switches you to that tab,
+  // Add is in the utility bar rather than inside a tab, so saving never depends
+  // on which tab happens to be open. A component save switches you to that tab,
   // since cropping is the next thing you'll do.
   async function handleAdd(kind, url) {
     setError(null);
     try {
-      if (kind === "website") {
-        const res = await fetch("/api/sites", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error || "Couldn't save that URL");
-          return false;
-        }
-        setTab("websites");
-        setRefreshKey((k) => k + 1);
-        setJobs((prev) => [...prev, { key: `site-${data.site.id}`, kind: "website", id: data.site.id, label: data.site.name || data.site.domain }]);
-        return true;
-      }
-
-      const res = await fetch("/api/components/capture", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Couldn't start that capture");
+      const result = await addItem(kind, url);
+      if (result.error) {
+        setError(result.error);
         return false;
       }
-      setTab("components");
-      setPendingCapture(data.capture);
-      setJobs((prev) => [...prev, { key: `cap-${data.capture.id}`, kind: "component", id: data.capture.id, label: data.capture.domain }]);
+      setTab(kind === "website" ? "websites" : "components");
+      if (result.capture) setPendingCapture(result.capture);
+      if (result.site) setRefreshKey((k) => k + 1);
+      setJobs((prev) => [...prev, result.job]);
       return true;
     } catch {
       setError("Couldn't reach the server");
@@ -96,20 +66,7 @@ export default function Home() {
 
   return (
     <>
-      <header className="utility-bar">
-        <div className="utility-bar-inner">
-          <h1>Inspiration Library</h1>
-          <div className="nav-links">
-            {needsReviewCount > 0 && (
-              <a href="/review" className="review-badge">
-                {needsReviewCount} to review
-              </a>
-            )}
-            <a href="/tags">Manage tags</a>
-            <AddMenu onSubmit={handleAdd} />
-          </div>
-        </div>
-      </header>
+      <UtilityBar onAdd={handleAdd} />
 
       <main className="page page-wide">
         {error && <p className="error">{error}</p>}

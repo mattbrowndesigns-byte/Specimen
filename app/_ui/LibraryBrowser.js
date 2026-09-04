@@ -180,7 +180,7 @@ export default function LibraryBrowser({
                   href={adapter.externalUrl(item)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title="Open the live page"
+                  title="Launch site"
                 >
                   ↗
                 </a>
@@ -216,7 +216,7 @@ export default function LibraryBrowser({
                 href={adapter.externalUrl(item)}
                 target="_blank"
                 rel="noopener noreferrer"
-                title="Open the live page"
+                title="Launch site"
               >
                 ↗
               </a>
@@ -238,7 +238,7 @@ export default function LibraryBrowser({
                 href={adapter.externalUrl(item)}
                 target="_blank"
                 rel="noopener noreferrer"
-                title="Open the live page"
+                title="Launch site"
               >
                 ↗
               </a>

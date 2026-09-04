@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { latestCapture } from "@/lib/captures";
+import ReviewEditModal from "../_ui/ReviewEditModal";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -14,6 +15,8 @@ export default function ReviewPage() {
   const [components, setComponents] = useState([]);
   const [pendingTags, setPendingTags] = useState([]);
   const [loaded, setLoaded] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [allTags, setAllTags] = useState([]);
   const [error, setError] = useState(null);
 
   async function load() {
@@ -33,6 +36,7 @@ export default function ReviewPage() {
     if (tagsRes.ok) {
       const data = await tagsRes.json();
       setPendingTags((data.tags || []).filter((t) => !t.is_approved));
+      setAllTags((data.tags || []).filter((t) => t.is_approved));
     }
     setLoaded(true);
   }
@@ -117,33 +121,16 @@ export default function ReviewPage() {
         <section className="tag-section">
           <h2>Sites to review ({sites.length})</h2>
           <div className="review-list">
-            {sites.map((site) => {
-              const thumb = latestCapture(site.capture, "desktop")?.thumb_url;
-              return (
-                <div className="review-row" key={site.id}>
-                  <div className="review-thumb">
-                    {thumb ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={thumb} alt={site.name} />
-                    ) : (
-                      <div className="placeholder">No image</div>
-                    )}
-                  </div>
-                  <div className="review-info">
-                    <a href={`/sites/${site.id}`}>{site.name || site.domain}</a>
-                    {site.summary && <p className="review-summary">{site.summary}</p>}
-                    <div className="card-tags">
-                      {(site.tags || []).map((tag, i) => (
-                        <span className={`chip${tag.is_approved ? "" : " chip-pending"}`} key={i}>
-                          {tag.label}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <button onClick={() => markReviewed("sites", site.id)}>Mark reviewed</button>
-                </div>
-              );
-            })}
+            {sites.map((site) => (
+              <ReviewRow
+                key={site.id}
+                item={site}
+                thumb={latestCapture(site.capture, "desktop")?.thumb_url}
+                fallbackName={site.domain}
+                onEdit={() => setEditing({ kind: "sites", item: { ...site, thumb: latestCapture(site.capture, "desktop")?.thumb_url } })}
+                onMarkReviewed={() => markReviewed("sites", site.id)}
+              />
+            ))}
           </div>
         </section>
       )}
@@ -153,32 +140,71 @@ export default function ReviewPage() {
           <h2>Components to review ({components.length})</h2>
           <div className="review-list">
             {components.map((c) => (
-              <div className="review-row" key={c.id}>
-                <div className="review-thumb">
-                  {c.image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.image_url} alt={c.name || "Component"} />
-                  ) : (
-                    <div className="placeholder">No image</div>
-                  )}
-                </div>
-                <div className="review-info">
-                  <a href={`/components/${c.id}`}>{c.name || "Untitled component"}</a>
-                  {c.summary && <p className="review-summary">{c.summary}</p>}
-                  <div className="card-tags">
-                    {(c.tags || []).map((tag, i) => (
-                      <span className={`chip${tag.is_approved ? "" : " chip-pending"}`} key={i}>
-                        {tag.label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <button onClick={() => markReviewed("components", c.id)}>Mark reviewed</button>
-              </div>
+              <ReviewRow
+                key={c.id}
+                item={c}
+                thumb={c.image_url}
+                fallbackName="Untitled component"
+                onEdit={() => setEditing({ kind: "components", item: { ...c, thumb: c.image_url } })}
+                onMarkReviewed={() => markReviewed("components", c.id)}
+              />
             ))}
           </div>
         </section>
       )}
+
+      {editing && (
+        <ReviewEditModal
+          item={editing.item}
+          kind={editing.kind}
+          allTags={allTags}
+          onClose={() => setEditing(null)}
+          onSaved={async () => {
+            setEditing(null);
+            await load();
+          }}
+        />
+      )}
+
     </main>
+  );
+}
+
+// One row per queue item. The whole row opens the edit modal, so a correction
+// can be made without leaving the queue and losing your place.
+function ReviewRow({ item, thumb, fallbackName, onEdit, onMarkReviewed }) {
+  return (
+    <div className="review-row" onClick={onEdit} role="button" tabIndex={0}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onEdit()}>
+      <div className="review-thumb">
+        {thumb ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={thumb} alt={item.name || fallbackName} />
+        ) : (
+          <div className="placeholder">No image</div>
+        )}
+      </div>
+      <div className="review-info">
+        <span className="review-name">{item.name || fallbackName}</span>
+        <p className="review-summary">
+          {item.summary || <span className="summary-empty">No summary — the AI pass didn't complete.</span>}
+        </p>
+        <div className="card-tags">
+          {(item.tags || []).map((tag, i) => (
+            <span className={`chip${tag.is_approved ? "" : " chip-pending"}`} key={i}>
+              {tag.label}
+            </span>
+          ))}
+        </div>
+      </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onMarkReviewed();
+        }}
+      >
+        Mark reviewed
+      </button>
+    </div>
   );
 }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { dispatchCapture } from "@/lib/github";
 import { fetchPageMeta } from "@/lib/pageMeta";
-import { iconFillsFrame, resolveFallbackIcon } from "@/lib/iconShape";
+import { iconFillsFrame, resolveIconUrl } from "@/lib/iconShape";
 import { guessSiteName } from "@/lib/ai";
 import { HARDCODED_USER_ID } from "@/lib/constants";
 import { fetchSitesList } from "@/lib/siteQueries";
@@ -39,7 +39,7 @@ export async function POST(request) {
 
   const domain = parsed.hostname.replace(/^www\./, "");
   let { name, textSnippet, links, faviconUrl } = await fetchPageMeta(parsed.toString());
-  if (!faviconUrl) faviconUrl = await resolveFallbackIcon(parsed.toString());
+  faviconUrl = await resolveIconUrl(parsed.toString(), faviconUrl);
 
   if (!name) {
     name = await guessSiteName({ domain, textSnippet });

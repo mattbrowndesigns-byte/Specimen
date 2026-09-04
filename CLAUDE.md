@@ -131,10 +131,20 @@ classify all thirty nav links, flagging them `page.is_representative`. Nothing
 is deleted — the rest sit behind "Show all", and nothing flagged means "show
 everything" so a failed enrichment can't make discovery look empty.
 
-**Favicons come from the site's own domain, never a favicon service.** The
-declared `<link rel="icon">` is stored at save time and `/favicon.ico` is the
-fallback; both steps are load-bearing (Rippling 404s on `.ico`, Apple declares
-no icon). `/api/sites/backfill-favicons` fills the column for older rows.
+**Brand icons come from Google's favicon service first**, then the declared
+`<link rel="icon">`, then `/favicon.ico`. This reverses an earlier decision to
+avoid third-party icon services: a company art-directs the mark that represents
+it in Google results, so it's the version designed for exactly this size, and
+it always arrives as PNG rather than ICO. The trade is that rendering a badge
+tells Google which domains are in the library. Google answers 404 when it has
+no icon, so status is the whole test.
+
+**Whether an icon fills its badge or is inset is measured, not guessed** —
+`lib/iconShape.js` counts opaque pixels and compares to 0.70. The number that
+matters is pi/4 (0.785, a circle inscribed in its square): a disc-shaped mark
+lands just under it, a square tile at 1.0, a floating glyph far below. Corner
+sampling can't tell a disc from a glyph and got Ramp wrong.
+`/api/sites/backfill-favicons?force=1` re-resolves and re-measures every row.
 
 **The AI's tag vocabulary is read live from the database** (approved tags
 only), never hardcoded — so renaming, merging or deleting a tag immediately

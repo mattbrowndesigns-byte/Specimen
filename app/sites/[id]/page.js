@@ -32,6 +32,8 @@ export default function SiteDetailPage({ params }) {
   const [captureDone, setCaptureDone] = useState(false);
   const [editingSummary, setEditingSummary] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [wayback, setWayback] = useState({ state: "idle" });
+  const [expandedCapture, setExpandedCapture] = useState(false);
   const timelineRef = useRef(null);
   const captureBaseline = useRef(0);
 
@@ -88,6 +90,34 @@ export default function SiteDetailPage({ params }) {
       setSelectedRun(null);
     }
   }, [site, recapturing]);
+
+  // Resolve the real archived snapshot for whichever capture is on screen.
+  useEffect(() => {
+    if (!site) return;
+    const runs = captureTimeline(site.capture);
+    const run = runs.find((r) => r.capturedAt === selectedRun) || runs[0];
+    if (!run) return;
+
+    let cancelled = false;
+    setWayback({ state: "loading" });
+
+    const stamp = new Date(run.capturedAt);
+    const timestamp = `${stamp.getFullYear()}${String(stamp.getMonth() + 1).padStart(2, "0")}${String(
+      stamp.getDate()
+    ).padStart(2, "0")}`;
+
+    fetch(`/api/wayback?url=${encodeURIComponent(site.url)}&timestamp=${timestamp}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        setWayback(data.available ? { state: "found", url: data.url } : { state: "none" });
+      })
+      .catch(() => !cancelled && setWayback({ state: "none" }));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [site, selectedRun]);
 
   // The strip runs oldest-to-newest, so start it scrolled to the newest end.
   useEffect(() => {
@@ -351,13 +381,15 @@ export default function SiteDetailPage({ params }) {
         {activeRun && (
           <p className="capture-meta">
             Captured {formatCaptureDate(activeRun.capturedAt)} ·{" "}
-            <a
-              href={archiveUrl(site.url, activeRun.capturedAt)}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              View on the Wayback Machine
-            </a>{" "}
+            {wayback.state === "found" ? (
+              <a href={wayback.url} target="_blank" rel="noopener noreferrer">
+                View on the Wayback Machine
+              </a>
+            ) : wayback.state === "loading" ? (
+              <span>Checking the Wayback Machine…</span>
+            ) : (
+              <span title="archive.org has no snapshot near this date">No Wayback snapshot</span>
+            )}{" "}
             ·{" "}
             <button
               className="capture-delete"
@@ -380,14 +412,21 @@ export default function SiteDetailPage({ params }) {
           </div>
         )}
 
-        <div className="detail-capture">
+        <div className={`detail-capture${expandedCapture ? "" : " detail-capture-collapsed"}`}>
           {capture?.full_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={capture.full_url} alt={site.name} />
           ) : (
             <div className="placeholder">{recapturing ? "Capturing…" : "No capture yet"}</div>
           )}
+          {!expandedCapture && capture?.full_url && <div className="capture-fade" />}
         </div>
+
+        {capture?.full_url && (
+          <button className="capture-expand" onClick={() => setExpandedCapture((v) => !v)}>
+            {expandedCapture ? "Collapse screenshot" : "Expand full screenshot"}
+          </button>
+        )}
       </div>
 
       <section className="detail-section">

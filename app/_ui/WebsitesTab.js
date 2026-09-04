@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { latestCapture } from "@/lib/captures";
+import FilterModal from "./FilterModal";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -9,6 +10,15 @@ const FACET_LABELS = {
   aesthetic: "Aesthetic",
 };
 const FACETS = Object.keys(FACET_LABELS);
+
+const VIEWS = [
+  { id: "cards", label: "Cards" },
+  { id: "list", label: "List" },
+  { id: "headlines", label: "Headlines" },
+];
+
+// Cards show at most this many tags before collapsing into a "+N more" link.
+const CARD_TAG_LIMIT = 6;
 
 export default function WebsitesTab() {
   const [sites, setSites] = useState([]);
@@ -19,6 +29,10 @@ export default function WebsitesTab() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [loaded, setLoaded] = useState(false);
+  const [view, setView] = useState("cards");
+  const [addOpen, setAddOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const addInputRef = useRef(null);
 
   async function loadSites(q) {
     const res = await fetch(`/api/sites${q ? `?q=${encodeURIComponent(q)}` : ""}`);
@@ -39,6 +53,12 @@ export default function WebsitesTab() {
 
   useEffect(() => {
     loadTags();
+    try {
+      const saved = localStorage.getItem("specimen.view");
+      if (saved && VIEWS.some((v) => v.id === saved)) setView(saved);
+    } catch {
+      // localStorage can be unavailable; the default view is fine.
+    }
   }, []);
 
   useEffect(() => {
@@ -50,6 +70,19 @@ export default function WebsitesTab() {
     const interval = setInterval(() => loadSites(query), 5000);
     return () => clearInterval(interval);
   }, [query]);
+
+  useEffect(() => {
+    if (addOpen) addInputRef.current?.focus();
+  }, [addOpen]);
+
+  function chooseView(id) {
+    setView(id);
+    try {
+      localStorage.setItem("specimen.view", id);
+    } catch {
+      // Not persisting the choice is survivable.
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -69,6 +102,7 @@ export default function WebsitesTab() {
       }
       setSites((prev) => [data.site, ...prev]);
       setUrl("");
+      setAddOpen(false);
     } catch {
       setError("Couldn't reach the server");
     } finally {
@@ -85,8 +119,11 @@ export default function WebsitesTab() {
     });
   }
 
-  const tagsByFacet = useMemo(
-    () => FACETS.map((facet) => ({ facet, tags: allTags.filter((t) => t.facet === facet) })),
+  const sortedTags = useMemo(
+    () =>
+      [...allTags].sort(
+        (a, b) => (b.usage_count || 0) - (a.usage_count || 0) || a.label.localeCompare(b.label)
+      ),
     [allTags]
   );
 
@@ -104,72 +141,122 @@ export default function WebsitesTab() {
     });
   }, [sites, selectedTagIds, allTags]);
 
-  function desktopThumb(site) {
+  function thumbFor(site) {
     return latestCapture(site.capture, "desktop")?.thumb_url || null;
+  }
+
+  function renderTags(site, limit) {
+    const tags = site.tags || [];
+    if (!tags.length) return null;
+    const shown = limit ? tags.slice(0, limit) : tags;
+    const hidden = tags.length - shown.length;
+    return (
+      <div className="card-tags">
+        {shown.map((tag, i) => (
+          <span className={`chip${tag.is_approved ? "" : " chip-pending"}`} key={i}>
+            {tag.label}
+          </span>
+        ))}
+        {hidden > 0 && (
+          <a className="chip chip-more" href={`/sites/${site.id}`}>
+            +{hidden} more
+          </a>
+        )}
+      </div>
+    );
   }
 
   return (
     <>
-      <form className="save-form" onSubmit={handleSubmit}>
+      <div className="toolbar">
         <input
-          type="text"
-          placeholder="Paste a URL and press Enter…"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          disabled={submitting}
+          type="search"
+          className="search-input"
+          placeholder="Search name, summary, notes, tags, discovered pages…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
         />
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Saving…" : "Save"}
+        <button className="filters-btn" onClick={() => setFiltersOpen(true)}>
+          Filters{selectedTagIds.size > 0 ? ` (${selectedTagIds.size})` : ""}
         </button>
-      </form>
+        <button className="add-btn" onClick={() => setAddOpen((v) => !v)}>
+          + Add
+        </button>
+      </div>
 
-      <input
-        type="text"
-        className="search-input"
-        placeholder="Search name, summary, notes, tags, discovered pages…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      {addOpen && (
+        <form className="add-form" onSubmit={handleSubmit}>
+          <input
+            ref={addInputRef}
+            type="text"
+            placeholder="Paste a URL and press Enter…"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            disabled={submitting}
+          />
+          <button type="submit" disabled={submitting}>
+            {submitting ? "Saving…" : "Save"}
+          </button>
+          <button type="button" onClick={() => setAddOpen(false)} disabled={submitting}>
+            Cancel
+          </button>
+        </form>
+      )}
 
-      {allTags.length > 0 && (
-        <div className="filter-chips">
-          {tagsByFacet.map(
-            ({ facet, tags }) =>
-              tags.length > 0 && (
-                <div className="filter-facet" key={facet}>
-                  {tags.map((tag) => (
-                    <button
-                      key={tag.id}
-                      className={`chip chip-filter${selectedTagIds.has(tag.id) ? " chip-selected" : ""}`}
-                      onClick={() => toggleTag(tag.id)}
-                    >
-                      {tag.label}
-                    </button>
-                  ))}
-                </div>
-              )
+      {sortedTags.length > 0 && (
+        <div className="chip-strip">
+          {selectedTagIds.size > 0 && (
+            <button className="chip chip-filter chip-clear" onClick={() => setSelectedTagIds(new Set())}>
+              Clear
+            </button>
           )}
+          {sortedTags.map((tag) => (
+            <button
+              key={tag.id}
+              className={`chip chip-filter${selectedTagIds.has(tag.id) ? " chip-selected" : ""}`}
+              onClick={() => toggleTag(tag.id)}
+            >
+              {tag.label}
+              <span className="chip-count">{tag.usage_count || 0}</span>
+            </button>
+          ))}
         </div>
       )}
+
+      <div className="results-bar">
+        <span>
+          {visibleSites.length} {visibleSites.length === 1 ? "site" : "sites"}
+        </span>
+        <div className="view-switch">
+          {VIEWS.map((v) => (
+            <button
+              key={v.id}
+              className={view === v.id ? "active" : ""}
+              onClick={() => chooseView(v.id)}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {error && <p className="error">{error}</p>}
 
       {loaded && sites.length === 0 && (
-        <p className="empty">Paste your first URL above to start your library.</p>
+        <p className="empty">Nothing saved yet — hit Add to save your first URL.</p>
       )}
       {loaded && sites.length > 0 && visibleSites.length === 0 && (
         <p className="empty">Nothing matches those filters.</p>
       )}
 
-      <div className="grid">
-        {visibleSites.map((site) => {
-          const thumb = desktopThumb(site);
-          return (
+      {view === "cards" && (
+        <div className="grid">
+          {visibleSites.map((site) => (
             <div className="card" key={site.id}>
               <a className="thumb" href={`/sites/${site.id}`}>
-                {thumb ? (
+                {thumbFor(site) ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={thumb} alt={site.name || site.domain} />
+                  <img src={thumbFor(site)} alt={site.name || site.domain} />
                 ) : (
                   <div className="placeholder">Capturing…</div>
                 )}
@@ -178,29 +265,71 @@ export default function WebsitesTab() {
                 <a className="name" href={`/sites/${site.id}`} title={site.summary || undefined}>
                   {site.name || site.domain}
                 </a>
-                <a
-                  className="visit"
-                  href={site.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Visit live site"
-                >
+                <a className="visit" href={site.url} target="_blank" rel="noopener noreferrer" title="Visit live site">
                   ↗
                 </a>
               </div>
-              {site.tags?.length > 0 && (
-                <div className="card-tags">
-                  {site.tags.map((tag, i) => (
-                    <span className={`chip${tag.is_approved ? "" : " chip-pending"}`} key={i}>
-                      {tag.label}
-                    </span>
-                  ))}
-                </div>
-              )}
+              {renderTags(site, CARD_TAG_LIMIT)}
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {view === "list" && (
+        <div className="row-list">
+          {visibleSites.map((site) => (
+            <div className="row-item" key={site.id}>
+              <a className="row-thumb" href={`/sites/${site.id}`}>
+                {thumbFor(site) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={thumbFor(site)} alt={site.name || site.domain} />
+                ) : (
+                  <div className="placeholder">…</div>
+                )}
+              </a>
+              <div className="row-body">
+                <a className="row-name" href={`/sites/${site.id}`}>
+                  {site.name || site.domain}
+                </a>
+                <span className="row-domain">{site.domain}</span>
+                {site.summary && <p className="row-summary">{site.summary}</p>}
+                {renderTags(site, CARD_TAG_LIMIT)}
+              </div>
+              <a className="visit" href={site.url} target="_blank" rel="noopener noreferrer" title="Visit live site">
+                ↗
+              </a>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {view === "headlines" && (
+        <div className="headline-list">
+          {visibleSites.map((site) => (
+            <div className="headline-item" key={site.id}>
+              <a className="row-name" href={`/sites/${site.id}`}>
+                {site.name || site.domain}
+              </a>
+              <span className="row-domain">{site.domain}</span>
+              <a className="visit" href={site.url} target="_blank" rel="noopener noreferrer" title="Visit live site">
+                ↗
+              </a>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {filtersOpen && (
+        <FilterModal
+          allTags={sortedTags}
+          selectedTagIds={selectedTagIds}
+          onClose={() => setFiltersOpen(false)}
+          onApply={(next) => {
+            setSelectedTagIds(next);
+            setFiltersOpen(false);
+          }}
+        />
+      )}
     </>
   );
 }

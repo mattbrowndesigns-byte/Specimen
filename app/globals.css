@@ -297,6 +297,361 @@ h1 {
   border-color: #1a1a1a;
 }
 
+/* Dashboard toolbar: search leads, actions on the right */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.toolbar .search-input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.filters-btn {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border: 1px solid #d8d8dc;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.filters-btn:hover {
+  background: #f2f2f3;
+}
+
+.add-btn {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #e8502e;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.add-btn:hover {
+  background: #d0431f;
+}
+
+.add-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.add-form input {
+  flex: 1;
+  padding: 12px 14px;
+  font-size: 15px;
+  border: 1px solid #1a1a1a;
+  border-radius: 8px;
+  outline: none;
+}
+
+.add-form button {
+  padding: 12px 18px;
+  border: 1px solid #d8d8dc;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.add-form button[type="submit"] {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+/* Scrolling tag strip */
+
+.chip-strip {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  scrollbar-width: thin;
+}
+
+.chip-strip .chip-filter {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.chip-count {
+  font-size: 11px;
+  color: #9a9aa0;
+  background: #fff;
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+.chip-selected .chip-count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.chip-clear {
+  background: #fff;
+  border: 1px solid #d8d8dc;
+}
+
+.chip-more {
+  text-decoration: none;
+  color: #4a4a4e;
+  background: #e7e7e9;
+}
+
+/* Results bar + view switch */
+
+.results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 16px;
+  font-size: 13px;
+  color: #6b6b70;
+}
+
+.view-switch {
+  display: flex;
+  gap: 2px;
+  background: #ececed;
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.view-switch button {
+  padding: 5px 12px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #6b6b70;
+  cursor: pointer;
+}
+
+.view-switch button.active {
+  background: #fff;
+  color: #1a1a1a;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* List view */
+
+.row-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #e6e6e9;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.row-thumb {
+  width: 140px;
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
+  background: #ececed;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.row-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: inherit;
+  text-decoration: none;
+}
+
+.row-name:hover {
+  text-decoration: underline;
+}
+
+.row-domain {
+  font-size: 12px;
+  color: #9a9aa0;
+  margin-left: 8px;
+}
+
+.row-summary {
+  font-size: 13px;
+  color: #6b6b70;
+  margin: 4px 0 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.row-item .card-tags {
+  padding: 0;
+}
+
+/* Headlines view */
+
+.headline-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.headline-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 4px;
+  border-bottom: 1px solid #ececed;
+}
+
+.headline-item .visit {
+  margin-left: auto;
+}
+
+/* Filter modal */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 22, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid #ececed;
+}
+
+.modal-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.modal-close {
+  border: none;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b6b70;
+}
+
+.modal-body {
+  overflow-y: auto;
+  padding: 8px 20px 16px;
+}
+
+.modal-body h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9a9aa0;
+  margin: 16px 0 8px;
+}
+
+.modal-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px 12px;
+}
+
+.modal-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 4px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.modal-options label:hover {
+  background: #f7f7f8;
+}
+
+.modal-count {
+  margin-left: auto;
+  color: #9a9aa0;
+  font-size: 12px;
+}
+
+.modal-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid #ececed;
+}
+
+.modal-foot button {
+  padding: 9px 18px;
+  border: 1px solid #d8d8dc;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.modal-apply {
+  background: #e8502e !important;
+  color: #fff;
+  border-color: #e8502e !important;
+}
+
 .filter-chips {
   display: flex;
   flex-wrap: wrap;
@@ -590,6 +945,42 @@ h1 {
   max-width: 100%;
   display: flex;
   justify-content: center;
+  position: relative;
+}
+
+/* Collapsed view sizes the img element itself rather than clipping an
+   oversized one. Screenshots run to 20,000px, and clipping an element that
+   tall makes the browser rasterize it at degraded quality -- see CLAUDE.md. */
+.detail-capture-collapsed img {
+  height: 70vh;
+  object-fit: cover;
+  object-position: top center;
+  width: 100%;
+}
+
+.capture-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 90px;
+  border-radius: 0 0 10px 10px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.95));
+  pointer-events: none;
+}
+
+.capture-expand {
+  margin-top: 12px;
+  padding: 7px 16px;
+  border: 1px solid #d8d8dc;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.capture-expand:hover {
+  background: #f7f7f8;
 }
 
 .detail-capture img {

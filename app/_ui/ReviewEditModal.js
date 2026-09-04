@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import TagCombobox from "./TagCombobox";
+import ModalShell from "./ModalShell";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -20,14 +21,6 @@ export default function ReviewEditModal({ item, kind, allTags, onClose, onSaved 
   const [tags, setTags] = useState(item.tags || []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
-
-  useEffect(() => {
-    function onKey(e) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
 
   async function refreshTags() {
     const res = await fetch(`/api/${kind}/${item.id}`);
@@ -93,77 +86,75 @@ export default function ReviewEditModal({ item, kind, allTags, onClose, onSaved 
     facet,
     assigned: tags.filter((t) => t.facet === facet),
     available: allTags.filter(
-      (t) => t.facet === facet && t.is_approved && !tags.some((at) => at.id === t.id)
+      (t) => t.facet === facet && t.is_approved && !tags.some((at) => at.id === t.id),
     ),
   }));
 
   const detailHref = kind === "sites" ? `/sites/${item.id}` : `/components/${item.id}`;
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal modal-wide" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Review item">
-        <div className="modal-head">
-          <h2>Review</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">
-            ×
-          </button>
-        </div>
-
-        <div className="modal-body">
-          {error && <p className="error">{error}</p>}
-
-          <div className="review-modal-top">
-            {item.thumb && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="review-modal-thumb" src={item.thumb} alt={name} />
-            )}
-            <div className="review-modal-fields">
-              <label className="field">
-                <span>Name</span>
-                <input value={name} onChange={(e) => setName(e.target.value)} />
-              </label>
-              <a className="review-modal-link" href={detailHref}>
-                Open full detail page →
-              </a>
-            </div>
-          </div>
-
-          <label className="field">
-            <span>AI summary</span>
-            <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={4} />
-          </label>
-
-          <div className="field">
-            <span>Tags</span>
-            {tagsByFacet.map(({ facet, assigned, available }) => (
-              <div className="facet-row" key={facet}>
-                <span className="facet-name">{FACET_LABELS[facet]}</span>
-                <TagCombobox
-                  assigned={assigned}
-                  available={available}
-                  onAdd={addTag}
-                  onRemove={removeTag}
-                  onCreate={(label) => createTag(facet, label)}
-                />
-              </div>
-            ))}
-          </div>
-
-          <label className="field">
-            <span>Notes</span>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
-          </label>
-        </div>
-
-        <div className="modal-foot">
-          <button onClick={() => save({ markReviewed: false })} disabled={busy}>
-            Save, keep in queue
-          </button>
-          <button className="modal-apply" onClick={() => save({ markReviewed: true })} disabled={busy}>
-            {busy ? "Saving…" : "Save and mark reviewed"}
-          </button>
-        </div>
+    <ModalShell label="Review item" wide onClose={onClose}>
+      <div className="modal-head">
+        <h2>Review</h2>
+        <button className="modal-close" onClick={onClose} aria-label="Close">
+          ×
+        </button>
       </div>
-    </div>
+
+      <div className="modal-body">
+        {error && <p className="error">{error}</p>}
+
+        <div className="review-modal-top">
+          {item.thumb && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="review-modal-thumb" src={item.thumb} alt={name} />
+          )}
+          <div className="review-modal-fields">
+            <label className="field">
+              <span>Name</span>
+              <input value={name} onChange={(e) => setName(e.target.value)} />
+            </label>
+            <a className="review-modal-link" href={detailHref}>
+              Open full detail page →
+            </a>
+          </div>
+        </div>
+
+        <label className="field">
+          <span>AI summary</span>
+          <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={4} />
+        </label>
+
+        <div className="field">
+          <span>Tags</span>
+          {tagsByFacet.map(({ facet, assigned, available }) => (
+            <div className="facet-row" key={facet}>
+              <span className="facet-name">{FACET_LABELS[facet]}</span>
+              <TagCombobox
+                assigned={assigned}
+                available={available}
+                onAdd={addTag}
+                onRemove={removeTag}
+                onCreate={(label) => createTag(facet, label)}
+              />
+            </div>
+          ))}
+        </div>
+
+        <label className="field">
+          <span>Notes</span>
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
+        </label>
+      </div>
+
+      <div className="modal-foot">
+        <button onClick={() => save({ markReviewed: false })} disabled={busy}>
+          Save, keep in queue
+        </button>
+        <button className="modal-apply" onClick={() => save({ markReviewed: true })} disabled={busy}>
+          {busy ? "Saving…" : "Save and mark reviewed"}
+        </button>
+      </div>
+    </ModalShell>
   );
 }

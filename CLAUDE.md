@@ -73,6 +73,14 @@ page.** Those pages were still statically prerendered, so redeploys weren't
 visible without a hard refresh or an incognito window. Fixed with explicit
 `Cache-Control: no-store` headers in `next.config.js`. Don't remove them.
 
+**Modals must go through `ModalShell`,** which portals them to `<body>`.
+`position: fixed` doesn't resolve against the viewport if *any* ancestor has a
+`transform`, `filter` or `backdrop-filter` — that ancestor becomes the
+containing block instead. A card has two (`transform` on `:hover`,
+`backdrop-filter` on the save buttons overlaid on its thumbnail) plus
+`overflow: hidden`, so the collection modal opened from a card rendered 64px
+wide *inside* the card and got clipped. Don't hand-roll `.modal-backdrop`.
+
 **`overflow: auto` + `max-height` around a very tall screenshot corrupts it.**
 Full-page captures run 5,000–20,000px. Inside a clipped scroll container the
 browser rasterizes them at visibly degraded quality — washed-out, moiré-like

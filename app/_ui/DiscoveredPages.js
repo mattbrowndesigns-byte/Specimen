@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import ModalShell from "./ModalShell";
 
 const PREVIEW_LIMIT = 4;
 
@@ -9,14 +10,6 @@ const PREVIEW_LIMIT = 4;
 // which are the only part that needs room -- moves into a modal.
 export default function DiscoveredPages({ groups, pageTypeLabel, promoted, promoting, onPromote }) {
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    function onKey(e) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
 
   const all = groups.flatMap(([, pages]) => pages);
   if (all.length === 0) return null;
@@ -46,51 +39,44 @@ export default function DiscoveredPages({ groups, pageTypeLabel, promoted, promo
       </button>
 
       {open && (
-        <div className="modal-backdrop" onClick={() => setOpen(false)}>
-          <div
-            className="modal modal-wide"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-label="Discovered pages"
-          >
-            <div className="modal-head">
-              <h2>Discovered pages ({all.length})</h2>
-              <button className="modal-close" onClick={() => setOpen(false)} aria-label="Close">
-                ×
-              </button>
-            </div>
-
-            <div className="modal-body">
-              {groups.map(([typeSlug, pages]) => (
-                <div className="page-group" key={typeSlug || "none"}>
-                  <h3>{pageTypeLabel(typeSlug)}</h3>
-                  <ul className="page-list">
-                    {pages.map((page) => (
-                      <li key={page.id}>
-                        <a href={page.url} target="_blank" rel="noopener noreferrer">
-                          {page.label || page.url}
-                        </a>
-                        {promoted[page.id] ? (
-                          <a className="promote-link" href={`/sites/${promoted[page.id]}`}>
-                            View full capture →
-                          </a>
-                        ) : (
-                          <button
-                            className="promote-btn"
-                            disabled={promoting === page.id}
-                            onClick={() => onPromote(page)}
-                          >
-                            {promoting === page.id ? "Capturing…" : "Promote to full capture"}
-                          </button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
+        <ModalShell label="Discovered pages" wide onClose={() => setOpen(false)}>
+          <div className="modal-head">
+            <h2>Discovered pages ({all.length})</h2>
+            <button className="modal-close" onClick={() => setOpen(false)} aria-label="Close">
+              ×
+            </button>
           </div>
-        </div>
+
+          <div className="modal-body">
+            {groups.map(([typeSlug, pages]) => (
+              <div className="page-group" key={typeSlug || "none"}>
+                <h3>{pageTypeLabel(typeSlug)}</h3>
+                <ul className="page-list">
+                  {pages.map((page) => (
+                    <li key={page.id}>
+                      <a href={page.url} target="_blank" rel="noopener noreferrer">
+                        {page.label || page.url}
+                      </a>
+                      {promoted[page.id] ? (
+                        <a className="promote-link" href={`/sites/${promoted[page.id]}`}>
+                          View full capture →
+                        </a>
+                      ) : (
+                        <button
+                          className="promote-btn"
+                          disabled={promoting === page.id}
+                          onClick={() => onPromote(page)}
+                        >
+                          {promoting === page.id ? "Capturing…" : "Promote to full capture"}
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </ModalShell>
       )}
     </section>
   );

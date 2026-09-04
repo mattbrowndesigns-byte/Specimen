@@ -595,7 +595,13 @@ h1 {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
+}
+
+/* The bell and the theme toggle are both ambient status/preference controls, so
+   they sit as a pair rather than evenly spaced with Add and the menu. */
+.nav-links .bell-wrap + .icon-btn {
+  margin-left: -6px;
 }
 
 .search-input {
@@ -2591,6 +2597,10 @@ a.card {
 }
 
 /* Bigger where there's room for it -- a detail page isn't a dense grid. */
+/* Only the badge changes size between a card and a detail page; everything
+   inside it is a percentage, so the two render as the same mark at two scales.
+   A rule that pinned the image to 22px here was what put a ring of white space
+   around it. */
 .detail-header .favicon-badge {
   width: 34px;
   height: 34px;
@@ -2610,12 +2620,6 @@ a.card {
 
 .headline-item .favicon {
   margin-right: 2px;
-}
-
-.detail-header .favicon {
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
 }
 
 /* Curated discovered pages */

@@ -1044,10 +1044,17 @@ h1 {
    un-collapse this. Capped by viewport too, so tags stay near the fold on a
    laptop screen. */
 .detail-capture.detail-capture-collapsed img {
-  height: min(960px, 70vh);
+  height: 960px;
   object-fit: cover;
   object-position: top center;
   width: 100%;
+}
+
+/* A mobile capture is only 390px wide. Filling the column would upscale it
+   2x and go visibly soft, so it holds native width and crops vertically. */
+.detail-capture.detail-capture-mobile.detail-capture-collapsed img {
+  width: 390px;
+  max-width: 100%;
 }
 
 .capture-fade {

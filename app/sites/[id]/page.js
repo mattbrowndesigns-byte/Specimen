@@ -423,7 +423,11 @@ export default function SiteDetailPage({ params }) {
           </div>
         )}
 
-        <div className={`detail-capture${expandedCapture ? "" : " detail-capture-collapsed"}`}>
+        <div
+          className={`detail-capture${expandedCapture ? "" : " detail-capture-collapsed"}${
+            viewport === "mobile" ? " detail-capture-mobile" : ""
+          }`}
+        >
           {capture?.full_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={capture.full_url} alt={site.name} />

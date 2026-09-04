@@ -53,6 +53,11 @@ export default function ComponentsTab({ allTags, pendingCapture, setPendingCaptu
       }
       setPendingCapture(null);
       setComponents((prev) => [data.component, ...prev]);
+      if (data.enrichmentError) {
+        setError(
+          "Crop saved, but the AI couldn't describe it just now. Open the component and hit Regenerate."
+        );
+      }
     } catch {
       setError("Couldn't reach the server");
     } finally {

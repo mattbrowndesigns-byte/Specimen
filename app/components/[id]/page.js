@@ -24,6 +24,23 @@ export default function ComponentDetailPage({ params }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [viewport, setViewport] = useState("desktop");
+  const [editingSummary, setEditingSummary] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+
+  async function regenerateSummary() {
+    setRegenerating(true);
+    setError(null);
+    const res = await fetch(`/api/components/${id}/enrich`, { method: "POST" });
+    setRegenerating(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Couldn't regenerate the description");
+      return;
+    }
+    setEditingSummary(false);
+    await load();
+    await loadTags();
+  }
 
   async function load() {
     const res = await fetch(`/api/components/${id}`);
@@ -247,11 +264,51 @@ export default function ComponentDetailPage({ params }) {
       </div>
 
       <section className="detail-section">
-        <h2>Summary</h2>
-        <textarea value={summaryDraft} onChange={(e) => setSummaryDraft(e.target.value)} rows={3} />
-        <button disabled={savingField === "summary"} onClick={() => saveField("summary", summaryDraft)}>
-          {savingField === "summary" ? "Saving…" : "Save summary"}
-        </button>
+        <div className="section-head">
+          <h2>AI summary</h2>
+          {!editingSummary && (
+            <div className="section-head-actions">
+              <button onClick={() => setEditingSummary(true)}>Edit</button>
+              <button onClick={regenerateSummary} disabled={regenerating}>
+                {regenerating ? "Regenerating…" : "Regenerate"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {editingSummary ? (
+          <>
+            <textarea value={summaryDraft} onChange={(e) => setSummaryDraft(e.target.value)} rows={3} />
+            <div className="section-head-actions">
+              <button
+                className="primary"
+                disabled={savingField === "summary"}
+                onClick={async () => {
+                  await saveField("summary", summaryDraft);
+                  setEditingSummary(false);
+                }}
+              >
+                {savingField === "summary" ? "Saving…" : "Save"}
+              </button>
+              <button
+                onClick={() => {
+                  setSummaryDraft(component.summary || "");
+                  setEditingSummary(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        ) : (
+          <p className="summary-text">
+            {component.summary || (
+              <span className="summary-empty">
+                No summary yet — use Regenerate to describe this crop.
+              </span>
+            )}
+          </p>
+        )}
       </section>
 
       <section className="detail-section">

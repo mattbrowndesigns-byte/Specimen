@@ -66,14 +66,25 @@ export async function POST(request) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
+  let croppedBuffer;
   try {
-    const { imageUrl, croppedBuffer } = await cropAndUpload({
+    const cropped = await cropAndUpload({
       sourceImageUrl: capture.full_url,
       cropRect,
       componentId: component.id,
     });
+    croppedBuffer = cropped.croppedBuffer;
+    await supabase.from("component").update({ image_url: cropped.imageUrl }).eq("id", component.id);
+  } catch (err) {
+    console.error("Component crop failed:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 
-    await supabase.from("component").update({ image_url: imageUrl }).eq("id", component.id);
+  // The crop is saved by this point. If the AI pass fails -- Gemini's free tier
+  // throws transient 503s -- keep the component and report it, so the owner can
+  // retry with Regenerate instead of losing the crop they just drew.
+  let enrichmentError = null;
+  try {
     await enrichAndSaveComponent({
       componentId: component.id,
       sourceUrl: capture.url,
@@ -81,11 +92,11 @@ export async function POST(request) {
       clearExistingTags: false,
     });
   } catch (err) {
-    console.error("Component crop/enrichment failed:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("Component enrichment failed:", err);
+    enrichmentError = err.message;
   }
 
   const { data: finalComponent } = await supabase.from("component").select("*").eq("id", component.id).single();
   const [withTags] = await attachTags(supabase, [finalComponent], "component");
-  return NextResponse.json({ component: withTags }, { status: 201 });
+  return NextResponse.json({ component: withTags, enrichmentError }, { status: 201 });
 }

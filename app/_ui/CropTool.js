@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const MIN_SIZE = 24;
 const HANDLES = ["nw", "n", "ne", "w", "e", "sw", "s", "se"];
@@ -56,7 +56,24 @@ export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRe
   const imgRef = useRef(null);
   const [rect, setRect] = useState(null);
   const [imageBounds, setImageBounds] = useState(null);
+  const [saveElapsed, setSaveElapsed] = useState(0);
   const dragState = useRef(null);
+
+  useEffect(() => {
+    if (!saving) {
+      setSaveElapsed(0);
+      return;
+    }
+    const tick = setInterval(() => setSaveElapsed((s) => s + 1), 1000);
+    return () => clearInterval(tick);
+  }, [saving]);
+
+  // Displayed pixels -> source pixels, for the size readout.
+  function scaleToNatural() {
+    const img = imgRef.current;
+    if (!img || !img.clientWidth) return 1;
+    return img.naturalWidth / img.clientWidth;
+  }
 
   function handleImageLoad() {
     const img = imgRef.current;
@@ -186,26 +203,46 @@ export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRe
           </>
         )}
       </div>
+      {/* Sticks to the bottom of the viewport: these screenshots run thousands
+          of pixels tall, and the save action shouldn't be a long scroll away
+          from wherever you drew the box. */}
       <div className="crop-actions">
-        {rect && (
-          <button
-            className="crop-reset"
-            onClick={() => setRect(null)}
-            disabled={saving}
-          >
-            Redraw
-          </button>
+        {saving ? (
+          <div className="crop-saving">
+            <div className="capture-status-bar">
+              <div
+                className="capture-status-fill"
+                style={{ width: `${Math.min(95, (saveElapsed / 15) * 100)}%` }}
+              />
+            </div>
+            <span>
+              {saveElapsed < 15
+                ? "Cropping and describing it with AI…"
+                : "Still working — the AI service is busy, retrying…"}
+            </span>
+          </div>
+        ) : (
+          <>
+            {rect && (
+              <span className="crop-size">
+                {Math.round(rect.width * scaleToNatural())} × {Math.round(rect.height * scaleToNatural())} px
+              </span>
+            )}
+            {rect && (
+              <button className="crop-reset" onClick={() => setRect(null)}>
+                Redraw
+              </button>
+            )}
+            <button onClick={onCancel}>Cancel</button>
+            <button
+              className="crop-save"
+              onClick={handleSave}
+              disabled={!rect || rect.width < MIN_SIZE || rect.height < MIN_SIZE}
+            >
+              Save component
+            </button>
+          </>
         )}
-        <button onClick={onCancel} disabled={saving}>
-          Cancel
-        </button>
-        <button
-          className="crop-save"
-          onClick={handleSave}
-          disabled={saving || !rect || rect.width < MIN_SIZE || rect.height < MIN_SIZE}
-        >
-          {saving ? "Saving…" : "Save component"}
-        </button>
       </div>
     </div>
   );

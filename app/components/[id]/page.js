@@ -195,6 +195,7 @@ export default function ComponentDetailPage({ params }) {
           <Favicon
             url={component.source_url}
             faviconUrl={component.favicon_url}
+            fills={component.favicon_fills !== false}
             alt={component.name || "Component"}
           />
           <input

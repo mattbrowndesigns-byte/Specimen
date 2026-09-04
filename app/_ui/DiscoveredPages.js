@@ -15,7 +15,15 @@ const PREVIEW_LIMIT = 4;
 //
 // A site with nothing flagged (enrichment hasn't run, or failed) falls back to
 // showing everything, so discovery never looks empty when it isn't.
-export default function DiscoveredPages({ pages, pageTypeLabel, promoted, promoting, onPromote }) {
+export default function DiscoveredPages({
+  pages,
+  pageTypeLabel,
+  promoted,
+  promoting,
+  onPromote,
+  onRefresh,
+  refreshing,
+}) {
   const [open, setOpen] = useState(false);
 
   if (!pages || pages.length === 0) return null;
@@ -47,9 +55,16 @@ export default function DiscoveredPages({ pages, pageTypeLabel, promoted, promot
         ))}
       </ul>
 
-      <button className="link-btn" onClick={() => setOpen(true)}>
-        {hasMore ? `Show all ${pages.length} pages` : "Open all pages"}
-      </button>
+      <div className="page-list-actions">
+        <button className="link-btn" onClick={() => setOpen(true)}>
+          {hasMore ? `Show all ${pages.length} pages` : "Open all pages"}
+        </button>
+        {onRefresh && (
+          <button className="link-btn" onClick={onRefresh} disabled={refreshing}>
+            {refreshing ? "Re-reading…" : "Refresh pages"}
+          </button>
+        )}
+      </div>
 
       {open && (
         <ModalShell label="Discovered pages" wide onClose={() => setOpen(false)}>

@@ -43,6 +43,7 @@ export default function RecordGrid({ entries, emptyMessage, onRemove, removeLabe
                 <Favicon
                   url={kind === "site" ? item.url : item.source_url}
                   faviconUrl={item.favicon_url}
+                  fills={item.favicon_fills !== false}
                   alt={name}
                 />
                 <a className="name" href={href} title={item.summary || undefined}>

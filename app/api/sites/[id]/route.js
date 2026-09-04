@@ -9,7 +9,7 @@ export async function GET(request, { params }) {
 
   const { data: site, error } = await supabase
     .from("site")
-    .select("id, url, domain, name, summary, notes, saved_at, needs_review, is_favorite, favicon_url")
+    .select("id, url, domain, name, summary, notes, saved_at, needs_review, is_favorite, favicon_url, favicon_fills")
     .eq("id", id)
     .single();
 

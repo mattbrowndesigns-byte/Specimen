@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchPageMeta } from "@/lib/pageMeta";
+import { iconFillsFrame } from "@/lib/iconShape";
 
 export const dynamic = "force-dynamic";
 
@@ -35,15 +36,16 @@ export async function POST(request) {
       skipped.push(site.domain);
       continue;
     }
+    const favicon_fills = await iconFillsFrame(faviconUrl);
     const { error: updateError } = await supabase
       .from("site")
-      .update({ favicon_url: faviconUrl })
+      .update({ favicon_url: faviconUrl, favicon_fills })
       .eq("id", site.id);
     if (updateError) {
       skipped.push(`${site.domain} (${updateError.message})`);
       continue;
     }
-    filled.push({ domain: site.domain, faviconUrl });
+    filled.push({ domain: site.domain, faviconUrl, fills: favicon_fills });
   }
 
   return NextResponse.json({ checked: (sites || []).length, filled, skipped });

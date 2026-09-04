@@ -217,6 +217,7 @@ export default function ReviewPage() {
                     item={site}
                     thumb={thumb}
                     faviconUrl={site.favicon_url}
+                    fills={site.favicon_fills !== false}
                     linkUrl={site.url}
                     fallbackName={site.domain}
                     busy={busy}
@@ -348,6 +349,7 @@ function ReviewRow({
   item,
   thumb,
   faviconUrl,
+  fills,
   linkUrl,
   fallbackName,
   checked,
@@ -375,7 +377,7 @@ function ReviewRow({
       </div>
       <div className="review-info">
         <span className="review-name">
-          <Favicon url={linkUrl} faviconUrl={faviconUrl} alt={item.name || fallbackName} />
+          <Favicon url={linkUrl} faviconUrl={faviconUrl} fills={fills} alt={item.name || fallbackName} />
           {item.name || fallbackName}
         </span>
         <p className="review-summary">

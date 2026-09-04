@@ -8,7 +8,7 @@ import { useState } from "react";
 // service: no external dependency, no rate limit, and the library's contents
 // don't get sent anywhere. Two chances, then it gives up and renders nothing
 // — a missing icon should leave no gap.
-export default function Favicon({ url, faviconUrl, alt }) {
+export default function Favicon({ url, faviconUrl, fills = true, alt }) {
   const declared = faviconUrl || null;
   const guessed = (() => {
     try {
@@ -26,8 +26,12 @@ export default function Favicon({ url, faviconUrl, alt }) {
   // the site's own file has. Otherwise a transparent PNG floats loose against
   // a white card while a square favicon reads as a block, and a row of them
   // has no common baseline.
+  //
+  // `fills` is measured when the icon is stored: a brand tile fills the circle
+  // edge to edge, a mark on transparency is inset so the circle doesn't crop
+  // it. There's no rendering rule that suits both.
   return (
-    <span className="favicon-badge">
+    <span className={`favicon-badge${fills ? "" : " favicon-badge-mark"}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className="favicon"

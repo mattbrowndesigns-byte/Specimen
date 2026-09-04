@@ -43,18 +43,6 @@ export default function CollectionsPage() {
     await load();
   }
 
-  async function remove(collection) {
-    if (!confirm(`Delete “${collection.name}”? The sites and components in it are not deleted.`)) return;
-    setError(null);
-    const res = await fetch(`/api/collections/${collection.id}`, { method: "DELETE" });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error || "Couldn't delete that collection");
-      return;
-    }
-    await load();
-  }
-
   return (
     <>
       <UtilityBar onError={setError} />
@@ -96,12 +84,9 @@ export default function CollectionsPage() {
                 <span className="tag-facet">
                   {collection.item_count} {collection.item_count === 1 ? "item" : "items"}
                 </span>
-                <div className="tag-actions">
-                  <a className="promote-btn" href={`/collections/${collection.id}`}>
-                    Open
-                  </a>
-                  <button onClick={() => remove(collection)}>Delete</button>
-                </div>
+                <a className="promote-btn" href={`/collections/${collection.id}`}>
+                  Open collection →
+                </a>
               </div>
             ))}
           </div>

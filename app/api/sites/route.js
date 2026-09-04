@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { dispatchCapture } from "@/lib/github";
 import { fetchPageMeta } from "@/lib/pageMeta";
+import { iconFillsFrame } from "@/lib/iconShape";
 import { guessSiteName } from "@/lib/ai";
 import { HARDCODED_USER_ID } from "@/lib/constants";
 import { fetchSitesList } from "@/lib/siteQueries";
@@ -52,6 +53,7 @@ export async function POST(request) {
       domain,
       name: name || domain,
       favicon_url: faviconUrl || null,
+      favicon_fills: faviconUrl ? await iconFillsFrame(faviconUrl) : true,
     })
     .select()
     .single();

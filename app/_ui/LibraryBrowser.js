@@ -217,6 +217,7 @@ export default function LibraryBrowser({
                   <Favicon
                     url={adapter.externalUrl(item)}
                     faviconUrl={adapter.faviconUrl?.(item)}
+                    fills={item.favicon_fills !== false}
                     alt={adapter.name(item)}
                   />
                   <a className="name" href={adapter.href(item)} title={item.summary || undefined}>
@@ -256,6 +257,7 @@ export default function LibraryBrowser({
                   <Favicon
                     url={adapter.externalUrl(item)}
                     faviconUrl={adapter.faviconUrl?.(item)}
+                    fills={item.favicon_fills !== false}
                     alt={adapter.name(item)}
                   />
                   <a className="row-name" href={adapter.href(item)}>
@@ -293,6 +295,7 @@ export default function LibraryBrowser({
               <Favicon
                 url={adapter.externalUrl(item)}
                 faviconUrl={adapter.faviconUrl?.(item)}
+                fills={item.favicon_fills !== false}
                 alt={adapter.name(item)}
               />
               <a className="row-name" href={adapter.href(item)}>

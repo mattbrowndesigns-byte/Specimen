@@ -35,6 +35,7 @@ export default function SiteDetailPage({ params }) {
   const [recapturing, setRecapturing] = useState(false);
   const [error, setError] = useState(null);
   const [promoting, setPromoting] = useState(null);
+  const [rediscovering, setRediscovering] = useState(false);
   const [promoted, setPromoted] = useState({});
   const [selectedRun, setSelectedRun] = useState(null);
   const [deletingCapture, setDeletingCapture] = useState(false);
@@ -288,6 +289,29 @@ export default function SiteDetailPage({ params }) {
     );
   }
 
+  // Link extraction has improved since some of these sites were saved, and the
+  // page rows were written once, at save. This re-reads the homepage.
+  async function rediscoverPages() {
+    setRediscovering(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/sites/${id}/rediscover`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Couldn't refresh those pages");
+        return;
+      }
+      if (data.enrichmentError) {
+        setError("Pages refreshed, but the AI pass didn't finish — they're all showing for now.");
+      }
+      await load();
+    } catch {
+      setError("Couldn't reach the server");
+    } finally {
+      setRediscovering(false);
+    }
+  }
+
   const pageTypeLabel = (slug) => {
     if (!slug) return "Unclassified";
     const match = allTags.find((t) => t.facet === "page_type" && t.slug === slug);
@@ -314,7 +338,12 @@ export default function SiteDetailPage({ params }) {
         {error && <p className="error">{error}</p>}
 
         <div className="detail-header">
-          <Favicon url={site.url} faviconUrl={site.favicon_url} alt={site.name} />
+          <Favicon
+            url={site.url}
+            faviconUrl={site.favicon_url}
+            fills={site.favicon_fills !== false}
+            alt={site.name}
+          />
           <input
             className="name-input"
             value={nameDraft}
@@ -522,6 +551,8 @@ export default function SiteDetailPage({ params }) {
               promoted={promoted}
               promoting={promoting}
               onPromote={promotePage}
+              onRefresh={rediscoverPages}
+              refreshing={rediscovering}
             />
           </aside>
         </div>

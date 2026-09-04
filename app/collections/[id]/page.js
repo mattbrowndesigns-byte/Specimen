@@ -2,12 +2,13 @@
 import { useCallback, useEffect, useState, use as usePromise } from "react";
 import UtilityBar from "../../_ui/UtilityBar";
 import RecordGrid from "../../_ui/RecordGrid";
+import ModalShell from "../../_ui/ModalShell";
 
 export default function CollectionDetailPage({ params }) {
   const { id } = usePromise(params);
   const [collection, setCollection] = useState(null);
   const [entries, setEntries] = useState(null);
-  const [nameDraft, setNameDraft] = useState("");
+  const [editing, setEditing] = useState(false);
   const [error, setError] = useState(null);
 
   // The membership rows are ids only, so the records come from the two library
@@ -26,7 +27,6 @@ export default function CollectionDetailPage({ params }) {
     }
     const { collection: found, items } = await collectionRes.json();
     setCollection(found);
-    setNameDraft(found.name);
 
     const sites = new Map();
     const components = new Map();
@@ -53,29 +53,28 @@ export default function CollectionDetailPage({ params }) {
     load();
   }, [load]);
 
-  async function rename() {
-    if (!nameDraft.trim() || nameDraft === collection?.name) return;
-    setError(null);
-    const res = await fetch(`/api/collections/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: nameDraft.trim() }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error || "Couldn't rename that collection");
-      setNameDraft(collection.name);
+  async function remove() {
+    if (
+      !confirm(
+        `Delete “${collection?.name}”? The sites and components in it stay in your library.`
+      )
+    ) {
       return;
     }
-    await load();
+    const res = await fetch(`/api/collections/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Couldn't delete that collection");
+      return;
+    }
+    window.location.href = "/collections";
   }
 
-  async function remove(kind, targetId) {
+  async function removeItem(kind, targetId) {
     setError(null);
-    const res = await fetch(
-      `/api/collections/${id}/items?targetType=${kind}&targetId=${targetId}`,
-      { method: "DELETE" }
-    );
+    const res = await fetch(`/api/collections/${id}/items?targetType=${kind}&targetId=${targetId}`, {
+      method: "DELETE",
+    });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error || "Couldn't remove that item");
@@ -89,18 +88,21 @@ export default function CollectionDetailPage({ params }) {
       <UtilityBar onError={setError} />
 
       <main className="page page-wide">
+        <div className="top-nav">
+          <a href="/collections">← All collections</a>
+        </div>
+
+        {/* Renaming and deleting live here rather than in the archive: the
+            archive is for finding a collection, this page is the collection. */}
         <div className="detail-header">
-          <input
-            className="name-input"
-            value={nameDraft}
-            onChange={(e) => setNameDraft(e.target.value)}
-            onBlur={rename}
-            aria-label="Collection name"
-          />
+          <h1 className="collection-title">{collection?.name || "…"}</h1>
           <div className="detail-actions">
-            <a className="promote-btn" href="/collections">
-              All collections
-            </a>
+            <button onClick={() => setEditing(true)} disabled={!collection}>
+              Edit collection
+            </button>
+            <button onClick={remove} disabled={!collection}>
+              Delete collection
+            </button>
           </div>
         </div>
 
@@ -118,12 +120,80 @@ export default function CollectionDetailPage({ params }) {
             <RecordGrid
               entries={entries}
               emptyMessage="Nothing in this collection yet — use the bookmark button on any card."
-              onRemove={remove}
+              onRemove={removeItem}
               removeLabel="Remove from collection"
             />
           </>
         )}
+
+        {editing && collection && (
+          <EditCollectionModal
+            collection={collection}
+            onClose={() => setEditing(false)}
+            onSaved={async () => {
+              setEditing(false);
+              await load();
+            }}
+            onError={setError}
+          />
+        )}
       </main>
     </>
+  );
+}
+
+function EditCollectionModal({ collection, onClose, onSaved, onError }) {
+  const [name, setName] = useState(collection.name);
+  const [busy, setBusy] = useState(false);
+  const [localError, setLocalError] = useState(null);
+
+  async function save(e) {
+    e.preventDefault();
+    if (!name.trim() || busy) return;
+    setBusy(true);
+    setLocalError(null);
+    const res = await fetch(`/api/collections/${collection.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name.trim() }),
+    });
+    setBusy(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setLocalError(data.error || "Couldn't rename that collection");
+      return;
+    }
+    onError?.(null);
+    onSaved();
+  }
+
+  return (
+    <ModalShell label="Edit collection" onClose={onClose}>
+      <form onSubmit={save}>
+        <div className="modal-head">
+          <h2>Edit collection</h2>
+          <button className="modal-close" type="button" onClick={onClose} aria-label="Close">
+            ×
+          </button>
+        </div>
+
+        <div className="modal-body">
+          {localError && <p className="error">{localError}</p>}
+          <label className="field">
+            <span>Collection name</span>
+            <input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+          </label>
+        </div>
+
+        <div className="modal-foot">
+          <button type="button" onClick={onClose} disabled={busy}>
+            Cancel
+          </button>
+          <button type="submit" className="modal-apply" disabled={busy || !name.trim()}>
+            {busy ? "Saving…" : "Update"}
+          </button>
+        </div>
+      </form>
+    </ModalShell>
   );
 }

@@ -4,6 +4,7 @@ import CropTool from "../../_ui/CropTool";
 import TagCombobox from "../../_ui/TagCombobox";
 import UtilityBar from "../../_ui/UtilityBar";
 import RelatedSection from "../../_ui/RelatedSection";
+import SaveActions from "../../_ui/SaveActions";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -197,6 +198,12 @@ export default function ComponentDetailPage({ params }) {
             onBlur={() => nameDraft !== component.name && saveField("name", nameDraft)}
           />
           <div className="detail-actions">
+            <SaveActions
+              kind="component"
+              id={component.id}
+              name={component.name || "Untitled component"}
+              isFavorite={component.is_favorite}
+            />
             {component.needs_review && <button onClick={markReviewed}>Mark reviewed</button>}
             <a className="visit-btn" href={component.source_url} target="_blank" rel="noopener noreferrer">
               Visit source ↗

@@ -306,7 +306,9 @@ h1 {
   font-size: 18px;
 }
 
-.theme-toggle {
+/* Every square icon control in the app: bar buttons, the menu trigger, the
+   heart and bookmark on a card. */
+.icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -321,10 +323,15 @@ h1 {
   transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
-.theme-toggle:hover {
+.icon-btn:hover {
   background: var(--surface-hover);
   border-color: var(--border);
   color: var(--text);
+}
+
+.icon-btn-on,
+.icon-btn-on:hover {
+  color: var(--accent);
 }
 
 /* Selector carries the type too, or `.utility-bar a` below wins on
@@ -413,12 +420,11 @@ h1 {
   color: var(--text-secondary);
 }
 
-/* Full width by gaining columns rather than by stretching one row: a row
-   holding the word "Agency" plus three buttons doesn't improve at 1400px, it
-   just grows a gap in the middle. */
+/* One column, full width. The multi-column version used the space better on
+   paper and read as chaos in practice -- too many identical rows to scan. */
 .tag-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(430px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
@@ -488,14 +494,6 @@ h1 {
   display: flex;
   align-items: center;
   gap: 16px;
-}
-
-.review-badge {
-  background: var(--warn-bg);
-  color: var(--warn-text);
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-weight: 500;
 }
 
 .search-input {
@@ -1981,14 +1979,6 @@ a.card {
   background: var(--surface-hover);
 }
 
-.review-badge {
-  transition: background 0.12s ease;
-}
-
-.review-badge:hover {
-  background: var(--warn-bg-hover);
-}
-
 .tag-actions button,
 .detail-actions button,
 .detail-section button,
@@ -2166,4 +2156,296 @@ a.card {
   padding: 0 12px 12px;
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* Notification bell */
+
+.bell-wrap,
+.more-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+/* The dot, not a number: the count is in the popover and the title attribute.
+   Sitting on the glyph's top-right corner, so it reads as a badge. */
+.bell-btn-unread::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+}
+
+.bell-pop,
+.more-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  min-width: 260px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+}
+
+.bell-pop {
+  width: 300px;
+}
+
+.bell-pop-head {
+  padding: 6px 10px 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.bell-item {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.bell-item:hover {
+  background: var(--surface-hover);
+}
+
+.bell-item-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bell-item-meta,
+.bell-more {
+  display: block;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.bell-more {
+  margin: 4px 0 0;
+  padding: 0 10px;
+}
+
+.bell-pop-foot {
+  display: block;
+  margin-top: 4px;
+  padding: 8px 10px 4px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.bell-pop-foot:hover {
+  color: var(--text);
+}
+
+.bell-pop .empty-small,
+.more-pop .empty-small {
+  margin: 4px 10px 8px;
+}
+
+/* Overflow menu */
+
+.more-item {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.more-item:hover {
+  background: var(--surface-hover);
+}
+
+.more-item-quiet {
+  color: var(--text-muted);
+}
+
+.more-divider {
+  height: 1px;
+  margin: 5px 6px;
+  background: var(--border-soft);
+}
+
+/* Favorite + collection buttons */
+
+.save-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Overlaid on a card's thumbnail and revealed on hover -- except when the
+   record is already a favorite, which stays visible so the grid shows what's
+   starred without being hovered. */
+.card-media {
+  position: relative;
+}
+
+.card-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px;
+  border-radius: 10px;
+  background: rgba(var(--surface-rgb), 0.92);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.card:hover .card-actions,
+.card-actions:focus-within,
+.card-actions[data-favorite="true"] {
+  opacity: 1;
+}
+
+.card-actions .icon-btn {
+  width: 28px;
+  height: 28px;
+}
+
+.card-remove {
+  margin: 0 12px 12px;
+}
+
+/* Collections */
+
+.collection-modal-target {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.collection-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.collection-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text);
+}
+
+.collection-option:hover {
+  background: var(--surface-hover);
+}
+
+.collection-option-in {
+  border-color: var(--border-strong);
+}
+
+.collection-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  color: var(--invert-text);
+}
+
+.collection-option-in .collection-check {
+  background: var(--invert-bg);
+  border-color: var(--invert-bg);
+}
+
+.collection-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.collection-option-text strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.collection-option-text small {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.collection-new {
+  max-width: 460px;
+}
+
+.modal-foot button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Sidebar discovered pages */
+
+.section-count {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.page-list-compact li {
+  padding: 6px 0;
+}
+
+.page-list-compact a {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A button that reads as a link: for "show all", "remove", and similar
+   in-flow actions that shouldn't carry a button's weight. */
+.link-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  color: var(--text);
+}
+
+.placeholder-page {
+  max-width: 640px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-body);
 }

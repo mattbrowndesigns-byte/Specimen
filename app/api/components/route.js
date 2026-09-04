@@ -9,7 +9,9 @@ export async function GET(request) {
   const supabase = supabaseAdmin();
   let query = supabase
     .from("component")
-    .select("id, site_id, source_url, name, summary, notes, image_url, crop_rect, created_at, needs_review")
+    .select(
+      "id, site_id, source_url, name, summary, notes, image_url, crop_rect, created_at, needs_review, is_favorite"
+    )
     .order("created_at", { ascending: false });
 
   if (siteId) query = query.eq("site_id", siteId);

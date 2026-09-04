@@ -109,9 +109,15 @@ auth exists blocks every read and write, since there are no policies and no
 logged-in user. The Supabase SQL editor warns on every migration — choose
 "Run without RLS". Turn it on in the same pass as auth, and test each policy.
 
-**`taggable` is polymorphic and `target_id` has no foreign key**, so deleting a
-site or component does *not* cascade to its tag links. Delete them explicitly
-(see the site DELETE route). Captures and discovered pages *do* cascade.
+**`taggable` and `collection_item` are polymorphic and `target_id` has no
+foreign key**, so deleting a site or component does *not* cascade to either.
+Delete both explicitly (see the site DELETE route). Captures and discovered
+pages *do* cascade, and so do a collection's items when the collection itself
+goes — that side has a real FK.
+
+**Favoriting must not clear `needs_review`.** Both PATCH routes clear the flag
+on any manual edit, but `is_favorite` is excluded: starring something you
+haven't read yet shouldn't quietly empty the review queue.
 
 **The AI's tag vocabulary is read live from the database** (approved tags only),
 never hardcoded. So renaming, merging, or deleting a tag in the tag-management

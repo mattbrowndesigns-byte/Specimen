@@ -9,7 +9,7 @@ export async function GET(request, { params }) {
 
   const { data: site, error } = await supabase
     .from("site")
-    .select("id, url, domain, name, summary, notes, saved_at, needs_review")
+    .select("id, url, domain, name, summary, notes, saved_at, needs_review, is_favorite")
     .eq("id", id)
     .single();
 
@@ -40,14 +40,18 @@ export async function PATCH(request, { params }) {
   if (typeof body.summary === "string") update.summary = body.summary;
   if (typeof body.notes === "string") update.notes = body.notes;
   if (typeof body.needs_review === "boolean") update.needs_review = body.needs_review;
+  if (typeof body.is_favorite === "boolean") update.is_favorite = body.is_favorite;
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }
 
-  // Any manual edit counts as having reviewed the record, unless the
-  // caller explicitly set needs_review itself (e.g. the queue's "mark reviewed").
-  if (!("needs_review" in update)) {
+  // Any manual edit counts as having reviewed the record, unless the caller
+  // explicitly set needs_review itself (e.g. the queue's "mark reviewed").
+  // Favoriting is deliberately not an edit: starring something you haven't
+  // read yet shouldn't quietly empty the review queue.
+  const isReviewingEdit = Object.keys(update).some((k) => k !== "is_favorite");
+  if (!("needs_review" in update) && isReviewingEdit) {
     update.needs_review = false;
   }
   update.updated_at = new Date().toISOString();
@@ -61,9 +65,10 @@ export async function PATCH(request, { params }) {
   return NextResponse.json({ site: data });
 }
 
-// Captures and discovered pages cascade via foreign keys. Tag links don't --
-// taggable is polymorphic, so it has no FK to cascade through. Components keep
-// existing with site_id set to null, since a crop is worth keeping on its own.
+// Captures and discovered pages cascade via foreign keys. Tag links and
+// collection rows don't -- both are polymorphic, so neither has an FK to
+// cascade through. Components keep existing with site_id set to null, since a
+// crop is worth keeping on its own.
 export async function DELETE(request, { params }) {
   const { id } = await params;
   const supabase = supabaseAdmin();
@@ -79,6 +84,7 @@ export async function DELETE(request, { params }) {
   }
 
   await supabase.from("taggable").delete().eq("target_type", "site").eq("target_id", id);
+  await supabase.from("collection_item").delete().eq("target_type", "site").eq("target_id", id);
 
   const { error } = await supabase.from("site").delete().eq("id", id);
   if (error) {

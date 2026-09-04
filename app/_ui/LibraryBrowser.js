@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LayoutGrid, List, AlignJustify, SlidersHorizontal } from "lucide-react";
 import FilterModal from "./FilterModal";
+import SaveActions from "./SaveActions";
 
 const VIEWS = [
   { id: "cards", label: "Cards", Icon: LayoutGrid },
@@ -193,14 +194,23 @@ export default function LibraryBrowser({
         <div className="grid">
           {visible.map((item) => (
             <div className="card" key={item.id}>
-              <a className={`thumb${adapter.naturalThumb ? " thumb-natural" : ""}`} href={adapter.href(item)}>
-                {adapter.thumb(item) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={adapter.thumb(item)} alt={adapter.name(item)} />
-                ) : (
-                  <div className="placeholder">{adapter.pendingLabel}</div>
-                )}
-              </a>
+              <div className="card-media">
+                <a className={`thumb${adapter.naturalThumb ? " thumb-natural" : ""}`} href={adapter.href(item)}>
+                  {adapter.thumb(item) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={adapter.thumb(item)} alt={adapter.name(item)} />
+                  ) : (
+                    <div className="placeholder">{adapter.pendingLabel}</div>
+                  )}
+                </a>
+                <SaveActions
+                  className="card-actions"
+                  kind={adapter.kind}
+                  id={item.id}
+                  name={adapter.name(item)}
+                  isFavorite={item.is_favorite}
+                />
+              </div>
               <div className="card-footer">
                 <a className="name" href={adapter.href(item)} title={item.summary || undefined}>
                   {adapter.name(item)}
@@ -241,6 +251,12 @@ export default function LibraryBrowser({
                 {item.summary && <p className="row-summary">{item.summary}</p>}
                 {renderTags(item, CARD_TAG_LIMIT)}
               </div>
+              <SaveActions
+                kind={adapter.kind}
+                id={item.id}
+                name={adapter.name(item)}
+                isFavorite={item.is_favorite}
+              />
               <a
                 className="visit"
                 href={adapter.externalUrl(item)}

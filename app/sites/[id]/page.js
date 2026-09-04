@@ -3,6 +3,8 @@ import { useEffect, useRef, useState, use as usePromise } from "react";
 import TagCombobox from "../../_ui/TagCombobox";
 import UtilityBar from "../../_ui/UtilityBar";
 import RelatedSection from "../../_ui/RelatedSection";
+import SaveActions from "../../_ui/SaveActions";
+import DiscoveredPages from "../../_ui/DiscoveredPages";
 import { archiveUrl, captureTimeline, formatCaptureDate } from "@/lib/captures";
 
 const FACET_LABELS = {
@@ -326,6 +328,7 @@ export default function SiteDetailPage({ params }) {
             onBlur={() => nameDraft !== site.name && saveField("name", nameDraft)}
           />
           <div className="detail-actions">
+            <SaveActions kind="site" id={site.id} name={site.name || site.domain} isFavorite={site.is_favorite} />
             {site.needs_review && <button onClick={markReviewed}>Mark reviewed</button>}
             <a className="visit-btn" href={site.url} target="_blank" rel="noopener noreferrer">
               Visit site ↗
@@ -518,42 +521,17 @@ export default function SiteDetailPage({ params }) {
                 {savingField === "notes" ? "Saving…" : "Save notes"}
               </button>
             </section>
+
+            <DiscoveredPages
+              groups={pageGroups}
+              pageTypeLabel={pageTypeLabel}
+              promoted={promoted}
+              promoting={promoting}
+              onPromote={promotePage}
+            />
           </aside>
         </div>
 
-
-        {pageGroups.length > 0 && (
-          <section className="detail-section">
-            <h2>Discovered pages</h2>
-            {pageGroups.map(([typeSlug, pages]) => (
-              <div className="page-group" key={typeSlug || "none"}>
-                <h3>{pageTypeLabel(typeSlug)}</h3>
-                <ul className="page-list">
-                  {pages.map((page) => (
-                    <li key={page.id}>
-                      <a href={page.url} target="_blank" rel="noopener noreferrer">
-                        {page.label || page.url}
-                      </a>
-                      {promoted[page.id] ? (
-                        <a className="promote-link" href={`/sites/${promoted[page.id]}`}>
-                          View full capture →
-                        </a>
-                      ) : (
-                        <button
-                          className="promote-btn"
-                          disabled={promoting === page.id}
-                          onClick={() => promotePage(page)}
-                        >
-                          {promoting === page.id ? "Capturing…" : "Promote to full capture"}
-                        </button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </section>
-        )}
 
         {components.length > 0 && (
           <section className="detail-section">

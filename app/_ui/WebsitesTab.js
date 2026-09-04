@@ -4,6 +4,7 @@ import { latestCapture } from "@/lib/captures";
 import LibraryBrowser from "./LibraryBrowser";
 
 const ADAPTER = {
+  kind: "site",
   href: (site) => `/sites/${site.id}`,
   externalUrl: (site) => site.url,
   name: (site) => site.name || site.domain,

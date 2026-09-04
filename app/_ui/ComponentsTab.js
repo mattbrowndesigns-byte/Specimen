@@ -4,6 +4,7 @@ import CropTool from "./CropTool";
 import LibraryBrowser from "./LibraryBrowser";
 
 const ADAPTER = {
+  kind: "component",
   href: (c) => `/components/${c.id}`,
   externalUrl: (c) => c.source_url,
   name: (c) => c.name || "Untitled component",

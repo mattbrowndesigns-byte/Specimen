@@ -4,6 +4,7 @@ import { Moon, Sun } from "lucide-react";
 import AddMenu from "./AddMenu";
 import MoreMenu from "./MoreMenu";
 import NotificationBell from "./NotificationBell";
+import BrandTagline from "./BrandTagline";
 import { addItem, jobHandoffUrl } from "@/lib/addItem";
 import { THEME_KEY } from "@/lib/theme";
 
@@ -54,7 +55,7 @@ export default function UtilityBar({ onAdd, onError }) {
           </a>
           {/* Outside the link: the wordmark is the target, the tagline is
               description, and a hover that greyed both would read as one word. */}
-          <span className="brand-tagline">Your visual inspiration library</span>
+          <BrandTagline />
         </div>
         <div className="nav-links">
           <NotificationBell />

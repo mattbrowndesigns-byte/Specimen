@@ -309,8 +309,8 @@ h1 {
 /* Brand lockup: wordmark, then the tagline reading off its baseline. */
 .brand {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -318,27 +318,87 @@ h1 {
    (0,1,1) and the wordmark only ever appears here, so it doesn't need the
    context-free weight the utility classes carry. Lalezar ships weight 400
    only -- it's a display face and already heavy, so don't ask for bold and
-   get a synthesised one. */
+   get a synthesised one.
+
+   44px sizes the *painted* glyphs to 29.6px -- 87% of the 34px Add button,
+   inside the 85-90% target. Lalezar's cap height is 67.3% of its font size,
+   so the ratio isn't guessable from the font-size alone.
+
+   The negative margins trim the line box down to the glyphs. Lalezar declares
+   a deep descender (26/44 of an em) that "Kivli" doesn't use, so an untrimmed
+   box would be 44px tall: it would push the bar 10px taller and hang the
+   wordmark above the optical centre of the row. Values are in em so they hold
+   if the size changes. */
 .utility-bar .wordmark {
   font-family: var(--font-wordmark), "Arial Black", "Helvetica Neue", sans-serif;
-  font-size: 25px;
+  font-size: 44px;
   font-weight: 400;
   line-height: 1;
   letter-spacing: 0.005em;
+  margin-top: -0.021em;
+  margin-bottom: -0.307em;
 }
 
 /* Medium grey that still clears WCAG AA on both themes: 5.30:1 on the light
    bar, 5.94:1 on the dark one. --text-faint would look right and fail at
    2.80:1, so it isn't used for real copy. */
 .brand-tagline {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-muted);
   white-space: nowrap;
 }
 
-/* Below this the tagline crowds the actions; the wordmark carries the brand
-   on its own. */
-@media (max-width: 780px) {
+.brand-tagline-phrase {
+  display: inline-block;
+  animation-name: tagline-cycle;
+  animation-timing-function: ease;
+  animation-fill-mode: both;
+}
+
+/* Rises in, holds, rises out. The hold is most of the timeline, so the
+   percentages are small at each end. */
+@keyframes tagline-cycle {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  9% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  91% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* Still crossfades, so both phrases are still readable, but without the
+   movement that's the actual problem for motion sensitivity. */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes tagline-cycle {
+    0% {
+      opacity: 0;
+      transform: none;
+    }
+    9%,
+    91% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+      transform: none;
+    }
+  }
+}
+
+/* Below this the longer phrase crowds the actions; the wordmark carries the
+   brand on its own. */
+@media (max-width: 900px) {
   .brand-tagline {
     display: none;
   }
@@ -413,10 +473,6 @@ h1 {
     padding: 10px 16px;
     gap: 10px;
     flex-wrap: wrap;
-  }
-
-  .utility-bar h1 {
-    font-size: 16px;
   }
 
   /* Title on its own line, actions right-aligned below it: at 375px the three

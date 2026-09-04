@@ -9,7 +9,7 @@ export async function GET(request, { params }) {
 
   const { data: site, error } = await supabase
     .from("site")
-    .select("id, url, domain, name, summary, notes, saved_at, needs_review, is_favorite")
+    .select("id, url, domain, name, summary, notes, saved_at, needs_review, is_favorite, favicon_url")
     .eq("id", id)
     .single();
 
@@ -21,7 +21,7 @@ export async function GET(request, { params }) {
 
   const { data: pages, error: pagesError } = await supabase
     .from("page")
-    .select("id, url, label, page_type")
+    .select("id, url, label, page_type, is_representative")
     .eq("site_id", id)
     .order("label", { ascending: true });
   if (pagesError) {

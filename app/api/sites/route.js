@@ -37,7 +37,7 @@ export async function POST(request) {
   }
 
   const domain = parsed.hostname.replace(/^www\./, "");
-  let { name, textSnippet, links } = await fetchPageMeta(parsed.toString());
+  let { name, textSnippet, links, faviconUrl } = await fetchPageMeta(parsed.toString());
 
   if (!name) {
     name = await guessSiteName({ domain, textSnippet });
@@ -51,6 +51,7 @@ export async function POST(request) {
       url: parsed.toString(),
       domain,
       name: name || domain,
+      favicon_url: faviconUrl || null,
     })
     .select()
     .single();

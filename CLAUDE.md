@@ -127,6 +127,25 @@ goes — that side has a real FK.
 on any manual edit, but `is_favorite` is excluded: starring something you
 haven't read yet shouldn't quietly empty the review queue.
 
+**Utility classes are written doubled** — `.icon-btn.icon-btn`,
+`.link-btn.link-btn` — to reach (0,2,0) and beat container rules like
+`.detail-actions button` or `.detail-section button`, which are (0,1,1). Those
+container rules style bare `button` elements, so without the doubling an icon
+button inherits 14px of horizontal padding out of a fixed 32px border-box and
+its icon collapses to a 4px sliver. Don't "simplify" them back to one class.
+
+**Discovered pages are curated, not exhaustive.** Enrichment asks Gemini to
+*select* the pages that stand for a site's distinct templates (shop archive,
+one product detail, pricing, FAQ) rather than classify all thirty nav links,
+and flags those with `page.is_representative`. Nothing is deleted — the rest
+stay behind "Show all". No pages flagged means "show everything", so a site
+whose enrichment hasn't run doesn't look empty.
+
+**Favicons come from the site's own domain, never a favicon service.** The
+declared `<link rel="icon">` is stored at save time and `/favicon.ico` is the
+fallback; both steps are load-bearing (Rippling 404s on `.ico`, Apple declares
+no icon). `/api/sites/backfill-favicons` fills the column for older rows.
+
 **The AI's tag vocabulary is read live from the database** (approved tags only),
 never hardcoded. So renaming, merging, or deleting a tag in the tag-management
 screen immediately changes what the AI is allowed to pick next time.

@@ -1,6 +1,7 @@
 "use client";
 import { latestCapture } from "@/lib/captures";
 import SaveActions from "./SaveActions";
+import Favicon from "./Favicon";
 
 // A plain grid of mixed sites and components, for the pages that show a
 // hand-picked set rather than a browsable library: favorites and one
@@ -38,9 +39,16 @@ export default function RecordGrid({ entries, emptyMessage, onRemove, removeLabe
               />
             </div>
             <div className="card-footer">
-              <a className="name" href={href} title={item.summary || undefined}>
-                {name}
-              </a>
+              <span className="card-title">
+                <Favicon
+                  url={kind === "site" ? item.url : item.source_url}
+                  faviconUrl={item.favicon_url}
+                  alt={name}
+                />
+                <a className="name" href={href} title={item.summary || undefined}>
+                  {name}
+                </a>
+              </span>
               <span className="related-kind">{kind}</span>
             </div>
             {onRemove && (

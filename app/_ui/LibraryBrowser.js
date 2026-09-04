@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { LayoutGrid, List, AlignJustify, SlidersHorizontal } from "lucide-react";
 import FilterModal from "./FilterModal";
 import SaveActions from "./SaveActions";
+import Favicon from "./Favicon";
 
 const VIEWS = [
   { id: "cards", label: "Cards", Icon: LayoutGrid },
@@ -212,9 +213,16 @@ export default function LibraryBrowser({
                 />
               </div>
               <div className="card-footer">
-                <a className="name" href={adapter.href(item)} title={item.summary || undefined}>
-                  {adapter.name(item)}
-                </a>
+                <span className="card-title">
+                  <Favicon
+                    url={adapter.externalUrl(item)}
+                    faviconUrl={adapter.faviconUrl?.(item)}
+                    alt={adapter.name(item)}
+                  />
+                  <a className="name" href={adapter.href(item)} title={item.summary || undefined}>
+                    {adapter.name(item)}
+                  </a>
+                </span>
                 <a
                   className="visit"
                   href={adapter.externalUrl(item)}
@@ -244,10 +252,17 @@ export default function LibraryBrowser({
                 )}
               </a>
               <div className="row-body">
-                <a className="row-name" href={adapter.href(item)}>
-                  {adapter.name(item)}
-                </a>
-                <span className="row-domain">{adapter.meta(item)}</span>
+                <span className="row-title">
+                  <Favicon
+                    url={adapter.externalUrl(item)}
+                    faviconUrl={adapter.faviconUrl?.(item)}
+                    alt={adapter.name(item)}
+                  />
+                  <a className="row-name" href={adapter.href(item)}>
+                    {adapter.name(item)}
+                  </a>
+                  <span className="row-domain">{adapter.meta(item)}</span>
+                </span>
                 {item.summary && <p className="row-summary">{item.summary}</p>}
                 {renderTags(item, CARD_TAG_LIMIT)}
               </div>
@@ -275,6 +290,11 @@ export default function LibraryBrowser({
         <div className="headline-list">
           {visible.map((item) => (
             <div className="headline-item" key={item.id}>
+              <Favicon
+                url={adapter.externalUrl(item)}
+                faviconUrl={adapter.faviconUrl?.(item)}
+                alt={adapter.name(item)}
+              />
               <a className="row-name" href={adapter.href(item)}>
                 {adapter.name(item)}
               </a>

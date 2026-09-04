@@ -10,6 +10,7 @@ const ADAPTER = {
   name: (site) => site.name || site.domain,
   meta: (site) => site.domain,
   thumb: (site) => latestCapture(site.capture, "desktop")?.thumb_url || null,
+  faviconUrl: (site) => site.favicon_url || null,
   pendingLabel: "Capturing…",
 };
 

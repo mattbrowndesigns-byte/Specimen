@@ -16,6 +16,8 @@ const ADAPTER = {
     }
   },
   thumb: (c) => c.image_url || null,
+  // Components have no stored icon; Favicon derives one from the source URL.
+  faviconUrl: () => null,
   pendingLabel: "Processing…",
   naturalThumb: true,
 };

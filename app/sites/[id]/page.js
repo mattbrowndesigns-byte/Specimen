@@ -4,6 +4,7 @@ import TagCombobox from "../../_ui/TagCombobox";
 import UtilityBar from "../../_ui/UtilityBar";
 import RelatedSection from "../../_ui/RelatedSection";
 import SaveActions from "../../_ui/SaveActions";
+import Favicon from "../../_ui/Favicon";
 import DiscoveredPages from "../../_ui/DiscoveredPages";
 import { archiveUrl, captureTimeline, formatCaptureDate } from "@/lib/captures";
 
@@ -293,14 +294,6 @@ export default function SiteDetailPage({ params }) {
     return match?.label || slug;
   };
 
-  const pagesByType = new Map();
-  for (const page of site.pages || []) {
-    const key = page.page_type || "";
-    if (!pagesByType.has(key)) pagesByType.set(key, []);
-    pagesByType.get(key).push(page);
-  }
-  const pageGroups = [...pagesByType.entries()].sort((a, b) => pageTypeLabel(a[0]).localeCompare(pageTypeLabel(b[0])));
-
   const timeline = captureTimeline(site.capture);
   const activeRun = timeline.find((r) => r.capturedAt === selectedRun) || timeline[0];
   const capture = activeRun?.byViewport[viewport] || null;
@@ -321,6 +314,7 @@ export default function SiteDetailPage({ params }) {
         {error && <p className="error">{error}</p>}
 
         <div className="detail-header">
+          <Favicon url={site.url} faviconUrl={site.favicon_url} alt={site.name} />
           <input
             className="name-input"
             value={nameDraft}
@@ -523,7 +517,7 @@ export default function SiteDetailPage({ params }) {
             </section>
 
             <DiscoveredPages
-              groups={pageGroups}
+              pages={site.pages || []}
               pageTypeLabel={pageTypeLabel}
               promoted={promoted}
               promoting={promoting}

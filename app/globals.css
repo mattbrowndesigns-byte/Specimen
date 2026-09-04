@@ -307,8 +307,16 @@ h1 {
 }
 
 /* Every square icon control in the app: bar buttons, the menu trigger, the
-   heart and bookmark on a card. */
-.icon-btn {
+   heart and bookmark on a card.
+   
+   The doubled class name is deliberate. Container rules like
+   `.detail-actions button` are (0,1,1) and would otherwise beat a plain
+   `.icon-btn` at (0,1,0) -- which is what squashed the heart and bookmark on
+   detail pages into 4px-wide boxes, since 14px of inherited horizontal
+   padding came out of a fixed 32px border-box. Doubling makes this (0,2,0).
+   `.card-actions .icon-btn` further down is also (0,2,0) and comes later, so
+   its smaller size still wins on cards. */
+.icon-btn.icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -323,14 +331,14 @@ h1 {
   transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
-.icon-btn:hover {
+.icon-btn.icon-btn:hover {
   background: var(--surface-hover);
   border-color: var(--border);
   color: var(--text);
 }
 
-.icon-btn-on,
-.icon-btn-on:hover {
+.icon-btn-on.icon-btn-on,
+.icon-btn-on.icon-btn-on:hover {
   color: var(--accent);
 }
 
@@ -2427,8 +2435,10 @@ a.card {
 }
 
 /* A button that reads as a link: for "show all", "remove", and similar
-   in-flow actions that shouldn't carry a button's weight. */
-.link-btn {
+   in-flow actions that shouldn't carry a button's weight. Doubled for the same
+   specificity reason as .icon-btn -- `.detail-section button` was giving this
+   a border and a background. */
+.link-btn.link-btn {
   padding: 0;
   border: none;
   background: none;
@@ -2439,7 +2449,7 @@ a.card {
   cursor: pointer;
 }
 
-.link-btn:hover {
+.link-btn.link-btn:hover {
   color: var(--text);
 }
 
@@ -2448,4 +2458,60 @@ a.card {
   font-size: 14px;
   line-height: 1.6;
   color: var(--text-body);
+}
+
+/* Favicons */
+
+.favicon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  object-fit: contain;
+}
+
+.card-title,
+.row-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.row-title {
+  gap: 8px;
+}
+
+.headline-item .favicon {
+  margin-right: 2px;
+}
+
+.detail-header .favicon {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+}
+
+/* Curated discovered pages */
+
+.page-type-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.page-section-head {
+  margin: 18px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.page-list-compact li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
 }

@@ -325,9 +325,17 @@ h1 {
   background: #f2f2f3;
 }
 
+/* Add menu, anchored in the header */
+
+.add-menu {
+  position: relative;
+}
+
 .add-btn {
-  flex-shrink: 0;
-  padding: 10px 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
   border: none;
   border-radius: 8px;
   background: #e8502e;
@@ -335,40 +343,113 @@ h1 {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  transition: background 0.12s ease;
 }
 
 .add-btn:hover {
-  background: #d0431f;
+  background: #cf421f;
 }
 
-.add-form {
+.add-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 300px;
+  background: #fff;
+  border: 1px solid #e0e0e2;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+  padding: 6px;
+  z-index: 40;
+}
+
+.add-option {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  color: #1a1a1a;
+  transition: background 0.12s ease;
 }
 
-.add-form input {
-  flex: 1;
-  padding: 12px 14px;
-  font-size: 15px;
+.add-option:hover {
+  background: #f2f2f3;
+}
+
+.add-option svg {
+  margin-top: 2px;
+  flex-shrink: 0;
+  color: #6b6b70;
+}
+
+.add-option strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.add-option small {
+  display: block;
+  font-size: 12px;
+  color: #9a9aa0;
+  margin-top: 1px;
+}
+
+.add-pop-form {
+  padding: 14px;
+}
+
+.add-pop-form label {
+  display: block;
+  font-size: 12px;
+  color: #6b6b70;
+  margin-bottom: 6px;
+}
+
+.add-pop-form input {
+  width: 100%;
+  padding: 9px 11px;
+  font-size: 14px;
   border: 1px solid #1a1a1a;
   border-radius: 8px;
   outline: none;
+  margin-bottom: 10px;
 }
 
-.add-form button {
-  padding: 12px 18px;
+.add-pop-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.add-pop-actions button {
+  padding: 7px 14px;
   border: 1px solid #d8d8dc;
   border-radius: 8px;
   background: #fff;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
+  transition: background 0.12s ease;
 }
 
-.add-form button[type="submit"] {
-  background: #1a1a1a;
+.add-pop-actions button:hover {
+  background: #f2f2f3;
+}
+
+.add-pop-actions .primary {
+  background: #e8502e;
   color: #fff;
-  border-color: #1a1a1a;
+  border-color: #e8502e;
+}
+
+.add-pop-actions .primary:hover {
+  background: #cf421f;
 }
 
 /* Scrolling tag strip */
@@ -436,6 +517,9 @@ h1 {
 }
 
 .view-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 5px 12px;
   border: none;
   background: none;
@@ -443,6 +527,12 @@ h1 {
   font-size: 13px;
   color: #6b6b70;
   cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.view-switch button:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.6);
+  color: #1a1a1a;
 }
 
 .view-switch button.active {
@@ -942,7 +1032,7 @@ h1 {
    oversized one. Screenshots run to 20,000px, and clipping an element that
    tall makes the browser rasterize it at degraded quality -- see CLAUDE.md. */
 .detail-capture-collapsed img {
-  height: 70vh;
+  height: 340px;
   object-fit: cover;
   object-position: top center;
   width: 100%;
@@ -1476,4 +1566,144 @@ a.card {
 .crop-actions button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+/* ---- Interaction states -------------------------------------------------
+   Everything clickable gets a hover state: cards, chips, tabs, rows, links. */
+
+.card {
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+}
+
+.card:hover {
+  border-color: #d2d2d6;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.thumb img {
+  transition: opacity 0.12s ease;
+}
+
+.card:hover .thumb img {
+  opacity: 0.92;
+}
+
+/* Component crops keep their own proportions rather than a 16:9 box. */
+.thumb-natural {
+  aspect-ratio: auto;
+  display: block;
+  max-height: 260px;
+}
+
+.thumb-natural img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Two rows of tags, then "+N more". */
+.card-tags-clamped {
+  max-height: 56px;
+  overflow: hidden;
+}
+
+.chip-filter {
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.chip-filter:hover:not(.chip-selected) {
+  background: #e2e2e5;
+  color: #1a1a1a;
+}
+
+.chip-selected:hover {
+  background: #333338;
+}
+
+.chip-more {
+  transition: background 0.12s ease;
+}
+
+.chip-more:hover {
+  background: #d8d8dc;
+}
+
+.tab-switcher button {
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+
+.tab-switcher button:hover:not(.active) {
+  color: #4a4a4e;
+  border-bottom-color: #d8d8dc;
+}
+
+.row-item,
+.headline-item {
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.row-item:hover {
+  border-color: #d2d2d6;
+  background: #fcfcfd;
+}
+
+.headline-item:hover {
+  background: #f2f2f3;
+}
+
+.review-badge {
+  transition: background 0.12s ease;
+}
+
+.review-badge:hover {
+  background: #ffe9b8;
+}
+
+.tag-actions button,
+.detail-actions button,
+.detail-section button,
+.crop-actions button,
+.modal-foot button,
+.filters-btn {
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.detail-actions button:hover:not(:disabled),
+.detail-section button:hover:not(:disabled),
+.crop-actions button:hover:not(:disabled),
+.modal-foot button:hover:not(:disabled) {
+  background: #f2f2f3;
+}
+
+.visit-btn:hover {
+  background: #333338;
+}
+
+.capture-timeline button {
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.capture-timeline button:hover:not(.active) {
+  background: #f2f2f3;
+  border-color: #c8c8cc;
+}
+
+.viewport-toggle button {
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.viewport-toggle button:hover:not(.active) {
+  background: #f2f2f3;
+}
+
+.combobox-chip button:hover,
+.chip-remove:hover {
+  color: #c0392b;
+}
+
+.page-list a:hover,
+.meta-line a:hover,
+.capture-meta a:hover {
+  color: #1a1a1a;
 }

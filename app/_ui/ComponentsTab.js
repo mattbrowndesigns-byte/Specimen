@@ -1,15 +1,29 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CropTool from "./CropTool";
+import LibraryBrowser from "./LibraryBrowser";
 
-export default function ComponentsTab() {
+const ADAPTER = {
+  href: (c) => `/components/${c.id}`,
+  externalUrl: (c) => c.source_url,
+  name: (c) => c.name || "Untitled component",
+  meta: (c) => {
+    try {
+      return new URL(c.source_url).hostname.replace(/^www\./, "");
+    } catch {
+      return c.source_url;
+    }
+  },
+  thumb: (c) => c.image_url || null,
+  pendingLabel: "Processing…",
+  naturalThumb: true,
+};
+
+export default function ComponentsTab({ allTags, pendingCapture, setPendingCapture, refreshKey }) {
   const [components, setComponents] = useState([]);
-  const [loaded, setLoaded] = useState(false);
-  const [url, setUrl] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [pendingCapture, setPendingCapture] = useState(null);
+  const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   async function loadComponents() {
     const res = await fetch("/api/components");
@@ -17,49 +31,11 @@ export default function ComponentsTab() {
       const data = await res.json();
       setComponents(data.components || []);
     }
-    setLoaded(true);
   }
 
   useEffect(() => {
     loadComponents();
-  }, []);
-
-  useEffect(() => {
-    if (!pendingCapture || pendingCapture.status !== "pending") return;
-    const interval = setInterval(async () => {
-      const res = await fetch(`/api/components/capture/${pendingCapture.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPendingCapture(data.capture);
-      }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [pendingCapture]);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!url.trim() || submitting) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/components/capture", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Something went wrong");
-        return;
-      }
-      setPendingCapture(data.capture);
-      setUrl("");
-    } catch {
-      setError("Couldn't reach the server");
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  }, [refreshKey]);
 
   async function handleSaveCrop(cropRect) {
     setSaving(true);
@@ -84,86 +60,52 @@ export default function ComponentsTab() {
     }
   }
 
-  return (
-    <>
-      <form className="save-form" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Paste a page URL to crop a component from…"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          disabled={submitting || !!pendingCapture}
-        />
-        <button type="submit" disabled={submitting || !!pendingCapture}>
-          {submitting ? "Starting…" : "Capture"}
-        </button>
-      </form>
+  // Components are few enough to filter in the browser; sites go through the
+  // Postgres search function instead.
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return components;
+    return components.filter((c) =>
+      [c.name, c.summary, c.notes, c.source_url, ...(c.tags || []).map((t) => t.label)]
+        .filter(Boolean)
+        .some((field) => field.toLowerCase().includes(q))
+    );
+  }, [components, query]);
 
-      {error && <p className="error">{error}</p>}
-
-      {pendingCapture && pendingCapture.status === "pending" && (
-        <p className="empty">Capturing the page… this takes about a minute.</p>
-      )}
-
-      {pendingCapture && pendingCapture.status === "failed" && (
-        <p className="error">
-          That page couldn't be captured.{" "}
-          <button onClick={() => setPendingCapture(null)}>Try another URL</button>
-        </p>
-      )}
-
-      {pendingCapture && pendingCapture.status === "ready" && (
+  if (pendingCapture?.status === "ready") {
+    return (
+      <>
+        {error && <p className="error">{error}</p>}
         <CropTool
           imageUrl={pendingCapture.full_url}
           onCancel={() => setPendingCapture(null)}
           onSave={handleSaveCrop}
           saving={saving}
         />
-      )}
+      </>
+    );
+  }
 
-      {!pendingCapture && loaded && components.length === 0 && (
-        <p className="empty">Paste a page URL above to crop your first component.</p>
+  return (
+    <>
+      {error && <p className="error">{error}</p>}
+      {pendingCapture?.status === "failed" && (
+        <p className="error">
+          That page couldn't be captured.{" "}
+          <button onClick={() => setPendingCapture(null)}>Dismiss</button>
+        </p>
       )}
-
-      {!pendingCapture && (
-        <div className="grid">
-          {components.map((c) => (
-            <div className="card component-card" key={c.id}>
-              <a className="thumb" href={`/components/${c.id}`}>
-                {c.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.image_url} alt={c.name || "Component"} />
-                ) : (
-                  <div className="placeholder">Processing…</div>
-                )}
-              </a>
-              <div className="card-footer">
-                <a className="name" href={`/components/${c.id}`} title={c.summary || undefined}>
-                  {c.name || "Untitled component"}
-                </a>
-                <a
-                  className="visit"
-                  href={c.source_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Visit source page"
-                >
-                  ↗
-                </a>
-              </div>
-              {c.tags?.length > 0 && (
-                <div className="card-tags">
-                  {c.tags.map((tag, i) => (
-                    <span className={`chip${tag.is_approved ? "" : " chip-pending"}`} key={i}>
-                      {tag.label}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <LibraryBrowser
+        items={filtered}
+        allTags={allTags}
+        query={query}
+        onQueryChange={setQuery}
+        searchPlaceholder="Search components by name, summary, notes or tag…"
+        emptyMessage="No components yet — use Add to capture a page and crop one out."
+        noun="component"
+        adapter={ADAPTER}
+        storageKey="specimen.view.components"
+      />
     </>
   );
 }

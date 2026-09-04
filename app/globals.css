@@ -1030,6 +1030,11 @@ h1 {
   background: #fff;
   border: 1px solid #e0e0e2;
   border-radius: 10px;
+  /* Explicit, because .capture-panel centres its children with align-items,
+     which otherwise makes this shrink-to-fit. Once the image has a fixed
+     height, a shrink-to-fit parent lets its width collapse to whatever the
+     aspect ratio implies instead of filling the column. */
+  width: 100%;
   max-width: 100%;
   display: flex;
   justify-content: center;

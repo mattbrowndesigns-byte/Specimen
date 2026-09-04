@@ -13,8 +13,8 @@ export default function AboutPage() {
         </div>
         <div className="placeholder-page">
           <p>
-            Specimen is a personal design-inspiration library. Paste a URL and it captures the page
-            on desktop and mobile, then tags and summarises it so you can find it again in seconds.
+            Kivli is your visual inspiration library. Paste a URL and it captures the page on
+            desktop and mobile, then tags and summarises it so you can find it again in seconds.
           </p>
           <p className="empty-small">This page is a placeholder — there&rsquo;s more to write here.</p>
         </div>

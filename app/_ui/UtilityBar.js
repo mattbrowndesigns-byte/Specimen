@@ -48,9 +48,14 @@ export default function UtilityBar({ onAdd, onError }) {
   return (
     <header className="utility-bar">
       <div className="utility-bar-inner">
-        <a className="utility-bar-title" href="/">
-          <h1>Inspiration Library</h1>
-        </a>
+        <div className="brand">
+          <a className="utility-bar-title" href="/">
+            <h1 className="wordmark">Kivli</h1>
+          </a>
+          {/* Outside the link: the wordmark is the target, the tagline is
+              description, and a hover that greyed both would read as one word. */}
+          <span className="brand-tagline">Your visual inspiration library</span>
+        </div>
         <div className="nav-links">
           <NotificationBell />
           <button

@@ -306,6 +306,44 @@ h1 {
   font-size: 18px;
 }
 
+/* Brand lockup: wordmark, then the tagline reading off its baseline. */
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Descendant selector, not a doubled class: this beats `.utility-bar h1`
+   (0,1,1) and the wordmark only ever appears here, so it doesn't need the
+   context-free weight the utility classes carry. Lalezar ships weight 400
+   only -- it's a display face and already heavy, so don't ask for bold and
+   get a synthesised one. */
+.utility-bar .wordmark {
+  font-family: var(--font-wordmark), "Arial Black", "Helvetica Neue", sans-serif;
+  font-size: 25px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.005em;
+}
+
+/* Medium grey that still clears WCAG AA on both themes: 5.30:1 on the light
+   bar, 5.94:1 on the dark one. --text-faint would look right and fail at
+   2.80:1, so it isn't used for real copy. */
+.brand-tagline {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Below this the tagline crowds the actions; the wordmark carries the brand
+   on its own. */
+@media (max-width: 780px) {
+  .brand-tagline {
+    display: none;
+  }
+}
+
 /* Every square icon control in the app: bar buttons, the menu trigger, the
    heart and bookmark on a card.
    

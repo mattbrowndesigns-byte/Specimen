@@ -1,3 +1,109 @@
+/* Palette
+   ---------------------------------------------------------------------------
+   Every colour in this file comes from here, so dark mode is one block of
+   overrides rather than a second stylesheet. Names describe the role, not the
+   value: `--invert-*` is the "solid dark button" pair, which swaps to a solid
+   light button in dark mode, and the `-rgb` triples exist for the few places
+   that need a surface colour at partial alpha (the capture fade, the sticky
+   crop bar). `color-scheme` is what makes native selects and scrollbars follow
+   the theme. */
+:root {
+  color-scheme: light;
+
+  --bg: #f7f7f8;
+  --surface: #fff;
+  --surface-rgb: 255, 255, 255;
+  --surface-soft: #fcfcfd;
+  --surface-sunken: #ececed;
+  --surface-sunken-rgb: 236, 236, 237;
+  --surface-hover: #f2f2f3;
+
+  --chip-bg: #f0f0f1;
+  --chip-strong-bg: #e7e7e9;
+
+  --border-soft: #e6e6e9;
+  --border: #e0e0e2;
+  --border-strong: #d8d8dc;
+  --border-strong-hover: #c8c8cc;
+
+  --text: #1a1a1a;
+  --text-body: #2a2a2e;
+  --text-secondary: #4a4a4e;
+  --text-muted: #6b6b70;
+  --text-faint: #9a9aa0;
+
+  --accent: #e8502e;
+  --accent-hover: #cf421f;
+  --accent-text: #fff;
+
+  --invert-bg: #1a1a1a;
+  --invert-bg-hover: #333338;
+  --invert-text: #fff;
+  --invert-text-rgb: 255, 255, 255;
+
+  --danger: #c0392b;
+
+  --warn-bg: #fff3d6;
+  --warn-bg-hover: #ffe9b8;
+  --warn-text: #8a6100;
+
+  --ok-bg: #f2fbf4;
+  --ok-border: #bfe3c6;
+  --ok-text: #1f6b33;
+
+  --overlay: rgba(20, 20, 22, 0.45);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Light mode reads sunken < page < surface in lightness; dark keeps that
+     same ordering rather than flipping it, so a card still sits above the page
+     and a panel still sits below it. */
+  --bg: #121215;
+  --surface: #1e1e23;
+  --surface-rgb: 30, 30, 35;
+  --surface-soft: #24242a;
+  --surface-sunken: #0d0d0f;
+  --surface-sunken-rgb: 13, 13, 15;
+  --surface-hover: #2a2a31;
+
+  --chip-bg: #26262c;
+  --chip-strong-bg: #303037;
+
+  --border-soft: #2a2a31;
+  --border: #303037;
+  --border-strong: #3d3d46;
+  --border-strong-hover: #4e4e59;
+
+  --text: #f0f0f2;
+  --text-body: #dcdce0;
+  --text-secondary: #b6b6bd;
+  --text-muted: #9a9aa2;
+  --text-faint: #74747c;
+
+  --accent: #f0603c;
+  --accent-hover: #ff7353;
+  --accent-text: #fff;
+
+  --invert-bg: #f0f0f2;
+  --invert-bg-hover: #dcdce0;
+  --invert-text: #17171a;
+  --invert-text-rgb: 23, 23, 26;
+
+  --danger: #ff6f61;
+
+  --warn-bg: #3a2b0f;
+  --warn-bg-hover: #4a3714;
+  --warn-text: #f2ca7c;
+
+  --ok-bg: #12291a;
+  --ok-border: #245c34;
+  --ok-text: #86d79b;
+
+  --overlay: rgba(0, 0, 0, 0.62);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -5,8 +111,8 @@
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f7f7f8;
-  color: #1a1a1a;
+  background: var(--bg);
+  color: var(--text);
 }
 
 .page {
@@ -39,13 +145,13 @@ h1 {
   flex: 1;
   padding: 12px 14px;
   font-size: 15px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   outline: none;
 }
 
 .save-form input:focus {
-  border-color: #1a1a1a;
+  border-color: var(--text);
 }
 
 .save-form button {
@@ -53,8 +159,8 @@ h1 {
   font-size: 15px;
   border: none;
   border-radius: 8px;
-  background: #1a1a1a;
-  color: #fff;
+  background: var(--invert-bg);
+  color: var(--invert-text);
   cursor: pointer;
 }
 
@@ -64,13 +170,13 @@ h1 {
 }
 
 .error {
-  color: #c0392b;
+  color: var(--danger);
   font-size: 14px;
   margin: 0 0 16px;
 }
 
 .empty {
-  color: #6b6b70;
+  color: var(--text-muted);
   font-size: 15px;
   margin: 40px 0;
   text-align: center;
@@ -87,15 +193,15 @@ h1 {
 }
 
 .card {
-  background: #fff;
+  background: var(--surface);
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid #e6e6e9;
+  border: 1px solid var(--border-soft);
 }
 
 .thumb {
   aspect-ratio: 16 / 9;
-  background: #ececed;
+  background: var(--surface-sunken);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -111,7 +217,7 @@ h1 {
 }
 
 .placeholder {
-  color: #9a9aa0;
+  color: var(--text-faint);
   font-size: 13px;
 }
 
@@ -139,7 +245,7 @@ h1 {
 
 .visit {
   flex-shrink: 0;
-  color: #6b6b70;
+  color: var(--text-muted);
   text-decoration: none;
   font-size: 15px;
   width: 28px;
@@ -152,8 +258,8 @@ h1 {
 }
 
 .visit:hover {
-  color: #1a1a1a;
-  background: #e7e7e9;
+  color: var(--text);
+  background: var(--chip-strong-bg);
 }
 
 .card-tags {
@@ -167,13 +273,13 @@ h1 {
   font-size: 11px;
   padding: 3px 8px;
   border-radius: 999px;
-  background: #f0f0f1;
-  color: #4a4a4e;
+  background: var(--chip-bg);
+  color: var(--text-secondary);
 }
 
 .chip-pending {
-  background: #fff3d6;
-  color: #8a6100;
+  background: var(--warn-bg);
+  color: var(--warn-text);
 }
 
 /* Utility bar: the library's identity plus the actions that should be
@@ -183,8 +289,8 @@ h1 {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: #fff;
-  border-bottom: 1px solid #e6e6e9;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .utility-bar-inner {
@@ -200,6 +306,27 @@ h1 {
   font-size: 18px;
 }
 
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--surface-hover);
+  border-color: var(--border);
+  color: var(--text);
+}
+
 /* Selector carries the type too, or `.utility-bar a` below wins on
    specificity and paints the title link grey. */
 .utility-bar a.utility-bar-title {
@@ -208,17 +335,17 @@ h1 {
 }
 
 .utility-bar a.utility-bar-title:hover h1 {
-  color: #6b6b70;
+  color: var(--text-muted);
 }
 
 .utility-bar a {
-  color: #6b6b70;
+  color: var(--text-muted);
   text-decoration: none;
   font-size: 14px;
 }
 
 .utility-bar a:hover {
-  color: #1a1a1a;
+  color: var(--text);
 }
 
 .utility-bar a,
@@ -266,13 +393,13 @@ h1 {
 }
 
 .top-nav a {
-  color: #6b6b70;
+  color: var(--text-muted);
   text-decoration: none;
   font-size: 14px;
 }
 
 .top-nav a:hover {
-  color: #1a1a1a;
+  color: var(--text);
 }
 
 .tag-section {
@@ -283,15 +410,15 @@ h1 {
   font-size: 15px;
   font-weight: 600;
   margin: 0 0 12px;
-  color: #4a4a4e;
+  color: var(--text-secondary);
 }
 
-/* Capped inside a full-bleed page: a row holding the word "Agency" plus three
-   buttons does not get better at 1400px, it just grows a gap in the middle. */
+/* Full width by gaining columns rather than by stretching one row: a row
+   holding the word "Agency" plus three buttons doesn't improve at 1400px, it
+   just grows a gap in the middle. */
 .tag-list {
-  max-width: 960px;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(430px, 1fr));
   gap: 8px;
 }
 
@@ -299,15 +426,15 @@ h1 {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #fff;
-  border: 1px solid #e6e6e9;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
   border-radius: 8px;
   padding: 10px 12px;
 }
 
 .tag-facet {
   font-size: 12px;
-  color: #9a9aa0;
+  color: var(--text-faint);
   min-width: 110px;
 }
 
@@ -321,7 +448,7 @@ h1 {
   flex: 1;
   font-size: 14px;
   padding: 4px 8px;
-  border: 1px solid #1a1a1a;
+  border: 1px solid var(--text);
   border-radius: 6px;
 }
 
@@ -329,9 +456,9 @@ h1 {
 .tag-merge-select {
   font-size: 13px;
   padding: 4px 6px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .tag-actions {
@@ -342,18 +469,18 @@ h1 {
 .tag-actions button {
   font-size: 13px;
   padding: 5px 10px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: #fff;
+  background: var(--surface);
   cursor: pointer;
 }
 
 .tag-actions button:hover {
-  background: #f2f2f3;
+  background: var(--surface-hover);
 }
 
 .empty-small {
-  color: #9a9aa0;
+  color: var(--text-faint);
   font-size: 13px;
 }
 
@@ -364,8 +491,8 @@ h1 {
 }
 
 .review-badge {
-  background: #fff3d6;
-  color: #8a6100;
+  background: var(--warn-bg);
+  color: var(--warn-text);
   padding: 4px 10px;
   border-radius: 999px;
   font-weight: 500;
@@ -375,14 +502,14 @@ h1 {
   width: 100%;
   padding: 10px 14px;
   font-size: 14px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   margin-bottom: 12px;
   outline: none;
 }
 
 .search-input:focus {
-  border-color: #1a1a1a;
+  border-color: var(--text);
 }
 
 /* Dashboard toolbar: search leads, actions on the right */
@@ -402,15 +529,15 @@ h1 {
 .filters-btn {
   flex-shrink: 0;
   padding: 10px 16px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   font-size: 14px;
   cursor: pointer;
 }
 
 .filters-btn:hover {
-  background: #f2f2f3;
+  background: var(--surface-hover);
 }
 
 /* Add menu, anchored in the header */
@@ -426,8 +553,8 @@ h1 {
   padding: 9px 16px;
   border: none;
   border-radius: 8px;
-  background: #e8502e;
-  color: #fff;
+  background: var(--accent);
+  color: var(--accent-text);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -435,7 +562,7 @@ h1 {
 }
 
 .add-btn:hover {
-  background: #cf421f;
+  background: var(--accent-hover);
 }
 
 .add-pop {
@@ -443,8 +570,8 @@ h1 {
   top: calc(100% + 8px);
   right: 0;
   width: 300px;
-  background: #fff;
-  border: 1px solid #e0e0e2;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
   padding: 6px;
@@ -462,18 +589,18 @@ h1 {
   border-radius: 8px;
   cursor: pointer;
   text-align: left;
-  color: #1a1a1a;
+  color: var(--text);
   transition: background 0.12s ease;
 }
 
 .add-option:hover {
-  background: #f2f2f3;
+  background: var(--surface-hover);
 }
 
 .add-option svg {
   margin-top: 2px;
   flex-shrink: 0;
-  color: #6b6b70;
+  color: var(--text-muted);
 }
 
 .add-option strong {
@@ -485,7 +612,7 @@ h1 {
 .add-option small {
   display: block;
   font-size: 12px;
-  color: #9a9aa0;
+  color: var(--text-faint);
   margin-top: 1px;
 }
 
@@ -496,7 +623,7 @@ h1 {
 .add-pop-form label {
   display: block;
   font-size: 12px;
-  color: #6b6b70;
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
@@ -504,7 +631,7 @@ h1 {
   width: 100%;
   padding: 9px 11px;
   font-size: 14px;
-  border: 1px solid #1a1a1a;
+  border: 1px solid var(--text);
   border-radius: 8px;
   outline: none;
   margin-bottom: 10px;
@@ -518,26 +645,26 @@ h1 {
 
 .add-pop-actions button {
   padding: 7px 14px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   font-size: 13px;
   cursor: pointer;
   transition: background 0.12s ease;
 }
 
 .add-pop-actions button:hover {
-  background: #f2f2f3;
+  background: var(--surface-hover);
 }
 
 .add-pop-actions .primary {
-  background: #e8502e;
-  color: #fff;
-  border-color: #e8502e;
+  background: var(--accent);
+  color: var(--invert-text);
+  border-color: var(--accent);
 }
 
 .add-pop-actions .primary:hover {
-  background: #cf421f;
+  background: var(--accent-hover);
 }
 
 /* Scrolling tag strip */
@@ -591,26 +718,26 @@ h1 {
 
 .chip-count {
   font-size: 11px;
-  color: #9a9aa0;
-  background: #fff;
+  color: var(--text-faint);
+  background: var(--surface);
   border-radius: 999px;
   padding: 1px 6px;
 }
 
 .chip-selected .chip-count {
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
+  background: rgba(var(--invert-text-rgb), 0.22);
+  color: var(--invert-text);
 }
 
 .chip-clear {
-  background: #fff;
-  border: 1px solid #d8d8dc;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
 }
 
 .chip-more {
   text-decoration: none;
-  color: #4a4a4e;
-  background: #e7e7e9;
+  color: var(--text-secondary);
+  background: var(--chip-strong-bg);
 }
 
 /* Results bar + view switch */
@@ -621,13 +748,13 @@ h1 {
   justify-content: space-between;
   margin: 4px 0 16px;
   font-size: 13px;
-  color: #6b6b70;
+  color: var(--text-muted);
 }
 
 .view-switch {
   display: flex;
   gap: 2px;
-  background: #ececed;
+  background: var(--surface-sunken);
   border-radius: 8px;
   padding: 2px;
 }
@@ -641,19 +768,19 @@ h1 {
   background: none;
   border-radius: 6px;
   font-size: 13px;
-  color: #6b6b70;
+  color: var(--text-muted);
   cursor: pointer;
   transition: background 0.12s ease, color 0.12s ease;
 }
 
 .view-switch button:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.6);
-  color: #1a1a1a;
+  background: rgba(var(--surface-rgb), 0.6);
+  color: var(--text);
 }
 
 .view-switch button.active {
-  background: #fff;
-  color: #1a1a1a;
+  background: var(--surface);
+  color: var(--text);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
@@ -669,8 +796,8 @@ h1 {
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  background: #fff;
-  border: 1px solid #e6e6e9;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
   border-radius: 10px;
   padding: 12px;
 }
@@ -679,7 +806,7 @@ h1 {
   width: 140px;
   aspect-ratio: 16 / 9;
   flex-shrink: 0;
-  background: #ececed;
+  background: var(--surface-sunken);
   border-radius: 6px;
   overflow: hidden;
   display: flex;
@@ -712,14 +839,14 @@ h1 {
 
 .row-domain {
   font-size: 12px;
-  color: #9a9aa0;
+  color: var(--text-faint);
   margin-left: 8px;
 }
 
 .row-summary {
   max-width: 90ch;
   font-size: 13px;
-  color: #6b6b70;
+  color: var(--text-muted);
   margin: 4px 0 8px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -743,7 +870,7 @@ h1 {
   align-items: center;
   gap: 10px;
   padding: 9px 4px;
-  border-bottom: 1px solid #ececed;
+  border-bottom: 1px solid var(--surface-sunken);
 }
 
 .headline-item .visit {
@@ -755,7 +882,7 @@ h1 {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(20, 20, 22, 0.45);
+  background: var(--overlay);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -765,7 +892,7 @@ h1 {
 }
 
 .modal {
-  background: #fff;
+  background: var(--surface);
   border-radius: 14px;
   width: 100%;
   max-width: 520px;
@@ -780,7 +907,7 @@ h1 {
   align-items: center;
   justify-content: space-between;
   padding: 18px 20px;
-  border-bottom: 1px solid #ececed;
+  border-bottom: 1px solid var(--surface-sunken);
 }
 
 .modal-head h2 {
@@ -794,7 +921,7 @@ h1 {
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
-  color: #6b6b70;
+  color: var(--text-muted);
 }
 
 .modal-body {
@@ -806,7 +933,7 @@ h1 {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #9a9aa0;
+  color: var(--text-faint);
   margin: 16px 0 8px;
 }
 
@@ -827,12 +954,12 @@ h1 {
 }
 
 .modal-options label:hover {
-  background: #f7f7f8;
+  background: var(--bg);
 }
 
 .modal-count {
   margin-left: auto;
-  color: #9a9aa0;
+  color: var(--text-faint);
   font-size: 12px;
 }
 
@@ -841,22 +968,22 @@ h1 {
   justify-content: space-between;
   gap: 8px;
   padding: 14px 20px;
-  border-top: 1px solid #ececed;
+  border-top: 1px solid var(--surface-sunken);
 }
 
 .modal-foot button {
   padding: 9px 18px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   font-size: 14px;
   cursor: pointer;
 }
 
 .modal-apply {
-  background: #e8502e !important;
-  color: #fff;
-  border-color: #e8502e !important;
+  background: var(--accent) !important;
+  color: var(--invert-text);
+  border-color: var(--accent) !important;
 }
 
 .filter-chips {
@@ -871,7 +998,7 @@ h1 {
   flex-wrap: wrap;
   gap: 6px;
   padding-right: 12px;
-  border-right: 1px solid #e6e6e9;
+  border-right: 1px solid var(--border-soft);
   margin-right: 4px;
 }
 
@@ -886,27 +1013,46 @@ h1 {
 }
 
 .chip-selected {
-  background: #1a1a1a;
-  color: #fff;
+  background: var(--invert-bg);
+  color: var(--invert-text);
 }
 
 /* Detail page */
 
-/* Wide, but not unbounded: a desktop capture is 1440px, and 1530 is the page
-   width at which it renders 1:1 (1440 + 40 panel padding + 2 frame borders +
-   48 page padding). Past that the screenshot would be upscaled and go soft --
-   the same problem the mobile capture rule avoids. */
+/* Full-bleed, like the library itself. The readable measure comes from the
+   sidebar column rather than from narrowing the page, and the capture caps
+   itself at its own native width so a very wide window can't upscale it. */
 .detail-page {
-  max-width: 1530px;
+  max-width: none;
 }
 
-/* Prose and form fields keep a readable measure inside that wide page. The
-   header row is left full width so its actions stay aligned with the capture's
-   right edge. */
-.detail-page .meta-line,
-.detail-page .detail-section,
-.detail-page .capture-status {
-  max-width: 960px;
+/* Capture on the left, the record's own fields on the right -- so tags and the
+   summary are reachable without scrolling past a full-page screenshot. The 1fr
+   is minmax(0, 1fr): a plain 1fr floors at min-content, and a wide capture
+   would push the sidebar off the page. */
+.detail-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 28px;
+}
+
+/* Cropping needs the whole width to draw a region on a full-page screenshot. */
+.detail-columns-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.detail-side .detail-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Below this the sidebar would be too narrow for the tag comboboxes, so the
+   two columns stack instead. */
+@media (max-width: 1080px) {
+  .detail-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .detail-header {
@@ -928,7 +1074,7 @@ h1 {
 }
 
 .name-input:focus {
-  border-bottom: 1px solid #1a1a1a;
+  border-bottom: 1px solid var(--text);
 }
 
 .detail-actions {
@@ -939,8 +1085,8 @@ h1 {
 
 .visit-btn {
   padding: 8px 14px;
-  background: #1a1a1a;
-  color: #fff;
+  background: var(--invert-bg);
+  color: var(--invert-text);
   border-radius: 8px;
   text-decoration: none;
   font-size: 14px;
@@ -948,25 +1094,25 @@ h1 {
 
 .detail-actions button {
   padding: 8px 14px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   font-size: 14px;
   cursor: pointer;
 }
 
 .meta-line {
-  color: #6b6b70;
+  color: var(--text-muted);
   font-size: 13px;
   margin: 0 0 16px;
 }
 
 .meta-line a {
-  color: #6b6b70;
+  color: var(--text-muted);
 }
 
 .capture-panel {
-  background: #ececed;
+  background: var(--surface-sunken);
   border-radius: 14px;
   padding: 20px;
   margin-bottom: 24px;
@@ -982,7 +1128,7 @@ h1 {
   gap: 6px;
   margin-bottom: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #dedee0;
+  border-bottom: 1px solid var(--border);
   width: 100%;
   overflow-x: auto;
   scrollbar-width: thin;
@@ -994,18 +1140,18 @@ h1 {
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  border: 1px solid #d8d8dc;
-  background: #fff;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
   border-radius: 999px;
   cursor: pointer;
   font-size: 12px;
-  color: #4a4a4e;
+  color: var(--text-secondary);
 }
 
 .capture-timeline button.active {
-  background: #1a1a1a;
-  color: #fff;
-  border-color: #1a1a1a;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  border-color: var(--invert-bg);
 }
 
 .timeline-latest {
@@ -1016,8 +1162,8 @@ h1 {
 }
 
 .capture-status {
-  background: #fff;
-  border: 1px solid #e0e0e2;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 14px 16px;
   margin-bottom: 16px;
@@ -1026,12 +1172,12 @@ h1 {
 .capture-status p {
   margin: 0;
   font-size: 13px;
-  color: #4a4a4e;
+  color: var(--text-secondary);
 }
 
 .capture-status-bar {
   height: 4px;
-  background: #ececed;
+  background: var(--surface-sunken);
   border-radius: 999px;
   overflow: hidden;
   margin-bottom: 10px;
@@ -1039,14 +1185,14 @@ h1 {
 
 .capture-status-fill {
   height: 100%;
-  background: #1a1a1a;
+  background: var(--invert-bg);
   border-radius: 999px;
   transition: width 1s linear;
 }
 
 .capture-status-done {
-  border-color: #bfe3c6;
-  background: #f2fbf4;
+  border-color: var(--ok-border);
+  background: var(--ok-bg);
 }
 
 .capture-status-done p {
@@ -1054,13 +1200,13 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  color: #1f6b33;
+  color: var(--ok-text);
 }
 
 .capture-status-done button {
   border: none;
   background: none;
-  color: #1f6b33;
+  color: var(--ok-text);
   text-decoration: underline;
   cursor: pointer;
   font: inherit;
@@ -1084,32 +1230,32 @@ h1 {
 }
 
 .detail-section .section-head-actions button.primary {
-  background: #1a1a1a;
-  color: #fff;
-  border-color: #1a1a1a;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  border-color: var(--invert-bg);
 }
 
 .summary-text {
   font-size: 14px;
   line-height: 1.55;
-  color: #2a2a2e;
+  color: var(--text-body);
   margin: 0;
   white-space: pre-wrap;
 }
 
 .summary-empty {
-  color: #9a9aa0;
+  color: var(--text-faint);
 }
 
 .capture-meta {
   font-size: 12px;
-  color: #6b6b70;
+  color: var(--text-muted);
   margin: 0 0 14px;
   text-align: center;
 }
 
 .capture-meta a {
-  color: #6b6b70;
+  color: var(--text-muted);
 }
 
 .capture-delete {
@@ -1117,7 +1263,7 @@ h1 {
   background: none;
   padding: 0;
   font: inherit;
-  color: #c0392b;
+  color: var(--danger);
   cursor: pointer;
   text-decoration: underline;
 }
@@ -1135,28 +1281,30 @@ h1 {
 
 .viewport-toggle button {
   padding: 6px 14px;
-  border: 1px solid #d8d8dc;
-  background: #fff;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
   border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
 }
 
 .viewport-toggle button.active {
-  background: #1a1a1a;
-  color: #fff;
-  border-color: #1a1a1a;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  border-color: var(--invert-bg);
 }
 
 .detail-capture {
-  background: #fff;
-  border: 1px solid #e0e0e2;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
   /* Explicit, because .capture-panel centres its children with align-items,
      which otherwise makes this shrink-to-fit. Once the image has a fixed
      height, a shrink-to-fit parent lets its width collapse to whatever the
-     aspect ratio implies instead of filling the column. */
-  width: 100%;
+     aspect ratio implies instead of filling the column. Capped at 1442 (a
+     1440px desktop capture plus the frame's two borders) so a very wide
+     column downscales the screenshot at worst, never upscales it. */
+  width: min(1442px, 100%);
   max-width: 100%;
   display: flex;
   justify-content: center;
@@ -1199,10 +1347,10 @@ h1 {
   height: 220px;
   background: linear-gradient(
     to bottom,
-    rgba(236, 236, 237, 0) 0%,
-    rgba(236, 236, 237, 0.5) 42%,
-    rgba(236, 236, 237, 0.88) 74%,
-    rgb(236, 236, 237) 100%
+    rgba(var(--surface-sunken-rgb), 0) 0%,
+    rgba(var(--surface-sunken-rgb), 0.5) 42%,
+    rgba(var(--surface-sunken-rgb), 0.88) 74%,
+    var(--surface-sunken) 100%
   );
   pointer-events: none;
 }
@@ -1217,15 +1365,15 @@ h1 {
 .capture-expand {
   margin-top: 12px;
   padding: 7px 16px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   font-size: 13px;
   cursor: pointer;
 }
 
 .capture-expand:hover {
-  background: #f7f7f8;
+  background: var(--bg);
 }
 
 .detail-capture img {
@@ -1256,7 +1404,7 @@ h1 {
   padding: 10px 12px;
   font-size: 14px;
   font-family: inherit;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   resize: vertical;
   margin-bottom: 8px;
@@ -1264,9 +1412,9 @@ h1 {
 
 .detail-section button {
   padding: 6px 14px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: #fff;
+  background: var(--surface);
   cursor: pointer;
   font-size: 13px;
 }
@@ -1280,7 +1428,7 @@ h1 {
 
 .facet-name {
   font-size: 12px;
-  color: #9a9aa0;
+  color: var(--text-faint);
   min-width: 110px;
   padding-top: 5px;
 }
@@ -1305,9 +1453,9 @@ h1 {
 .facet-tags select {
   font-size: 12px;
   padding: 3px 6px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .combobox {
@@ -1323,14 +1471,14 @@ h1 {
   gap: 6px;
   min-height: 34px;
   padding: 5px 8px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   cursor: text;
 }
 
 .combobox-field:focus-within {
-  border-color: #1a1a1a;
+  border-color: var(--text);
 }
 
 .combobox-chip {
@@ -1340,13 +1488,13 @@ h1 {
   font-size: 12px;
   padding: 3px 6px 3px 10px;
   border-radius: 999px;
-  background: #f0f0f1;
-  color: #4a4a4e;
+  background: var(--chip-bg);
+  color: var(--text-secondary);
 }
 
 .combobox-chip.chip-pending {
-  background: #fff3d6;
-  color: #8a6100;
+  background: var(--warn-bg);
+  color: var(--warn-text);
 }
 
 .combobox-chip button {
@@ -1374,8 +1522,8 @@ h1 {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: #fff;
-  border: 1px solid #d8d8dc;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
   max-height: 240px;
@@ -1397,21 +1545,21 @@ h1 {
   font-size: 13px;
   border-radius: 6px;
   cursor: pointer;
-  color: #1a1a1a;
+  color: var(--text);
 }
 
 .combobox-option:hover {
-  background: #f2f2f3;
+  background: var(--surface-hover);
 }
 
 .combobox-count {
-  color: #9a9aa0;
+  color: var(--text-faint);
   font-size: 12px;
   flex-shrink: 0;
 }
 
 .combobox-create .combobox-count {
-  color: #8a6100;
+  color: var(--warn-text);
 }
 
 .page-group {
@@ -1420,7 +1568,7 @@ h1 {
 
 .page-group h3 {
   font-size: 12px;
-  color: #9a9aa0;
+  color: var(--text-faint);
   margin: 0 0 6px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1442,11 +1590,11 @@ h1 {
   justify-content: space-between;
   gap: 12px;
   padding: 6px 0;
-  border-bottom: 1px solid #f0f0f1;
+  border-bottom: 1px solid var(--chip-bg);
 }
 
 .page-list a {
-  color: #1a1a1a;
+  color: var(--text);
   text-decoration: none;
   font-size: 14px;
   overflow: hidden;
@@ -1462,9 +1610,9 @@ h1 {
   flex-shrink: 0;
   font-size: 12px;
   padding: 4px 10px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: #fff;
+  background: var(--surface);
   cursor: pointer;
 }
 
@@ -1476,7 +1624,7 @@ h1 {
 .promote-link {
   flex-shrink: 0;
   font-size: 12px;
-  color: #6b6b70 !important;
+  color: var(--text-muted) !important;
 }
 
 /* Review queue */
@@ -1491,8 +1639,8 @@ h1 {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #fff;
-  border: 1px solid #e6e6e9;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
   border-radius: 10px;
   padding: 12px;
 }
@@ -1501,7 +1649,7 @@ h1 {
   width: 120px;
   aspect-ratio: 16 / 9;
   flex-shrink: 0;
-  background: #ececed;
+  background: var(--surface-sunken);
   border-radius: 6px;
   overflow: hidden;
   display: flex;
@@ -1534,16 +1682,16 @@ h1 {
 
 .review-summary {
   font-size: 13px;
-  color: #6b6b70;
+  color: var(--text-muted);
   margin: 4px 0 8px;
 }
 
 .review-row > button {
   flex-shrink: 0;
   padding: 8px 14px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: #fff;
+  background: var(--surface);
   cursor: pointer;
   font-size: 13px;
 }
@@ -1562,14 +1710,14 @@ h1 {
   background: none;
   font-size: 14px;
   font-weight: 500;
-  color: #9a9aa0;
+  color: var(--text-faint);
   cursor: pointer;
   border-bottom: 2px solid transparent;
 }
 
 .tab-switcher button.active {
-  color: #1a1a1a;
-  border-bottom-color: #1a1a1a;
+  color: var(--text);
+  border-bottom-color: var(--text);
 }
 
 /* Components */
@@ -1582,7 +1730,7 @@ a.card {
 
 .component-card .thumb {
   aspect-ratio: auto;
-  background: #ececed;
+  background: var(--surface-sunken);
   display: block;
 }
 
@@ -1598,7 +1746,7 @@ a.card {
   padding: 0;
   display: flex;
   justify-content: center;
-  background: #ececed;
+  background: var(--surface-sunken);
 }
 
 .component-detail-capture img {
@@ -1614,16 +1762,16 @@ a.card {
 
 .crop-hint {
   font-size: 13px;
-  color: #6b6b70;
+  color: var(--text-muted);
   margin: 0 0 8px;
 }
 
 .crop-container {
   position: relative;
-  border: 1px solid #e6e6e9;
+  border: 1px solid var(--border-soft);
   border-radius: 10px;
   user-select: none;
-  background: #fff;
+  background: var(--surface);
 }
 
 .crop-container.crop-drawing {
@@ -1643,6 +1791,8 @@ a.card {
   pointer-events: none;
 }
 
+/* The crop rectangle and its handles sit on top of a screenshot, not on the
+   app's own surfaces, so they stay literally white-on-black in both themes. */
 .crop-rect {
   position: absolute;
   border: 2px solid #fff;
@@ -1702,9 +1852,9 @@ a.card {
   position: sticky;
   bottom: 16px;
   z-index: 5;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(var(--surface-rgb), 0.92);
   backdrop-filter: blur(6px);
-  border: 1px solid #e0e0e2;
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
@@ -1713,7 +1863,7 @@ a.card {
 .crop-size {
   margin-right: auto;
   font-size: 12px;
-  color: #6b6b70;
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1725,7 +1875,7 @@ a.card {
   display: block;
   margin-top: 8px;
   font-size: 13px;
-  color: #4a4a4e;
+  color: var(--text-secondary);
 }
 
 .crop-actions .crop-reset {
@@ -1734,17 +1884,17 @@ a.card {
 
 .crop-actions button {
   padding: 8px 16px;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   font-size: 14px;
   cursor: pointer;
 }
 
 .crop-actions .crop-save {
-  background: #1a1a1a;
-  color: #fff;
-  border-color: #1a1a1a;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  border-color: var(--invert-bg);
 }
 
 .crop-actions button:disabled {
@@ -1760,7 +1910,7 @@ a.card {
 }
 
 .card:hover {
-  border-color: #d2d2d6;
+  border-color: var(--border-strong-hover);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
@@ -1778,7 +1928,7 @@ a.card {
    rather than cropped, so a tall crop stays readable instead of being cut. */
 .thumb-natural img {
   object-fit: contain;
-  background: #ececed;
+  background: var(--surface-sunken);
 }
 
 /* Two rows of tags, then "+N more". */
@@ -1792,12 +1942,12 @@ a.card {
 }
 
 .chip-filter:hover:not(.chip-selected) {
-  background: #e2e2e5;
-  color: #1a1a1a;
+  background: var(--chip-strong-bg);
+  color: var(--text);
 }
 
 .chip-selected:hover {
-  background: #333338;
+  background: var(--invert-bg-hover);
 }
 
 .chip-more {
@@ -1805,7 +1955,7 @@ a.card {
 }
 
 .chip-more:hover {
-  background: #d8d8dc;
+  background: var(--border-strong);
 }
 
 .tab-switcher button {
@@ -1813,8 +1963,8 @@ a.card {
 }
 
 .tab-switcher button:hover:not(.active) {
-  color: #4a4a4e;
-  border-bottom-color: #d8d8dc;
+  color: var(--text-secondary);
+  border-bottom-color: var(--border-strong);
 }
 
 .row-item,
@@ -1823,12 +1973,12 @@ a.card {
 }
 
 .row-item:hover {
-  border-color: #d2d2d6;
-  background: #fcfcfd;
+  border-color: var(--border-strong-hover);
+  background: var(--surface-soft);
 }
 
 .headline-item:hover {
-  background: #f2f2f3;
+  background: var(--surface-hover);
 }
 
 .review-badge {
@@ -1836,7 +1986,7 @@ a.card {
 }
 
 .review-badge:hover {
-  background: #ffe9b8;
+  background: var(--warn-bg-hover);
 }
 
 .tag-actions button,
@@ -1852,11 +2002,11 @@ a.card {
 .detail-section button:hover:not(:disabled),
 .crop-actions button:hover:not(:disabled),
 .modal-foot button:hover:not(:disabled) {
-  background: #f2f2f3;
+  background: var(--surface-hover);
 }
 
 .visit-btn:hover {
-  background: #333338;
+  background: var(--invert-bg-hover);
 }
 
 .capture-timeline button {
@@ -1864,8 +2014,8 @@ a.card {
 }
 
 .capture-timeline button:hover:not(.active) {
-  background: #f2f2f3;
-  border-color: #c8c8cc;
+  background: var(--surface-hover);
+  border-color: var(--border-strong-hover);
 }
 
 .viewport-toggle button {
@@ -1873,18 +2023,18 @@ a.card {
 }
 
 .viewport-toggle button:hover:not(.active) {
-  background: #f2f2f3;
+  background: var(--surface-hover);
 }
 
 .combobox-chip button:hover,
 .chip-remove:hover {
-  color: #c0392b;
+  color: var(--danger);
 }
 
 .page-list a:hover,
 .meta-line a:hover,
 .capture-meta a:hover {
-  color: #1a1a1a;
+  color: var(--text);
 }
 
 /* ---- Review queue rows -------------------------------------------------- */
@@ -1909,7 +2059,7 @@ a.card {
 .review-summary {
   max-width: 90ch;
   font-size: 13px;
-  color: #6b6b70;
+  color: var(--text-muted);
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1947,8 +2097,8 @@ a.card {
   object-fit: cover;
   object-position: top;
   border-radius: 8px;
-  border: 1px solid #e6e6e9;
-  background: #ececed;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-sunken);
   flex-shrink: 0;
 }
 
@@ -1959,11 +2109,11 @@ a.card {
 
 .review-modal-link {
   font-size: 12px;
-  color: #6b6b70;
+  color: var(--text-muted);
 }
 
 .review-modal-link:hover {
-  color: #1a1a1a;
+  color: var(--text);
 }
 
 .field {
@@ -1974,7 +2124,7 @@ a.card {
 .field > span {
   display: block;
   font-size: 12px;
-  color: #6b6b70;
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
@@ -1984,7 +2134,7 @@ a.card {
   padding: 9px 11px;
   font-size: 14px;
   font-family: inherit;
-  border: 1px solid #d8d8dc;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   outline: none;
   resize: vertical;
@@ -1992,5 +2142,28 @@ a.card {
 
 .field input:focus,
 .field textarea:focus {
-  border-color: #1a1a1a;
+  border-color: var(--text);
+}
+
+/* Related */
+
+.related-hint {
+  margin: -2px 0 4px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.related-kind {
+  flex-shrink: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.related-reason {
+  margin: 0;
+  padding: 0 12px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
 }

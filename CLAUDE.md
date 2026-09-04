@@ -83,7 +83,23 @@ page itself scrolls. Don't reintroduce a scroll box around a full-page capture.
 
 **Use `max-width: 100%`, never `width: 100%`, on capture images.** A 390px-wide
 mobile screenshot stretched to the ~900px detail column looks obviously blurry.
-Desktop captures hide the bug because they only ever shrink.
+Desktop captures hide the bug because they only ever shrink. Same reason
+`.detail-capture` is capped at `min(1442px, 100%)` (1440 desktop capture + two
+1px borders) and the mobile variant at `min(392px, 100%)`: the detail page is
+full-bleed, so without the cap a wide window upscales the screenshot.
+
+**All colour comes from `:root` custom properties**; dark mode is the single
+`:root[data-theme="dark"]` override block, so never add a raw hex. `--invert-*`
+is the solid-dark-button pair, which becomes a solid *light* button in dark
+mode. Two deliberate exceptions keep literal values: the chip-strip fade masks
+(`#000` there is alpha, not colour) and the crop rectangle and handles, which
+sit on a screenshot rather than on the app's own surfaces.
+
+**`<html>` needs `suppressHydrationWarning`.** The boot script in `lib/theme.js`
+stamps `data-theme` before React hydrates, so the attribute is legitimately
+missing from the server HTML. Without the suppression every page logs a
+hydration mismatch. The script has to be inline in `<head>` or the light
+palette paints first and the theme arrives as a flash.
 
 **Gemini model is `gemini-3.6-flash`.** `gemini-2.0-flash` is retired and 404s.
 The `generateContent` request/response shape is unchanged.

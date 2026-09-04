@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, use as usePromise } from "react";
 import TagCombobox from "../../_ui/TagCombobox";
 import UtilityBar from "../../_ui/UtilityBar";
+import RelatedSection from "../../_ui/RelatedSection";
 import { archiveUrl, captureTimeline, formatCaptureDate } from "@/lib/captures";
 
 const FACET_LABELS = {
@@ -365,151 +366,161 @@ export default function SiteDetailPage({ params }) {
           </div>
         )}
 
-        <div className="capture-panel">
-          {timeline.length > 1 && (
-            <div className="capture-timeline" ref={timelineRef}>
-              {timeline
-                .slice()
-                .reverse()
-                .map((run, i, arr) => {
-                  const isLatest = i === arr.length - 1;
-                  return (
-                    <button
-                      key={run.capturedAt}
-                      className={run.capturedAt === activeRun?.capturedAt ? "active" : ""}
-                      onClick={() => setSelectedRun(run.capturedAt)}
-                      title={new Date(run.capturedAt).toLocaleString()}
-                    >
-                      {formatCaptureDate(run.capturedAt)}
-                      {isLatest && <span className="timeline-latest">Latest</span>}
-                    </button>
-                  );
-                })}
-            </div>
-          )}
+        {/* Capture on the left, everything you'd edit about the record on the
+            right, so the tags and summary are readable without scrolling past a
+            full-page screenshot. Collapses to one column on a narrow window. */}
+        <div className="detail-columns">
+          <div className="detail-main">
+            <div className="capture-panel">
+              {timeline.length > 1 && (
+                <div className="capture-timeline" ref={timelineRef}>
+                  {timeline
+                    .slice()
+                    .reverse()
+                    .map((run, i, arr) => {
+                      const isLatest = i === arr.length - 1;
+                      return (
+                        <button
+                          key={run.capturedAt}
+                          className={run.capturedAt === activeRun?.capturedAt ? "active" : ""}
+                          onClick={() => setSelectedRun(run.capturedAt)}
+                          title={new Date(run.capturedAt).toLocaleString()}
+                        >
+                          {formatCaptureDate(run.capturedAt)}
+                          {isLatest && <span className="timeline-latest">Latest</span>}
+                        </button>
+                      );
+                    })}
+                </div>
+              )}
 
-          {activeRun && (
-            <p className="capture-meta">
-              Captured {formatCaptureDate(activeRun.capturedAt)} ·{" "}
-              {wayback.state === "found" ? (
-                <a href={wayback.url} target="_blank" rel="noopener noreferrer">
-                  View on the Wayback Machine
-                </a>
-              ) : wayback.state === "loading" ? (
-                <span>Checking the Wayback Machine…</span>
-              ) : (
-                <span title="archive.org has no snapshot near this date">No Wayback snapshot</span>
-              )}{" "}
-              ·{" "}
-              <button
-                className="capture-delete"
-                onClick={() => deleteCaptureRun(activeRun)}
-                disabled={deletingCapture}
+              {activeRun && (
+                <p className="capture-meta">
+                  Captured {formatCaptureDate(activeRun.capturedAt)} ·{" "}
+                  {wayback.state === "found" ? (
+                    <a href={wayback.url} target="_blank" rel="noopener noreferrer">
+                      View on the Wayback Machine
+                    </a>
+                  ) : wayback.state === "loading" ? (
+                    <span>Checking the Wayback Machine…</span>
+                  ) : (
+                    <span title="archive.org has no snapshot near this date">No Wayback snapshot</span>
+                  )}{" "}
+                  ·{" "}
+                  <button
+                    className="capture-delete"
+                    onClick={() => deleteCaptureRun(activeRun)}
+                    disabled={deletingCapture}
+                  >
+                    {deletingCapture ? "Deleting…" : "Delete this capture"}
+                  </button>
+                </p>
+              )}
+
+              {hasMobile && (
+                <div className="viewport-toggle">
+                  <button className={viewport === "desktop" ? "active" : ""} onClick={() => setViewport("desktop")}>
+                    Desktop
+                  </button>
+                  <button className={viewport === "mobile" ? "active" : ""} onClick={() => setViewport("mobile")}>
+                    Mobile
+                  </button>
+                </div>
+              )}
+
+              <div
+                className={`detail-capture${expandedCapture ? "" : " detail-capture-collapsed"}${
+                  viewport === "mobile" ? " detail-capture-mobile" : ""
+                }`}
               >
-                {deletingCapture ? "Deleting…" : "Delete this capture"}
-              </button>
-            </p>
-          )}
+                {capture?.full_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={capture.full_url} alt={site.name} />
+                ) : (
+                  <div className="placeholder">{recapturing ? "Capturing…" : "No capture yet"}</div>
+                )}
+                {!expandedCapture && capture?.full_url && <div className="capture-fade" />}
+              </div>
 
-          {hasMobile && (
-            <div className="viewport-toggle">
-              <button className={viewport === "desktop" ? "active" : ""} onClick={() => setViewport("desktop")}>
-                Desktop
-              </button>
-              <button className={viewport === "mobile" ? "active" : ""} onClick={() => setViewport("mobile")}>
-                Mobile
-              </button>
+              {capture?.full_url && (
+                <button className="capture-expand" onClick={() => setExpandedCapture((v) => !v)}>
+                  {expandedCapture ? "Collapse screenshot" : "Expand full screenshot"}
+                </button>
+              )}
             </div>
-          )}
-
-          <div
-            className={`detail-capture${expandedCapture ? "" : " detail-capture-collapsed"}${
-              viewport === "mobile" ? " detail-capture-mobile" : ""
-            }`}
-          >
-            {capture?.full_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={capture.full_url} alt={site.name} />
-            ) : (
-              <div className="placeholder">{recapturing ? "Capturing…" : "No capture yet"}</div>
-            )}
-            {!expandedCapture && capture?.full_url && <div className="capture-fade" />}
           </div>
 
-          {capture?.full_url && (
-            <button className="capture-expand" onClick={() => setExpandedCapture((v) => !v)}>
-              {expandedCapture ? "Collapse screenshot" : "Expand full screenshot"}
-            </button>
-          )}
+          <aside className="detail-side">
+            <section className="detail-section">
+              <div className="section-head">
+                <h2>AI summary</h2>
+                {!editingSummary && (
+                  <div className="section-head-actions">
+                    <button onClick={() => setEditingSummary(true)}>Edit</button>
+                    <button onClick={regenerateSummary} disabled={regenerating}>
+                      {regenerating ? "Regenerating…" : "Regenerate"}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {editingSummary ? (
+                <>
+                  <textarea value={summaryDraft} onChange={(e) => setSummaryDraft(e.target.value)} rows={4} />
+                  <div className="section-head-actions">
+                    <button
+                      className="primary"
+                      disabled={savingField === "summary"}
+                      onClick={async () => {
+                        await saveField("summary", summaryDraft);
+                        setEditingSummary(false);
+                      }}
+                    >
+                      {savingField === "summary" ? "Saving…" : "Save"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSummaryDraft(site.summary || "");
+                        setEditingSummary(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p className="summary-text">
+                  {site.summary || <span className="summary-empty">No summary yet.</span>}
+                </p>
+              )}
+            </section>
+
+            <section className="detail-section">
+              <h2>Tags</h2>
+              {tagsByFacet.map(({ facet, assigned, available }) => (
+                <div className="facet-row" key={facet}>
+                  <span className="facet-name">{FACET_LABELS[facet]}</span>
+                  <TagCombobox
+                    assigned={assigned}
+                    available={available}
+                    onAdd={(tagId) => addTag(facet, tagId)}
+                    onRemove={removeTag}
+                    onCreate={(label) => createTag(facet, label)}
+                  />
+                </div>
+              ))}
+            </section>
+
+            <section className="detail-section">
+              <h2>Notes</h2>
+              <textarea value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} rows={4} />
+              <button disabled={savingField === "notes"} onClick={() => saveField("notes", notesDraft)}>
+                {savingField === "notes" ? "Saving…" : "Save notes"}
+              </button>
+            </section>
+          </aside>
         </div>
 
-        <section className="detail-section">
-          <div className="section-head">
-            <h2>AI summary</h2>
-            {!editingSummary && (
-              <div className="section-head-actions">
-                <button onClick={() => setEditingSummary(true)}>Edit</button>
-                <button onClick={regenerateSummary} disabled={regenerating}>
-                  {regenerating ? "Regenerating…" : "Regenerate"}
-                </button>
-              </div>
-            )}
-          </div>
-
-          {editingSummary ? (
-            <>
-              <textarea value={summaryDraft} onChange={(e) => setSummaryDraft(e.target.value)} rows={4} />
-              <div className="section-head-actions">
-                <button
-                  className="primary"
-                  disabled={savingField === "summary"}
-                  onClick={async () => {
-                    await saveField("summary", summaryDraft);
-                    setEditingSummary(false);
-                  }}
-                >
-                  {savingField === "summary" ? "Saving…" : "Save"}
-                </button>
-                <button
-                  onClick={() => {
-                    setSummaryDraft(site.summary || "");
-                    setEditingSummary(false);
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          ) : (
-            <p className="summary-text">
-              {site.summary || <span className="summary-empty">No summary yet.</span>}
-            </p>
-          )}
-        </section>
-
-        <section className="detail-section">
-          <h2>Tags</h2>
-          {tagsByFacet.map(({ facet, assigned, available }) => (
-            <div className="facet-row" key={facet}>
-              <span className="facet-name">{FACET_LABELS[facet]}</span>
-              <TagCombobox
-                assigned={assigned}
-                available={available}
-                onAdd={(tagId) => addTag(facet, tagId)}
-                onRemove={removeTag}
-                onCreate={(label) => createTag(facet, label)}
-              />
-            </div>
-          ))}
-        </section>
-
-        <section className="detail-section">
-          <h2>Notes</h2>
-          <textarea value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} rows={4} />
-          <button disabled={savingField === "notes"} onClick={() => saveField("notes", notesDraft)}>
-            {savingField === "notes" ? "Saving…" : "Save notes"}
-          </button>
-        </section>
 
         {pageGroups.length > 0 && (
           <section className="detail-section">
@@ -566,6 +577,7 @@ export default function SiteDetailPage({ params }) {
             </div>
           </section>
         )}
+        <RelatedSection kind="site" item={site} />
       </main>
     </>
   );

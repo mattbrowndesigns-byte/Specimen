@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 import AddMenu from "./AddMenu";
 import { addItem, jobHandoffUrl } from "@/lib/addItem";
+import { THEME_KEY } from "@/lib/theme";
 
 // The library's chrome, the same on every page: identity (which doubles as the
 // way home), the review count, tag management and Add.
@@ -11,6 +13,24 @@ import { addItem, jobHandoffUrl } from "@/lib/addItem";
 // string and navigates there, so you always end up watching the capture.
 export default function UtilityBar({ onAdd, onError }) {
   const [needsReviewCount, setNeedsReviewCount] = useState(0);
+  const [theme, setTheme] = useState("light");
+
+  // The boot script in the document head has already set data-theme from
+  // storage or the OS preference; read it back rather than deciding again.
+  useEffect(() => {
+    setTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    setTheme(next);
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // The theme still applies for this session; it just won't be remembered.
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -62,6 +82,14 @@ export default function UtilityBar({ onAdd, onError }) {
             </a>
           )}
           <a href="/tags">Manage tags</a>
+          <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
           <AddMenu onSubmit={handleAdd} />
         </div>
       </div>

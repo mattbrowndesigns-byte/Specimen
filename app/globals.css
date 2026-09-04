@@ -440,6 +440,102 @@ h1 {
   opacity: 0.65;
 }
 
+.capture-status {
+  background: #fff;
+  border: 1px solid #e0e0e2;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.capture-status p {
+  margin: 0;
+  font-size: 13px;
+  color: #4a4a4e;
+}
+
+.capture-status-bar {
+  height: 4px;
+  background: #ececed;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.capture-status-fill {
+  height: 100%;
+  width: 35%;
+  background: #1a1a1a;
+  border-radius: 999px;
+  animation: capture-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes capture-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+.capture-status-done {
+  border-color: #bfe3c6;
+  background: #f2fbf4;
+}
+
+.capture-status-done p {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #1f6b33;
+}
+
+.capture-status-done button {
+  border: none;
+  background: none;
+  color: #1f6b33;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.section-head h2 {
+  margin: 0;
+}
+
+.section-head-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.detail-section .section-head-actions button.primary {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+.summary-text {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #2a2a2e;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.summary-empty {
+  color: #9a9aa0;
+}
+
 .capture-meta {
   font-size: 12px;
   color: #6b6b70;

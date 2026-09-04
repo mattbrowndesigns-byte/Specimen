@@ -28,7 +28,12 @@ export default function SiteDetailPage({ params }) {
   const [promoted, setPromoted] = useState({});
   const [selectedRun, setSelectedRun] = useState(null);
   const [deletingCapture, setDeletingCapture] = useState(false);
+  const [captureElapsed, setCaptureElapsed] = useState(0);
+  const [captureDone, setCaptureDone] = useState(false);
+  const [editingSummary, setEditingSummary] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const timelineRef = useRef(null);
+  const captureBaseline = useRef(0);
 
   async function load() {
     const res = await fetch(`/api/sites/${id}`);
@@ -65,9 +70,24 @@ export default function SiteDetailPage({ params }) {
 
   useEffect(() => {
     if (!recapturing) return;
-    const interval = setInterval(load, 4000);
-    return () => clearInterval(interval);
+    const poll = setInterval(load, 4000);
+    const tick = setInterval(() => setCaptureElapsed((s) => s + 1), 1000);
+    return () => {
+      clearInterval(poll);
+      clearInterval(tick);
+    };
   }, [recapturing]);
+
+  // A capture run finishing is what ends the progress state -- new capture rows
+  // land only once the Actions job has uploaded and called back.
+  useEffect(() => {
+    if (!recapturing || !site) return;
+    if ((site.capture || []).length > captureBaseline.current) {
+      setRecapturing(false);
+      setCaptureDone(true);
+      setSelectedRun(null);
+    }
+  }, [site, recapturing]);
 
   // The strip runs oldest-to-newest, so start it scrolled to the newest end.
   useEffect(() => {
@@ -190,13 +210,31 @@ export default function SiteDetailPage({ params }) {
 
   async function recapture() {
     setError(null);
+    setCaptureDone(false);
+    setCaptureElapsed(0);
+    captureBaseline.current = (site?.capture || []).length;
     setRecapturing(true);
+
     const res = await fetch(`/api/sites/${id}/recapture`, { method: "POST" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error || "Failed to start re-capture");
       setRecapturing(false);
     }
+  }
+
+  async function regenerateSummary() {
+    setRegenerating(true);
+    setError(null);
+    const res = await fetch(`/api/sites/${id}/enrich`, { method: "POST" });
+    setRegenerating(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Couldn't regenerate the summary");
+      return;
+    }
+    setEditingSummary(false);
+    await load();
   }
 
   if (!site) {
@@ -266,6 +304,27 @@ export default function SiteDetailPage({ params }) {
 
       <p className="meta-line">Saved {formatCaptureDate(site.saved_at)}</p>
 
+      {recapturing && (
+        <div className="capture-status">
+          <div className="capture-status-bar">
+            <div className="capture-status-fill" />
+          </div>
+          <p>
+            Capturing this site… usually about a minute ({captureElapsed}s so far). This runs on a
+            server, so it'll finish even if you leave this page.
+          </p>
+        </div>
+      )}
+
+      {captureDone && (
+        <div className="capture-status capture-status-done">
+          <p>
+            ✓ New capture complete — added to the timeline below.
+            <button onClick={() => setCaptureDone(false)}>Dismiss</button>
+          </p>
+        </div>
+      )}
+
       <div className="capture-panel">
         {timeline.length > 1 && (
           <div className="capture-timeline" ref={timelineRef}>
@@ -332,15 +391,47 @@ export default function SiteDetailPage({ params }) {
       </div>
 
       <section className="detail-section">
-        <h2>Summary</h2>
-        <textarea
-          value={summaryDraft}
-          onChange={(e) => setSummaryDraft(e.target.value)}
-          rows={4}
-        />
-        <button disabled={savingField === "summary"} onClick={() => saveField("summary", summaryDraft)}>
-          {savingField === "summary" ? "Saving…" : "Save summary"}
-        </button>
+        <div className="section-head">
+          <h2>AI summary</h2>
+          {!editingSummary && (
+            <div className="section-head-actions">
+              <button onClick={() => setEditingSummary(true)}>Edit</button>
+              <button onClick={regenerateSummary} disabled={regenerating}>
+                {regenerating ? "Regenerating…" : "Regenerate"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {editingSummary ? (
+          <>
+            <textarea value={summaryDraft} onChange={(e) => setSummaryDraft(e.target.value)} rows={4} />
+            <div className="section-head-actions">
+              <button
+                className="primary"
+                disabled={savingField === "summary"}
+                onClick={async () => {
+                  await saveField("summary", summaryDraft);
+                  setEditingSummary(false);
+                }}
+              >
+                {savingField === "summary" ? "Saving…" : "Save"}
+              </button>
+              <button
+                onClick={() => {
+                  setSummaryDraft(site.summary || "");
+                  setEditingSummary(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        ) : (
+          <p className="summary-text">
+            {site.summary || <span className="summary-empty">No summary yet.</span>}
+          </p>
+        )}
       </section>
 
       <section className="detail-section">

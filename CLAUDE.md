@@ -183,6 +183,52 @@ what stops vocabulary drift (`minimal` / `minimalist` / `clean minimal`).
 timestamp per run so desktop and mobile land on the same point. Anything that
 writes captures must preserve that.
 
+**`analyze.js` exists because `capture.js` is off limits.** Reading a site's
+palette and typefaces needs a rendered DOM, which means Playwright, which means
+the Actions runner — but not an edit to the validated capture script. So it's a
+second script and a second page load in the same job, plus its own
+`analyze-dispatch.yml` so a site can be re-read without a new capture. It runs
+*after* delivery in `capture-dispatch.yml`, with `continue-on-error`, so a
+failed style read can never cost the screenshots.
+
+**Colours are measured, not parsed.** A stylesheet declares thousands of rules
+the page never paints, and frequency in CSS says nothing about area on screen.
+`analyze.js` walks the rendered DOM and weights each colour by the area it
+actually covers — backgrounds less what their children paint over, borders as
+perimeter x width, text as *ink* (about 14% of the em square per character, or
+one paragraph would outweigh a hero panel), SVG fills by bbox. `<img>`,
+`<video>` and `url()` backgrounds are skipped, which is the point: a palette
+taken from pixels reports the photography, not the interface. Gradients are
+kept — they're drawn UI — with the element's area split across their stops.
+
+**A site that declares no background still has one.** Stripe sets neither
+`html` nor `body` background and lets the browser canvas show through; without
+the synthetic canvas entry in `analyze.js`, the colour covering 70% of the page
+was missing from its palette entirely. Body wins over html, white is the
+fallback.
+
+**The palette bar compresses widths and stores true shares.** Painted area is
+brutally top-heavy — a page background routinely holds 80% — so a literal bar
+is one white rectangle and five slivers. `SiteStyle.js` raises each share to
+0.55 for width only; the real percentage is on every swatch.
+
+**Font and foundry links are checked before they're stored.** Gemini names the
+typeface, its foundry and the nearest Google/Adobe equivalents; every URL it
+returns is then fetched, and anything that doesn't answer is dropped rather
+than rendered. Both font services return a real 404 for a name they don't
+have, which is what makes this work — and what lets the model suggest freely.
+A font that *is* on a service gets a link to itself there rather than a
+substitute, including the self-hosted Google fonts half the web serves.
+
+**`palette` and `fonts` are jsonb on `site`, not tables.** They're always read
+with the site and never queried across rows, so a join buys nothing — and
+columns inherit the site's own RLS instead of needing a policy, a `user_id`
+and a scoped query in every route, which is the part that's easy to get wrong.
+
+**Both Actions callbacks must be in `middleware.js`'s `PUBLIC_PATHS`.** The
+runner has no session, so a callback left off that list is redirected to
+/login and the job's results are thrown away with no error anywhere.
+
 **Component crops are non-destructive.** `source_image_url` is the original
 capture, `image_url` the cropped derivative, `crop_rect` the region.
 Re-cropping reads the original, so cropped-out content stays recoverable.

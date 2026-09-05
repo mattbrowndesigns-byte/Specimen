@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// Public: the login screen, the auth callback, and the capture callback that
-// GitHub Actions posts to (authenticated by CALLBACK_SECRET, not a session).
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/api/auth", "/api/capture-callback"];
+// Public: the login screen, the auth callback, and the two callbacks GitHub
+// Actions posts to (both authenticated by CALLBACK_SECRET, not a session --
+// the runner has no session to offer, so leaving either out of this list means
+// the job's results are rejected at the door).
+const PUBLIC_PATHS = [
+  "/login",
+  "/auth/callback",
+  "/api/auth",
+  "/api/capture-callback",
+  "/api/analyze-callback",
+];
 
 export async function middleware(request) {
   let response = NextResponse.next({ request });

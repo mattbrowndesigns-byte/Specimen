@@ -643,13 +643,20 @@ h1 {
   margin-bottom: 0;
 }
 
+/* inline-flex, or the icon sits on the text's baseline rather than its centre
+   -- which reads as the label hanging low -- and butts straight up against the
+   first letter. Same construction as .sort-btn and .add-btn. */
 .filters-btn {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 10px 16px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   background: var(--surface);
   font-size: 14px;
+  line-height: 1.25;
   cursor: pointer;
 }
 
@@ -2485,6 +2492,166 @@ a.card {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+/* ---- Site style: palette + fonts in use --------------------------------- */
+
+/* One bar rather than a row of chips: the point is the proportion, and
+   separate swatches with gaps between them read as a set of equals. Clipping
+   the corners on the container is what lets the segments stay plain
+   rectangles that can't drift apart. */
+.palette-bar {
+  display: flex;
+  height: 34px;
+  border-radius: 8px;
+  overflow: hidden;
+  /* A pale palette on a pale panel would otherwise float with no edge -- and a
+     1px inset beats a border, which would eat into the first swatch. */
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+/* flex-basis 0 with a grow set per swatch, so the widths come out as the exact
+   ratio asked for. min-width keeps a 0.3% accent clickable rather than
+   sub-pixel -- the number beside it stays true either way. */
+.palette-swatch {
+  flex: 0 1 0;
+  min-width: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.palette-swatch:hover,
+.palette-swatch:focus-visible {
+  outline: none;
+  transform: scaleY(1.14);
+}
+
+.palette-tick {
+  font-size: 12px;
+  line-height: 1;
+  color: #fff;
+}
+
+.palette-tick-dark {
+  color: #111;
+}
+
+/* Fixed height, so hovering along the bar doesn't shift the panel below it. */
+.palette-caption {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 18px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.palette-caption-hex {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text);
+}
+
+.palette-caption-idle {
+  color: var(--text-faint);
+}
+
+.font-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.font-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.font-row:last-child {
+  border-bottom: none;
+}
+
+.font-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.font-name a {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.font-name a:hover {
+  border-bottom-color: var(--text);
+}
+
+.font-foundry,
+.font-meta {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.font-meta {
+  color: var(--text-faint);
+}
+
+.font-badge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.font-matches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* Quiet by design: a substitute is a lead to follow, not the answer to the
+   question the panel is asking. */
+.font-match {
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.font-match:hover {
+  border-color: var(--border-strong-hover);
+  color: var(--text);
+}
+
+.style-empty {
+  margin: 0 0 8px;
+  font-size: 13px;
   color: var(--text-faint);
 }
 

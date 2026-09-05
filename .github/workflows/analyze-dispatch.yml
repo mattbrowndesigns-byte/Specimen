@@ -1,0 +1,33 @@
+name: Analyze site style
+
+# Reading a site's palette and typefaces needs a rendered page but no
+# screenshots, so it runs on its own rather than only as part of a capture.
+# That's what lets a site saved before this existed be filled in without
+# re-capturing it.
+on:
+  repository_dispatch:
+    types: [analyze-site]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+
+      - name: Analyze
+        run: node analyze.js
+        env:
+          TARGET_URL: ${{ github.event.client_payload.url }}
+          TARGET_ID: ${{ github.event.client_payload.target_id }}
+          CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
+          CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET }}

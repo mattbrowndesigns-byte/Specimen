@@ -7,6 +7,7 @@ import RelatedSection from "../../_ui/RelatedSection";
 import SaveActions from "../../_ui/SaveActions";
 import Favicon from "../../_ui/Favicon";
 import DiscoveredPages from "../../_ui/DiscoveredPages";
+import SiteStyle from "../../_ui/SiteStyle";
 import FeatureRotator from "../../_ui/FeatureRotator";
 import { archiveUrl, captureTimeline, formatCaptureDate } from "@/lib/captures";
 
@@ -548,6 +549,8 @@ export default function SiteDetailPage({ params }) {
                 </div>
               ))}
             </section>
+
+            <SiteStyle site={site} onRefresh={load} />
 
             <section className="detail-section">
               <h2>Notes</h2>

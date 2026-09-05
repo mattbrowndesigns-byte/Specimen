@@ -34,3 +34,16 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
           CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET }}
+
+      # After delivery, so a failure reading the palette can never cost the
+      # screenshots. Sites only -- a component source is a page we crop, not a
+      # design whose palette belongs in the library.
+      - name: Analyze style
+        if: github.event.client_payload.target_type != 'component_source'
+        continue-on-error: true
+        run: node analyze.js
+        env:
+          TARGET_URL: ${{ github.event.client_payload.url }}
+          TARGET_ID: ${{ github.event.client_payload.target_id }}
+          CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
+          CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET }}

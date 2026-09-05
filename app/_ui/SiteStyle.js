@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Check, Copy } from "lucide-react";
+import { colorName } from "@/lib/colorNames";
+import { formatCaptureDate } from "@/lib/captures";
 
 // What the site is built out of: the colours it paints and the typefaces it
 // sets. Measured in a real browser by analyze.js, so these are the colours the
@@ -13,13 +15,14 @@ import { ArrowUpRight } from "lucide-react";
 // Painted area is brutally top-heavy: a page background routinely holds 80% of
 // it, which as a literal bar is one long white rectangle and five slivers. The
 // exponent pulls the tail up enough to see while leaving the order and the
-// rough proportions intact, and the real number is on every swatch, so nothing
-// is hidden -- the bar is for reading hierarchy at a glance, not for measuring.
+// rough proportions intact, and the real number is on every swatch and in the
+// expanded list, so nothing is hidden -- the bar reads hierarchy at a glance,
+// it isn't a measuring device.
 const COMPRESSION = 0.55;
 
 const pct = (n) => `${n < 0.01 ? "<1" : Math.round(n * 100)}%`;
 
-// Enough contrast to put a label on the swatch. Rec. 601 luma is the cheap
+// Enough contrast to put a tick on the swatch. Rec. 601 luma is the cheap
 // version and it's the right cheap version here: it over-weights green, which
 // is what the eye does.
 function isLight(hex) {
@@ -43,21 +46,42 @@ function fontRole(font) {
   return "Headings & body";
 }
 
+// Two claims that must not sit under one label. "This typeface is on Google
+// Fonts" and "this is the nearest thing on Google Fonts to one you can't have"
+// lead to opposite next actions, so they're grouped and labelled separately.
+function matchGroups(font) {
+  const available = [];
+  const closest = [];
+  for (const [service, match] of [
+    ["Google Fonts", font.google],
+    ["Adobe Fonts", font.adobe],
+  ]) {
+    if (!match) continue;
+    (match.self ? available : closest).push({ service, ...match });
+  }
+  return [
+    { key: "available", label: "Available on", items: available },
+    { key: "closest", label: "Closest match", items: closest },
+  ].filter((group) => group.items.length);
+}
+
 export default function SiteStyle({ site, onRefresh }) {
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(null);
   const [hovered, setHovered] = useState(null);
+  const [expanded, setExpanded] = useState(false);
   const startedAt = useRef(null);
 
   const palette = Array.isArray(site.palette) ? site.palette : [];
   const fonts = Array.isArray(site.fonts) ? site.fonts : [];
+  const history = Array.isArray(site.style_history) ? site.style_history : [];
   const analyzed = Boolean(site.analyzed_at);
 
   // Held in a ref because the parent rebuilds this function on every render,
   // and the poll below must not depend on it: each refresh sets state, which
-  // re-renders, which would tear the interval down and restart its clock --
-  // so it would never reach five seconds and never poll again.
+  // re-renders, which would tear the interval down and restart its clock -- so
+  // it would never reach five seconds and never poll again.
   const refresh = useRef(onRefresh);
   refresh.current = onRefresh;
 
@@ -111,13 +135,25 @@ export default function SiteStyle({ site, onRefresh }) {
   const weightTotal = weights.reduce((a, b) => a + b, 0) || 1;
   const shown = palette.find((c) => c.hex === hovered) || null;
 
+  // The most recent reading whose typefaces differ from today's. A site
+  // redesigning is exactly what a library like this should notice, and the
+  // previous names are more use in front of you than buried in a column.
+  const nameFonts = (list) => (list || []).map((f) => f.display_name || f.family).join(", ");
+  const previousFonts = history.find(
+    (entry) => entry.fonts?.length && nameFonts(entry.fonts) !== nameFonts(fonts)
+  );
+
   return (
     <>
       {palette.length > 0 && (
         <section className="detail-section">
           <div className="section-head">
-            <h2>Colours</h2>
-            <span className="section-count">{palette.length}</span>
+            <h2>
+              Colours <span className="section-count">{palette.length}</span>
+            </h2>
+            <div className="section-head-actions">
+              <button onClick={() => setExpanded((v) => !v)}>{expanded ? "Collapse" : "Expand"}</button>
+            </div>
           </div>
 
           <div className="palette-bar">
@@ -126,7 +162,7 @@ export default function SiteStyle({ site, onRefresh }) {
                 key={color.hex}
                 className="palette-swatch"
                 style={{ flexGrow: weights[i] / weightTotal, background: color.hex }}
-                title={`${color.hex} — ${pct(color.share)} of the interface · ${
+                title={`${colorName(color.hex)} ${color.hex} — ${pct(color.share)} of the interface · ${
                   ROLE_LABEL[color.role] || color.role
                 }`}
                 onMouseEnter={() => setHovered(color.hex)}
@@ -134,38 +170,59 @@ export default function SiteStyle({ site, onRefresh }) {
                 onFocus={() => setHovered(color.hex)}
                 onBlur={() => setHovered((h) => (h === color.hex ? null : h))}
                 onClick={() => copyHex(color.hex)}
-                aria-label={`${color.hex}, ${pct(color.share)} of the interface. Click to copy.`}
+                aria-label={`${colorName(color.hex)}, ${color.hex}, ${pct(color.share)} of the interface. Copy.`}
               >
-                <span className={isLight(color.hex) ? "palette-tick palette-tick-dark" : "palette-tick"}>
-                  {copied === color.hex ? "✓" : ""}
-                </span>
+                {copied === color.hex && (
+                  <Check size={13} className={isLight(color.hex) ? "palette-tick-dark" : "palette-tick"} />
+                )}
               </button>
             ))}
           </div>
 
           {/* One caption that changes rather than eight labels that don't fit.
-              It holds the row's height steady so hovering doesn't reflow the
-              panel underneath. */}
+              Fixed height, so running along the bar doesn't shift the panel. */}
           <p className="palette-caption">
             {shown ? (
               <>
                 <span className="palette-caption-hex">{shown.hex}</span>
                 <span>
-                  {pct(shown.share)} of the interface · {ROLE_LABEL[shown.role] || shown.role}
+                  {colorName(shown.hex)} · {pct(shown.share)} · {ROLE_LABEL[shown.role] || shown.role}
                 </span>
               </>
             ) : (
-              <span className="palette-caption-idle">Sized by share of the interface · click to copy</span>
+              <span className="palette-caption-idle">Click to copy</span>
             )}
           </p>
+
+          {expanded && (
+            <ul className="palette-list">
+              {palette.map((color) => (
+                <li key={color.hex}>
+                  <span className="palette-list-chip" style={{ background: color.hex }} />
+                  <span className="palette-list-name">{colorName(color.hex)}</span>
+                  <span className="palette-list-share">{pct(color.share)}</span>
+                  <span className="palette-list-hex">{color.hex}</span>
+                  <button
+                    className="icon-btn palette-copy"
+                    onClick={() => copyHex(color.hex)}
+                    title={`Copy ${color.hex}`}
+                    aria-label={`Copy ${color.hex}`}
+                  >
+                    {copied === color.hex ? <Check size={14} /> : <Copy size={14} />}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       )}
 
       {fonts.length > 0 && (
         <section className="detail-section">
           <div className="section-head">
-            <h2>Fonts in use</h2>
-            <span className="section-count">{fonts.length}</span>
+            <h2>
+              Fonts in use <span className="section-count">{fonts.length}</span>
+            </h2>
           </div>
 
           <ul className="font-list">
@@ -191,53 +248,53 @@ export default function SiteStyle({ site, onRefresh }) {
                     {[font.classification, role, `${pct(font.share)} of text`].filter(Boolean).join(" · ")}
                   </span>
 
-                  {(font.google || font.adobe) && (
-                    <span className="font-matches">
-                      {font.google && (
-                        <a
-                          className="font-match"
-                          href={font.google.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title={font.google.note || undefined}
-                        >
-                          {font.google.self ? "On Google Fonts" : `Google: ${font.google.family}`}
-                        </a>
-                      )}
-                      {font.adobe && (
-                        <a
-                          className="font-match"
-                          href={font.adobe.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title={font.adobe.note || undefined}
-                        >
-                          {font.adobe.self ? "On Adobe Fonts" : `Adobe: ${font.adobe.family}`}
-                        </a>
-                      )}
+                  {matchGroups(font).map((group) => (
+                    <span className="font-match-group" key={group.key}>
+                      <span className="font-match-label">{group.label}</span>
+                      <span className="font-matches">
+                        {group.items.map((item) => (
+                          <a
+                            className="font-match"
+                            key={item.service}
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={item.note || undefined}
+                          >
+                            <span className="font-match-service">{item.service}</span>
+                            {!item.self && <span className="font-match-family">{item.family}</span>}
+                          </a>
+                        ))}
+                      </span>
                     </span>
-                  )}
+                  ))}
                 </li>
               );
             })}
           </ul>
+
+          {previousFonts && (
+            <p className="style-changed">
+              Type changed since {formatCaptureDate(previousFonts.analyzed_at)} — was{" "}
+              {nameFonts(previousFonts.fonts)}
+            </p>
+          )}
         </section>
       )}
 
       {/* One control for both sections, since one run produces both. */}
-      <section className="detail-section">
+      <div className="style-actions">
         {!analyzed && !analyzing && palette.length === 0 && fonts.length === 0 && (
           <p className="style-empty">This site&rsquo;s colours and type haven&rsquo;t been read yet.</p>
         )}
         {error && <p className="error">{error}</p>}
         <button className="link-btn" onClick={analyze} disabled={analyzing}>
-          {analyzing
-            ? "Reading the page…"
-            : analyzed
-              ? "Re-read colours & type"
-              : "Read colours & type"}
+          {analyzing ? "Reading the page…" : analyzed ? "Re-read colours & type" : "Read colours & type"}
         </button>
-      </section>
+        {analyzed && !analyzing && (
+          <span className="style-read-at">Read {formatCaptureDate(site.analyzed_at)}</span>
+        )}
+      </div>
     </>
   );
 }

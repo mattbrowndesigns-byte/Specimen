@@ -15,7 +15,7 @@ export async function GET(request, { params }) {
   const { data: site, error } = await supabase
     .from("site")
     .select(
-      "id, url, domain, name, summary, notes, saved_at, needs_review, is_favorite, favicon_url, favicon_fills, palette, fonts, analyzed_at"
+      "id, url, domain, name, summary, notes, saved_at, needs_review, is_favorite, favicon_url, favicon_fills, palette, fonts, analyzed_at, style_history"
     )
     .eq("id", id)
     .eq("user_id", user.id)

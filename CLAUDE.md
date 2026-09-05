@@ -183,6 +183,26 @@ what stops vocabulary drift (`minimal` / `minimalist` / `clean minimal`).
 timestamp per run so desktop and mobile land on the same point. Anything that
 writes captures must preserve that.
 
+**Card tags are measured, not counted.** `TagRow` renders every chip once,
+reads their widths back, then keeps the number that fits on one line with room
+for "+N more". A count per card size can't do it — "Ecommerce" is twice the
+width of "SaaS" and the grid reflows at every breakpoint. It re-fits on every
+render *and* on a ResizeObserver: the size switch changes widths through a
+re-render, and a browser that isn't painting (a hidden tab) delivers no
+observer callbacks at all, which is also why this can't be verified through a
+hidden preview pane.
+
+**Colour names are generated, not looked up.** A table of the 148 CSS colour
+names sounds right until an off-white comes back as "Linen". `lib/colorNames.js`
+describes the colour instead — lightness, then chroma, then hue — so #f7f4f1 is
+"Warm off-white" and #211006 is "Muted brown". Brown and navy are the two
+hand-written exceptions, because "dark muted orange" is not what anyone says.
+
+**Each analysis keeps the one it replaced.** `style_history` on `site` holds up
+to twelve prior readings, newest first, pushed by the analyze callback. A
+library of design work is the right place to notice a redesign, and that's only
+possible if the previous reading survives the next one.
+
 **`analyze.js` exists because `capture.js` is off limits.** Reading a site's
 palette and typefaces needs a rendered DOM, which means Playwright, which means
 the Actions runner — but not an edit to the validated capture script. So it's a

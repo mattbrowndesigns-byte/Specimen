@@ -15,6 +15,7 @@ import SaveActions from "./SaveActions";
 import Favicon from "./Favicon";
 import AddMenu from "./AddMenu";
 import FeatureRotator from "./FeatureRotator";
+import TagRow from "./TagRow";
 
 const VIEWS = [
   { id: "cards", label: "Cards", Icon: LayoutGrid },
@@ -22,11 +23,9 @@ const VIEWS = [
   { id: "headlines", label: "Headlines", Icon: AlignJustify },
 ];
 
-// Cards keep tags to two rows, so how many labels fit depends on how wide the
-// card is. These are the counts that leave "+N more" on the second row rather
-// than pushing it onto a third one that gets clipped. List rows are wide enough
-// that they don't need to vary.
-const TAG_LIMITS = { small: 2, medium: 3, large: 5 };
+// List rows are one wide column, so a fixed count holds its line. Cards are
+// not: their width changes with the size switch and again at every grid
+// breakpoint, so TagRow measures instead of counting.
 const ROW_TAG_LIMIT = 4;
 
 // `date` reads whichever timestamp the adapter exposes, so sites (saved_at) and
@@ -204,7 +203,7 @@ export default function LibraryBrowser({
     const shown = limit ? tags.slice(0, limit) : tags;
     const hidden = tags.length - shown.length;
     return (
-      <div className={`card-tags${limit ? " card-tags-clamped" : ""}`}>
+      <div className="card-tags">
         {shown.map((tag, i) => (
           <span className={`chip${tag.is_approved ? "" : " chip-pending"}`} key={i}>
             {tag.label}
@@ -377,7 +376,7 @@ export default function LibraryBrowser({
                   ↗
                 </a>
               </div>
-              {renderTags(item, TAG_LIMITS[size])}
+              <TagRow tags={item.tags || []} href={adapter.href(item)} />
             </div>
           ))}
         </div>

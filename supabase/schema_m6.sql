@@ -43,8 +43,13 @@ create index if not exists page_user_idx on page (user_id);
 
 -- The tag vocabulary is per account now, so the uniqueness that mattered --
 -- one "Minimal" per facet -- has to be per account too.
-drop index if exists tag_facet_slug_key;
+--
+-- Constraint first, then index: this index exists to enforce the UNIQUE
+-- constraint, so Postgres refuses to drop it on its own. Dropping the
+-- constraint takes the index with it, and the second line is only a safety net
+-- for a database where the index was created without one.
 alter table tag drop constraint if exists tag_facet_slug_key;
+drop index if exists tag_facet_slug_key;
 create unique index if not exists tag_user_facet_slug_idx on tag (user_id, facet, slug);
 
 -- 3. RLS on, everywhere. No policies for anon or authenticated means no direct

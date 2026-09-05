@@ -116,7 +116,7 @@
 
 body {
   margin: 0;
-  font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text);
 }
@@ -2851,8 +2851,15 @@ a.card {
 
 /* Dashboard hero */
 
+/* The only text in the app set in Figtree. Everything else is the system face,
+   which is the right call for interface copy and the wrong one for the single
+   line that has to sound like the product rather than like the OS. Fallback
+   still listed: the headline renders in the system stack until the font
+   lands, and next/font's metric-matched fallback keeps that swap from moving
+   the page. */
 .page-hero {
   margin: 4px 0 22px;
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: clamp(28px, 3.6vw, 44px);
   font-weight: 600;
   line-height: 1.12;

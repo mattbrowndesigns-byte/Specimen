@@ -12,14 +12,17 @@ const lalezar = Lalezar({
   variable: "--font-wordmark",
 });
 
-// The interface face, everything but the wordmark. Self-hosted for the same
-// reasons, and a variable font rather than a set of static weights: the app
-// asks for 400, 500 and 600, and one variable file covers all three for less
-// than two static ones would cost.
+// The dashboard headline, and nothing else. Setting the whole interface in
+// Figtree made the app feel like a brochure for itself; at 44px on one line of
+// copy it does the job the system stack can't, which is to have a voice.
+//
+// One weight, not the variable file: the headline is the only thing asking for
+// it, and a single static cut is a smaller download than the variable font.
 const figtree = Figtree({
+  weight: "600",
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-ui",
+  variable: "--font-display",
 });
 
 export const metadata = {

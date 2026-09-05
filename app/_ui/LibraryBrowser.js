@@ -35,14 +35,14 @@ const ROW_TAG_LIMIT = 4;
 // continuous control would need a continuous grid, and the column count is what
 // actually changes. Denser icon means smaller cards.
 const SIZES = [
-  { id: "small", label: "Small cards", Icon: Grid3x3 },
-  { id: "medium", label: "Medium cards", Icon: LayoutGrid },
-  { id: "large", label: "Large cards", Icon: Square },
+  { id: "small", label: "Small Cards", Icon: Grid3x3 },
+  { id: "medium", label: "Medium Cards", Icon: LayoutGrid },
+  { id: "large", label: "Large Cards", Icon: Square },
 ];
 
 const SORTS = [
-  { id: "newest", label: "Newest first" },
-  { id: "oldest", label: "Oldest first" },
+  { id: "newest", label: "Newest First" },
+  { id: "oldest", label: "Oldest First" },
   { id: "az", label: "Name A–Z" },
   { id: "za", label: "Name Z–A" },
 ];
@@ -302,7 +302,7 @@ export default function LibraryBrowser({
             </button>
             {sortOpen && (
               <div className="sort-pop">
-                <span className="sort-pop-head">Sort by</span>
+                <span className="sort-pop-head">Sort By</span>
                 {SORTS.map((option) => (
                   <button
                     key={option.id}

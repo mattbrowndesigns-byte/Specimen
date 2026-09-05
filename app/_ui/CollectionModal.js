@@ -93,7 +93,7 @@ export default function CollectionModal({ kind, id, name, onClose }) {
   return (
     <ModalShell label="Add to a collection" onClose={onClose}>
       <div className="modal-head">
-        <h2>Add to a collection</h2>
+        <h2>Add To A Collection</h2>
         <button className="modal-close" onClick={onClose} aria-label="Close">
           ×
         </button>

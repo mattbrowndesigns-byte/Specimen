@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import ModalShell from "./ModalShell";
+import { formatCaptureDate } from "@/lib/captures";
 
 const PREVIEW_LIMIT = 4;
 
@@ -15,6 +16,12 @@ const PREVIEW_LIMIT = 4;
 //
 // A site with nothing flagged (enrichment hasn't run, or failed) falls back to
 // showing everything, so discovery never looks empty when it isn't.
+// What a page is called here is what it does, not what its own nav called it.
+// A site writes "Why us" or "Get started free" to sell to its visitors; this
+// library is for comparing one site's page set against another's, and that
+// only works if a demo request is called Request A Demo on both.
+const pageName = (page) => page.utility_label || page.label || page.url;
+
 export default function DiscoveredPages({
   pages,
   pageTypeLabel,
@@ -23,6 +30,7 @@ export default function DiscoveredPages({
   onPromote,
   onRefresh,
   refreshing,
+  readAt,
 }) {
   const [open, setOpen] = useState(false);
 
@@ -39,44 +47,50 @@ export default function DiscoveredPages({
 
   return (
     <section className="detail-section">
-      <div className="section-head">
-        <h2>{flagged.length > 0 ? "Key pages" : "Discovered pages"}</h2>
+      {/* Count inline after the heading, the same place the palette and the
+          typefaces put theirs. */}
+      <h2>
+        {flagged.length > 0 ? "Key Pages" : "Discovered Pages"}{" "}
         <span className="section-count">{key.length}</span>
-      </div>
+      </h2>
 
       <ul className="page-list page-list-compact">
         {preview.map((page) => (
           <li key={page.id}>
-            <a href={page.url} target="_blank" rel="noopener noreferrer">
-              {page.label || page.url}
+            <a href={page.url} target="_blank" rel="noopener noreferrer" title={page.label || page.url}>
+              {pageName(page)}
             </a>
             {page.page_type && <span className="page-type-badge">{pageTypeLabel(page.page_type)}</span>}
           </li>
         ))}
       </ul>
 
+      {/* Two buttons that looked identical were asking for the same attention.
+          Opening the list is what you came to do; re-reading it is maintenance,
+          so it steps back to match the style panel's own re-read control. */}
       <div className="page-list-actions">
-        <button className="link-btn" onClick={() => setOpen(true)}>
-          {hasMore ? `Show all ${pages.length} pages` : "Open all pages"}
+        <button className="page-list-open" onClick={() => setOpen(true)}>
+          {hasMore ? `Show All ${pages.length} Pages` : "Open All Pages"}
         </button>
         {onRefresh && (
           <button className="link-btn" onClick={onRefresh} disabled={refreshing}>
-            {refreshing ? "Re-reading…" : "Refresh pages"}
+            {refreshing ? "Re-reading…" : "Re-read Pages"}
           </button>
         )}
+        {readAt && !refreshing && <span className="style-read-at">Read {formatCaptureDate(readAt)}</span>}
       </div>
 
       {open && (
         <ModalShell label="Discovered pages" wide onClose={() => setOpen(false)}>
           <div className="modal-head">
-            <h2>Discovered pages ({pages.length})</h2>
+            <h2>Discovered Pages ({pages.length})</h2>
             <button className="modal-close" onClick={() => setOpen(false)} aria-label="Close">
               ×
             </button>
           </div>
 
           <div className="modal-body">
-            {flagged.length > 0 && <h3 className="page-section-head">Key pages</h3>}
+            {flagged.length > 0 && <h3 className="page-section-head">Key Pages</h3>}
             {groups.map(([typeSlug, group]) => (
               <div className="page-group" key={typeSlug || "none"}>
                 <h3>{pageTypeLabel(typeSlug)}</h3>
@@ -91,7 +105,7 @@ export default function DiscoveredPages({
 
             {rest.length > 0 && (
               <div className="page-group">
-                <h3 className="page-section-head">Everything else found ({rest.length})</h3>
+                <h3 className="page-section-head">Everything Else Found ({rest.length})</h3>
                 <PageList
                   pages={rest}
                   promoted={promoted}
@@ -122,12 +136,12 @@ function PageList({ pages, promoted, promoting, onPromote }) {
     <ul className="page-list">
       {pages.map((page) => (
         <li key={page.id}>
-          <a href={page.url} target="_blank" rel="noopener noreferrer">
-            {page.label || page.url}
+          <a href={page.url} target="_blank" rel="noopener noreferrer" title={page.label || page.url}>
+            {pageName(page)}
           </a>
           {promoted[page.id] ? (
             <a className="promote-link" href={`/sites/${promoted[page.id]}`}>
-              View full capture →
+              View Full Capture →
             </a>
           ) : (
             <button
@@ -135,7 +149,7 @@ function PageList({ pages, promoted, promoting, onPromote }) {
               disabled={promoting === page.id}
               onClick={() => onPromote(page)}
             >
-              {promoting === page.id ? "Capturing…" : "Promote to full capture"}
+              {promoting === page.id ? "Capturing…" : "Promote To Full Capture"}
             </button>
           )}
         </li>

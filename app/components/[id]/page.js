@@ -213,11 +213,11 @@ export default function ComponentDetailPage({ params }) {
               name={component.name || "Untitled component"}
               isFavorite={component.is_favorite}
             />
-            {component.needs_review && <button onClick={markReviewed}>Mark reviewed</button>}
+            {component.needs_review && <button onClick={markReviewed}>Mark Reviewed</button>}
             {/* Last, and the only filled control here: going to the real site is
                 what you came for, everything left of it acts on the record. */}
             <a className="visit-btn" href={component.source_url} target="_blank" rel="noopener noreferrer">
-              Visit source
+              Visit Source
               <ArrowUpRight size={15} />
             </a>
           </div>
@@ -293,7 +293,7 @@ export default function ComponentDetailPage({ params }) {
                   yours -- the same mark the site detail page uses. */}
               <h2 className="ai-heading">
                 <Sparkles size={15} />
-                AI summary
+                AI Summary
               </h2>
 
               {editingSummary ? (
@@ -331,9 +331,12 @@ export default function ComponentDetailPage({ params }) {
                   </p>
                   {/* Under the summary, not beside the heading: both buttons act
                       on the text, and you decide to rewrite it after reading it. */}
+                  {/* Same hierarchy as the site page: correcting a sentence is
+                      the ordinary move, throwing it away and paying for a new
+                      one is not. */}
                   <div className="section-head-actions section-actions-below">
                     <button onClick={() => setEditingSummary(true)}>Edit</button>
-                    <button onClick={regenerateSummary} disabled={regenerating}>
+                    <button className="link-btn" onClick={regenerateSummary} disabled={regenerating}>
                       {regenerating ? "Regenerating…" : "Regenerate"}
                     </button>
                   </div>
@@ -361,7 +364,7 @@ export default function ComponentDetailPage({ params }) {
               <h2>Notes</h2>
               <textarea value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} rows={4} />
               <button disabled={savingField === "notes"} onClick={() => saveField("notes", notesDraft)}>
-                {savingField === "notes" ? "Saving…" : "Save notes"}
+                {savingField === "notes" ? "Saving…" : "Save Notes"}
               </button>
             </section>
 
@@ -370,7 +373,7 @@ export default function ComponentDetailPage({ params }) {
                 everything you'd lose before you reach it. */}
             <div className="detail-danger">
               <button className="danger-btn" onClick={handleDelete}>
-                Delete component
+                Delete Component
               </button>
             </div>
           </aside>

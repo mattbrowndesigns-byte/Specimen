@@ -99,7 +99,7 @@ export default function TagsPage() {
 
         {loaded && pending.length > 0 && (
           <section className="tag-section">
-            <h2>Pending approval ({pending.length})</h2>
+            <h2>Pending Approval ({pending.length})</h2>
             <div className="tag-list">
               {pending.map((tag) => (
                 <div className="tag-row" key={tag.id}>

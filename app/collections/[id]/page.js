@@ -98,10 +98,10 @@ export default function CollectionDetailPage({ params }) {
           <h1 className="collection-title">{collection?.name || "…"}</h1>
           <div className="detail-actions">
             <button onClick={() => setEditing(true)} disabled={!collection}>
-              Edit collection
+              Edit Collection
             </button>
             <button onClick={remove} disabled={!collection}>
-              Delete collection
+              Delete Collection
             </button>
           </div>
         </div>
@@ -121,7 +121,7 @@ export default function CollectionDetailPage({ params }) {
               entries={entries}
               emptyMessage="Nothing in this collection yet — use the bookmark button on any card."
               onRemove={removeItem}
-              removeLabel="Remove from collection"
+              removeLabel="Remove From Collection"
             />
           </>
         )}

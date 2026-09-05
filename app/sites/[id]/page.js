@@ -355,7 +355,7 @@ export default function SiteDetailPage({ params }) {
           />
           <div className="detail-actions">
             <SaveActions className="detail-save-actions" kind="site" id={site.id} name={site.name || site.domain} isFavorite={site.is_favorite} />
-            {site.needs_review && <button onClick={markReviewed}>Mark reviewed</button>}
+            {site.needs_review && <button onClick={markReviewed}>Mark Reviewed</button>}
             <button onClick={recapture} disabled={recapturing}>
               {recapturing ? "Re-capturing…" : "Re-capture"}
             </button>
@@ -446,7 +446,7 @@ export default function SiteDetailPage({ params }) {
                     onClick={() => deleteCaptureRun(activeRun)}
                     disabled={deletingCapture}
                   >
-                    {deletingCapture ? "Deleting…" : "Delete this capture"}
+                    {deletingCapture ? "Deleting…" : "Delete This Capture"}
                   </button>
                 </p>
               )}
@@ -478,7 +478,7 @@ export default function SiteDetailPage({ params }) {
 
               {capture?.full_url && (
                 <button className="capture-expand" onClick={() => setExpandedCapture((v) => !v)}>
-                  {expandedCapture ? "Collapse screenshot" : "Expand full screenshot"}
+                  {expandedCapture ? "Collapse Screenshot" : "Expand Full Screenshot"}
                 </button>
               )}
             </div>
@@ -490,7 +490,7 @@ export default function SiteDetailPage({ params }) {
                   yours -- the same mark the review queue uses for AI tags. */}
               <h2 className="ai-heading">
                 <Sparkles size={15} />
-                AI summary
+                AI Summary
               </h2>
 
               {editingSummary ? (
@@ -522,13 +522,19 @@ export default function SiteDetailPage({ params }) {
                   <p className="summary-text">
                     {site.summary || <span className="summary-empty">No summary yet.</span>}
                   </p>
-                  {/* Under the summary, not beside the heading: both buttons act
-                      on the text, and you decide to rewrite it after reading it. */}
+                  {/* Under the summary, not beside the heading: both act on the
+                      text, and you decide to rewrite it after reading it.
+                      Edit is the bordered one and Regenerate steps back --
+                      correcting a sentence is the ordinary move, throwing the
+                      whole thing away and paying for a new one is not. */}
                   <div className="section-head-actions section-actions-below">
                     <button onClick={() => setEditingSummary(true)}>Edit</button>
-                    <button onClick={regenerateSummary} disabled={regenerating}>
+                    <button className="link-btn" onClick={regenerateSummary} disabled={regenerating}>
                       {regenerating ? "Regenerating…" : "Regenerate"}
                     </button>
+                    {site.enriched_at && !regenerating && (
+                      <span className="style-read-at">Written {formatCaptureDate(site.enriched_at)}</span>
+                    )}
                   </div>
                 </>
               )}
@@ -556,7 +562,7 @@ export default function SiteDetailPage({ params }) {
               <h2>Notes</h2>
               <textarea value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} rows={4} />
               <button disabled={savingField === "notes"} onClick={() => saveField("notes", notesDraft)}>
-                {savingField === "notes" ? "Saving…" : "Save notes"}
+                {savingField === "notes" ? "Saving…" : "Save Notes"}
               </button>
             </section>
 
@@ -568,14 +574,25 @@ export default function SiteDetailPage({ params }) {
               onPromote={promotePage}
               onRefresh={rediscoverPages}
               refreshing={rediscovering}
+              readAt={site.pages_read_at}
             />
 
             {/* Bottom of the panel, on its own: deleting the record isn't a
                 sibling of Re-capture, and putting it last means you scroll past
                 everything you'd lose before you reach it. */}
+            {/* The two controls that act on the record rather than on its
+                contents. Hiding is reversible and sits above the one that
+                isn't. */}
             <div className="detail-danger">
+              <button
+                className="hide-btn"
+                onClick={() => saveField("is_hidden", !site.is_hidden)}
+                disabled={savingField === "is_hidden"}
+              >
+                {site.is_hidden ? "Show On Dashboard" : "Hide From Dashboard"}
+              </button>
               <button className="danger-btn" onClick={handleDelete}>
-                Delete site
+                Delete Site
               </button>
             </div>
           </aside>
@@ -584,7 +601,7 @@ export default function SiteDetailPage({ params }) {
 
         {components.length > 0 && (
           <section className="detail-section">
-            <h2>Components from this site</h2>
+            <h2>Components From This Site</h2>
             <div className="grid">
               {components.map((c) => (
                 <a className="card component-card" key={c.id} href={`/components/${c.id}`}>

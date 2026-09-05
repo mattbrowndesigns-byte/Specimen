@@ -202,7 +202,7 @@ export default function ReviewPage() {
               busy={busy}
               actions={[
                 {
-                  label: "Mark reviewed",
+                  label: "Mark Reviewed",
                   primary: true,
                   onClick: () => markReviewed("sites", [...siteSelection.selected]),
                 },
@@ -241,7 +241,7 @@ export default function ReviewPage() {
               busy={busy}
               actions={[
                 {
-                  label: "Mark reviewed",
+                  label: "Mark Reviewed",
                   primary: true,
                   onClick: () => markReviewed("components", [...componentSelection.selected]),
                 },
@@ -398,7 +398,7 @@ function ReviewRow({
           onMarkReviewed();
         }}
       >
-        Mark reviewed
+        Mark Reviewed
       </button>
     </div>
   );

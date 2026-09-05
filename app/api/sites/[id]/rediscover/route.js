@@ -51,6 +51,10 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
+  // Stamped here rather than in enrichment: this is the moment the page list
+  // was actually re-read, whether or not the AI pass that labels them lands.
+  await supabase.from("site").update({ pages_read_at: new Date().toISOString() }).eq("id", id);
+
   try {
     await runEnrichment(id);
   } catch (err) {

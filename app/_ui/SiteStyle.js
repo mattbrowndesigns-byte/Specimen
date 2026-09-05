@@ -38,6 +38,27 @@ const ROLE_LABEL = {
   graphic: "Icons & graphics",
 };
 
+// The generic to fall back to when the real face isn't available to the
+// viewer, so a serif at least stays a serif.
+function genericFor(classification) {
+  const c = (classification || "").toLowerCase();
+  if (c.includes("mono")) return "monospace";
+  if (c.includes("serif") && !c.includes("sans")) return "serif";
+  if (c.includes("slab")) return "serif";
+  return "sans-serif";
+}
+
+// The specimen renders in the real typeface when the real typeface is
+// something the browser can be given: a face that's on Google Fonts gets
+// loaded from there. Everything else falls back through the family name --
+// which does render for anyone who happens to have it installed -- and then to
+// a generic of the right species. A licensed face can't be shown, and showing
+// the wrong one silently would be worse than showing a substitute.
+function sampleStack(font) {
+  const names = [font.display_name, font.family].filter(Boolean);
+  return [...new Set(names)].map((n) => `"${n}"`).concat(genericFor(font.classification)).join(", ");
+}
+
 function fontRole(font) {
   const d = font.display_share;
   if (typeof d !== "number") return null;
@@ -60,8 +81,8 @@ function matchGroups(font) {
     (match.self ? available : closest).push({ service, ...match });
   }
   return [
-    { key: "available", label: "Available on", items: available },
-    { key: "closest", label: "Closest match", items: closest },
+    { key: "available", label: "Available On", items: available },
+    { key: "closest", label: "Closest Match", items: closest },
   ].filter((group) => group.items.length);
 }
 
@@ -109,6 +130,28 @@ export default function SiteStyle({ site, onRefresh }) {
     }
   }, [site.analyzed_at, analyzing]);
 
+  // Pull the web-font file for any face that's on Google Fonts, so its
+  // specimen is the actual typeface rather than a stand-in. Same trade as the
+  // favicon service: it tells Google which faces are in the library, and it's
+  // the only way to render them truthfully without hosting anything.
+  useEffect(() => {
+    const families = fonts
+      .filter((f) => f.google?.self)
+      .map((f) => (f.display_name || f.family).trim())
+      .filter(Boolean);
+    if (!families.length) return;
+
+    const href = `https://fonts.googleapis.com/css2?${families
+      .map((f) => `family=${encodeURIComponent(f).replace(/%20/g, "+")}:wght@400;600`)
+      .join("&")}&display=swap`;
+    if (document.querySelector(`link[href="${href}"]`)) return;
+
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  }, [fonts]);
+
   async function analyze() {
     setError(null);
     startedAt.current = { at: Date.now(), stamp: site.analyzed_at || null };
@@ -147,14 +190,9 @@ export default function SiteStyle({ site, onRefresh }) {
     <>
       {palette.length > 0 && (
         <section className="detail-section">
-          <div className="section-head">
-            <h2>
-              Colours <span className="section-count">{palette.length}</span>
-            </h2>
-            <div className="section-head-actions">
-              <button onClick={() => setExpanded((v) => !v)}>{expanded ? "Collapse" : "Expand"}</button>
-            </div>
-          </div>
+          <h2>
+            Colours <span className="section-count">{palette.length}</span>
+          </h2>
 
           <div className="palette-bar">
             {palette.map((color, i) => (
@@ -181,18 +219,26 @@ export default function SiteStyle({ site, onRefresh }) {
 
           {/* One caption that changes rather than eight labels that don't fit.
               Fixed height, so running along the bar doesn't shift the panel. */}
-          <p className="palette-caption">
-            {shown ? (
-              <>
-                <span className="palette-caption-hex">{shown.hex}</span>
-                <span>
-                  {colorName(shown.hex)} · {pct(shown.share)} · {ROLE_LABEL[shown.role] || shown.role}
-                </span>
-              </>
-            ) : (
-              <span className="palette-caption-idle">Click to copy</span>
-            )}
-          </p>
+          {/* The caption and the control share a row: Expand belongs under the
+              thing it expands, not up beside a heading it has nothing to do
+              with, and the row has to exist anyway to hold the readout. */}
+          <div className="palette-foot">
+            <p className="palette-caption">
+              {shown ? (
+                <>
+                  <span className="palette-caption-hex">{shown.hex}</span>
+                  <span>
+                    {colorName(shown.hex)} · {pct(shown.share)} · {ROLE_LABEL[shown.role] || shown.role}
+                  </span>
+                </>
+              ) : (
+                <span className="palette-caption-idle">Click to copy</span>
+              )}
+            </p>
+            <div className="section-head-actions">
+              <button onClick={() => setExpanded((v) => !v)}>{expanded ? "Collapse" : "Expand"}</button>
+            </div>
+          </div>
 
           {expanded && (
             <ul className="palette-list">
@@ -219,55 +265,71 @@ export default function SiteStyle({ site, onRefresh }) {
 
       {fonts.length > 0 && (
         <section className="detail-section">
-          <div className="section-head">
-            <h2>
-              Fonts in use <span className="section-count">{fonts.length}</span>
-            </h2>
-          </div>
+          <h2>
+            Fonts in Use <span className="section-count">{fonts.length}</span>
+          </h2>
 
           <ul className="font-list">
             {fonts.map((font) => {
               const name = font.display_name || font.family;
               const role = fontRole(font);
+              const groups = matchGroups(font);
               return (
-                <li className="font-row" key={font.family}>
-                  <span className="font-name">
-                    {font.foundry_url ? (
-                      <a href={font.foundry_url} target="_blank" rel="noopener noreferrer">
-                        {name}
-                        <ArrowUpRight size={13} />
-                      </a>
-                    ) : (
-                      name
-                    )}
-                    {font.foundry && <span className="font-foundry">by {font.foundry}</span>}
-                    {font.is_custom && <span className="font-badge">Custom</span>}
+                <li className="font-card" key={font.family}>
+                  {/* The specimen carries the answer to the question the panel
+                      is actually asked -- what does it look like -- which no
+                      amount of naming does on its own. */}
+                  <span className="font-sample" style={{ fontFamily: sampleStack(font) }} aria-hidden="true">
+                    Aa
                   </span>
 
-                  <span className="font-meta">
-                    {[font.classification, role, `${pct(font.share)} of text`].filter(Boolean).join(" · ")}
-                  </span>
-
-                  {matchGroups(font).map((group) => (
-                    <span className="font-match-group" key={group.key}>
-                      <span className="font-match-label">{group.label}</span>
-                      <span className="font-matches">
-                        {group.items.map((item) => (
-                          <a
-                            className="font-match"
-                            key={item.service}
-                            href={item.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title={item.note || undefined}
-                          >
-                            <span className="font-match-service">{item.service}</span>
-                            {!item.self && <span className="font-match-family">{item.family}</span>}
-                          </a>
-                        ))}
-                      </span>
+                  <div className="font-detail">
+                    <span className="font-name">
+                      {font.foundry_url ? (
+                        <a href={font.foundry_url} target="_blank" rel="noopener noreferrer">
+                          {name}
+                          <ArrowUpRight size={13} />
+                        </a>
+                      ) : (
+                        name
+                      )}
+                      {font.is_custom && <span className="font-badge">Custom</span>}
                     </span>
-                  ))}
+
+                    {font.foundry && <span className="font-foundry">by {font.foundry}</span>}
+
+                    <span className="font-meta">
+                      {[font.classification, role, `${pct(font.share)} of text`].filter(Boolean).join(" · ")}
+                    </span>
+
+                    {groups.map((group) => (
+                      <span className="font-match-group" key={group.key}>
+                        <span className="font-match-label">{group.label}</span>
+                        <span className="font-matches">
+                          {group.items.map((item) => (
+                            <a
+                              className="font-match"
+                              key={item.service}
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={item.note || undefined}
+                            >
+                              <span className="font-match-service">{item.service}</span>
+                              {!item.self && <span className="font-match-family">{item.family}</span>}
+                            </a>
+                          ))}
+                        </span>
+                      </span>
+                    ))}
+
+                    {/* Saying so beats saying nothing. An empty space where the
+                        links usually are reads as a bug rather than an answer,
+                        and "we looked and there isn't one" is an answer. */}
+                    {!groups.length && (
+                      <span className="font-no-match">No close match found on Google or Adobe Fonts</span>
+                    )}
+                  </div>
                 </li>
               );
             })}
@@ -289,7 +351,7 @@ export default function SiteStyle({ site, onRefresh }) {
         )}
         {error && <p className="error">{error}</p>}
         <button className="link-btn" onClick={analyze} disabled={analyzing}>
-          {analyzing ? "Reading the page…" : analyzed ? "Re-read colours & type" : "Read colours & type"}
+          {analyzing ? "Reading the Page…" : analyzed ? "Re-read Colours & Type" : "Read Colours & Type"}
         </button>
         {analyzed && !analyzing && (
           <span className="style-read-at">Read {formatCaptureDate(site.analyzed_at)}</span>

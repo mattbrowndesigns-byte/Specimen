@@ -25,8 +25,8 @@ import { THEME_KEY } from "@/lib/theme";
 const LINKS = [
   { href: "/favorites", label: "Favorites", Icon: Heart },
   { href: "/collections", label: "Collections", Icon: Layers },
-  { href: "/tags", label: "Manage tags", Icon: Tag },
-  { href: "/review", label: "Review queue", Icon: ListChecks },
+  { href: "/tags", label: "Manage Tags", Icon: Tag },
+  { href: "/review", label: "Review Queue", Icon: ListChecks },
 ];
 
 const SECONDARY = [
@@ -135,14 +135,14 @@ export default function MoreMenu() {
           <span className="more-section-head">Settings</span>
           <button className="more-item more-item-button" onClick={toggleTheme}>
             {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
-            {theme === "dark" ? "Light mode" : "Dark mode"}
+            {theme === "dark" ? "Light Mode" : "Dark Mode"}
           </button>
 
           <div className="more-divider" />
           {account && <span className="more-account">{account}</span>}
           <button className="more-item more-item-button" onClick={signOut}>
             <LogOut size={15} />
-            Sign out
+            Sign Out
           </button>
         </div>
       )}

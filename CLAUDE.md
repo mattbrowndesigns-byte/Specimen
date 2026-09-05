@@ -183,6 +183,36 @@ what stops vocabulary drift (`minimal` / `minimalist` / `clean minimal`).
 timestamp per run so desktop and mobile land on the same point. Anything that
 writes captures must preserve that.
 
+**Two oranges, and greys darker than they look.** `--accent` is the brand tone
+for marks — the notification dot, the AI sparkle. `--accent-solid` is the one
+that carries white text, and it's darker because the brand tone under white is
+3.74:1, which fails AA for a button label; dark mode solves it the other way,
+keeping the bright orange and darkening the label to 5.49:1. `--text-muted` and
+`--text-faint` were also raised (from #6b6b70/#9a9aa0): faint text was 2.8:1 on
+white, which is decoration with words in it, not readable text. Both now clear
+4.5:1 on the page and on a card. What still fails, deliberately: `--border-strong`
+is 1.4:1 against a surface where WCAG 1.4.11 wants 3:1 for control boundaries —
+fixing it would mean visibly darker borders on every control in the app.
+
+**A typeface's specimen renders in the real face when it can.** `SiteStyle`
+injects a Google Fonts stylesheet for any face flagged `google.self`, so its
+"Aa" is the actual typeface rather than a stand-in. Everything else falls back
+through the family name — which does render for anyone who has it installed —
+then to a generic of the right species. A licensed face can't be shown, and
+silently showing the wrong one would be worse than an obvious substitute.
+
+**Hidden sites are out of the grid but still in search.** `site.is_hidden` is
+filtered in `fetchSitesList`'s default path only. A hide with no way back would
+be a trap, since the grid is the only route to a site's page — searching is the
+way back. Like favouriting, hiding does not clear `needs_review`.
+
+**A discovered page is named for what it does.** `page.utility_label` comes
+from enrichment — "About Us", "Request A Demo", "Product Detail" — and is shown
+in place of the link's own text. A nav says "Why us" or "Get started free"
+because it's selling to that site's visitors; comparing one site's page set
+against another's only works if a demo request is called the same thing on
+both. The raw label survives as the link's title attribute.
+
 **Card tags are measured, not counted.** `TagRow` renders every chip once,
 reads their widths back, then keeps the number that fits on one line with room
 for "+N more". A count per card size can't do it — "Ecommerce" is twice the

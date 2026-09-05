@@ -29,12 +29,25 @@
   --text: #1a1a1a;
   --text-body: #2a2a2e;
   --text-secondary: #4a4a4e;
-  --text-muted: #6b6b70;
-  --text-faint: #9a9aa0;
+  /* Both of these are darker than they look like they should be, and that's
+     the point: the old pair (#6b6b70 / #9a9aa0) put faint text at 2.8:1 on
+     white, which is not readable text, it's decoration that happens to have
+     words in it. These clear 4.5:1 on the page and on a card while keeping a
+     visible step between them -- 6.9:1 against 4.8:1. */
+  --text-muted: #5a5a60;
+  --text-faint: #71717a;
 
+  /* Two oranges, because one can't do both jobs. --accent is the brand tone,
+     used where it's a mark rather than a label: the notification dot, the AI
+     sparkle, focus. --accent-solid is the one that carries white text, and it
+     has to be dark enough to do that -- the brand tone under white is 3.74:1,
+     which fails AA for a button label. */
   --accent: #e8502e;
   --accent-hover: #cf421f;
   --accent-text: #fff;
+  --accent-solid: #c93f1d;
+  --accent-solid-hover: #b53517;
+  --accent-solid-text: #fff;
 
   --invert-bg: #1a1a1a;
   --invert-bg-hover: #333338;
@@ -83,11 +96,17 @@
   --text-body: #dcdce0;
   --text-secondary: #b6b6bd;
   --text-muted: #9a9aa2;
-  --text-faint: #74747c;
+  --text-faint: #8a8a93;
 
+  /* Dark mode solves it the other way round: the bright orange is what belongs
+     on a dark page, so the label goes dark instead -- 5.49:1, where white on
+     the same orange is 3.26:1. */
   --accent: #f0603c;
   --accent-hover: #ff7353;
   --accent-text: #fff;
+  --accent-solid: #f0603c;
+  --accent-solid-hover: #ff7353;
+  --accent-solid-text: #17171a;
 
   --invert-bg: #f0f0f2;
   --invert-bg-hover: #dcdce0;
@@ -359,9 +378,8 @@ h1 {
   margin-bottom: -0.307em;
 }
 
-/* Medium grey that still clears WCAG AA on both themes: 5.30:1 on the light
-   bar, 5.94:1 on the dark one. --text-faint would look right and fail at
-   2.80:1, so it isn't used for real copy. */
+/* Medium grey that clears WCAG AA on both themes: 6.85:1 on the light bar,
+   5.94:1 on the dark one. */
 .brand-tagline {
   font-size: 15px;
   line-height: 1;
@@ -681,8 +699,8 @@ h1 {
   padding: 9px 16px;
   border: none;
   border-radius: 8px;
-  background: var(--accent);
-  color: var(--accent-text);
+  background: var(--accent-solid);
+  color: var(--accent-solid-text);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -690,7 +708,7 @@ h1 {
 }
 
 .add-btn:hover {
-  background: var(--accent-hover);
+  background: var(--accent-solid-hover);
 }
 
 .add-pop {
@@ -786,9 +804,9 @@ h1 {
 }
 
 .add-pop-actions .primary {
-  background: var(--accent);
-  color: var(--invert-text);
-  border-color: var(--accent);
+  background: var(--accent-solid);
+  color: var(--accent-solid-text);
+  border-color: var(--accent-solid);
 }
 
 .add-pop-actions .primary:hover {
@@ -1109,9 +1127,9 @@ h1 {
 }
 
 .modal-apply {
-  background: var(--accent) !important;
-  color: var(--invert-text);
-  border-color: var(--accent) !important;
+  background: var(--accent-solid) !important;
+  color: var(--accent-solid-text);
+  border-color: var(--accent-solid) !important;
 }
 
 .filter-chips {
@@ -1179,7 +1197,30 @@ h1 {
    header row: it isn't a sibling of Re-capture, and down here you've scrolled
    past everything you'd be throwing away before you can reach it. */
 .detail-danger {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding-top: 4px;
+}
+
+/* Reversible, so it stays in the app's ordinary button language and leaves the
+   red one below it as the only thing that looks like a warning. */
+.hide-btn.hide-btn {
+  width: 100%;
+  padding: 9px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.hide-btn.hide-btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--border-strong-hover);
 }
 
 /* Doubled for the same reason as .icon-btn: `.detail-section button` and
@@ -2498,14 +2539,15 @@ a.card {
    separate swatches with gaps between them read as a set of equals. Clipping
    the corners on the container is what lets the segments stay plain
    rectangles that can't drift apart. */
+/* No ring around the bar. It was there so a white first swatch had an edge,
+   but drawn around the whole strip it reads as a border on the component --
+   which is why the palette looked boxed in. The edge belongs to the swatch
+   that needs one, not to the bar. */
 .palette-bar {
   display: flex;
   height: 34px;
   border-radius: 8px;
   overflow: hidden;
-  /* A pale palette on a pale panel would otherwise float with no edge -- and a
-     1px inset beats a border, which would eat into the first swatch. */
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 /* flex-basis 0 with a grow set per swatch, so the widths come out as the exact
@@ -2514,6 +2556,9 @@ a.card {
 .palette-swatch {
   flex: 0 1 0;
   min-width: 14px;
+  /* Inset so a near-white swatch has a boundary against a near-white panel.
+     Every swatch carries it, but only a pale one can see it. */
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.07);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2540,13 +2585,22 @@ a.card {
   color: #111;
 }
 
+/* Caption left, Expand right, on one row under the bar. */
+.palette-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
 /* Fixed height, so hovering along the bar doesn't shift the panel below it. */
 .palette-caption {
   display: flex;
   align-items: baseline;
   gap: 8px;
   min-height: 18px;
-  margin: 8px 0 0;
+  margin: 0;
   font-size: 12px;
   color: var(--text-muted);
 }
@@ -2572,8 +2626,13 @@ a.card {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 5px 0;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border-soft);
   font-size: 13px;
+}
+
+.palette-list li:last-child {
+  border-bottom: none;
 }
 
 .palette-list-chip {
@@ -2595,14 +2654,23 @@ a.card {
   color: var(--text-body);
 }
 
+/* Both right-aligned in a fixed column. "82%" and "<1%" are different widths,
+   and so are the hexes once one of them is short -- left to themselves the
+   right-hand side of the list comes out ragged against a name column that's
+   dead straight. */
 .palette-list-share {
   flex-shrink: 0;
+  min-width: 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
   font-size: 12px;
   color: var(--text-faint);
 }
 
 .palette-list-hex {
   flex-shrink: 0;
+  min-width: 62px;
+  text-align: right;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
   color: var(--text-muted);
@@ -2620,26 +2688,45 @@ a.card {
   padding: 0;
 }
 
-.font-row {
+/* A typeface is a thing you look at, so each one gets its own card with the
+   specimen beside the facts rather than a line in a list. */
+.font-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.font-card:last-child {
+  margin-bottom: 0;
+}
+
+/* Big enough to judge a letterform by, and square so a row of them lines up
+   whatever the face does. */
+.font-sample {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: var(--surface-sunken);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text);
+}
+
+.font-detail {
   display: flex;
   flex-direction: column;
-  /* Was 3px, which read as one block of text rather than a name with facts
-     under it. The row needs the internal air more than the list needs to be
-     short. */
-  gap: 6px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border-soft);
-}
-
-/* The section heading already leaves 8px; another 14 on top of it left the
-   first typeface floating away from the words naming it. */
-.font-row:first-child {
-  padding-top: 2px;
-}
-
-.font-row:last-child {
-  border-bottom: none;
-  padding-bottom: 2px;
+  gap: 4px;
+  min-width: 0;
 }
 
 .font-name {
@@ -2665,14 +2752,15 @@ a.card {
   border-bottom-color: var(--text);
 }
 
-.font-foundry,
-.font-meta {
+.font-foundry {
   font-size: 12px;
   font-weight: 400;
   color: var(--text-muted);
 }
 
 .font-meta {
+  font-size: 12px;
+  font-weight: 400;
   color: var(--text-faint);
 }
 
@@ -2697,10 +2785,10 @@ a.card {
   margin-top: 4px;
 }
 
+/* Sentence case. Set in caps it read as a section heading competing with the
+   real one two lines up, when all it does is label two links. */
 .font-match-label {
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   color: var(--text-faint);
 }
 
@@ -2738,6 +2826,12 @@ a.card {
 
 .font-match-family {
   color: var(--text);
+}
+
+.font-no-match {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-faint);
 }
 
 .style-changed {
@@ -3172,7 +3266,25 @@ a.card {
 .page-list-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* The primary of the pair: bordered, so "re-read" beside it reads as the
+   quieter thing it is. Matches the buttons under the summary. */
+.page-list-open.page-list-open {
+  padding: 6px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.page-list-open.page-list-open:hover {
+  background: var(--surface-hover);
 }
 
 /* Sort menu */
@@ -3408,8 +3520,8 @@ a.card {
   padding: 11px 16px;
   border: none;
   border-radius: 8px;
-  background: var(--accent);
-  color: var(--accent-text);
+  background: var(--accent-solid);
+  color: var(--accent-solid-text);
   font: inherit;
   font-size: 14px;
   font-weight: 500;
@@ -3417,7 +3529,7 @@ a.card {
 }
 
 .auth-submit:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: var(--accent-solid-hover);
 }
 
 .auth-submit:disabled {

@@ -87,6 +87,11 @@ export async function POST(request) {
       );
     if (pagesError) {
       console.error("Failed to store discovered pages:", pagesError.message);
+    } else {
+      await supabase
+        .from("site")
+        .update({ pages_read_at: new Date().toISOString() })
+        .eq("id", site.id);
     }
   }
 

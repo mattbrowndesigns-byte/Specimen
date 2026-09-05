@@ -15,7 +15,7 @@ export async function GET(request, { params }) {
   const { data: site, error } = await supabase
     .from("site")
     .select(
-      "id, url, domain, name, summary, notes, saved_at, needs_review, is_favorite, favicon_url, favicon_fills, palette, fonts, analyzed_at, style_history"
+      "id, url, domain, name, summary, notes, saved_at, needs_review, is_favorite, favicon_url, favicon_fills, palette, fonts, analyzed_at, style_history, pages_read_at, enriched_at, is_hidden"
     )
     .eq("id", id)
     .eq("user_id", user.id)
@@ -29,7 +29,7 @@ export async function GET(request, { params }) {
 
   const { data: pages, error: pagesError } = await supabase
     .from("page")
-    .select("id, url, label, page_type, is_representative")
+    .select("id, url, label, utility_label, page_type, is_representative")
     .eq("site_id", id)
     .order("label", { ascending: true });
   if (pagesError) {
@@ -52,6 +52,7 @@ export async function PATCH(request, { params }) {
   if (typeof body.notes === "string") update.notes = body.notes;
   if (typeof body.needs_review === "boolean") update.needs_review = body.needs_review;
   if (typeof body.is_favorite === "boolean") update.is_favorite = body.is_favorite;
+  if (typeof body.is_hidden === "boolean") update.is_hidden = body.is_hidden;
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
@@ -61,7 +62,10 @@ export async function PATCH(request, { params }) {
   // explicitly set needs_review itself (e.g. the queue's "mark reviewed").
   // Favoriting is deliberately not an edit: starring something you haven't
   // read yet shouldn't quietly empty the review queue.
-  const isReviewingEdit = Object.keys(update).some((k) => k !== "is_favorite");
+  // Hiding is excluded for the same reason favouriting is: tidying a site off
+  // the dashboard says nothing about whether you've read what the AI wrote
+  // about it, and it shouldn't quietly empty the review queue.
+  const isReviewingEdit = Object.keys(update).some((k) => k !== "is_favorite" && k !== "is_hidden");
   if (!("needs_review" in update) && isReviewingEdit) {
     update.needs_review = false;
   }

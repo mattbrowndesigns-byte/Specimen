@@ -5,7 +5,7 @@ import { Plus, Globe, Crop } from "lucide-react";
 // Lives in the page header so saving never depends on which tab is open.
 // Two kinds: a website (full record, appears in the grid) or a component
 // (a page capture you then crop a region out of).
-export default function AddMenu({ onSubmit }) {
+export default function AddMenu({ onSubmit, variant }) {
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState(null);
   const [url, setUrl] = useState("");
@@ -48,7 +48,7 @@ export default function AddMenu({ onSubmit }) {
   }
 
   return (
-    <div className="add-menu" ref={wrapRef}>
+    <div className={`add-menu${variant === "hero" ? " add-menu-hero" : ""}`} ref={wrapRef}>
       <button className="add-btn" onClick={() => (open ? close() : setOpen(true))}>
         <Plus size={16} />
         Add

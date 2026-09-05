@@ -3102,3 +3102,120 @@ a.card {
   color: var(--text-faint);
   text-decoration: line-through;
 }
+
+/* Empty state */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 380px;
+  margin-top: 24px;
+  padding: 56px 24px;
+  text-align: center;
+  background: var(--surface-sunken);
+  border-radius: 14px;
+}
+
+/* Same weight as the dashboard hero, a step down in size: it's the loudest
+   thing on the page but it isn't the page's title. */
+.empty-state-headline {
+  margin: 0;
+  max-width: 16ch;
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.empty-state-body {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.empty-state .add-menu-hero {
+  margin-top: 6px;
+}
+
+/* Bigger trigger for the first-run call to action, and the popover centred
+   under it -- the header one hugs the right edge because that's where it sits. */
+.add-menu-hero .add-btn {
+  padding: 12px 22px;
+  font-size: 15px;
+}
+
+.add-menu-hero .add-pop {
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Feature rotator */
+
+.feature-rotator {
+  margin: 0;
+  min-height: 20px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.empty-state-rotator {
+  margin-top: 10px;
+}
+
+.capture-status-rotator {
+  margin-top: 8px;
+}
+
+.feature-rotator-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  animation-name: feature-cycle;
+  animation-timing-function: ease;
+  animation-fill-mode: both;
+}
+
+@keyframes feature-cycle {
+  0% {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-7px);
+  }
+}
+
+/* Still crossfades so every line is still readable, without the movement. */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes feature-cycle {
+    0% {
+      opacity: 0;
+      transform: none;
+    }
+    10%,
+    90% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+      transform: none;
+    }
+  }
+}

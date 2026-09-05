@@ -15,7 +15,7 @@ const ADAPTER = {
   pendingLabel: "Capturing…",
 };
 
-export default function WebsitesTab({ allTags, refreshKey }) {
+export default function WebsitesTab({ allTags, refreshKey, onAdd }) {
   const [sites, setSites] = useState([]);
   const [query, setQuery] = useState("");
 
@@ -45,9 +45,11 @@ export default function WebsitesTab({ allTags, refreshKey }) {
       query={query}
       onQueryChange={setQuery}
       searchPlaceholder="Search name, summary, notes, tags, discovered pages…"
-      emptyMessage="Nothing saved yet — use Add to save your first site."
+      emptyHeadline="Start your library."
+      emptyMessage="Paste any URL. Kivli captures it on desktop and mobile, writes a summary, and tags it for you."
       noun="site"
       adapter={ADAPTER}
+      onAdd={onAdd}
       storageKey="specimen.view.websites"
     />
   );

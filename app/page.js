@@ -91,13 +91,14 @@ export default function Home() {
         </div>
 
         {tab === "websites" ? (
-          <WebsitesTab allTags={allTags} refreshKey={refreshKey} />
+          <WebsitesTab allTags={allTags} refreshKey={refreshKey} onAdd={handleAdd} />
         ) : (
           <ComponentsTab
             allTags={allTags}
             pendingCapture={pendingCapture}
             setPendingCapture={setPendingCapture}
             refreshKey={refreshKey}
+            onAdd={handleAdd}
           />
         )}
       </main>

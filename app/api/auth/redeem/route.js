@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { seedStarterTags } from "@/lib/starterTags";
 
 // Redeems a single-use invite code by creating the account for it.
 //
@@ -60,6 +61,14 @@ export async function POST(request) {
   if (!claimed) {
     await supabase.auth.admin.deleteUser(created.user.id);
     return NextResponse.json({ error: "That invite code was just used" }, { status: 409 });
+  }
+
+  // Without this the account has an empty vocabulary, and since the AI is told
+  // to pick only from values that exist, it picks nothing -- the first save
+  // arrives with no tags at all.
+  const seedError = await seedStarterTags(supabase, created.user.id);
+  if (seedError) {
+    console.error("Signup: failed to seed starter tags", seedError.message);
   }
 
   return NextResponse.json({ ok: true });

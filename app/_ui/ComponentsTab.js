@@ -23,7 +23,7 @@ const ADAPTER = {
   naturalThumb: true,
 };
 
-export default function ComponentsTab({ allTags, pendingCapture, setPendingCapture, refreshKey }) {
+export default function ComponentsTab({ allTags, pendingCapture, setPendingCapture, refreshKey, onAdd }) {
   const [components, setComponents] = useState([]);
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
@@ -110,10 +110,12 @@ export default function ComponentsTab({ allTags, pendingCapture, setPendingCaptu
         query={query}
         onQueryChange={setQuery}
         searchPlaceholder="Search components by name, summary, notes or tag…"
-        emptyMessage="No components yet — use Add to capture a page and crop one out."
+        emptyHeadline="Save the parts, not just the page."
+        emptyMessage="Capture any page, then crop out the one block worth keeping — a pricing table, a nav, a hero."
         noun="component"
         adapter={ADAPTER}
-        storageKey="specimen.view.components"
+        onAdd={onAdd}
+      storageKey="specimen.view.components"
       />
     </>
   );

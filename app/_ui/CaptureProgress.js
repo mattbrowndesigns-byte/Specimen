@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import FeatureRotator from "./FeatureRotator";
 
 // Observed Actions round trip: install deps, run Playwright over both
 // viewports, upload, call back. Only paces the estimate -- completion comes
@@ -74,6 +75,7 @@ export default function CaptureProgress({ job, onDone }) {
         {elapsed < ESTIMATE_SECONDS ? `about ${ESTIMATE_SECONDS - elapsed}s remaining` : "finishing up"}
         . This runs on a server, so it'll finish even if you leave the page.
       </p>
+      <FeatureRotator className="capture-status-rotator" />
     </div>
   );
 }

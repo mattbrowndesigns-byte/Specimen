@@ -4,6 +4,8 @@ import { LayoutGrid, List, AlignJustify, SlidersHorizontal, ArrowDownUp, Check }
 import FilterModal from "./FilterModal";
 import SaveActions from "./SaveActions";
 import Favicon from "./Favicon";
+import AddMenu from "./AddMenu";
+import FeatureRotator from "./FeatureRotator";
 
 const VIEWS = [
   { id: "cards", label: "Cards", Icon: LayoutGrid },
@@ -48,8 +50,10 @@ export default function LibraryBrowser({
   onQueryChange,
   searchPlaceholder,
   emptyMessage,
+  emptyHeadline,
   noun,
   adapter,
+  onAdd,
   storageKey,
 }) {
   const [selectedTagIds, setSelectedTagIds] = useState(new Set());
@@ -266,7 +270,18 @@ export default function LibraryBrowser({
         </div>
       </div>
 
-      {items.length === 0 && <p className="empty">{emptyMessage}</p>}
+      {/* An empty library is the first thing a new account sees, so it gets the
+          panel the cards would have filled rather than one grey sentence. The
+          filtered-to-nothing case stays a plain line -- that's a dead end you
+          back out of, not a place to be welcomed. */}
+      {items.length === 0 && (
+        <div className="empty-state">
+          <h2 className="empty-state-headline">{emptyHeadline}</h2>
+          <p className="empty-state-body">{emptyMessage}</p>
+          {onAdd && <AddMenu onSubmit={onAdd} variant="hero" />}
+          <FeatureRotator className="empty-state-rotator" />
+        </div>
+      )}
       {items.length > 0 && visible.length === 0 && <p className="empty">Nothing matches those filters.</p>}
 
       {view === "cards" && (

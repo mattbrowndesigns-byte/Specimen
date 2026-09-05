@@ -22,9 +22,12 @@ const VIEWS = [
   { id: "headlines", label: "Headlines", Icon: AlignJustify },
 ];
 
-// Cards keep tags to two rows; four labels plus a "+N more" chip is what
-// reliably fits at the grid's column width.
-const CARD_TAG_LIMIT = 4;
+// Cards keep tags to two rows, so how many labels fit depends on how wide the
+// card is. These are the counts that leave "+N more" on the second row rather
+// than pushing it onto a third one that gets clipped. List rows are wide enough
+// that they don't need to vary.
+const TAG_LIMITS = { small: 2, medium: 3, large: 5 };
+const ROW_TAG_LIMIT = 4;
 
 // `date` reads whichever timestamp the adapter exposes, so sites (saved_at) and
 // components (created_at) sort the same way without the browser knowing which
@@ -374,7 +377,7 @@ export default function LibraryBrowser({
                   ↗
                 </a>
               </div>
-              {renderTags(item, CARD_TAG_LIMIT)}
+              {renderTags(item, TAG_LIMITS[size])}
             </div>
           ))}
         </div>
@@ -406,7 +409,7 @@ export default function LibraryBrowser({
                   <span className="row-domain">{adapter.meta(item)}</span>
                 </span>
                 {item.summary && <p className="row-summary">{item.summary}</p>}
-                {renderTags(item, CARD_TAG_LIMIT)}
+                {renderTags(item, ROW_TAG_LIMIT)}
               </div>
               <SaveActions
                 kind={adapter.kind}

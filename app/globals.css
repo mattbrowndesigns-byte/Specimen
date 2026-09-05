@@ -263,10 +263,17 @@ h1 {
 }
 
 .card-tags {
+  /* --chip-row has to track .chip's height below (11px text, 3px padding).
+     The clamp is arithmetic on it, so if the chip changes, change this. */
+  --chip-row: 19px;
+  --chip-gap: 6px;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  padding: 0 12px 12px;
+  gap: var(--chip-gap);
+  padding: 0 12px;
+  /* Margin, not padding: the clamp below clips this box, and padding inside it
+     leaves room for the top of a third row to show through. */
+  margin-bottom: 12px;
 }
 
 .chip {
@@ -2037,9 +2044,10 @@ a.card {
   background: var(--surface-sunken);
 }
 
-/* Two rows of tags, then "+N more". */
+/* Exactly two rows, then "+N more". Computed rather than eyeballed: 56px used
+   to leave 6px of a third row visible, which is the sliver under small cards. */
 .card-tags-clamped {
-  max-height: 56px;
+  max-height: calc(var(--chip-row) * 2 + var(--chip-gap));
   overflow: hidden;
 }
 

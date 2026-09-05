@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
 
 export async function POST(request, { params }) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { id } = await params;
   const { tagId } = await request.json();
 
@@ -10,6 +15,8 @@ export async function POST(request, { params }) {
   }
 
   const supabase = supabaseAdmin();
+  if (!(await ownsComponent(supabase, id, user.id))) return NOT_FOUND();
+  if (!(await ownsTag(supabase, tagId, user.id))) return NOT_FOUND();
   const { error } = await supabase
     .from("taggable")
     .upsert(

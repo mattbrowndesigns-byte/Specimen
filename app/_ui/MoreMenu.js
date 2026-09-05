@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Menu } from "lucide-react";
+import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
 // Everything that isn't a primary action. Keeping Manage tags in here rather
 // than in the bar itself is the point: the bar is for what you reach for
@@ -19,7 +20,31 @@ const SECONDARY = [
 
 export default function MoreMenu() {
   const [open, setOpen] = useState(false);
+  const [account, setAccount] = useState(null);
+  const [isOwner, setIsOwner] = useState(false);
   const wrapRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const { data } = await supabaseBrowser().auth.getUser();
+      if (cancelled) return;
+      setAccount(data?.user?.email || null);
+      // Whether Invites shows is decided by the server; a 404 here just means
+      // this account isn't the owner, and the route refuses it either way.
+      const res = await fetch("/api/invites");
+      if (!cancelled) setIsOwner(res.ok);
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function signOut() {
+    await supabaseBrowser().auth.signOut();
+    window.location.href = "/login";
+  }
 
   useEffect(() => {
     function onDocClick(e) {
@@ -55,12 +80,22 @@ export default function MoreMenu() {
               {link.label}
             </a>
           ))}
+          {isOwner && (
+            <a className="more-item" href="/invites">
+              Invites
+            </a>
+          )}
           <div className="more-divider" />
           {SECONDARY.map((link) => (
             <a className="more-item more-item-quiet" key={link.href} href={link.href}>
               {link.label}
             </a>
           ))}
+          <div className="more-divider" />
+          {account && <span className="more-account">{account}</span>}
+          <button className="more-item more-item-button" onClick={signOut}>
+            Sign out
+          </button>
         </div>
       )}
     </div>

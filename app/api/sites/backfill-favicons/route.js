@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchPageMeta } from "@/lib/pageMeta";
 import { iconFillsFrame, resolveIconUrl } from "@/lib/iconShape";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED } from "@/lib/ownership";
 
 export const dynamic = "force-dynamic";
 
@@ -14,13 +16,16 @@ export const dynamic = "force-dynamic";
 // favicon_url is null, and a site whose page declares no icon is left null so
 // the /favicon.ico fallback still applies.
 export async function POST(request) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const supabase = supabaseAdmin();
   // ?force=1 re-reads every site, for when the *choice* of icon changes rather
   // than just the rows that were missing one -- switching to apple-touch-icons
   // means the stored URLs are stale, not absent.
   const force = request.nextUrl.searchParams.get("force") === "1";
 
-  let query = supabase.from("site").select("id, url, domain");
+  let query = supabase.from("site").select("id, url, domain").eq("user_id", user.id);
   if (!force) query = query.is("favicon_url", null);
   const { data: sites, error } = await query;
   if (error) {
@@ -43,7 +48,8 @@ export async function POST(request) {
     const { error: updateError } = await supabase
       .from("site")
       .update({ favicon_url: faviconUrl, favicon_fills })
-      .eq("id", site.id);
+      .eq("id", site.id)
+      .eq("user_id", user.id);
     if (updateError) {
       skipped.push(`${site.domain} (${updateError.message})`);
       continue;

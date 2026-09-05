@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, NOT_FOUND, ownsTag } from "@/lib/ownership";
 
 const FACETS = ["vertical", "page_type", "block_pattern", "aesthetic"];
 
 export async function PATCH(request, { params }) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { id } = await params;
   const body = await request.json();
   const update = {};
@@ -26,7 +31,13 @@ export async function PATCH(request, { params }) {
   }
 
   const supabase = supabaseAdmin();
-  const { data, error } = await supabase.from("tag").update(update).eq("id", id).select().single();
+  const { data, error } = await supabase
+    .from("tag")
+    .update(update)
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select()
+    .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -35,9 +46,12 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { id } = await params;
   const supabase = supabaseAdmin();
-  const { error } = await supabase.from("tag").delete().eq("id", id);
+  const { error } = await supabase.from("tag").delete().eq("id", id).eq("user_id", user.id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

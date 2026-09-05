@@ -4,15 +4,19 @@ import { dispatchCapture } from "@/lib/github";
 import { fetchPageMeta } from "@/lib/pageMeta";
 import { iconFillsFrame, resolveIconUrl } from "@/lib/iconShape";
 import { guessSiteName } from "@/lib/ai";
-import { HARDCODED_USER_ID } from "@/lib/constants";
 import { fetchSitesList } from "@/lib/siteQueries";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, atSaveLimit, SAVE_LIMIT } from "@/lib/ownership";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const q = request.nextUrl.searchParams.get("q") || "";
   try {
-    const sites = await fetchSitesList(q);
+    const sites = await fetchSitesList(q, user.id);
     return NextResponse.json({ sites });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -20,6 +24,9 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const body = await request.json();
   let rawUrl = (body.url || "").trim();
 
@@ -46,10 +53,19 @@ export async function POST(request) {
   }
 
   const supabase = supabaseAdmin();
+  // A ceiling per account: storage is one shared 1 GB, so one person filling
+  // it would take everyone else's library down with them.
+  if (await atSaveLimit(supabase, user.id)) {
+    return NextResponse.json(
+      { error: `You've reached the ${SAVE_LIMIT}-site limit for one account.` },
+      { status: 403 }
+    );
+  }
+
   const { data: site, error } = await supabase
     .from("site")
     .insert({
-      user_id: HARDCODED_USER_ID,
+      user_id: user.id,
       url: parsed.toString(),
       domain,
       name: name || domain,
@@ -66,7 +82,9 @@ export async function POST(request) {
   if (links?.length) {
     const { error: pagesError } = await supabase
       .from("page")
-      .insert(links.map((link) => ({ site_id: site.id, url: link.url, label: link.label })));
+      .insert(
+        links.map((link) => ({ site_id: site.id, user_id: user.id, url: link.url, label: link.label }))
+      );
     if (pagesError) {
       console.error("Failed to store discovered pages:", pagesError.message);
     }

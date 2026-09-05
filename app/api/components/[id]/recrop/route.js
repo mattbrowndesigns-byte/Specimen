@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { cropAndUpload, enrichAndSaveComponent } from "@/lib/componentCrop";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
 
 // Redraws a crop from the original stored page capture -- no need to re-run the
 // screenshot job, that image never changes. viewport picks which screenshot and
@@ -8,8 +10,12 @@ import { cropAndUpload, enrichAndSaveComponent } from "@/lib/componentCrop";
 // component's name, summary and tags; mobile is an optional companion crop,
 // drawn separately because mobile layouts don't match desktop coordinates.
 export async function POST(request, { params }) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { id } = await params;
   const { cropRect, viewport = "desktop" } = await request.json();
+  if (!(await ownsComponent(supabaseAdmin(), id, user.id))) return NOT_FOUND();
 
   if (!cropRect) {
     return NextResponse.json({ error: "cropRect is required" }, { status: 400 });

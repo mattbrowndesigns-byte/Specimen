@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { HARDCODED_USER_ID } from "@/lib/constants";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, NOT_FOUND, ownsCollection } from "@/lib/ownership";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,9 @@ const PREVIEW_ITEMS = 4;
 // needs: every collection, how big it is, and whether this record is already
 // in it.
 export async function GET(request) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const targetType = request.nextUrl.searchParams.get("targetType");
   const targetId = request.nextUrl.searchParams.get("targetId");
   const supabase = supabaseAdmin();
@@ -21,15 +25,22 @@ export async function GET(request) {
   const { data: collections, error } = await supabase
     .from("collection")
     .select("id, name, created_at")
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const { data: items, error: itemsError } = await supabase
-    .from("collection_item")
-    .select("collection_id, target_type, target_id, added_at")
-    .order("added_at", { ascending: false });
+  // Scoped to this account's collections, so counts and covers can't be read
+  // off someone else's.
+  const collectionIds = (collections || []).map((c) => c.id);
+  const { data: items, error: itemsError } = collectionIds.length
+    ? await supabase
+        .from("collection_item")
+        .select("collection_id, target_type, target_id, added_at")
+        .in("collection_id", collectionIds)
+        .order("added_at", { ascending: false })
+    : { data: [], error: null };
   if (itemsError) {
     return NextResponse.json({ error: itemsError.message }, { status: 500 });
   }
@@ -62,6 +73,9 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const body = await request.json();
   const name = (body.name || "").trim();
   if (!name) {
@@ -71,7 +85,7 @@ export async function POST(request) {
   const supabase = supabaseAdmin();
   const { data, error } = await supabase
     .from("collection")
-    .insert({ user_id: HARDCODED_USER_ID, name })
+    .insert({ user_id: user.id, name })
     .select("id, name, created_at")
     .single();
 

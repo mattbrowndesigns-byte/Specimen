@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchPageMeta } from "@/lib/pageMeta";
 import { runEnrichment } from "@/lib/enrich";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, NOT_FOUND, ownsSite } from "@/lib/ownership";
 
 // Re-reads a site's homepage and replaces its discovered pages, then re-runs
 // enrichment so the new links get classified and the representative ones
@@ -15,13 +17,19 @@ import { runEnrichment } from "@/lib/enrich";
 // Pages already promoted to their own site keep working: promotion creates a
 // separate site row and doesn't depend on the page row surviving.
 export async function POST(request, { params }) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { id } = await params;
   const supabase = supabaseAdmin();
 
-  const { data: site, error } = await supabase.from("site").select("id, url").eq("id", id).single();
-  if (error || !site) {
-    return NextResponse.json({ error: "That site doesn't exist" }, { status: 404 });
-  }
+  const { data: site, error } = await supabase
+    .from("site")
+    .select("id, url")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (error || !site) return NOT_FOUND();
 
   const { links } = await fetchPageMeta(site.url);
   if (!links?.length) {
@@ -38,7 +46,7 @@ export async function POST(request, { params }) {
 
   const { error: insertError } = await supabase
     .from("page")
-    .insert(links.map((link) => ({ site_id: id, url: link.url, label: link.label })));
+    .insert(links.map((link) => ({ site_id: id, user_id: user.id, url: link.url, label: link.label })));
   if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED } from "@/lib/ownership";
 
 // Resolves a real archived snapshot instead of linking at
 // web.archive.org/web/<date>/<url>. That path makes archive.org resolve a
@@ -6,6 +8,9 @@ import { NextResponse } from "next/server";
 // answering 429 after a handful of clicks. This availability endpoint isn't,
 // and it hands back the exact snapshot URL, which loads directly.
 export async function GET(request) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const url = request.nextUrl.searchParams.get("url");
   const timestamp = request.nextUrl.searchParams.get("timestamp");
 

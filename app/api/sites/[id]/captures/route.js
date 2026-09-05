@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { storagePathsForCaptures } from "@/lib/storage";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, NOT_FOUND, ownsSite } from "@/lib/ownership";
 
 // Deletes one capture run (the desktop + mobile shots taken together), by the
 // capture ids that run covers. Ids are checked against this site before
 // anything is removed, so a stale or wrong id can't delete another site's work.
 export async function DELETE(request, { params }) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { id } = await params;
   const idsParam = request.nextUrl.searchParams.get("ids") || "";
   const requestedIds = idsParam.split(",").map((s) => s.trim()).filter(Boolean);
@@ -15,6 +20,7 @@ export async function DELETE(request, { params }) {
   }
 
   const supabase = supabaseAdmin();
+  if (!(await ownsSite(supabase, id, user.id))) return NOT_FOUND();
 
   const { data: captures, error: readError } = await supabase
     .from("capture")

@@ -2,15 +2,23 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachTags } from "@/lib/tagAttach";
 import { attachSiteFavicons } from "@/lib/componentFavicons";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
 
 export async function GET(request, { params }) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { id } = await params;
   const supabase = supabaseAdmin();
 
-  const { data, error } = await supabase.from("component").select("*").eq("id", id).single();
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 404 });
-  }
+  const { data, error } = await supabase
+    .from("component")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+  if (error) return NOT_FOUND();
 
   const [withTags] = await attachTags(supabase, [data], "component");
   const [withFavicon] = await attachSiteFavicons(supabase, [withTags]);
@@ -18,6 +26,9 @@ export async function GET(request, { params }) {
 }
 
 export async function PATCH(request, { params }) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { id } = await params;
   const body = await request.json();
   const update = {};
@@ -41,7 +52,13 @@ export async function PATCH(request, { params }) {
   update.updated_at = new Date().toISOString();
 
   const supabase = supabaseAdmin();
-  const { data, error } = await supabase.from("component").update(update).eq("id", id).select().single();
+  const { data, error } = await supabase
+    .from("component")
+    .update(update)
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select()
+    .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -52,13 +69,17 @@ export async function PATCH(request, { params }) {
 // Tag links and collection rows are polymorphic, so there's no FK to cascade
 // through -- they have to go explicitly, the same as in the site route.
 export async function DELETE(request, { params }) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { id } = await params;
   const supabase = supabaseAdmin();
+  if (!(await ownsComponent(supabase, id, user.id))) return NOT_FOUND();
 
   await supabase.from("taggable").delete().eq("target_type", "component").eq("target_id", id);
   await supabase.from("collection_item").delete().eq("target_type", "component").eq("target_id", id);
 
-  const { error } = await supabase.from("component").delete().eq("id", id);
+  const { error } = await supabase.from("component").delete().eq("id", id).eq("user_id", user.id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -106,9 +106,34 @@ paints first and the theme arrives as a flash.
 **Gemini model is `gemini-3.6-flash`.** `gemini-2.0-flash` is retired and 404s.
 The `generateContent` request/response shape is unchanged.
 
-**RLS is intentionally OFF until M6.** Enabling it before auth exists blocks
-every read and write — no policies, no logged-in user. The SQL editor warns on
-every migration; choose "Run without RLS". Turn it on in the same pass as auth.
+**RLS is on, but it is not what separates accounts.** Every route still uses
+`supabaseAdmin()` and the service-role key, which bypasses RLS by design — so
+the isolation comes from route code filtering each query on the signed-in
+user's id. RLS is the second lock: it stops the anon key, now exposed to the
+browser for auth, being pointed at the REST API directly. Both layers matter
+and neither is enough alone. A new table needs a `user_id`, `enable row level
+security`, and every query in its routes scoped — miss the scope and the data
+leaks even with RLS on.
+
+**Ownership checks read the row scoped to the user** (`lib/ownership.js`)
+rather than reading it and comparing after. Someone else's row then comes back
+as "not found", which is also what the caller should be told — leaking the
+difference between "doesn't exist" and "isn't yours" lets anyone enumerate the
+library by id.
+
+**Enrichment resolves the owner from the record, not from a session.** The
+capture callback runs with no session at all (GitHub Actions authenticates with
+`CALLBACK_SECRET`), so `runEnrichment` reads `site.user_id` itself. A
+vocabulary from the wrong account would quietly tag one library with another's
+words.
+
+**Signup goes through `/api/auth/redeem`, never Supabase's own signup.** The
+invite code is checked and consumed there, and the account is created with the
+admin API. Supabase's signup endpoint knows nothing about codes, so leaving it
+reachable would bypass the gate entirely. Email confirmation is off and auth is
+email + password: Supabase's built-in mailer sends 2 messages an hour and only
+to pre-authorised addresses, so magic links can't work until custom SMTP is
+configured.
 
 **`taggable` and `collection_item` are polymorphic and `target_id` has no
 foreign key**, so deleting a site or component cascades to neither — delete

@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { dispatchCapture } from "@/lib/github";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
 
 // Starts a one-off screenshot of a page so a component can be cropped
 // out of it. Doesn't touch the site table at all.
 export async function POST(request) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const body = await request.json();
   let rawUrl = (body.url || "").trim();
 
@@ -27,7 +32,7 @@ export async function POST(request) {
 
   const { data: capture, error } = await supabase
     .from("component_capture")
-    .insert({ url: parsed.toString(), domain })
+    .insert({ url: parsed.toString(), domain, user_id: user.id })
     .select()
     .single();
 

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, NOT_FOUND, ownsTag } from "@/lib/ownership";
 
 const FACETS = ["vertical", "page_type", "block_pattern", "aesthetic"];
 
@@ -8,10 +10,14 @@ function slugify(label) {
 }
 
 export async function GET() {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const supabase = supabaseAdmin();
   const { data: tags, error } = await supabase
     .from("tag")
     .select("id, slug, label, facet, is_approved")
+    .eq("user_id", user.id)
     .order("facet", { ascending: true })
     .order("label", { ascending: true });
 
@@ -19,7 +25,12 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const { data: taggables, error: countError } = await supabase.from("taggable").select("tag_id");
+  // Counts come from this account's own tags, so a shared tag_id can't leak a
+  // usage count from someone else's library.
+  const tagIds = tags.map((t) => t.id);
+  const { data: taggables, error: countError } = tagIds.length
+    ? await supabase.from("taggable").select("tag_id").in("tag_id", tagIds)
+    : { data: [], error: null };
   if (countError) {
     return NextResponse.json({ error: countError.message }, { status: 500 });
   }
@@ -36,6 +47,9 @@ export async function GET() {
 // Manually creating a tag (as opposed to an AI proposal) is immediately
 // approved -- the owner typing it in directly is itself the review.
 export async function POST(request) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { facet, label } = await request.json();
 
   if (!facet || !FACETS.includes(facet)) {
@@ -53,14 +67,20 @@ export async function POST(request) {
 
   const supabase = supabaseAdmin();
 
-  const { data: existing } = await supabase.from("tag").select("*").eq("facet", facet).eq("slug", slug).maybeSingle();
+  const { data: existing } = await supabase
+    .from("tag")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("facet", facet)
+    .eq("slug", slug)
+    .maybeSingle();
   if (existing) {
     return NextResponse.json({ tag: { ...existing, usage_count: 0 } });
   }
 
   const { data: created, error } = await supabase
     .from("tag")
-    .insert({ facet, slug, label: trimmed, is_approved: true })
+    .insert({ user_id: user.id, facet, slug, label: trimmed, is_approved: true })
     .select()
     .single();
 

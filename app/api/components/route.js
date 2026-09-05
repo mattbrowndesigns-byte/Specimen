@@ -2,10 +2,14 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachTags } from "@/lib/tagAttach";
 import { attachSiteFavicons } from "@/lib/componentFavicons";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
 import { cropAndUpload, enrichAndSaveComponent } from "@/lib/componentCrop";
-import { HARDCODED_USER_ID } from "@/lib/constants";
 
 export async function GET(request) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const siteId = request.nextUrl.searchParams.get("siteId");
   const supabase = supabaseAdmin();
   let query = supabase
@@ -13,6 +17,7 @@ export async function GET(request) {
     .select(
       "id, site_id, source_url, name, summary, notes, image_url, crop_rect, created_at, needs_review, is_favorite"
     )
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   if (siteId) query = query.eq("site_id", siteId);
@@ -30,6 +35,9 @@ export async function GET(request) {
 
 // Creates a component by cropping a region out of a finished component_capture.
 export async function POST(request) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { componentCaptureId, cropRect } = await request.json();
 
   if (!componentCaptureId || !cropRect) {
@@ -41,7 +49,8 @@ export async function POST(request) {
     .from("component_capture")
     .select("*")
     .eq("id", componentCaptureId)
-    .single();
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   if (captureError || !capture || capture.status !== "ready" || !capture.full_url) {
     return NextResponse.json({ error: "That capture isn't ready yet" }, { status: 400 });
@@ -51,12 +60,13 @@ export async function POST(request) {
     .from("site")
     .select("id")
     .eq("domain", capture.domain)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   const { data: component, error: insertError } = await supabase
     .from("component")
     .insert({
-      user_id: HARDCODED_USER_ID,
+      user_id: user.id,
       site_id: matchingSite?.id || null,
       source_url: capture.url,
       source_image_url: capture.full_url,

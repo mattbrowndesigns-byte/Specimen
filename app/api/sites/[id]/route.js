@@ -2,8 +2,13 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachCapturesAndTags } from "@/lib/siteQueries";
 import { storagePathsForCaptures } from "@/lib/storage";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, NOT_FOUND, ownsSite } from "@/lib/ownership";
 
 export async function GET(request, { params }) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { id } = await params;
   const supabase = supabaseAdmin();
 
@@ -11,10 +16,11 @@ export async function GET(request, { params }) {
     .from("site")
     .select("id, url, domain, name, summary, notes, saved_at, needs_review, is_favorite, favicon_url, favicon_fills")
     .eq("id", id)
+    .eq("user_id", user.id)
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 404 });
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const [withExtras] = await attachCapturesAndTags(supabase, [site]);
@@ -32,6 +38,9 @@ export async function GET(request, { params }) {
 }
 
 export async function PATCH(request, { params }) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { id } = await params;
   const body = await request.json();
   const update = {};
@@ -57,7 +66,13 @@ export async function PATCH(request, { params }) {
   update.updated_at = new Date().toISOString();
 
   const supabase = supabaseAdmin();
-  const { data, error } = await supabase.from("site").update(update).eq("id", id).select().single();
+  const { data, error } = await supabase
+    .from("site")
+    .update(update)
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select()
+    .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -70,8 +85,12 @@ export async function PATCH(request, { params }) {
 // cascade through. Components keep existing with site_id set to null, since a
 // crop is worth keeping on its own.
 export async function DELETE(request, { params }) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { id } = await params;
   const supabase = supabaseAdmin();
+  if (!(await ownsSite(supabase, id, user.id))) return NOT_FOUND();
 
   const { data: captures } = await supabase.from("capture").select("full_url, thumb_url").eq("site_id", id);
 
@@ -86,7 +105,7 @@ export async function DELETE(request, { params }) {
   await supabase.from("taggable").delete().eq("target_type", "site").eq("target_id", id);
   await supabase.from("collection_item").delete().eq("target_type", "site").eq("target_id", id);
 
-  const { error } = await supabase.from("site").delete().eq("id", id);
+  const { error } = await supabase.from("site").delete().eq("id", id).eq("user_id", user.id);
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

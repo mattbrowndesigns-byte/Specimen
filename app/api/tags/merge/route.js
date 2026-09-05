@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { currentUser } from "@/lib/supabaseServer";
+import { UNAUTHORIZED, NOT_FOUND, ownsTag } from "@/lib/ownership";
 
 // Moves every site/page/component tagged with sourceId onto targetId,
 // then deletes the source tag (its now-empty taggable rows cascade away).
 export async function POST(request) {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
   const { sourceId, targetId } = await request.json();
 
   if (!sourceId || !targetId || sourceId === targetId) {
@@ -11,6 +16,11 @@ export async function POST(request) {
   }
 
   const supabase = supabaseAdmin();
+  // Both tags have to be this account's, or a merge could move another
+  // library's records onto a tag here.
+  if (!(await ownsTag(supabase, sourceId, user.id)) || !(await ownsTag(supabase, targetId, user.id))) {
+    return NOT_FOUND();
+  }
 
   const { data: rows, error: readError } = await supabase
     .from("taggable")

@@ -6,6 +6,7 @@ import RelatedSection from "../../_ui/RelatedSection";
 import SaveActions from "../../_ui/SaveActions";
 import Favicon from "../../_ui/Favicon";
 import DiscoveredPages from "../../_ui/DiscoveredPages";
+import FeatureRotator from "../../_ui/FeatureRotator";
 import { archiveUrl, captureTimeline, formatCaptureDate } from "@/lib/captures";
 
 const FACET_LABELS = {
@@ -373,13 +374,16 @@ export default function SiteDetailPage({ params }) {
                 style={{ width: `${Math.min(95, (captureElapsed / CAPTURE_ESTIMATE_SECONDS) * 100)}%` }}
               />
             </div>
-            <p>
-              Capturing this site —{" "}
-              {captureElapsed < CAPTURE_ESTIMATE_SECONDS
-                ? `about ${CAPTURE_ESTIMATE_SECONDS - captureElapsed}s remaining`
-                : "finishing up, any moment now"}
-              . This runs on a server, so it'll finish even if you leave this page.
-            </p>
+            <div className="capture-status-row">
+              <p>
+                Capturing this site —{" "}
+                {captureElapsed < CAPTURE_ESTIMATE_SECONDS
+                  ? `about ${CAPTURE_ESTIMATE_SECONDS - captureElapsed}s remaining`
+                  : "finishing up, any moment now"}
+                . Safe to leave this page.
+              </p>
+              <FeatureRotator className="capture-status-rotator" />
+            </div>
           </div>
         )}
 

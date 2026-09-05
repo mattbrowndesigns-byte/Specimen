@@ -3219,3 +3219,72 @@ a.card {
     }
   }
 }
+
+/* Card size */
+
+.size-switch {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface-sunken);
+  border-radius: 8px;
+}
+
+.size-switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.size-switch button:hover:not(.active) {
+  color: var(--text);
+}
+
+.size-switch button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* The minimum is what changes; auto-fill still decides the column count, so
+   every size stays responsive rather than pinning a number of columns. */
+.grid-small {
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 16px;
+}
+
+/* 340, not 380: at a typical laptop width 380 drops straight from four columns
+   to two, which reads as a different layout rather than a larger card. 340
+   steps 5 -> 4 -> 3. */
+.grid-large {
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
+}
+
+/* Progress row: status left, feature line right. */
+
+.capture-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.capture-status-row p {
+  margin: 0;
+}
+
+/* Below this the two would collide, and the status is the one that matters. */
+@media (max-width: 900px) {
+  .capture-status-row .feature-rotator {
+    display: none;
+  }
+}

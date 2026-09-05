@@ -70,12 +70,14 @@ export default function CaptureProgress({ job, onDone }) {
           style={{ width: `${Math.min(95, (elapsed / ESTIMATE_SECONDS) * 100)}%` }}
         />
       </div>
-      <p>
-        Capturing {job.label} —{" "}
-        {elapsed < ESTIMATE_SECONDS ? `about ${ESTIMATE_SECONDS - elapsed}s remaining` : "finishing up"}
-        . This runs on a server, so it'll finish even if you leave the page.
-      </p>
-      <FeatureRotator className="capture-status-rotator" />
+      <div className="capture-status-row">
+        <p>
+          Capturing {job.label} —{" "}
+          {elapsed < ESTIMATE_SECONDS ? `about ${ESTIMATE_SECONDS - elapsed}s remaining` : "finishing up"}
+          . Safe to leave this page.
+        </p>
+        <FeatureRotator className="capture-status-rotator" />
+      </div>
     </div>
   );
 }

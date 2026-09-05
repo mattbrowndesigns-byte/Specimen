@@ -1,6 +1,15 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LayoutGrid, List, AlignJustify, SlidersHorizontal, ArrowDownUp, Check } from "lucide-react";
+import {
+  LayoutGrid,
+  List,
+  AlignJustify,
+  SlidersHorizontal,
+  ArrowDownUp,
+  Check,
+  Grid3x3,
+  Square,
+} from "lucide-react";
 import FilterModal from "./FilterModal";
 import SaveActions from "./SaveActions";
 import Favicon from "./Favicon";
@@ -20,6 +29,15 @@ const CARD_TAG_LIMIT = 4;
 // `date` reads whichever timestamp the adapter exposes, so sites (saved_at) and
 // components (created_at) sort the same way without the browser knowing which
 // it's holding.
+// Card size, Finder-style but in three steps rather than a slider -- a
+// continuous control would need a continuous grid, and the column count is what
+// actually changes. Denser icon means smaller cards.
+const SIZES = [
+  { id: "small", label: "Small cards", Icon: Grid3x3 },
+  { id: "medium", label: "Medium cards", Icon: LayoutGrid },
+  { id: "large", label: "Large cards", Icon: Square },
+];
+
 const SORTS = [
   { id: "newest", label: "Newest first" },
   { id: "oldest", label: "Oldest first" },
@@ -61,6 +79,7 @@ export default function LibraryBrowser({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [stripFade, setStripFade] = useState({ left: false, right: false });
   const [sort, setSort] = useState("newest");
+  const [size, setSize] = useState("medium");
   const [sortOpen, setSortOpen] = useState(false);
   const stripRef = useRef(null);
   const sortRef = useRef(null);
@@ -71,6 +90,8 @@ export default function LibraryBrowser({
       if (saved && VIEWS.some((v) => v.id === saved)) setView(saved);
       const savedSort = localStorage.getItem(`${storageKey}.sort`);
       if (savedSort && SORTS.some((o) => o.id === savedSort)) setSort(savedSort);
+      const savedSize = localStorage.getItem(`${storageKey}.size`);
+      if (savedSize && SIZES.some((o) => o.id === savedSize)) setSize(savedSize);
     } catch {
       // localStorage can be unavailable; the defaults are fine.
     }
@@ -90,6 +111,15 @@ export default function LibraryBrowser({
       document.removeEventListener("keydown", onKey);
     };
   }, []);
+
+  function chooseSize(id) {
+    setSize(id);
+    try {
+      localStorage.setItem(`${storageKey}.size`, id);
+    } catch {
+      // Not persisting the choice is survivable.
+    }
+  }
 
   function chooseSort(id) {
     setSort(id);
@@ -232,6 +262,23 @@ export default function LibraryBrowser({
           {visible.length} {visible.length === 1 ? noun : `${noun}s`}
         </span>
         <div className="results-controls">
+          {view === "cards" && (
+            <div className="size-switch">
+              {SIZES.map(({ id, label, Icon }) => (
+                <button
+                  key={id}
+                  className={size === id ? "active" : ""}
+                  onClick={() => chooseSize(id)}
+                  title={label}
+                  aria-label={label}
+                  aria-pressed={size === id}
+                >
+                  <Icon size={15} />
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="sort-menu" ref={sortRef}>
             <button className="sort-btn" onClick={() => setSortOpen((v) => !v)} aria-expanded={sortOpen}>
               <ArrowDownUp size={14} />
@@ -285,7 +332,7 @@ export default function LibraryBrowser({
       {items.length > 0 && visible.length === 0 && <p className="empty">Nothing matches those filters.</p>}
 
       {view === "cards" && (
-        <div className="grid">
+        <div className={`grid grid-${size}`}>
           {ordered.map((item) => (
             <div className="card" key={item.id}>
               <div className="card-media">

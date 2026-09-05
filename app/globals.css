@@ -42,6 +42,9 @@
   --invert-text-rgb: 255, 255, 255;
 
   --danger: #c0392b;
+  --danger-bg: #fdf5f4;
+  --danger-bg-hover: #fbe9e6;
+  --danger-border: #edcfca;
 
   --warn-bg: #fff3d6;
   --warn-bg-hover: #ffe9b8;
@@ -92,6 +95,9 @@
   --invert-text-rgb: 23, 23, 26;
 
   --danger: #ff6f61;
+  --danger-bg: #2b1a18;
+  --danger-bg-hover: #37201d;
+  --danger-border: #55302b;
 
   --warn-bg: #3a2b0f;
   --warn-bg-hover: #4a3714;
@@ -313,10 +319,13 @@ h1 {
   font-size: 18px;
 }
 
-/* Brand lockup: wordmark, then the tagline reading off its baseline. */
+/* Brand lockup: wordmark, then the tagline sitting on the wordmark's own
+   baseline rather than on its optical centre. `baseline` is what does it --
+   the two type sizes are far enough apart (44px against 15px) that centring
+   left the tagline visibly floating above the wordmark's feet. */
 .brand {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 12px;
   min-width: 0;
 }
@@ -351,6 +360,7 @@ h1 {
    2.80:1, so it isn't used for real copy. */
 .brand-tagline {
   font-size: 15px;
+  line-height: 1;
   color: var(--text-muted);
   white-space: nowrap;
 }
@@ -603,12 +613,6 @@ h1 {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-/* The bell and the theme toggle are both ambient status/preference controls, so
-   they sit as a pair rather than evenly spaced with Add and the menu. */
-.nav-links .bell-wrap + .icon-btn {
-  margin-left: -6px;
 }
 
 .search-input {
@@ -1160,6 +1164,38 @@ h1 {
   margin-bottom: 0;
 }
 
+/* Deleting the record lives at the foot of the sidebar rather than in the
+   header row: it isn't a sibling of Re-capture, and down here you've scrolled
+   past everything you'd be throwing away before you can reach it. */
+.detail-danger {
+  padding-top: 4px;
+}
+
+/* Doubled for the same reason as .icon-btn: `.detail-section button` and
+   `.detail-actions button` are (0,1,1) and would otherwise repaint this in the
+   surface colour. Tinted rather than filled -- red enough to read as the one
+   irreversible control on the page, quiet enough not to court the click. */
+.danger-btn.danger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 9px 14px;
+  border: 1px solid var(--danger-border);
+  border-radius: 8px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.danger-btn.danger-btn:hover {
+  background: var(--danger-bg-hover);
+  border-color: var(--danger);
+}
+
 /* Below this the sidebar would be too narrow for the tag comboboxes, so the
    two columns stack instead. */
 @media (max-width: 1080px) {
@@ -1190,19 +1226,31 @@ h1 {
   border-bottom: 1px solid var(--text);
 }
 
+/* align-items, or the anchor stretches to the height of the bordered buttons
+   beside it and its label sits 8px from the top of a taller box -- which read
+   as the arrow and text hanging high in the button. */
 .detail-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-shrink: 0;
 }
 
+/* The one filled control in the row. A transparent border rather than none:
+   it matches the 1px the neighbouring buttons carry, so all of them come out
+   the same height without hard-coding one. */
 .visit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 14px;
+  border: 1px solid transparent;
   background: var(--invert-bg);
   color: var(--invert-text);
   border-radius: 8px;
   text-decoration: none;
   font-size: 14px;
+  line-height: 1.25;
 }
 
 .detail-actions button {
@@ -1211,6 +1259,7 @@ h1 {
   border-radius: 8px;
   background: var(--surface);
   font-size: 14px;
+  line-height: 1.25;
   cursor: pointer;
 }
 
@@ -1340,6 +1389,24 @@ h1 {
 .section-head-actions {
   display: flex;
   gap: 6px;
+}
+
+/* The same pair of buttons, moved under the text they act on. */
+.section-actions-below {
+  margin-top: 12px;
+}
+
+/* Sections whose copy the model wrote carry a sparkle, so it's clear at a
+   glance which words on the page are yours. */
+.ai-heading.ai-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-heading svg {
+  flex-shrink: 0;
+  color: var(--accent);
 }
 
 .detail-section .section-head-actions button.primary {
@@ -2375,12 +2442,25 @@ a.card {
 /* Overflow menu */
 
 .more-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 8px 10px;
   border-radius: 8px;
   font-size: 13px;
   color: var(--text);
   text-decoration: none;
+}
+
+/* The icons are wayfinding, not content: they sit back from the label so a
+   column of them reads as one quiet edge rather than eight coloured marks. */
+.more-item svg {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.more-item:hover svg {
+  color: var(--text-muted);
 }
 
 .more-item:hover {
@@ -2395,6 +2475,17 @@ a.card {
   height: 1px;
   margin: 5px 6px;
   background: var(--border-soft);
+}
+
+/* Names the group the theme control opens, so the next preference has an
+   obvious place to land. Matches the sort menu's own heading. */
+.more-section-head {
+  display: block;
+  padding: 4px 10px 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
 }
 
 /* Favorite + collection buttons */

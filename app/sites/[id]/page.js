@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, use as usePromise } from "react";
+import { ArrowUpRight, Sparkles } from "lucide-react";
 import TagCombobox from "../../_ui/TagCombobox";
 import UtilityBar from "../../_ui/UtilityBar";
 import RelatedSection from "../../_ui/RelatedSection";
@@ -354,13 +355,15 @@ export default function SiteDetailPage({ params }) {
           <div className="detail-actions">
             <SaveActions className="detail-save-actions" kind="site" id={site.id} name={site.name || site.domain} isFavorite={site.is_favorite} />
             {site.needs_review && <button onClick={markReviewed}>Mark reviewed</button>}
-            <a className="visit-btn" href={site.url} target="_blank" rel="noopener noreferrer">
-              Visit site ↗
-            </a>
             <button onClick={recapture} disabled={recapturing}>
               {recapturing ? "Re-capturing…" : "Re-capture"}
             </button>
-            <button onClick={handleDelete}>Delete</button>
+            {/* Last, and the only filled control here: going to the real site is
+                what you came for, everything left of it acts on the record. */}
+            <a className="visit-btn" href={site.url} target="_blank" rel="noopener noreferrer">
+              Visit site
+              <ArrowUpRight size={15} />
+            </a>
           </div>
         </div>
 
@@ -482,17 +485,12 @@ export default function SiteDetailPage({ params }) {
 
           <aside className="detail-side">
             <section className="detail-section">
-              <div className="section-head">
-                <h2>AI summary</h2>
-                {!editingSummary && (
-                  <div className="section-head-actions">
-                    <button onClick={() => setEditingSummary(true)}>Edit</button>
-                    <button onClick={regenerateSummary} disabled={regenerating}>
-                      {regenerating ? "Regenerating…" : "Regenerate"}
-                    </button>
-                  </div>
-                )}
-              </div>
+              {/* The sparkle marks the copy below as the model's rather than
+                  yours -- the same mark the review queue uses for AI tags. */}
+              <h2 className="ai-heading">
+                <Sparkles size={15} />
+                AI summary
+              </h2>
 
               {editingSummary ? (
                 <>
@@ -519,9 +517,19 @@ export default function SiteDetailPage({ params }) {
                   </div>
                 </>
               ) : (
-                <p className="summary-text">
-                  {site.summary || <span className="summary-empty">No summary yet.</span>}
-                </p>
+                <>
+                  <p className="summary-text">
+                    {site.summary || <span className="summary-empty">No summary yet.</span>}
+                  </p>
+                  {/* Under the summary, not beside the heading: both buttons act
+                      on the text, and you decide to rewrite it after reading it. */}
+                  <div className="section-head-actions section-actions-below">
+                    <button onClick={() => setEditingSummary(true)}>Edit</button>
+                    <button onClick={regenerateSummary} disabled={regenerating}>
+                      {regenerating ? "Regenerating…" : "Regenerate"}
+                    </button>
+                  </div>
+                </>
               )}
             </section>
 
@@ -558,6 +566,15 @@ export default function SiteDetailPage({ params }) {
               onRefresh={rediscoverPages}
               refreshing={rediscovering}
             />
+
+            {/* Bottom of the panel, on its own: deleting the record isn't a
+                sibling of Re-capture, and putting it last means you scroll past
+                everything you'd lose before you reach it. */}
+            <div className="detail-danger">
+              <button className="danger-btn" onClick={handleDelete}>
+                Delete site
+              </button>
+            </div>
           </aside>
         </div>
 

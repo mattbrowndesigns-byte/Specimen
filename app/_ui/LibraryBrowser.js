@@ -282,6 +282,20 @@ export default function LibraryBrowser({
             </div>
           )}
 
+          <div className="view-switch">
+            {VIEWS.map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                className={view === id ? "active" : ""}
+                onClick={() => chooseView(id)}
+                title={label}
+              >
+                <Icon size={15} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+
           <div className="sort-menu" ref={sortRef}>
             <button className="sort-btn" onClick={() => setSortOpen((v) => !v)} aria-expanded={sortOpen}>
               <ArrowDownUp size={14} />
@@ -302,20 +316,6 @@ export default function LibraryBrowser({
                 ))}
               </div>
             )}
-          </div>
-
-          <div className="view-switch">
-          {VIEWS.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              className={view === id ? "active" : ""}
-              onClick={() => chooseView(id)}
-              title={label}
-            >
-              <Icon size={15} />
-              <span>{label}</span>
-            </button>
-            ))}
           </div>
         </div>
       </div>

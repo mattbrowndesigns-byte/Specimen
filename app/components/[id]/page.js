@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, use as usePromise } from "react";
+import { ArrowUpRight, Sparkles } from "lucide-react";
 import CropTool from "../../_ui/CropTool";
 import TagCombobox from "../../_ui/TagCombobox";
 import UtilityBar from "../../_ui/UtilityBar";
@@ -213,10 +214,12 @@ export default function ComponentDetailPage({ params }) {
               isFavorite={component.is_favorite}
             />
             {component.needs_review && <button onClick={markReviewed}>Mark reviewed</button>}
+            {/* Last, and the only filled control here: going to the real site is
+                what you came for, everything left of it acts on the record. */}
             <a className="visit-btn" href={component.source_url} target="_blank" rel="noopener noreferrer">
-              Visit source ↗
+              Visit source
+              <ArrowUpRight size={15} />
             </a>
-            <button onClick={handleDelete}>Delete</button>
           </div>
         </div>
 
@@ -286,17 +289,12 @@ export default function ComponentDetailPage({ params }) {
 
           <aside className="detail-side">
             <section className="detail-section">
-              <div className="section-head">
-                <h2>AI summary</h2>
-                {!editingSummary && (
-                  <div className="section-head-actions">
-                    <button onClick={() => setEditingSummary(true)}>Edit</button>
-                    <button onClick={regenerateSummary} disabled={regenerating}>
-                      {regenerating ? "Regenerating…" : "Regenerate"}
-                    </button>
-                  </div>
-                )}
-              </div>
+              {/* The sparkle marks the copy below as the model's rather than
+                  yours -- the same mark the site detail page uses. */}
+              <h2 className="ai-heading">
+                <Sparkles size={15} />
+                AI summary
+              </h2>
 
               {editingSummary ? (
                 <>
@@ -323,13 +321,23 @@ export default function ComponentDetailPage({ params }) {
                   </div>
                 </>
               ) : (
-                <p className="summary-text">
-                  {component.summary || (
-                    <span className="summary-empty">
-                      No summary yet — use Regenerate to describe this crop.
-                    </span>
-                  )}
-                </p>
+                <>
+                  <p className="summary-text">
+                    {component.summary || (
+                      <span className="summary-empty">
+                        No summary yet — use Regenerate to describe this crop.
+                      </span>
+                    )}
+                  </p>
+                  {/* Under the summary, not beside the heading: both buttons act
+                      on the text, and you decide to rewrite it after reading it. */}
+                  <div className="section-head-actions section-actions-below">
+                    <button onClick={() => setEditingSummary(true)}>Edit</button>
+                    <button onClick={regenerateSummary} disabled={regenerating}>
+                      {regenerating ? "Regenerating…" : "Regenerate"}
+                    </button>
+                  </div>
+                </>
               )}
             </section>
 
@@ -356,6 +364,15 @@ export default function ComponentDetailPage({ params }) {
                 {savingField === "notes" ? "Saving…" : "Save notes"}
               </button>
             </section>
+
+            {/* Bottom of the panel, on its own: deleting the record isn't a
+                sibling of Re-crop, and putting it last means you scroll past
+                everything you'd lose before you reach it. */}
+            <div className="detail-danger">
+              <button className="danger-btn" onClick={handleDelete}>
+                Delete component
+              </button>
+            </div>
           </aside>
         </div>
 

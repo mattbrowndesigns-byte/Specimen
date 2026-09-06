@@ -4,6 +4,7 @@ import {
   Menu,
   X,
   Sparkles,
+  Share2,
   Heart,
   Layers,
   Tag,
@@ -15,6 +16,7 @@ import {
   Sun,
   LogOut,
 } from "lucide-react";
+import ShareModal from "./ShareModal";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { THEME_KEY } from "@/lib/theme";
 
@@ -42,6 +44,7 @@ export default function MoreMenu() {
   const [account, setAccount] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
   const [theme, setTheme] = useState("light");
+  const [sharing, setSharing] = useState(false);
   const wrapRef = useRef(null);
 
   // The boot script in the document head has already set data-theme from
@@ -134,6 +137,17 @@ export default function MoreMenu() {
 
           {/* A preference, not an action -- and the section it opens is where
               the next preference goes, rather than back out in the bar. */}
+          <button
+            className="more-item more-item-button"
+            onClick={() => {
+              setOpen(false);
+              setSharing(true);
+            }}
+          >
+            <Share2 size={15} />
+            Share Library
+          </button>
+
           <div className="more-divider" />
           <span className="more-section-head">Settings</span>
           <button className="more-item more-item-button" onClick={toggleTheme}>
@@ -149,6 +163,8 @@ export default function MoreMenu() {
           </button>
         </div>
       )}
+
+      {sharing && <ShareModal kind="library" title="your library" onClose={() => setSharing(false)} />}
     </div>
   );
 }

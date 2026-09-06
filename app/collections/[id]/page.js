@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState, use as usePromise } from "react";
 import UtilityBar from "../../_ui/UtilityBar";
+import ShareModal from "../../_ui/ShareModal";
 import RecordGrid from "../../_ui/RecordGrid";
 import ModalShell from "../../_ui/ModalShell";
 
@@ -9,6 +10,7 @@ export default function CollectionDetailPage({ params }) {
   const [collection, setCollection] = useState(null);
   const [entries, setEntries] = useState(null);
   const [editing, setEditing] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [error, setError] = useState(null);
 
   // The membership rows are ids only, so the records come from the two library
@@ -97,6 +99,9 @@ export default function CollectionDetailPage({ params }) {
         <div className="detail-header">
           <h1 className="collection-title">{collection?.name || "…"}</h1>
           <div className="detail-actions">
+            <button onClick={() => setSharing(true)} disabled={!collection}>
+              Share
+            </button>
             <button onClick={() => setEditing(true)} disabled={!collection}>
               Edit Collection
             </button>
@@ -135,6 +140,15 @@ export default function CollectionDetailPage({ params }) {
               await load();
             }}
             onError={setError}
+          />
+        )}
+      
+        {sharing && collection && (
+          <ShareModal
+            kind="collection"
+            targetId={collection.id}
+            title={collection.name}
+            onClose={() => setSharing(false)}
           />
         )}
       </main>

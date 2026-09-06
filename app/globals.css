@@ -1183,9 +1183,8 @@ h1 {
 }
 
 .modal-body h3 {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--text-faint);
   margin: 16px 0 8px;
 }
@@ -1476,10 +1475,8 @@ h1 {
 }
 
 .timeline-latest {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  opacity: 0.65;
+  font-size: 11px;
+  opacity: 0.7;
 }
 
 .capture-status {
@@ -1982,7 +1979,6 @@ h1 {
   color: var(--text-faint);
   margin: 0 0 6px;
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.02em;
 }
 
@@ -2562,9 +2558,7 @@ a.card {
 
 .related-kind {
   flex-shrink: 0;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 11px;
   color: var(--text-faint);
 }
 
@@ -2716,10 +2710,9 @@ a.card {
 .more-section-head {
   display: block;
   padding: 4px 10px 6px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-faint);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
 }
 
 /* ---- Site style: palette + fonts in use --------------------------------- */
@@ -2985,13 +2978,11 @@ a.card {
 }
 
 .font-badge {
-  padding: 1px 6px;
+  padding: 1px 7px;
   border-radius: 999px;
   background: var(--chip-bg);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--text-muted);
 }
 
@@ -3087,14 +3078,43 @@ a.card {
 
 /* ---- Prose pages: About, FAQ, Features ---------------------------------- */
 
-/* Narrower than the library. The grid wants every pixel; a paragraph wants a
-   line length you can read without losing your place coming back to the left. */
+/* Full width like the rest of the app, with the reading measure controlled by
+   the column rather than by squeezing the page. Four columns of title against
+   eight of content: the heading has somewhere to sit, and the prose still
+   lands on a line length you can read. */
 .prose-page {
-  max-width: 860px;
+  max-width: 1200px;
+}
+
+.prose-row {
+  display: grid;
+  grid-template-columns: 4fr 8fr;
+  gap: 24px 48px;
+  align-items: start;
+  margin-bottom: 52px;
+}
+
+/* The left column stays put while the right one scrolls past it, which is what
+   makes the pairing read as one section rather than two stacked ones. */
+.prose-row-aside {
+  position: sticky;
+  top: 88px;
+}
+
+@media (max-width: 900px) {
+  .prose-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .prose-row-aside {
+    position: static;
+  }
 }
 
 .prose-head {
-  margin: 8px 0 40px;
+  margin: 8px 0 44px;
 }
 
 .prose-head h1 {
@@ -3116,14 +3136,25 @@ a.card {
 }
 
 .prose-section {
-  margin-bottom: 44px;
+  margin-bottom: 0;
 }
 
 .prose-section h2 {
-  margin: 0 0 14px;
-  font-size: 22px;
+  margin: 0 0 8px;
+  font-size: 24px;
   font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   color: var(--text);
+}
+
+/* The line under a sticky section title, so the left column isn't one word
+   floating in a lot of space. */
+.prose-aside-note {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-muted);
 }
 
 .prose-section h3 {
@@ -3210,35 +3241,31 @@ a.card {
 
 /* ---- Features ----------------------------------------------------------- */
 
-.feature-group {
-  margin-bottom: 44px;
-}
-
 .feature-group-head {
-  margin-bottom: 18px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-soft);
+  margin: 0;
 }
 
+/* A heading, not a label. Small tracked-out capitals were doing the job of a
+   heading while looking like a system message. */
 .feature-group-head h2 {
-  margin: 0 0 4px;
-  font-size: 13px;
+  margin: 0 0 8px;
+  font-size: 24px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-muted);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--text);
 }
 
 .feature-group-head p {
   margin: 0;
-  max-width: 62ch;
-  font-size: 15px;
-  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-muted);
 }
 
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 14px;
 }
 
@@ -3261,12 +3288,17 @@ a.card {
   color: var(--accent);
 }
 
+/* One line, always. The copy is written short enough to fit, and this is the
+   guarantee that a narrow column can't break the promise. */
 .feature-card h3 {
   margin: 0 0 6px;
   font-size: 15px;
   font-weight: 600;
   line-height: 1.3;
   color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .feature-card p {
@@ -3327,6 +3359,12 @@ a.card {
 }
 
 /* The rotator is a line at a time; this is the way to all of them. */
+/* Sat on the text's baseline rather than aligned to a box. */
+.feature-rotator-line svg {
+  vertical-align: -2px;
+  margin-right: 7px;
+}
+
 .feature-rotator-more {
   margin-left: 10px;
   font-size: 12px;
@@ -3336,6 +3374,135 @@ a.card {
 
 .feature-rotator-more:hover {
   color: var(--text);
+}
+
+/* ---- Sharing ------------------------------------------------------------ */
+
+.share-note {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.share-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.share-link svg {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+/* Read-only rather than disabled: it still selects, and a disabled input is
+   grey text nobody can copy out by hand when the clipboard is blocked. */
+.share-link input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--text-body);
+}
+
+.share-copy {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 7px;
+  background: var(--invert-bg);
+  font: inherit;
+  font-size: 13px;
+  color: var(--invert-text);
+  cursor: pointer;
+}
+
+.share-copy:hover {
+  background: var(--invert-bg-hover);
+}
+
+.share-revoke.share-revoke {
+  margin-top: 16px;
+  color: var(--danger);
+}
+
+/* ---- The shared view ---------------------------------------------------- */
+
+.shared-bar {
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--surface);
+}
+
+.shared-bar-inner {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+}
+
+.shared-brand {
+  text-decoration: none;
+}
+
+.shared-mark {
+  font-family: var(--font-wordmark), "Arial Black", "Helvetica Neue", sans-serif;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--brand-ink);
+}
+
+.shared-bar-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.shared-title {
+  margin-bottom: 28px;
+}
+
+.shared-page {
+  padding-top: 28px;
+}
+
+.shared-gone {
+  max-width: 480px;
+  padding-top: 80px;
+  text-align: center;
+}
+
+.shared-gone h2 {
+  margin: 24px 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.shared-gone p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.shared-foot {
+  margin: 40px 0 8px;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.shared-foot a {
+  color: var(--text-muted);
 }
 
 /* ---- Load more ---------------------------------------------------------- */
@@ -3596,12 +3763,11 @@ a.card {
    needing to be read, and the label is there for when it does. */
 .page-tier {
   flex-shrink: 0;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   text-transform: capitalize;
-  letter-spacing: 0.02em;
 }
 
 .page-tier-primary {
@@ -3739,9 +3905,7 @@ a.card {
 
 .page-type-badge {
   flex-shrink: 0;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 11px;
   color: var(--text-faint);
 }
 
@@ -3971,10 +4135,9 @@ a.card {
 .sort-pop-head {
   display: block;
   padding: 4px 10px 6px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-faint);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
 }
 
 .sort-option {
@@ -4234,7 +4397,6 @@ a.card {
   min-width: 168px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 14px;
-  letter-spacing: 0.04em;
   color: var(--text);
 }
 
@@ -4323,10 +4485,15 @@ a.card {
   margin-top: 8px;
 }
 
+/* inline-block, not inline-flex, and that's the whole fix.
+   
+   This line sits in a row beside the status text and a link, all three meant
+   to share a baseline. A flex box reports the baseline of its first item --
+   here an icon, which hasn't got one, so it falls back to the box's bottom
+   edge and drags the row out of line. An inline-block reports the baseline of
+   its own last line of text, which is the thing that has to line up. */
 .feature-rotator-line {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+  display: inline-block;
   animation-name: feature-cycle;
   animation-timing-function: ease;
   animation-fill-mode: both;

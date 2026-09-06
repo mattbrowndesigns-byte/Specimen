@@ -349,6 +349,19 @@ many requests arrived at once. GitHub disables scheduled workflows on a repo
 idle for 60 days — if tags stop filling in on their own, check it's still
 enabled.
 
+**A share link's token is the whole of its authorisation.** `/api/shared/
+[token]` takes no session and scopes every query by the row that token
+resolves to, never by anything else in the request — so a caller can ask for a
+token but cannot ask for a user's sites. Revoking is a delete of that row, so
+there's no half-working state left behind, and a revoked link answers
+identically to one that never existed. The public payload is deliberately
+narrower than the owner's: no notes, no review flags, no hidden saves.
+
+**`/api/share` and `/api/shared` are different paths on purpose.**
+`PUBLIC_PATHS` matches by prefix, so naming the public read `/api/share/...`
+would have made managing your own links public too. Anything added near these
+needs the same care.
+
 **Every Actions-facing route must be in `middleware.js`'s `PUBLIC_PATHS`.** The
 runner has no session, so a callback left off that list is redirected to
 /login and the job's results are thrown away with no error anywhere.

@@ -23,8 +23,8 @@ export default function FeaturesPage() {
         </header>
 
         {FEATURE_GROUPS.map((group) => (
-          <section className="feature-group" key={group.title}>
-            <div className="feature-group-head">
+          <section className="prose-row" key={group.title}>
+            <div className="feature-group-head prose-row-aside">
               <h2>{group.title}</h2>
               <p>{group.blurb}</p>
             </div>

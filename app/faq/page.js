@@ -12,27 +12,29 @@ import SiteFooter from "../_ui/SiteFooter";
 const SECTIONS = [
   {
     title: "Saving",
+    note: "What happens after you paste a URL.",
     items: [
       {
         q: "How long does a save take?",
-        a: "Around a minute. A real browser has to open the page, scroll the whole thing so lazy sections load, and photograph it twice. You don't have to wait for it — leave the page and it carries on.",
+        a: "Around a minute. A real browser has to open the page, scroll the whole thing so lazy sections load, and photograph it twice. You do not have to wait for it. Leave the page and it carries on.",
       },
       {
         q: "Why did my tags and summary not appear?",
-        a: "If you saw a yellow note saying they were queued, the AI was at its rate limit when your save landed. The work isn't lost: it retries on its own and fills in within the hour, usually much sooner. Everything else about the save — the screenshots, the palette, the typefaces — is already done and unaffected.",
+        a: "If you saw a yellow note saying they were queued, the AI was at its rate limit when your save landed. The work isn't lost: it retries on its own and fills in within the hour, usually much sooner. Everything else about the save, the screenshots and the palette and the typefaces, is already done and unaffected.",
       },
       {
         q: "Can I save the same site twice?",
-        a: "Yes, and it's often the right thing to do. Each save keeps its own captures, so saving a site again a year later gives you both versions side by side. If you'd rather update the one you have, use Re-capture on its page — that keeps the old screenshots on a timeline too.",
+        a: "Yes, and it's often the right thing to do. Each save keeps its own captures, so saving a site again a year later gives you both versions side by side. If you'd rather update the one you have, use Re-capture on its page, which keeps the old screenshots on a timeline too.",
       },
       {
         q: "Can I save a page other than a homepage?",
-        a: "Any URL works. Kivli also finds a site's own key pages for you and offers to capture them properly — that's what Promote To Full Capture does on the pages list.",
+        a: "Any URL works. Kivli also finds a site's own key pages for you and offers to capture them properly, which is what Promote To Full Capture does on the pages list.",
       },
     ],
   },
   {
     title: "What the AI writes",
+    note: "How much of it is yours to change.",
     items: [
       {
         q: "Can I change the summary?",
@@ -40,7 +42,7 @@ const SECTIONS = [
       },
       {
         q: "What is the review queue for?",
-        a: "Everything written for you lands there until you've read it. It exists so nothing sits quietly wrong in your library — a summary that missed the point, a tag that doesn't fit. Starring or hiding a save deliberately doesn't clear it, since neither means you've read anything.",
+        a: "Everything written for you lands there until you've read it. It exists so nothing sits quietly wrong in your library, whether that is a summary that missed the point or a tag that does not fit. Starring or hiding a save deliberately doesn't clear it, since neither means you've read anything.",
       },
       {
         q: "Some tags look almost the same. Can I tidy them up?",
@@ -48,24 +50,25 @@ const SECTIONS = [
       },
       {
         q: "Why do some pages have no tags at all?",
-        a: "Either the tagging pass is still queued, or it failed outright — the site's page says which. Re-read Pages runs it again.",
+        a: "Either the tagging pass is still queued or it failed outright, and the site's page says which. Re-read Pages runs it again.",
       },
     ],
   },
   {
     title: "Colour and type",
+    note: "Where the numbers on those panels come from.",
     items: [
       {
         q: "Where do the colours come from?",
-        a: "They're measured off the rendered page, not read from its CSS, and weighted by how much of the interface each one actually covers. Images and video are excluded on purpose — a palette taken from the pixels would report the photography rather than the design. Gradients are kept, since those are drawn interface.",
+        a: "They're measured off the rendered page, not read from its CSS, and weighted by how much of the interface each one actually covers. Images and video are excluded on purpose, because a palette taken from the pixels would report the photography rather than the design. Gradients are kept, since those are drawn interface.",
       },
       {
         q: "Why is one colour 80% of the bar?",
-        a: "Because it genuinely is. Page backgrounds cover most of a page. The bar's segment widths are compressed so the accents stay visible, but the real percentage is on every swatch — hover one to see it, or expand the list.",
+        a: "Because it genuinely is. Page backgrounds cover most of a page. The bar's segment widths are compressed so the accents stay visible, but the real percentage is on every swatch. Hover one to see it, or expand the list.",
       },
       {
         q: "Is the specimen the real typeface?",
-        a: "Yes, where it can be. The letterforms are drawn off the live page by the browser that's already loaded the font, so what you're looking at is the real thing. When that isn't possible, it falls back to a substitute — never silently, since a wrong specimen is worse than an obvious stand-in.",
+        a: "Yes, where it can be. The letterforms are drawn off the live page by the browser that's already loaded the font, so what you're looking at is the real thing. When that is not possible it falls back to a substitute, and says so, because a wrong specimen is worse than an obvious stand-in.",
       },
       {
         q: "Why does a typeface have no closest match?",
@@ -75,6 +78,7 @@ const SECTIONS = [
   },
   {
     title: "Finding things",
+    note: "Getting back to something months later.",
     items: [
       {
         q: "What does search actually cover?",
@@ -86,16 +90,17 @@ const SECTIONS = [
       },
       {
         q: "I hid a save. Where did it go?",
-        a: "Out of the dashboard grid and nowhere else. It's still in your library and still turns up in search — hiding is for keeping the grid to what you're working on, not for putting something beyond reach. Its page has the button to bring it back.",
+        a: "Out of the dashboard grid and nowhere else. It is still in your library and still turns up in search. Hiding keeps the grid to what you are working on rather than putting anything beyond reach. Its page has the button to bring it back.",
       },
     ],
   },
   {
     title: "The account",
+    note: "Who sees what, and what gets kept.",
     items: [
       {
         q: "Can anyone else see my library?",
-        a: "No. Every library is separate, and nothing is shared between accounts — not saves, not collections, not your tag vocabulary.",
+        a: "Not unless you share it. Every library is separate by default, and nothing crosses between accounts on its own. You can create a link to a collection or to your whole library, and revoke it whenever you like.",
       },
       {
         q: "Can I invite someone?",
@@ -129,17 +134,21 @@ export default function FaqPage() {
 
       <main className="page prose-page">
         <header className="prose-head">
-          <h1>Questions</h1>
+          <h1>Frequently Asked Questions</h1>
           <p className="prose-lede">
-            Mostly the ones where something looks broken and isn&rsquo;t. If yours isn&rsquo;t
-            here, <a className="prose-link" href="/features">the features page</a> covers what
-            each part is for.
+            Kivli does a fair amount on its own, so most of these are about what it is doing
+            when it looks like it is doing nothing. If your question is really about what a
+            part of it is for, <a className="prose-link" href="/features">the features page</a>{" "}
+            covers that instead.
           </p>
         </header>
 
         {SECTIONS.map((section) => (
-          <section className="prose-section faq-section" key={section.title}>
-            <h2>{section.title}</h2>
+          <section className="prose-row" key={section.title}>
+            <div className="prose-section prose-row-aside">
+              <h2>{section.title}</h2>
+              <p className="prose-aside-note">{section.note}</p>
+            </div>
             <div className="faq-list">
               {section.items.map((item) => (
                 <Item key={item.q} {...item} />

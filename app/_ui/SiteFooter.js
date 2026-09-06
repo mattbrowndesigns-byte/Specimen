@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Heart, Layers, Tag, ListChecks, Info, CircleQuestionMark } from "lucide-react";
+import { Heart, Layers, Tag, ListChecks, Sparkles, Info, CircleQuestionMark } from "lucide-react";
 
 // The quiet end of the page.
 //
@@ -13,6 +13,7 @@ const LINKS = [
   { href: "/collections", label: "Collections", Icon: Layers },
   { href: "/tags", label: "Manage Tags", Icon: Tag },
   { href: "/review", label: "Review Queue", Icon: ListChecks, badge: true },
+  { href: "/features", label: "Features", Icon: Sparkles },
   { href: "/about", label: "About", Icon: Info },
   { href: "/faq", label: "FAQ", Icon: CircleQuestionMark },
 ];
@@ -39,7 +40,6 @@ export default function SiteFooter() {
       <div className="site-footer-inner">
         <span className="site-footer-brand">
           <span className="site-footer-mark">Kivli</span>
-          <span className="site-footer-tag">Your visual inspiration library</span>
         </span>
 
         <nav className="site-footer-links">

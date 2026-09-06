@@ -49,6 +49,21 @@
   --accent-solid-hover: #b53517;
   --accent-solid-text: #fff;
 
+  /* The brand's own ink, for the wordmark and the headline it sits above: a
+     very dark purple rather than black, which gives the orange something to be
+     opposite rather than something to sit on top of. Chosen to land on the
+     same contrast as the black it replaces -- 16.25:1 against the page, where
+     #1a1a1a was 16.26 -- so nothing about legibility changes, only the cast. */
+  --brand-ink: #211430;
+
+  /* The capture bar's ramp, deep purple through to lit orange. Four stops
+     rather than two: a two-colour sweep reads as a loading bar, and this one
+     is on screen for a minute at a time. */
+  --ramp-deep: #2b1b3d;
+  --ramp-mid: #7b4bd8;
+  --ramp-warm: #e8502e;
+  --ramp-lit: #ff9153;
+
   --invert-bg: #1a1a1a;
   --invert-bg-hover: #333338;
   --invert-text: #fff;
@@ -107,6 +122,17 @@
   --accent-solid: #f0603c;
   --accent-solid-hover: #ff7353;
   --accent-solid-text: #17171a;
+
+  /* The same cast, the other way up: a near-white carrying a trace of the
+     purple rather than a dark ink nobody could read here. */
+  --brand-ink: #f0eaf7;
+
+  /* The deep stop lifts on a dark track, or the ramp begins in something
+     indistinguishable from the groove it sits in. */
+  --ramp-deep: #4a2d6b;
+  --ramp-mid: #9a6ef0;
+  --ramp-warm: #f0603c;
+  --ramp-lit: #ffa06b;
 
   --invert-bg: #f0f0f2;
   --invert-bg-hover: #dcdce0;
@@ -369,6 +395,7 @@ h1 {
    wordmark above the optical centre of the row. Values are in em so they hold
    if the size changes. */
 .utility-bar .wordmark {
+  color: var(--brand-ink);
   font-family: var(--font-wordmark), "Arial Black", "Helvetica Neue", sans-serif;
   font-size: 44px;
   font-weight: 400;
@@ -510,7 +537,7 @@ h1 {
 @keyframes wordmark-warm {
   0%,
   100% {
-    color: var(--text);
+    color: var(--brand-ink);
   }
   40% {
     color: var(--accent);
@@ -1486,17 +1513,19 @@ h1 {
   border-radius: 999px;
   background: linear-gradient(
     90deg,
-    var(--invert-bg) 0%,
-    var(--accent) 42%,
-    var(--accent-hover) 58%,
-    var(--invert-bg) 100%
+    var(--ramp-deep) 0%,
+    var(--ramp-mid) 26%,
+    var(--ramp-warm) 52%,
+    var(--ramp-lit) 68%,
+    var(--ramp-mid) 88%,
+    var(--ramp-deep) 100%
   );
   background-size: 260% 100%;
   animation: capture-pulse 2.2s ease-in-out infinite;
   transition: width 1s linear;
   /* Cast onto the track rather than around the whole bar, so the lit end of
      the fill looks warm rather than the component looking selected. */
-  box-shadow: 0 0 10px rgba(232, 80, 46, 0.45);
+  box-shadow: 0 0 10px rgba(232, 80, 46, 0.35), 0 0 14px rgba(123, 75, 216, 0.25);
 }
 
 @keyframes capture-pulse {
@@ -3056,6 +3085,259 @@ a.card {
   color: var(--text-faint);
 }
 
+/* ---- Prose pages: About, FAQ, Features ---------------------------------- */
+
+/* Narrower than the library. The grid wants every pixel; a paragraph wants a
+   line length you can read without losing your place coming back to the left. */
+.prose-page {
+  max-width: 860px;
+}
+
+.prose-head {
+  margin: 8px 0 40px;
+}
+
+.prose-head h1 {
+  margin: 0 0 12px;
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--brand-ink);
+}
+
+.prose-lede {
+  margin: 0;
+  max-width: 60ch;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.prose-section {
+  margin-bottom: 44px;
+}
+
+.prose-section h2 {
+  margin: 0 0 14px;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.prose-section h3 {
+  margin: 26px 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.prose-section p {
+  margin: 0 0 14px;
+  max-width: 68ch;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-body);
+}
+
+.prose-link {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.prose-link:hover {
+  border-bottom-color: var(--text);
+}
+
+/* Numbered because the order is the point -- it's a sequence, not a list of
+   capabilities. */
+.prose-steps {
+  margin: 0 0 16px;
+  padding-left: 22px;
+  max-width: 68ch;
+}
+
+.prose-steps li {
+  margin-bottom: 12px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-body);
+}
+
+.prose-steps strong {
+  color: var(--text);
+}
+
+.prose-cta {
+  margin: 8px 0 8px;
+  padding: 26px 28px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.prose-cta h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.prose-cta p {
+  margin: 0 0 16px;
+  max-width: 60ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-body);
+}
+
+.prose-cta-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 18px;
+  border-radius: 8px;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.prose-cta-link:hover {
+  background: var(--invert-bg-hover);
+}
+
+/* ---- Features ----------------------------------------------------------- */
+
+.feature-group {
+  margin-bottom: 44px;
+}
+
+.feature-group-head {
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.feature-group-head h2 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.feature-group-head p {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.feature-card {
+  padding: 18px;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.feature-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 12px;
+  border-radius: 9px;
+  background: var(--chip-bg);
+  color: var(--accent);
+}
+
+.feature-card h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.feature-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* ---- FAQ ---------------------------------------------------------------- */
+
+.faq-section h2 {
+  margin-bottom: 8px;
+}
+
+.faq-list {
+  border-top: 1px solid var(--border-soft);
+}
+
+.faq-item {
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.faq-q svg {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  transition: transform 0.15s ease;
+}
+
+.faq-item-open .faq-q svg {
+  transform: rotate(180deg);
+}
+
+.faq-a {
+  margin: 0 0 16px;
+  padding-right: 32px;
+  max-width: 68ch;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-body);
+}
+
+/* The rotator is a line at a time; this is the way to all of them. */
+.feature-rotator-more {
+  margin-left: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.feature-rotator-more:hover {
+  color: var(--text);
+}
+
 /* ---- Load more ---------------------------------------------------------- */
 
 /* A button rather than an endless scroll: the grid has an end, and a footer
@@ -3122,16 +3404,11 @@ a.card {
    descender is deeper than "Kivli" ever uses. */
 .site-footer-mark {
   font-family: var(--font-wordmark), "Arial Black", "Helvetica Neue", sans-serif;
-  font-size: 22px;
+  font-size: 30px;
   line-height: 1;
   letter-spacing: 0.005em;
-  color: var(--text);
+  color: var(--brand-ink);
   margin-bottom: -0.307em;
-}
-
-.site-footer-tag {
-  font-size: 12px;
-  color: var(--text-faint);
 }
 
 .site-footer-links {
@@ -3163,13 +3440,13 @@ a.card {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  margin-left: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  margin-left: -2px;
   border-radius: 999px;
   background: var(--accent-solid);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   line-height: 1;
   color: var(--accent-solid-text);
@@ -3601,7 +3878,7 @@ a.card {
   font-weight: 800;
   line-height: 1.12;
   letter-spacing: -0.02em;
-  color: var(--text);
+  color: var(--brand-ink);
 }
 
 /* Names the checkbox in the bulk bar: an unlabelled tick in a header row
@@ -3835,6 +4112,7 @@ a.card {
 /* Same trim as the utility bar's wordmark -- Lalezar's declared descender is
    deep enough to leave a gap under it otherwise. */
 .auth-wordmark.auth-wordmark {
+  color: var(--brand-ink);
   font-family: var(--font-wordmark), "Arial Black", "Helvetica Neue", sans-serif;
   font-size: 40px;
   font-weight: 400;
@@ -4029,6 +4307,16 @@ a.card {
 
 .empty-state-rotator {
   margin-top: 10px;
+}
+
+/* The rotator's line is replaced every few seconds, so the link to the rest
+   sits beside it rather than inside it -- otherwise it would come and go with
+   the line it's attached to. */
+.capture-status-aside {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  min-width: 0;
 }
 
 .capture-status-rotator {

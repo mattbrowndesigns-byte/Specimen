@@ -123,6 +123,19 @@ did, so the server rendered one line and the browser another, and every page
 carrying a rotator threw a hydration error and re-rendered that subtree from
 scratch. Randomise in an effect after mount.
 
+**`--brand-ink` is the wordmark's colour, and it isn't `--text`.** A very dark
+purple, picked to land on the same contrast as the black it replaced — 16.25:1
+against the page where #1a1a1a was 16.26 — so only the cast changed. It carries
+the wordmark in the bar, the footer and the login card, plus the dashboard
+headline. Dark mode flips it to a near-white with the same trace of purple.
+The capture bar's `--ramp-*` stops run deep purple to lit orange, and the deep
+stop is lighter in dark mode or it vanishes into the groove it sits in.
+
+**The feature list lives in `lib/features.js`, and two surfaces read it.** The
+rotator picks a `short` line while a capture runs; `/features` lays the whole
+set out with the longer `blurb`. Adding a feature in one place adds it to both,
+which is the only way those two don't drift apart.
+
 **All colour comes from `:root` custom properties**; dark mode is the single
 `:root[data-theme="dark"]` override block, so never add a raw hex. `--invert-*`
 is the solid-dark-button pair, which flips to a solid *light* button in dark

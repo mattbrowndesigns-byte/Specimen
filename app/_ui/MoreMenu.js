@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Menu,
   X,
+  Sparkles,
   Heart,
   Layers,
   Tag,
@@ -31,6 +32,7 @@ const LINKS = [
 ];
 
 const SECONDARY = [
+  { href: "/features", label: "Features", Icon: Sparkles },
   { href: "/about", label: "About", Icon: Info },
   { href: "/faq", label: "FAQ", Icon: CircleQuestionMark },
 ];

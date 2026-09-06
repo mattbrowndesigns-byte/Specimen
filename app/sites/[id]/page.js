@@ -395,7 +395,12 @@ export default function SiteDetailPage({ params }) {
                   : "finishing up, any moment now"}
                 . Safe to leave this page.
               </p>
-              <FeatureRotator className="capture-status-rotator" />
+              <span className="capture-status-aside">
+                <FeatureRotator className="capture-status-rotator" />
+                <a className="feature-rotator-more" href="/features">
+                  All features
+                </a>
+              </span>
             </div>
           </div>
         )}

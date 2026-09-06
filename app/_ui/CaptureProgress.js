@@ -95,7 +95,12 @@ export default function CaptureProgress({ job, onDone }) {
           {elapsed < ESTIMATE_SECONDS ? `about ${ESTIMATE_SECONDS - elapsed}s remaining` : "finishing up"}
           . Safe to leave this page.
         </p>
-        <FeatureRotator className="capture-status-rotator" />
+        <span className="capture-status-aside">
+          <FeatureRotator className="capture-status-rotator" />
+          <a className="feature-rotator-more" href="/features">
+            All features
+          </a>
+        </span>
       </div>
     </div>
   );

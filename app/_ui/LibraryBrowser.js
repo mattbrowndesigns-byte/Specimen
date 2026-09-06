@@ -28,6 +28,11 @@ const VIEWS = [
 // breakpoint, so TagRow measures instead of counting.
 const ROW_TAG_LIMIT = 4;
 
+// A first screenful and a bit, then it asks. A library that grows past a few
+// hundred saves shouldn't render all of them to show you the newest twelve,
+// and an endless scroll would take the footer with it.
+const PAGE_SIZE = 24;
+
 // `date` reads whichever timestamp the adapter exposes, so sites (saved_at) and
 // components (created_at) sort the same way without the browser knowing which
 // it's holding.
@@ -83,6 +88,7 @@ export default function LibraryBrowser({
   const [sort, setSort] = useState("newest");
   const [size, setSize] = useState("medium");
   const [sortOpen, setSortOpen] = useState(false);
+  const [shown, setShown] = useState(PAGE_SIZE);
   const stripRef = useRef(null);
   const sortRef = useRef(null);
 
@@ -196,6 +202,16 @@ export default function LibraryBrowser({
   }, [items, selectedTagIds, allTags]);
 
   const ordered = useMemo(() => sortItems(visible, sort, adapter), [visible, sort, adapter]);
+
+  // Back to the first page whenever the list itself changes underneath -- a
+  // search that narrows to eight results shouldn't remember that you'd loaded
+  // ninety-six of something else.
+  useEffect(() => {
+    setShown(PAGE_SIZE);
+  }, [query, sort, selectedTagIds, items.length]);
+
+  const page = useMemo(() => ordered.slice(0, shown), [ordered, shown]);
+  const remaining = ordered.length - page.length;
 
   function renderTags(item, limit) {
     const tags = item.tags || [];
@@ -335,7 +351,7 @@ export default function LibraryBrowser({
 
       {view === "cards" && (
         <div className={`grid grid-${size}`}>
-          {ordered.map((item) => (
+          {page.map((item) => (
             <div className="card" key={item.id}>
               <div className="card-media">
                 <a className={`thumb${adapter.naturalThumb ? " thumb-natural" : ""}`} href={adapter.href(item)}>
@@ -384,7 +400,7 @@ export default function LibraryBrowser({
 
       {view === "list" && (
         <div className="row-list">
-          {ordered.map((item) => (
+          {page.map((item) => (
             <div className="row-item" key={item.id}>
               <a className="row-thumb" href={adapter.href(item)}>
                 {adapter.thumb(item) ? (
@@ -432,7 +448,7 @@ export default function LibraryBrowser({
 
       {view === "headlines" && (
         <div className="headline-list">
-          {ordered.map((item) => (
+          {page.map((item) => (
             <div className="headline-item" key={item.id}>
               <Favicon
                 url={adapter.externalUrl(item)}
@@ -455,6 +471,17 @@ export default function LibraryBrowser({
               </a>
             </div>
           ))}
+        </div>
+      )}
+
+      {remaining > 0 && (
+        <div className="load-more-row">
+          <button className="load-more" onClick={() => setShown((n) => n + PAGE_SIZE)}>
+            Load More
+          </button>
+          <span className="load-more-count">
+            Showing {page.length} of {ordered.length}
+          </span>
         </div>
       )}
 

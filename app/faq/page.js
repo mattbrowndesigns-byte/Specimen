@@ -1,5 +1,6 @@
 "use client";
 import UtilityBar from "../_ui/UtilityBar";
+import SiteFooter from "../_ui/SiteFooter";
 
 // Placeholder. Linked from the menu so the slot exists; the questions come later.
 export default function FaqPage() {
@@ -17,6 +18,7 @@ export default function FaqPage() {
           </p>
         </div>
       </main>
+      <SiteFooter />
     </>
   );
 }

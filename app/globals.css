@@ -521,16 +521,42 @@ h1 {
    shimmer, the two i's simply disappeared and the wordmark read "K vl". Given
    they have to paint themselves, they may as well catch the same orange the
    sweep is carrying, on the way up and back. */
+/* 18.45% is measured, not judged. Lalezar's i has its ink from 0.6825em above
+   the baseline down to it, with the gap between dot and stem centred 0.1625em
+   below the top of that ink; against a line box of 1em with the baseline at
+   0.7045em, the cut lands at 0.1845em from the top of the span. Change the
+   wordmark's size or line-height and this still holds -- it's all relative.
+   Change the typeface and it has to be measured again. */
 .wordmark-i {
+  position: relative;
   display: inline-block;
 }
 
+.wordmark-i-stem {
+  display: inline-block;
+  clip-path: inset(18.45% 0 0 0);
+}
+
+.wordmark-i-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  clip-path: inset(0 0 81.55% 0);
+}
+
+/* Both halves need a colour of their own during the shimmer. Clipping puts an
+   element in its own stacking context, and the parent's background-clip: text
+   gradient stops painting under it -- inheriting `transparent` from the sweep
+   would leave the letters as holes in the wordmark. */
 .utility-bar a.utility-bar-title:hover .wordmark-i {
   color: var(--text);
+}
+
+.utility-bar a.utility-bar-title:hover .wordmark-i-dot {
   animation: wordmark-hop 0.44s ease-out;
 }
 
-.utility-bar a.utility-bar-title:hover .wordmark-i-late {
+.utility-bar a.utility-bar-title:hover .wordmark-i-late .wordmark-i-dot {
   animation-delay: 0.09s;
 }
 
@@ -541,7 +567,7 @@ h1 {
     color: var(--text);
   }
   45% {
-    transform: translateY(-0.085em);
+    transform: translateY(-0.11em);
     color: var(--accent);
   }
 }
@@ -577,8 +603,11 @@ h1 {
     animation: none;
   }
 
-  .utility-bar a.utility-bar-title:hover .wordmark-i {
+  .utility-bar a.utility-bar-title:hover .wordmark-i-dot {
     animation: none;
+  }
+
+  .utility-bar a.utility-bar-title:hover .wordmark-i {
     color: inherit;
   }
 }
@@ -2528,6 +2557,16 @@ a.card {
 
 /* Related */
 
+/* A full-width band under the two columns is a bigger thing than a panel
+   inside one of them, and at the sidebar's 15px it read as another sidebar
+   heading that had wandered out of place. One step up: below the record's own
+   title at 22, clearly above the panel headings at 15. */
+.page-band > h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
 .related-hint {
   margin: -2px 0 4px;
   font-size: 12px;
@@ -3059,6 +3098,113 @@ a.card {
   color: var(--text-faint);
 }
 
+/* ---- Load more ---------------------------------------------------------- */
+
+/* A button rather than an endless scroll: the grid has an end, and a footer
+   below it that infinite scrolling would keep pushing out of reach. */
+.load-more-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 28px 0 8px;
+}
+
+.load-more {
+  padding: 10px 24px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.load-more:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong-hover);
+}
+
+.load-more-count {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* ---- Footer ------------------------------------------------------------- */
+
+.site-footer {
+  margin-top: 48px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface);
+}
+
+.site-footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 22px 24px;
+}
+
+.site-footer-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* The wordmark small. Same trim as the utility bar's, since Lalezar's declared
+   descender is deeper than "Kivli" ever uses. */
+.site-footer-mark {
+  font-family: var(--font-wordmark), "Arial Black", "Helvetica Neue", sans-serif;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: 0.005em;
+  color: var(--text);
+  margin-bottom: -0.307em;
+}
+
+.site-footer-tag {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.site-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.site-footer-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.site-footer-links a:hover {
+  color: var(--text);
+}
+
+.site-footer-links svg {
+  color: var(--text-faint);
+}
+
+@media (max-width: 640px) {
+  .site-footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 /* Favorite + collection buttons */
 
 .save-actions {
@@ -3228,7 +3374,7 @@ a.card {
   padding: 0 6px;
   margin-left: 2px;
   border-radius: 999px;
-  background: var(--chip-bg);
+  background: var(--chip-strong-bg);
   font-size: 11px;
   font-weight: 500;
   line-height: 1;
@@ -3502,9 +3648,10 @@ a.card {
 
 .page-list-actions {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   flex-wrap: wrap;
   gap: 12px;
+  margin-top: 14px;
 }
 
 /* The primary of the pair: bordered, so "re-read" beside it reads as the

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import UtilityBar from "../_ui/UtilityBar";
 import CollectionCard, { makeResolver } from "../_ui/CollectionCard";
+import SiteFooter from "../_ui/SiteFooter";
 
 export default function CollectionsPage() {
   const [collections, setCollections] = useState(null);
@@ -109,6 +110,7 @@ export default function CollectionsPage() {
           </div>
         )}
       </main>
+      <SiteFooter />
     </>
   );
 }

@@ -29,8 +29,24 @@ export async function GET(request) {
       return NextResponse.json({ available: false, reason: `archive.org returned ${res.status}` });
     }
 
-    const data = await res.json();
-    const snapshot = data?.archived_snapshots?.closest;
+    let data = await res.json();
+    let snapshot = data?.archived_snapshots?.closest;
+
+    // archive.org answers this endpoint inconsistently: the same URL comes
+    // back with a snapshot for one timestamp and empty for another, even when
+    // the CDX index plainly holds captures either side of both. An empty
+    // result is therefore not an answer, so ask again without pinning a date
+    // before believing it -- 829studios.com reported "no snapshot" for months
+    // of captures on exactly this.
+    if (!snapshot?.available && timestamp) {
+      const retry = await fetch(`https://archive.org/wayback/available?url=${encodeURIComponent(url)}`, {
+        headers: { "User-Agent": "Specimen/1.0 (personal design library)" },
+      });
+      if (retry.ok) {
+        data = await retry.json();
+        snapshot = data?.archived_snapshots?.closest;
+      }
+    }
 
     if (!snapshot?.available || !snapshot.url) {
       return NextResponse.json({ available: false, reason: "no snapshot" });

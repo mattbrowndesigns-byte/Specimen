@@ -39,7 +39,7 @@ export default function RelatedSection({ kind, item }) {
   if (!related || related.length === 0) return null;
 
   return (
-    <section className="detail-section related-section">
+    <section className="detail-section related-section page-band">
       <h2>Related</h2>
       <p className="related-hint">Closest matches by shared tags, then by wording in common.</p>
       <div className="grid">

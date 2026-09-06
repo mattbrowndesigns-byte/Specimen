@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import UtilityBar from "../_ui/UtilityBar";
 import RecordGrid from "../_ui/RecordGrid";
+import SiteFooter from "../_ui/SiteFooter";
 
 export default function FavoritesPage() {
   const [entries, setEntries] = useState(null);
@@ -59,6 +60,7 @@ export default function FavoritesPage() {
           </>
         )}
       </main>
+      <SiteFooter />
     </>
   );
 }

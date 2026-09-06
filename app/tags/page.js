@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import UtilityBar from "../_ui/UtilityBar";
+import SiteFooter from "../_ui/SiteFooter";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -186,6 +187,7 @@ export default function TagsPage() {
           );
         })}
       </main>
+      <SiteFooter />
     </>
   );
 }

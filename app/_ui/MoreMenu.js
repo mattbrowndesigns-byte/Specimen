@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Menu,
+  X,
   Heart,
   Layers,
   Tag,
@@ -100,11 +101,11 @@ export default function MoreMenu() {
       <button
         className="icon-btn"
         onClick={() => setOpen((v) => !v)}
-        title="More"
-        aria-label="More"
+        title={open ? "Close" : "More"}
+        aria-label={open ? "Close menu" : "More"}
         aria-expanded={open}
       >
-        <Menu size={16} />
+        {open ? <X size={16} /> : <Menu size={16} />}
       </button>
 
       {open && (

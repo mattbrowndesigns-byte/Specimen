@@ -29,11 +29,23 @@ export default function UtilityBar({ onAdd, onError }) {
       <div className="utility-bar-inner">
         <div className="brand">
           <a className="utility-bar-title" href="/">
-            {/* The two i's are wrapped so they can hop on hover. Only those
-                two: every character in its own inline-block would drop the
+            {/* Each i is drawn twice and each copy clipped -- stem below the
+                cut, dot above it -- so the dot can move while the stem stays
+                put. The duplicate is hidden from screen readers, which read
+                the stem copy as the letter. Only the two i's are wrapped:
+                putting every character in its own inline-block would drop the
                 kerning across the whole wordmark to animate two letters. */}
             <h1 className="wordmark">
-              K<span className="wordmark-i">i</span>vl<span className="wordmark-i wordmark-i-late">i</span>
+              K
+              <span className="wordmark-i">
+                <span className="wordmark-i-stem">i</span>
+                <span className="wordmark-i-dot" aria-hidden="true">i</span>
+              </span>
+              vl
+              <span className="wordmark-i wordmark-i-late">
+                <span className="wordmark-i-stem">i</span>
+                <span className="wordmark-i-dot" aria-hidden="true">i</span>
+              </span>
             </h1>
           </a>
           {/* Outside the link: the wordmark is the target, the tagline is

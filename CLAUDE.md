@@ -92,11 +92,27 @@ variant at `min(392px, 100%)` — the detail page is full-bleed.
 
 **The wordmark's hover is two effects that can't share a background.** The
 shimmer is a gradient with `background-clip: text` on the `<h1>`; the hop moves
-the two `i` spans. A moved element gets its own stacking context, and the
+the dots. A moved or clipped element gets its own stacking context, and the
 parent's text-clipped gradient stops painting under it — so with the inherited
-`transparent`, both i's vanished and the mark read "K vl". They set their own
+`transparent`, the i's vanished and the mark read "K vl". They set their own
 colour for exactly that reason. A `position: relative` offset breaks it the
 same way; it isn't specific to `transform`.
+
+**Only the dot moves, and 18.45% is measured.** Each `i` is drawn twice and
+each copy clipped — stem below the cut, dot above it — because a dot can't be
+addressed separately from the stem it sits on. Lalezar's `i` has ink from
+0.6825em above the baseline down to it, with the dot/stem gap centred 0.1625em
+below the top of that ink; against a 1em line box whose baseline sits at
+0.7045em, the cut lands at 0.1845em from the top of the span. It's all
+relative, so the size can change freely — but a different wordmark face has to
+be measured again. The duplicate carries `aria-hidden`, so the accessible name
+is still "Kivli" and not "Kiivlii".
+
+**An empty Wayback response is not an answer.** archive.org's availability
+endpoint returns a snapshot for one timestamp and nothing for another on the
+same URL, with captures plainly in the CDX index either side of both —
+829studios.com reported "No Wayback snapshot" against months of them. The route
+asks again without a timestamp before believing an empty result.
 
 **Nothing may pick a random value in a `useState` initialiser.** `FeatureRotator`
 did, so the server rendered one line and the browser another, and every page

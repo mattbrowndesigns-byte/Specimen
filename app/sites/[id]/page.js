@@ -609,7 +609,7 @@ export default function SiteDetailPage({ params }) {
 
 
         {components.length > 0 && (
-          <section className="detail-section">
+          <section className="detail-section page-band">
             <h2>Components From This Site</h2>
             <div className="grid">
               {components.map((c) => (

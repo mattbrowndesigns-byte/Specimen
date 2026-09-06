@@ -1,5 +1,6 @@
 "use client";
 import UtilityBar from "../_ui/UtilityBar";
+import SiteFooter from "../_ui/SiteFooter";
 
 // Placeholder. Linked from the menu so the slot exists; the copy comes later.
 export default function AboutPage() {
@@ -19,6 +20,7 @@ export default function AboutPage() {
           <p className="empty-small">This page is a placeholder — there&rsquo;s more to write here.</p>
         </div>
       </main>
+      <SiteFooter />
     </>
   );
 }

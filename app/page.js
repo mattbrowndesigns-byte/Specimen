@@ -4,6 +4,7 @@ import WebsitesTab from "./_ui/WebsitesTab";
 import ComponentsTab from "./_ui/ComponentsTab";
 import UtilityBar from "./_ui/UtilityBar";
 import CaptureProgress from "./_ui/CaptureProgress";
+import SiteFooter from "./_ui/SiteFooter";
 import { addItem, jobFromSearch } from "@/lib/addItem";
 
 export default function Home() {
@@ -102,6 +103,7 @@ export default function Home() {
           />
         )}
       </main>
+      <SiteFooter />
     </>
   );
 }

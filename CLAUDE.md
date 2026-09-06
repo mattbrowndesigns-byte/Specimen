@@ -90,13 +90,17 @@ captures hide the bug by only ever shrinking. Same reason `.detail-capture` is
 capped at `min(1442px, 100%)` (1440 capture + two borders) and its mobile
 variant at `min(392px, 100%)` — the detail page is full-bleed.
 
-**The wordmark's hover is two effects that can't share a background.** The
-shimmer is a gradient with `background-clip: text` on the `<h1>`; the hop moves
-the dots. A moved or clipped element gets its own stacking context, and the
-parent's text-clipped gradient stops painting under it — so with the inherited
-`transparent`, the i's vanished and the mark read "K vl". They set their own
-colour for exactly that reason. A `position: relative` offset breaks it the
-same way; it isn't specific to `transform`.
+**The wordmark's hover is a colour wave, not a gradient, and that's the
+second attempt.** It was a gradient with `background-clip: text` on the `<h1>`,
+which cannot coexist with moving the dots. That clip is generated from every
+glyph in the element's subtree and ignores what those descendants do to
+themselves, so the h1 kept painting a full unclipped "i" — dot included —
+behind the split copies: the moving dot rose off a static one that couldn't be
+removed. (An earlier round had the opposite failure, the letters vanishing
+entirely, because a moved or clipped child stops receiving the parent's
+text-clipped background and inherited `transparent`.) One span per letter with
+a staggered colour animation has no clip to fight over, reads as the same
+sweep, and lets each part animate independently.
 
 **Only the dot moves, and 18.45% is measured.** Each `i` is drawn twice and
 each copy clipped — stem below the cut, dot above it — because a dot can't be

@@ -486,41 +486,37 @@ h1 {
   color: inherit;
 }
 
-/* A sweep of the brand orange across the letterforms, left to right, once per
-   hover. background-clip: text is what puts the gradient inside the glyphs
-   rather than behind them -- so the wordmark stays the wordmark and just
-   catches the light.
+/* A warm sweep across the letterforms, left to right, once per hover -- and
+   then the dots hop as it reaches them.
    
-   The gradient is four times the width of the text and starts off to the left,
-   which is what makes it read as something passing over rather than the colour
-   changing. */
-.utility-bar a.utility-bar-title:hover h1 {
-  background: linear-gradient(
-    100deg,
-    var(--text) 35%,
-    var(--accent) 48%,
-    var(--accent-hover) 54%,
-    var(--text) 66%
-  );
-  background-size: 400% 100%;
-  background-position: 100% 0;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: wordmark-shimmer 0.75s ease-out;
+   This was a gradient with background-clip: text, and it had to stop being
+   one. That clip is generated from every glyph in the element's subtree,
+   ignoring what those descendants do to themselves -- so the h1 kept painting
+   a full, unclipped "i", dot included, behind the split copies. The moving dot
+   rose off a static dot that couldn't be got rid of.
+   
+   A per-letter colour wave has no clip to fight over. Five letters at 55ms
+   apart read as the same sweep, and every part of it can be animated
+   independently, which is what the dots needed. */
+.wordmark-letter {
+  color: inherit;
 }
 
-/* A small hop as the shimmer passes, the second one a beat behind the first.
-   The whole letter moves rather than the dot alone -- a dot can't be addressed
-   separately from the stem it carries -- but at this size that reads as the
-   dots bouncing, which is the point.
-   
-   The explicit colour is load-bearing, not decoration. Moving a letter puts it
-   in its own stacking context, and the parent's background-clip: text gradient
-   then stops painting under it -- so with the inherited `transparent` from the
-   shimmer, the two i's simply disappeared and the wordmark read "K vl". Given
-   they have to paint themselves, they may as well catch the same orange the
-   sweep is carrying, on the way up and back. */
+.utility-bar a.utility-bar-title:hover .wordmark-letter {
+  animation: wordmark-warm 0.5s ease-out;
+  animation-delay: calc(var(--step) * 55ms);
+}
+
+@keyframes wordmark-warm {
+  0%,
+  100% {
+    color: var(--text);
+  }
+  40% {
+    color: var(--accent);
+  }
+}
+
 /* 18.45% is measured, not judged. Lalezar's i has its ink from 0.6825em above
    the baseline down to it, with the gap between dot and stem centred 0.1625em
    below the top of that ink; against a line box of 1em with the baseline at
@@ -544,71 +540,33 @@ h1 {
   clip-path: inset(0 0 81.55% 0);
 }
 
-/* Both halves need a colour of their own during the shimmer. Clipping puts an
-   element in its own stacking context, and the parent's background-clip: text
-   gradient stops painting under it -- inheriting `transparent` from the sweep
-   would leave the letters as holes in the wordmark. */
-.utility-bar a.utility-bar-title:hover .wordmark-i {
-  color: var(--text);
-}
-
+/* A beat behind its letter's colour, so the dot lifts as the warmth arrives
+   rather than before it. */
 .utility-bar a.utility-bar-title:hover .wordmark-i-dot {
-  animation: wordmark-hop 0.44s ease-out;
-}
-
-.utility-bar a.utility-bar-title:hover .wordmark-i-late .wordmark-i-dot {
-  animation-delay: 0.09s;
+  animation: wordmark-hop 0.42s ease-out;
+  animation-delay: calc(var(--step) * 55ms + 40ms);
 }
 
 @keyframes wordmark-hop {
   0%,
   100% {
     transform: translateY(0);
-    color: var(--text);
   }
   45% {
     transform: translateY(-0.11em);
-    color: var(--accent);
   }
 }
 
-@keyframes wordmark-shimmer {
-  from {
-    background-position: 100% 0;
-  }
-  to {
-    background-position: 0 0;
-  }
-}
-
-/* The gradient is only visible because the text is transparent, so a browser
-   that can't clip a background to text would hover the wordmark out of
-   existence. Cheap insurance against an invisible logo. */
-@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
-  .utility-bar a.utility-bar-title:hover h1 {
-    background: none;
-    color: var(--text-muted);
-    animation: none;
-  }
-}
-
-/* The sweep is the whole effect, so with motion off it simply doesn't run --
-   a static half-orange wordmark would be worse than no hover state at all. */
+/* The sweep and the hop are the whole effect, so with motion off neither runs
+   and the hover is a plain colour change. */
 @media (prefers-reduced-motion: reduce) {
-  .utility-bar a.utility-bar-title:hover h1 {
-    background: none;
-    -webkit-background-clip: border-box;
-    background-clip: border-box;
-    color: var(--text-muted);
-    animation: none;
-  }
-
+  .utility-bar a.utility-bar-title:hover .wordmark-letter,
   .utility-bar a.utility-bar-title:hover .wordmark-i-dot {
     animation: none;
   }
 
-  .utility-bar a.utility-bar-title:hover .wordmark-i {
-    color: inherit;
+  .utility-bar a.utility-bar-title:hover h1 {
+    color: var(--text-muted);
   }
 }
 
@@ -3141,14 +3099,15 @@ a.card {
   background: var(--surface);
 }
 
+/* Full width with the same 24px gutters as the utility bar, so the two bands
+   that top and tail the app line up with each other rather than with the grid
+   between them. */
 .site-footer-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px 32px;
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 22px 24px;
 }
 
@@ -3196,6 +3155,24 @@ a.card {
 
 .site-footer-links svg {
   color: var(--text-faint);
+}
+
+/* The count of things waiting, in the accent so it reads as a notification
+   rather than as part of the label. Only rendered when it's above zero. */
+.footer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 2px;
+  border-radius: 999px;
+  background: var(--accent-solid);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--accent-solid-text);
 }
 
 @media (max-width: 640px) {

@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/api/auth",
   "/api/capture-callback",
   "/api/analyze-callback",
+  "/api/enrich-queue",
 ];
 
 export async function middleware(request) {

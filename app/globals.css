@@ -486,8 +486,60 @@ h1 {
   color: inherit;
 }
 
+/* A sweep of the brand orange across the letterforms, left to right, once per
+   hover. background-clip: text is what puts the gradient inside the glyphs
+   rather than behind them -- so the wordmark stays the wordmark and just
+   catches the light.
+   
+   The gradient is four times the width of the text and starts off to the left,
+   which is what makes it read as something passing over rather than the colour
+   changing. */
 .utility-bar a.utility-bar-title:hover h1 {
-  color: var(--text-muted);
+  background: linear-gradient(
+    100deg,
+    var(--text) 35%,
+    var(--accent) 48%,
+    var(--accent-hover) 54%,
+    var(--text) 66%
+  );
+  background-size: 400% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: wordmark-shimmer 0.75s ease-out;
+}
+
+@keyframes wordmark-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* The gradient is only visible because the text is transparent, so a browser
+   that can't clip a background to text would hover the wordmark out of
+   existence. Cheap insurance against an invisible logo. */
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .utility-bar a.utility-bar-title:hover h1 {
+    background: none;
+    color: var(--text-muted);
+    animation: none;
+  }
+}
+
+/* The sweep is the whole effect, so with motion off it simply doesn't run --
+   a static half-orange wordmark would be worse than no hover state at all. */
+@media (prefers-reduced-motion: reduce) {
+  .utility-bar a.utility-bar-title:hover h1 {
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    color: var(--text-muted);
+    animation: none;
+  }
 }
 
 .utility-bar a {
@@ -1397,16 +1449,74 @@ h1 {
   margin-bottom: 10px;
 }
 
+/* The one screen everyone watches from start to finish, so it gets the brand
+   rather than a grey rule. The gradient slides under a fixed-width fill: the
+   bar's width still reports real progress, and the movement inside it is what
+   says the job is alive rather than stuck. */
 .capture-status-fill {
   height: 100%;
-  background: var(--invert-bg);
   border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--invert-bg) 0%,
+    var(--accent) 42%,
+    var(--accent-hover) 58%,
+    var(--invert-bg) 100%
+  );
+  background-size: 260% 100%;
+  animation: capture-pulse 2.2s ease-in-out infinite;
   transition: width 1s linear;
+}
+
+@keyframes capture-pulse {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -20% 0;
+  }
+}
+
+/* Progress is still legible from the bar's width alone, so the travelling
+   highlight is the part that goes. */
+@media (prefers-reduced-motion: reduce) {
+  .capture-status-fill {
+    animation: none;
+    background: var(--accent-solid);
+  }
 }
 
 .capture-status-done {
   border-color: var(--ok-border);
   background: var(--ok-bg);
+}
+
+/* Queued isn't failure, so it doesn't get the red -- but it isn't finished
+   either, so it doesn't get the green. */
+.capture-status-queued {
+  border-color: var(--warn-bg-hover);
+  background: var(--warn-bg);
+}
+
+.capture-status-queued p {
+  color: var(--warn-text);
+}
+
+.queued-note {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--warn-bg-hover);
+  border-radius: 8px;
+  background: var(--warn-bg);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--warn-text);
+}
+
+.queued-note-failed {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .capture-status-done p {
@@ -3312,7 +3422,7 @@ a.card {
   margin: 4px 0 22px;
   font-family: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: clamp(28px, 3.6vw, 44px);
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.12;
   letter-spacing: -0.02em;
   color: var(--text);

@@ -293,7 +293,17 @@ with the site and never queried across rows, so a join buys nothing — and
 columns inherit the site's own RLS instead of needing a policy, a `user_id`
 and a scoped query in every route, which is the part that's easy to get wrong.
 
-**Both Actions callbacks must be in `middleware.js`'s `PUBLIC_PATHS`.** The
+**A rate-limited enrichment is queued, not lost.** Gemini's free tier is one
+pool shared by every account on the deployment, so two people saving at once
+can trip the per-minute limit. `runEnrichment` tells a retryable failure (429,
+5xx — flagged on the error by `lib/ai.js`) from a permanent one, and queues the
+first with an exponential backoff. `enrich-queue.yml` drains three at a time
+every fifteen minutes; three, because the queue exists precisely because too
+many requests arrived at once. GitHub disables scheduled workflows on a repo
+idle for 60 days — if tags stop filling in on their own, check it's still
+enabled.
+
+**Every Actions-facing route must be in `middleware.js`'s `PUBLIC_PATHS`.** The
 runner has no session, so a callback left off that list is redirected to
 /login and the job's results are thrown away with no error anywhere.
 

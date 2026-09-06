@@ -364,6 +364,21 @@ export default function SiteDetailPage({ params }) {
 
         <p className="meta-line">Saved {formatCaptureDate(site.saved_at)}</p>
 
+        {/* Not an error, and not something to act on -- the queue drains
+            itself. It's here so a site with no tags reads as "not yet" rather
+            than as something that quietly went wrong. */}
+        {site.enrichment_state === "queued" && (
+          <p className="queued-note">
+            Tags and summary are queued. The AI hit its rate limit while this was saving — they&rsquo;ll
+            fill in within the hour without you doing anything.
+          </p>
+        )}
+        {site.enrichment_state === "failed" && (
+          <p className="queued-note queued-note-failed">
+            The AI pass didn&rsquo;t finish for this one. Re-read Pages will try again.
+          </p>
+        )}
+
         {recapturing && (
           <div className="capture-status">
             <div className="capture-status-bar">

@@ -59,12 +59,24 @@ function sampleStack(font) {
   return [...new Set(names)].map((n) => `"${n}"`).concat(genericFor(font.classification)).join(", ");
 }
 
+// What a designer actually wants to know: what's the headline set in, and
+// what's everything else set in. A percentage answered a question nobody
+// asked -- "87% of the text" only ever restates "this is the body face".
+const ROLE_NAME = {
+  headline: "Headline",
+  body: "Body & UI",
+  "headline-body": "Headline & Body",
+  accent: "Accent",
+};
+
 function fontRole(font) {
+  if (font.role) return ROLE_NAME[font.role] || null;
+  // Readings taken before roles existed still carry the old measurement.
   const d = font.display_share;
   if (typeof d !== "number") return null;
-  if (d >= 0.6) return "Headings";
-  if (d <= 0.15) return "Body";
-  return "Headings & body";
+  if (d >= 0.6) return "Headline";
+  if (d <= 0.15) return "Body & UI";
+  return "Headline & Body";
 }
 
 // Two claims that must not sit under one label. "This typeface is on Google
@@ -278,10 +290,24 @@ export default function SiteStyle({ site, onRefresh }) {
                 <li className="font-card" key={font.family}>
                   {/* The specimen carries the answer to the question the panel
                       is actually asked -- what does it look like -- which no
-                      amount of naming does on its own. */}
-                  <span className="font-sample" style={{ fontFamily: sampleStack(font) }} aria-hidden="true">
-                    Aa
-                  </span>
+                      amount of naming does on its own.
+                      
+                      When analyze.js managed to draw the real letterforms off
+                      the live page, they're a PNG used as a mask, so they take
+                      the app's own text colour in either theme. Otherwise this
+                      falls back to naming the family and hoping the reader has
+                      it installed, which is honest about being a stand-in. */}
+                  {font.specimen?.src ? (
+                    <span
+                      className="font-sample font-sample-real"
+                      style={{ "--specimen": `url(${font.specimen.src})` }}
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <span className="font-sample" style={{ fontFamily: sampleStack(font) }} aria-hidden="true">
+                      Aa
+                    </span>
+                  )}
 
                   <div className="font-detail">
                     <span className="font-name">
@@ -299,7 +325,7 @@ export default function SiteStyle({ site, onRefresh }) {
                     {font.foundry && <span className="font-foundry">by {font.foundry}</span>}
 
                     <span className="font-meta">
-                      {[font.classification, role, `${pct(font.share)} of text`].filter(Boolean).join(" · ")}
+                      {[role, font.classification].filter(Boolean).join(" · ")}
                     </span>
 
                     {groups.map((group) => (

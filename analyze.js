@@ -159,15 +159,87 @@ function measure() {
       .trim();
 
   const fonts = new Map();
-  function addFont(family, ink, size, isHeading) {
+  function addFont(family, ink, size, weight, isHeading) {
     const key = normalizeFamily(family);
-    const row = fonts.get(key) || { family: key, raw: new Set(), ink: 0, displayInk: 0, bodyInk: 0, maxSize: 0 };
-    row.raw.add(family);
+    const row = fonts.get(key) || {
+      family: key,
+      rendered: family,
+      ink: 0,
+      displayInk: 0,
+      bodyInk: 0,
+      maxSize: 0,
+      weight: 400,
+    };
     row.ink += ink;
-    row.maxSize = Math.max(row.maxSize, size);
+    // The weight at the largest size the face appears at, since that's the
+    // cut the specimen should be drawn in -- a display face set at 68px is
+    // not the same drawing as its own small print.
+    if (size > row.maxSize) {
+      row.maxSize = size;
+      row.weight = parseInt(weight, 10) || 400;
+      row.rendered = family;
+    }
     if (isHeading || size >= 28) row.displayInk += ink;
     else row.bodyInk += ink;
     fonts.set(key, row);
+  }
+
+  // A picture of the actual letterforms, drawn by the browser that already has
+  // the font loaded.
+  //
+  // This is the only honest way to show a licensed typeface. The app can't ship
+  // the font file and shouldn't try; but the page being analysed has it, and a
+  // canvas can draw two glyphs with it and hand back a PNG. Painted white on
+  // transparent so the app can use it as a mask and tint it with the current
+  // text colour, which is what makes it work in both themes.
+  //
+  // No model is involved, so this costs nothing per site beyond the page load
+  // that was happening anyway.
+  function specimenFor(family, weight) {
+    try {
+      if (!document.fonts.check(`${weight} 64px "${family}"`)) return null;
+
+      // 104px renders to roughly a 120x80 crop, which is sharp at the 56px
+      // tile the panel draws it in and keeps the PNG small enough to sit in a
+      // column that's read with every site.
+      const SIZE = 104;
+      const pad = 24;
+      const canvas = document.createElement("canvas");
+      canvas.width = SIZE * 4;
+      canvas.height = SIZE * 2.4;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.font = `${weight} ${SIZE}px "${family}"`;
+      ctx.fillStyle = "#fff";
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText("Aa", pad, SIZE * 1.5);
+
+      // Crop to the ink. Every face sits differently in its em box, and an
+      // uncropped canvas would centre the whitespace rather than the letters.
+      const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let minX = width, minY = height, maxX = -1, maxY = -1;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          if (data[(y * width + x) * 4 + 3] > 12) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (maxX < 0 || maxX - minX < 4 || maxY - minY < 4) return null;
+
+      const out = document.createElement("canvas");
+      out.width = maxX - minX + 1;
+      out.height = maxY - minY + 1;
+      out.getContext("2d").drawImage(canvas, minX, minY, out.width, out.height, 0, 0, out.width, out.height);
+      const url = out.toDataURL("image/png");
+      // A specimen that somehow came out huge isn't worth carrying in a column
+      // that's read with every site.
+      return url.length > 40000 ? null : { src: url, width: out.width, height: out.height };
+    } catch {
+      return null;
+    }
   }
 
   // Ink, not bounding box. A paragraph's box is mostly leading and margin;
@@ -241,7 +313,8 @@ function measure() {
       const ink = inkOf(chars, size);
       add(parseColor(style.color), ink, "text");
       const face = renderedFamily(style.fontFamily, size, style.fontWeight);
-      if (face && !face.generic) addFont(face.family, ink, size, /^H[1-3]$/.test(el.tagName));
+      if (face && !face.generic)
+        addFont(face.family, ink, size, style.fontWeight, /^H[1-3]$/.test(el.tagName));
     }
   }
 
@@ -330,21 +403,38 @@ function measure() {
     .slice(0, MAX_COLORS)
     .map((c) => ({ ...c, share: +c.share.toFixed(4) }));
 
+  // Roles, not a ranking.
+  //
+  // What a designer wants from this panel is "what's the headline set in, and
+  // what's everything else set in" -- which is how type is chosen in the first
+  // place. A percentage answers a question nobody asked: knowing a face is 87%
+  // of the text tells you it's the body face, which the label already said.
   const fontTotal = [...fonts.values()].reduce((s, f) => s + f.ink, 0) || 1;
-  const fontList = [...fonts.values()]
-    .sort((a, b) => b.ink - a.ink)
-    .slice(0, MAX_FONTS)
-    .map((f) => ({
-      family: f.family,
-      share: +(f.ink / fontTotal).toFixed(4),
-      // How much of this face's ink is headline rather than running text. A
-      // single-typeface site sets everything in one face, and calling that
-      // "body" because most words are body copy would misread it -- the panel
-      // decides what to call it from this number.
-      display_share: +(f.displayInk / (f.ink || 1)).toFixed(3),
-      max_size: Math.round(f.maxSize),
-      source_host: faceSources[f.family] || null,
-    }));
+  const ranked = [...fonts.values()].sort((a, b) => b.ink - a.ink);
+  const headline = [...ranked].sort((a, b) => b.displayInk - a.displayInk).find((f) => f.displayInk > 0);
+  const body = [...ranked].sort((a, b) => b.bodyInk - a.bodyInk).find((f) => f.bodyInk > 0);
+
+  const roles = [];
+  if (headline && headline === body) {
+    roles.push([headline, "headline-body"]);
+  } else {
+    if (headline) roles.push([headline, "headline"]);
+    if (body) roles.push([body, "body"]);
+  }
+  // At most one more, and only if it's actually doing something -- a face used
+  // for a single label isn't a third typeface, it's a stray.
+  const accent = ranked.find((f) => !roles.some(([r]) => r === f) && f.ink / fontTotal >= 0.02);
+  if (accent) roles.push([accent, "accent"]);
+
+  const fontList = roles.slice(0, MAX_FONTS).map(([f, role]) => ({
+    family: f.family,
+    role,
+    share: +(f.ink / fontTotal).toFixed(4),
+    weight: f.weight,
+    max_size: Math.round(f.maxSize),
+    source_host: faceSources[f.family] || null,
+    specimen: specimenFor(f.rendered, f.weight),
+  }));
 
   return { palette, fonts: fontList, font_hosts: fontHosts, page_area: Math.round(pageArea) };
 }
@@ -394,7 +484,11 @@ function measure() {
     console.log(`  ${c.hex}  ${(c.share * 100).toFixed(1)}%  ${c.role}`);
   }
   for (const f of result.fonts) {
-    console.log(`  ${f.family}  ${(f.share * 100).toFixed(1)}%  ${f.source_host || "unknown source"}`);
+    console.log(
+      `  ${f.family}  ${f.role}  w${f.weight}  ${f.specimen ? `specimen ${f.specimen.width}x${f.specimen.height}` : "no specimen"}  ${
+        f.source_host || "unknown source"
+      }`
+    );
   }
 
   const res = await fetch(callbackUrl, {

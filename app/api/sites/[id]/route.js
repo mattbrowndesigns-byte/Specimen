@@ -29,7 +29,7 @@ export async function GET(request, { params }) {
 
   const { data: pages, error: pagesError } = await supabase
     .from("page")
-    .select("id, url, label, utility_label, page_type, is_representative")
+    .select("id, url, label, utility_label, page_type, tier, is_representative")
     .eq("site_id", id)
     .order("label", { ascending: true });
   if (pagesError) {

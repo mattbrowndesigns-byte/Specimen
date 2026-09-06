@@ -2539,15 +2539,18 @@ a.card {
    separate swatches with gaps between them read as a set of equals. Clipping
    the corners on the container is what lets the segments stay plain
    rectangles that can't drift apart. */
-/* No ring around the bar. It was there so a white first swatch had an edge,
-   but drawn around the whole strip it reads as a border on the component --
-   which is why the palette looked boxed in. The edge belongs to the swatch
-   that needs one, not to the bar. */
+/* Separated swatches on a tray, rather than one strip cut into pieces. The
+   gaps are what let a near-white swatch next to white read as two colours
+   instead of one long smear -- which is the problem a border around the whole
+   bar was trying and failing to solve. */
 .palette-bar {
   display: flex;
-  height: 34px;
-  border-radius: 8px;
-  overflow: hidden;
+  gap: 5px;
+  padding: 5px;
+  height: 46px;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  background: var(--surface);
 }
 
 /* flex-basis 0 with a grow set per swatch, so the widths come out as the exact
@@ -2555,15 +2558,17 @@ a.card {
    sub-pixel -- the number beside it stays true either way. */
 .palette-swatch {
   flex: 0 1 0;
-  min-width: 14px;
-  /* Inset so a near-white swatch has a boundary against a near-white panel.
-     Every swatch carries it, but only a pale one can see it. */
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.07);
+  /* Wide enough that a 0.3% accent is still a shape you can hit, not a line. */
+  min-width: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   border: none;
+  border-radius: 7px;
+  /* Barely there, and only visible on a pale swatch -- which is the only kind
+     that needs an edge against the tray behind it. */
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   transition: transform 0.12s ease;
 }
@@ -2571,7 +2576,7 @@ a.card {
 .palette-swatch:hover,
 .palette-swatch:focus-visible {
   outline: none;
-  transform: scaleY(1.14);
+  transform: scale(1.04);
 }
 
 /* Two literal colours, like the crop rectangle: this tick sits on whatever the
@@ -2720,6 +2725,32 @@ a.card {
   font-weight: 600;
   line-height: 1;
   color: var(--text);
+}
+
+/* The real letterforms, drawn off the live site and carried as a white-on-
+   transparent PNG. Masked rather than shown as an image so the glyphs take the
+   app's text colour -- white artwork would be invisible in light mode.
+   
+   The mask goes on the ::after, not on the tile: masking the tile itself would
+   clip its background to the shape of the letters and there'd be no tile left.
+   The URL arrives as a custom property because it's per-font data. */
+.font-sample-real {
+  position: relative;
+}
+
+.font-sample-real::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  background: var(--text);
+  mask-image: var(--specimen);
+  -webkit-mask-image: var(--specimen);
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  mask-size: contain;
+  -webkit-mask-size: contain;
 }
 
 .font-detail {
@@ -2994,9 +3025,52 @@ a.card {
 
 /* Sidebar discovered pages */
 
-.section-count {
-  font-size: 12px;
+/* A bare number beside a heading floats -- it reads as part of the title one
+   moment and as a stray the next. In a pill it's plainly a count: the chip is
+   the height of the heading's lowercase letters, the digits inside it smaller
+   than the heading they belong to. */
+/* Prominence, not template. Colour separates the three at a glance without
+   needing to be read, and the label is there for when it does. */
+.page-tier {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+
+.page-tier-primary {
+  background: var(--chip-strong-bg);
+  color: var(--text-secondary);
+}
+
+.page-tier-secondary {
+  background: var(--chip-bg);
+  color: var(--text-muted);
+}
+
+.page-tier-tertiary {
+  background: none;
   color: var(--text-faint);
+}
+
+.section-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  margin-left: 2px;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-muted);
+  vertical-align: 1px;
 }
 
 .page-list-compact li {

@@ -194,24 +194,42 @@ white, which is decoration with words in it, not readable text. Both now clear
 is 1.4:1 against a surface where WCAG 1.4.11 wants 3:1 for control boundaries —
 fixing it would mean visibly darker borders on every control in the app.
 
-**A typeface's specimen renders in the real face when it can.** `SiteStyle`
-injects a Google Fonts stylesheet for any face flagged `google.self`, so its
-"Aa" is the actual typeface rather than a stand-in. Everything else falls back
-through the family name — which does render for anyone who has it installed —
-then to a generic of the right species. A licensed face can't be shown, and
-silently showing the wrong one would be worse than an obvious substitute.
+**The specimen is drawn off the live site, by the browser, for free.**
+`analyze.js` renders "Aa" to a canvas in the page being analysed -- which has
+the licensed font loaded -- crops to the ink and stores a white-on-transparent
+PNG in the font row. The app shows it as a CSS *mask* tinted with `--text`, not
+as an image: white artwork would be invisible in light mode. This replaced
+loading Google Fonts to fake a specimen, which could only ever be right for the
+faces that were already free. No model is involved, so it costs nothing per
+site. A face the canvas can't draw falls back to naming the family and then to
+a generic of the right species.
+
+**Typefaces are reported by role, not by share.** Headline / Body & UI /
+Accent, computed in `analyze.js` from display ink against body ink. "87% of the
+text" only ever restated "this is the body face".
 
 **Hidden sites are out of the grid but still in search.** `site.is_hidden` is
 filtered in `fetchSitesList`'s default path only. A hide with no way back would
 be a trap, since the grid is the only route to a site's page — searching is the
 way back. Like favouriting, hiding does not clear `needs_review`.
 
-**A discovered page is named for what it does.** `page.utility_label` comes
-from enrichment — "About Us", "Request A Demo", "Product Detail" — and is shown
-in place of the link's own text. A nav says "Why us" or "Get started free"
-because it's selling to that site's visitors; comparing one site's page set
-against another's only works if a demo request is called the same thing on
-both. The raw label survives as the link's title attribute.
+**A discovered page is named after its own URL.** Link text is written to
+persuade -- "Our mission and team" -- and a nav link built from two spans comes
+back as one run-on string with no space in it. `/about-us` is About Us on every
+site there has ever been. `page.utility_label` from enrichment is the fallback
+for a path that says nothing (`/p/9f2c`), and the raw link text is last.
+
+**Pages are ranked by prominence, not classified by template.** `page.tier` is
+primary / secondary / tertiary. Asking what *kind* of page it was put an FAQ
+index and one FAQ entry side by side as equals, and five product pages that are
+one template shown five times.
+
+**`block_pattern` is an inventory; the other facets are descriptions.** It
+takes up to 8 tags where the rest take 2, and enrichment is asked to work down
+the screenshot naming every distinct section. Nav, hero and footer are on every
+site ever made, so tagging them by name makes the tag useless for search --
+they're recorded only as a variety ("Mega Footer", "Type-Led Hero") or not at
+all.
 
 **Card tags are measured, not counted.** `TagRow` renders every chip once,
 reads their widths back, then keeps the number that fits on one line with room

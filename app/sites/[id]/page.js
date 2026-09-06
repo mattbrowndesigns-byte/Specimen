@@ -315,12 +315,6 @@ export default function SiteDetailPage({ params }) {
     }
   }
 
-  const pageTypeLabel = (slug) => {
-    if (!slug) return "Unclassified";
-    const match = allTags.find((t) => t.facet === "page_type" && t.slug === slug);
-    return match?.label || slug;
-  };
-
   const timeline = captureTimeline(site.capture);
   const activeRun = timeline.find((r) => r.capturedAt === selectedRun) || timeline[0];
   const capture = activeRun?.byViewport[viewport] || null;
@@ -568,7 +562,6 @@ export default function SiteDetailPage({ params }) {
 
             <DiscoveredPages
               pages={site.pages || []}
-              pageTypeLabel={pageTypeLabel}
               promoted={promoted}
               promoting={promoting}
               onPromote={promotePage}

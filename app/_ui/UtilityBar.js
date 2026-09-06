@@ -29,7 +29,12 @@ export default function UtilityBar({ onAdd, onError }) {
       <div className="utility-bar-inner">
         <div className="brand">
           <a className="utility-bar-title" href="/">
-            <h1 className="wordmark">Kivli</h1>
+            {/* The two i's are wrapped so they can hop on hover. Only those
+                two: every character in its own inline-block would drop the
+                kerning across the whole wordmark to animate two letters. */}
+            <h1 className="wordmark">
+              K<span className="wordmark-i">i</span>vl<span className="wordmark-i wordmark-i-late">i</span>
+            </h1>
           </a>
           {/* Outside the link: the wordmark is the target, the tagline is
               description, and a hover that greyed both would read as one word. */}

@@ -51,7 +51,12 @@ function fromPath(url) {
     .join(" ");
 }
 
-const pageName = (page) => fromPath(page.url) || page.utility_label || page.label || page.url;
+// Function first, path second. A path names the subject -- /iphone, /pegasus-41
+// -- and the subject is exactly what nobody is searching a design library for.
+// "Product Landing" is what makes one site's page comparable to another's. The
+// path is the fallback for a page enrichment hasn't labelled, and the raw link
+// text is the last resort.
+const pageName = (page) => page.utility_label || fromPath(page.url) || page.label || page.url;
 
 // How central the page is, which is the question you have when you're deciding
 // what to look at. What template it happens to be is not.
@@ -67,6 +72,7 @@ const tierRank = (page) => {
 
 export default function DiscoveredPages({
   pages,
+  siteUrl,
   promoted,
   promoting,
   onPromote,
@@ -78,13 +84,22 @@ export default function DiscoveredPages({
 
   if (!pages || pages.length === 0) return null;
 
+  // The homepage is never in this list -- it's the site itself, and link
+  // extraction reads the page rather than including it. But it's the most
+  // primary page any site has, and a Primary group without it reads as though
+  // something went wrong. So it's added here rather than asked for.
+  const home = siteUrl
+    ? { id: "__home", url: siteUrl, utility_label: "Homepage", tier: "primary", isHome: true }
+    : null;
+
   const flagged = pages.filter((p) => p.is_representative);
-  const key = flagged.length > 0 ? flagged : pages;
+  const key = [...(home ? [home] : []), ...(flagged.length > 0 ? flagged : pages)];
   const rest = flagged.length > 0 ? pages.filter((p) => !p.is_representative) : [];
 
   const byTier = [...key].sort((a, b) => tierRank(a) - tierRank(b));
   const preview = byTier.slice(0, PREVIEW_LIMIT);
   const hasMore = key.length > preview.length || rest.length > 0;
+  const total = pages.length + (home ? 1 : 0);
 
   const groups = TIERS.map(([key_, label]) => [label, byTier.filter((p) => p.tier === key_)])
     .concat([["Other", byTier.filter((p) => !p.tier)]])
@@ -115,7 +130,7 @@ export default function DiscoveredPages({
           so it steps back to match the style panel's own re-read control. */}
       <div className="page-list-actions">
         <button className="page-list-open" onClick={() => setOpen(true)}>
-          {hasMore ? `Show All ${pages.length} Pages` : "Open All Pages"}
+          {hasMore ? `Show All ${total} Pages` : "Open All Pages"}
         </button>
         {onRefresh && (
           <button className="link-btn" onClick={onRefresh} disabled={refreshing}>
@@ -129,7 +144,7 @@ export default function DiscoveredPages({
         <ModalShell label="Discovered pages" wide onClose={() => setOpen(false)}>
           <div className="modal-head">
             <h2>
-              Pages <span className="section-count">{pages.length}</span>
+              Pages <span className="section-count">{total}</span>
             </h2>
             <button className="modal-close" onClick={() => setOpen(false)} aria-label="Close">
               ×
@@ -175,7 +190,9 @@ function PageList({ pages, promoted, promoting, onPromote }) {
           <a href={page.url} target="_blank" rel="noopener noreferrer" title={page.label || page.url}>
             {pageName(page)}
           </a>
-          {promoted[page.id] ? (
+          {page.isHome ? (
+            <span className="page-tier page-tier-secondary">This site</span>
+          ) : promoted[page.id] ? (
             <a className="promote-link" href={`/sites/${promoted[page.id]}`}>
               View Full Capture →
             </a>

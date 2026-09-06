@@ -24,7 +24,15 @@ const CYCLE_MS = 4600;
 const SWAP_MS = 4800;
 
 export default function FeatureRotator({ className = "" }) {
-  const [index, setIndex] = useState(() => Math.floor(Math.random() * FEATURES.length));
+  const [index, setIndex] = useState(0);
+
+  // Randomised after mount, not in the initial state. Picking at render time
+  // means the server renders one line and the browser renders a different one,
+  // which is a hydration mismatch -- React then throws away the server's HTML
+  // for this subtree and logs an error on every page that shows a rotator.
+  useEffect(() => {
+    setIndex(Math.floor(Math.random() * FEATURES.length));
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setIndex((i) => (i + 1) % FEATURES.length), SWAP_MS);

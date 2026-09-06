@@ -16,10 +16,11 @@ const lalezar = Lalezar({
 // Figtree made the app feel like a brochure for itself; at 44px on one line of
 // copy it does the job the system stack can't, which is to have a voice.
 //
-// One weight, not the variable file: the headline is the only thing asking for
-// it, and a single static cut is a smaller download than the variable font.
+// Two weights, both real cuts. The headline is set in 800, and asking for it
+// while loading only 600 would have the browser fake the bold by smearing the
+// 600 -- which is exactly the thing a display face is chosen to avoid.
 const figtree = Figtree({
-  weight: "600",
+  weight: ["600", "800"],
   subsets: ["latin"],
   display: "swap",
   variable: "--font-display",

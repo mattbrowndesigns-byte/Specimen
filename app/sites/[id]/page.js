@@ -577,6 +577,7 @@ export default function SiteDetailPage({ params }) {
 
             <DiscoveredPages
               pages={site.pages || []}
+              siteUrl={site.url}
               promoted={promoted}
               promoting={promoting}
               onPromote={promotePage}

@@ -510,6 +510,42 @@ h1 {
   animation: wordmark-shimmer 0.75s ease-out;
 }
 
+/* A small hop as the shimmer passes, the second one a beat behind the first.
+   The whole letter moves rather than the dot alone -- a dot can't be addressed
+   separately from the stem it carries -- but at this size that reads as the
+   dots bouncing, which is the point.
+   
+   The explicit colour is load-bearing, not decoration. Moving a letter puts it
+   in its own stacking context, and the parent's background-clip: text gradient
+   then stops painting under it -- so with the inherited `transparent` from the
+   shimmer, the two i's simply disappeared and the wordmark read "K vl". Given
+   they have to paint themselves, they may as well catch the same orange the
+   sweep is carrying, on the way up and back. */
+.wordmark-i {
+  display: inline-block;
+}
+
+.utility-bar a.utility-bar-title:hover .wordmark-i {
+  color: var(--text);
+  animation: wordmark-hop 0.44s ease-out;
+}
+
+.utility-bar a.utility-bar-title:hover .wordmark-i-late {
+  animation-delay: 0.09s;
+}
+
+@keyframes wordmark-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+    color: var(--text);
+  }
+  45% {
+    transform: translateY(-0.085em);
+    color: var(--accent);
+  }
+}
+
 @keyframes wordmark-shimmer {
   from {
     background-position: 100% 0;
@@ -539,6 +575,11 @@ h1 {
     background-clip: border-box;
     color: var(--text-muted);
     animation: none;
+  }
+
+  .utility-bar a.utility-bar-title:hover .wordmark-i {
+    animation: none;
+    color: inherit;
   }
 }
 
@@ -1442,11 +1483,11 @@ h1 {
 }
 
 .capture-status-bar {
-  height: 4px;
+  height: 7px;
   background: var(--surface-sunken);
   border-radius: 999px;
   overflow: hidden;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 /* The one screen everyone watches from start to finish, so it gets the brand
@@ -1466,6 +1507,9 @@ h1 {
   background-size: 260% 100%;
   animation: capture-pulse 2.2s ease-in-out infinite;
   transition: width 1s linear;
+  /* Cast onto the track rather than around the whole bar, so the lit end of
+     the fill looks warm rather than the component looking selected. */
+  box-shadow: 0 0 10px rgba(232, 80, 46, 0.45);
 }
 
 @keyframes capture-pulse {
@@ -1553,8 +1597,14 @@ h1 {
   gap: 6px;
 }
 
-/* The same pair of buttons, moved under the text they act on. */
+/* The same pair of buttons, moved under the text they act on.
+   
+   Baseline, not centre: the row holds a bordered button, a link and a line of
+   small grey text, and centring three boxes of different heights leaves their
+   words sitting at three different heights. */
 .section-actions-below {
+  align-items: baseline;
+  flex-wrap: wrap;
   margin-top: 12px;
 }
 
@@ -1849,9 +1899,12 @@ h1 {
   line-height: 1;
 }
 
+/* A short minimum, so the input tucks onto the end of the last row of chips
+   instead of demanding 80px it can't have and dropping to a line of its own --
+   which is where the empty band under a full tag box came from. */
 .combobox-field input {
-  flex: 1;
-  min-width: 80px;
+  flex: 1 1 44px;
+  min-width: 44px;
   border: none;
   outline: none;
   font-size: 13px;
@@ -2655,8 +2708,8 @@ a.card {
    bar was trying and failing to solve. */
 .palette-bar {
   display: flex;
-  gap: 5px;
-  padding: 5px;
+  gap: 2px;
+  padding: 4px;
   height: 46px;
   border: 1px solid var(--border-soft);
   border-radius: 12px;
@@ -3422,7 +3475,7 @@ a.card {
   margin: 4px 0 22px;
   font-family: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: clamp(28px, 3.6vw, 44px);
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.12;
   letter-spacing: -0.02em;
   color: var(--text);
@@ -3956,9 +4009,12 @@ a.card {
 
 /* Progress row: status left, feature line right. */
 
+/* Baseline: the rotator on the right is a different size to the status line on
+   the left, and centring two different type sizes leaves neither sitting on
+   the other's line. */
 .capture-status-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 20px;
 }

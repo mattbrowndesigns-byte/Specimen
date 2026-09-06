@@ -90,6 +90,19 @@ captures hide the bug by only ever shrinking. Same reason `.detail-capture` is
 capped at `min(1442px, 100%)` (1440 capture + two borders) and its mobile
 variant at `min(392px, 100%)` — the detail page is full-bleed.
 
+**The wordmark's hover is two effects that can't share a background.** The
+shimmer is a gradient with `background-clip: text` on the `<h1>`; the hop moves
+the two `i` spans. A moved element gets its own stacking context, and the
+parent's text-clipped gradient stops painting under it — so with the inherited
+`transparent`, both i's vanished and the mark read "K vl". They set their own
+colour for exactly that reason. A `position: relative` offset breaks it the
+same way; it isn't specific to `transform`.
+
+**Nothing may pick a random value in a `useState` initialiser.** `FeatureRotator`
+did, so the server rendered one line and the browser another, and every page
+carrying a rotator threw a hydration error and re-rendered that subtree from
+scratch. Randomise in an effect after mount.
+
 **All colour comes from `:root` custom properties**; dark mode is the single
 `:root[data-theme="dark"]` override block, so never add a raw hex. `--invert-*`
 is the solid-dark-button pair, which flips to a solid *light* button in dark

@@ -159,17 +159,28 @@
   box-sizing: border-box;
 }
 
+/* A column the height of the window, so a short page -- an empty Collections,
+   a Favorites with three things in it -- puts its footer at the bottom of the
+   screen rather than halfway up it with the page background below.
+   
+   Modals are unaffected: ModalShell portals to <body>, and a fixed-position
+   element is out of flow, so it never becomes a flex item here. */
 body {
   margin: 0;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text);
 }
 
 .page {
+  flex: 1 0 auto;
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 24px 80px;
+  width: 100%;
 }
 
 /* The library tracks the viewport instead of sitting in a 1200px column: on a
@@ -1309,6 +1320,12 @@ h1 {
   padding-top: 4px;
 }
 
+/* Full width only where it's the last thing in a column. */
+.detail-danger .danger-btn.danger-btn,
+.detail-danger .hide-btn.hide-btn {
+  width: 100%;
+}
+
 /* Reversible, so it stays in the app's ordinary button language and leaves the
    red one below it as the only thing that looks like a warning. */
 .hide-btn.hide-btn {
@@ -1334,10 +1351,9 @@ h1 {
    surface colour. Tinted rather than filled -- red enough to read as the one
    irreversible control on the page, quiet enough not to court the click. */
 .danger-btn.danger-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
   padding: 9px 14px;
   border: 1px solid var(--danger-border);
   border-radius: 8px;
@@ -3078,20 +3094,22 @@ a.card {
 
 /* ---- Prose pages: About, FAQ, Features ---------------------------------- */
 
-/* Full width like the rest of the app, with the reading measure controlled by
-   the column rather than by squeezing the page. Four columns of title against
-   eight of content: the heading has somewhere to sit, and the prose still
-   lands on a line length you can read. */
+/* Full width, so the title starts on the same 24px gutter the wordmark does
+   rather than indented by whatever a centred 1200px column leaves over. The
+   reading measure is controlled by the column and by the paragraphs
+   themselves, not by narrowing the page. */
 .prose-page {
-  max-width: 1200px;
+  max-width: none;
 }
 
 .prose-row {
   display: grid;
-  grid-template-columns: 4fr 8fr;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
   gap: 24px 48px;
   align-items: start;
   margin-bottom: 52px;
+  /* Past this the eight-column half is a line nobody can track back from. */
+  max-width: 1600px;
 }
 
 /* The left column stays put while the right one scrolls past it, which is what
@@ -3114,6 +3132,7 @@ a.card {
 }
 
 .prose-head {
+  max-width: 1600px;
   margin: 8px 0 44px;
 }
 

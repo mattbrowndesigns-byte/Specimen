@@ -71,6 +71,12 @@ waits on. Do not "optimize" this back into a background task.
 page.** Those pages still prerendered, so redeploys weren't visible without a
 hard refresh. Fixed with `Cache-Control: no-store` in `next.config.js`.
 
+**`body` is a flex column, so a short page still puts its footer at the
+bottom.** `.page` takes `flex: 1 0 auto`. This is safe alongside `ModalShell`
+only because `.modal-backdrop` is `position: fixed` — a fixed element is out of
+flow and never becomes a flex item, so a portalled modal can't end up as a
+sibling column.
+
 **Modals must go through `ModalShell`,** which portals them to `<body>`. A
 `transform`, `filter` or `backdrop-filter` on any ancestor makes it the
 containing block for `position: fixed`; a card has two of those plus

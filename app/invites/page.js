@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import UtilityBar from "../_ui/UtilityBar";
+import SiteFooter from "../_ui/SiteFooter";
 
 export default function InvitesPage() {
   const [invites, setInvites] = useState(null);
@@ -156,6 +157,7 @@ export default function InvitesPage() {
           </>
         )}
       </main>
+      <SiteFooter />
     </>
   );
 }

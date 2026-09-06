@@ -1,9 +1,11 @@
 "use client";
 import { useCallback, useEffect, useState, use as usePromise } from "react";
+import { Share2 } from "lucide-react";
 import UtilityBar from "../../_ui/UtilityBar";
 import ShareModal from "../../_ui/ShareModal";
 import RecordGrid from "../../_ui/RecordGrid";
 import ModalShell from "../../_ui/ModalShell";
+import SiteFooter from "../../_ui/SiteFooter";
 
 export default function CollectionDetailPage({ params }) {
   const { id } = usePromise(params);
@@ -98,14 +100,24 @@ export default function CollectionDetailPage({ params }) {
             archive is for finding a collection, this page is the collection. */}
         <div className="detail-header">
           <h1 className="collection-title">{collection?.name || "…"}</h1>
+          {/* Three weights for three different things: sharing is a quiet,
+              reversible aside, editing is the ordinary action, and deleting is
+              the one that can't be undone -- wearing the same red it wears at
+              the foot of a site's page. */}
           <div className="detail-actions">
-            <button onClick={() => setSharing(true)} disabled={!collection}>
-              Share
+            <button
+              className="icon-btn"
+              onClick={() => setSharing(true)}
+              disabled={!collection}
+              title="Share this collection"
+              aria-label="Share this collection"
+            >
+              <Share2 size={16} />
             </button>
             <button onClick={() => setEditing(true)} disabled={!collection}>
               Edit Collection
             </button>
-            <button onClick={remove} disabled={!collection}>
+            <button className="danger-btn" onClick={remove} disabled={!collection}>
               Delete Collection
             </button>
           </div>
@@ -152,6 +164,7 @@ export default function CollectionDetailPage({ params }) {
           />
         )}
       </main>
+      <SiteFooter />
     </>
   );
 }

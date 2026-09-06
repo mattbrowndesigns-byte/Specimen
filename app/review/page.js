@@ -4,6 +4,7 @@ import { latestCapture } from "@/lib/captures";
 import ReviewEditModal from "../_ui/ReviewEditModal";
 import UtilityBar from "../_ui/UtilityBar";
 import Favicon from "../_ui/Favicon";
+import SiteFooter from "../_ui/SiteFooter";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -279,6 +280,7 @@ export default function ReviewPage() {
           />
         )}
       </main>
+      <SiteFooter />
     </>
   );
 }

@@ -9,6 +9,7 @@ import Favicon from "../../_ui/Favicon";
 import DiscoveredPages from "../../_ui/DiscoveredPages";
 import SiteStyle from "../../_ui/SiteStyle";
 import FeatureRotator from "../../_ui/FeatureRotator";
+import SiteFooter from "../../_ui/SiteFooter";
 import { archiveUrl, captureTimeline, formatCaptureDate } from "@/lib/captures";
 
 const FACET_LABELS = {
@@ -637,6 +638,7 @@ export default function SiteDetailPage({ params }) {
         )}
         <RelatedSection kind="site" item={site} />
       </main>
+      <SiteFooter />
     </>
   );
 }

@@ -7,6 +7,7 @@ import UtilityBar from "../../_ui/UtilityBar";
 import RelatedSection from "../../_ui/RelatedSection";
 import SaveActions from "../../_ui/SaveActions";
 import Favicon from "../../_ui/Favicon";
+import SiteFooter from "../../_ui/SiteFooter";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -381,6 +382,7 @@ export default function ComponentDetailPage({ params }) {
 
         <RelatedSection kind="component" item={component} />
       </main>
+      <SiteFooter />
     </>
   );
 }

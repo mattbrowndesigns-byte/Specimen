@@ -69,6 +69,13 @@ const ROLE_NAME = {
   accent: "Accent",
 };
 
+// Whether the naming pass has run on this face. `described` is stamped by
+// describeFonts; the provider check covers readings stored before that flag
+// existed, since a provider is the one field that pass has always added.
+function named(font) {
+  return Boolean(font.described) || "provider" in font;
+}
+
 function fontRole(font) {
   if (font.role) return ROLE_NAME[font.role] || null;
   // Readings taken before roles existed still carry the old measurement.
@@ -96,6 +103,68 @@ function matchGroups(font) {
     { key: "available", label: "Available On", items: available },
     { key: "closest", label: "Closest Match", items: closest },
   ].filter((group) => group.items.length);
+}
+
+// Both panels keep their heading and their shape before there's anything in
+// them. A single line of grey text where two sections belong reads as though
+// the feature is missing rather than pending, and the page rearranges itself
+// when a reading lands. The bar's steps are the hierarchy a real palette has
+// -- one dominant background, then accents -- so the placeholder is a promise
+// about the shape of the answer, not just a grey box.
+const PALETTE_STEPS = [6, 4, 2, 1.2, 1];
+const FONT_LINES = [
+  ["58%", "40%", "46%"],
+  ["44%", "52%", "38%"],
+  ["64%", "34%", "50%"],
+];
+
+function StyleSkeleton({ kind, live, analyzed }) {
+  // Only pulses while a run is actually in flight. A placeholder that animates
+  // when nothing is happening promises something is on its way when it isn't.
+  const shell = `style-skeleton${live ? " style-skeleton-live" : ""}`;
+
+  // A finished reading that found nothing is a real answer and deserves the
+  // words, not a placeholder waiting for something that already came back.
+  const nothing = analyzed && !live;
+
+  if (kind === "palette") {
+    return (
+      <section className="detail-section">
+        <h2>Colours</h2>
+        {nothing ? (
+          <p className="style-none">No interface colours could be read from this page.</p>
+        ) : (
+          <div className={`palette-bar ${shell}`} aria-hidden="true">
+            {PALETTE_STEPS.map((grow, i) => (
+              <span className="palette-skeleton" style={{ flexGrow: grow }} key={i} />
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  return (
+    <section className="detail-section">
+      <h2>Fonts in Use</h2>
+      {nothing ? (
+        <p className="style-none">No typefaces could be read from this page.</p>
+      ) : (
+        <ul className={`font-list ${shell}`} aria-hidden="true">
+          {FONT_LINES.map((widths, i) => (
+            <li className="font-card" key={i}>
+              <span className="font-sample font-sample-skeleton" />
+              <div className="font-detail font-detail-skeleton">
+                {widths.map((width, j) => (
+                  <span className="font-line" style={{ width }} key={j} />
+                ))}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
 }
 
 export default function SiteStyle({ site, onRefresh }) {
@@ -200,7 +269,9 @@ export default function SiteStyle({ site, onRefresh }) {
 
   return (
     <>
-      {palette.length > 0 && (
+      {palette.length === 0 ? (
+        <StyleSkeleton kind="palette" live={analyzing} analyzed={analyzed} />
+      ) : (
         <section className="detail-section">
           <h2>
             Colours <span className="section-count">{palette.length}</span>
@@ -275,7 +346,9 @@ export default function SiteStyle({ site, onRefresh }) {
         </section>
       )}
 
-      {fonts.length > 0 && (
+      {fonts.length === 0 ? (
+        <StyleSkeleton kind="fonts" live={analyzing} analyzed={analyzed} />
+      ) : (
         <section className="detail-section">
           <h2>
             Fonts in Use <span className="section-count">{fonts.length}</span>
@@ -351,8 +424,14 @@ export default function SiteStyle({ site, onRefresh }) {
 
                     {/* Saying so beats saying nothing. An empty space where the
                         links usually are reads as a bug rather than an answer,
-                        and "we looked and there isn't one" is an answer. */}
-                    {!groups.length && (
+                        and "we looked and there isn't one" is an answer.
+                        
+                        Only where we did look, though. The measurement is
+                        stored before the naming pass runs, so a face can be on
+                        the page with its matches still unchecked -- and
+                        claiming there's nothing close would be inventing a
+                        result rather than reporting one. */}
+                    {!groups.length && named(font) && (
                       <span className="font-no-match">No close match found on Google or Adobe Fonts</span>
                     )}
                   </div>

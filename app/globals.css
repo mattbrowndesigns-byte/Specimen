@@ -3193,6 +3193,75 @@ a.card {
   color: var(--text-faint);
 }
 
+/* A finished reading that found nothing. Sits where the panel's content would,
+   so it reads as the answer rather than as an error about the panel. */
+.style-none {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+/* ---- The empty palette and font panels --------------------------------- */
+
+/* Placeholders reuse the real containers -- .palette-bar, .font-card,
+   .font-sample -- and only fill them, so the shape before a reading is the
+   shape after it and nothing shifts when one lands. */
+.palette-skeleton {
+  flex: 0 1 0;
+  min-width: 16px;
+  border-radius: 7px;
+  background: var(--surface-sunken);
+}
+
+.font-sample-skeleton {
+  background: var(--surface-sunken);
+}
+
+.font-detail-skeleton {
+  flex: 1;
+  gap: 7px;
+  padding-top: 6px;
+}
+
+/* Stepped, because the card it stands in for is stepped: a 14px name, then
+   12px of role, then an 11px note. Three identical bars are a placeholder for
+   a table, not for this. */
+.font-line {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+}
+
+.font-line:first-child {
+  height: 11px;
+}
+
+/* Pulsing only while a run is in flight: an animation that plays when nothing
+   is happening is a promise the page can't keep. */
+.style-skeleton-live .palette-skeleton,
+.style-skeleton-live .font-sample-skeleton,
+.style-skeleton-live .font-line {
+  animation: style-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes style-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .style-skeleton-live .palette-skeleton,
+  .style-skeleton-live .font-sample-skeleton,
+  .style-skeleton-live .font-line {
+    animation: none;
+  }
+}
+
 /* ---- Prose pages: About, FAQ, Features ---------------------------------- */
 
 /* Full width, so the title starts on the same 24px gutter the wordmark does

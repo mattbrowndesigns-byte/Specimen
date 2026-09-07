@@ -371,6 +371,35 @@ have, which is what makes this work — and what lets the model suggest freely.
 A font that *is* on a service gets a link to itself there rather than a
 substitute, including the self-hosted Google fonts half the web serves.
 
+**The analyze callback stores the measurement before it names anything.**
+Colours, roles and specimens are measured in a real browser and cost nothing
+to keep; names, foundries and Google/Adobe matches depend on a model and on
+other people's uptime. squareup.com is why the order matters: three custom
+faces, so every match check missed, the route ran past its 60s limit, and a
+perfect reading of the palette died with the request — the step showed green
+in Actions because `continue-on-error` reports a failed step as success. So
+there are two writes, and the naming pass also has a `DESCRIBE_BUDGET_MS`
+ceiling. The worst case is now a panel with real colours and unnamed faces.
+
+**`firstResolving` checks its candidates in parallel, and that is the fix, not
+a tidy-up.** Sequentially it cost the *sum* of its misses — three Adobe slugs
+at 4s each, twice over for a face with no match, ~24s per font — which is what
+put that request over the limit in the first place. Preference order is still
+honoured; only the waiting is shared.
+
+**A font card says "no close match" only where the check actually ran.**
+`described` is stamped by `describeFonts`, so a row stored by the write-first
+callback and never named shows nothing rather than asserting a negative nobody
+established. Rows written before that flag existed are recognised by
+`provider`, the one field that pass has always added.
+
+**Both style panels keep their heading and their shape when empty.** The
+placeholders reuse `.palette-bar`, `.font-card` and `.font-sample` and only
+fill them, so a card is 82px and the bar 46px whether or not there's a reading
+— nothing moves when one lands. They pulse only while a run is in flight, and
+an *analyzed* site with nothing to show gets words instead, because a finished
+reading that found nothing is an answer and not a pending state.
+
 **`palette` and `fonts` are jsonb on `site`, not tables.** They're always read
 with the site and never queried across rows, so a join buys nothing — and
 columns inherit the site's own RLS instead of needing a policy, a `user_id`

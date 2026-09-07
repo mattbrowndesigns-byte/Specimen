@@ -129,6 +129,22 @@ did, so the server rendered one line and the browser another, and every page
 carrying a rotator threw a hydration error and re-rendered that subtree from
 scratch. Randomise in an effect after mount.
 
+**The prose pages have their own type scale, built from a 20px body.** 20/30
+body, 24 for h3, 32 for h2, a clamp to 52 for h1, 18 for the aside note, 16 in
+a feature card. The old 15px body was why the copy never reached the right of
+its column: a reasonable line length in a small size is a narrow ribbon in a
+wide one. It's scoped to `.prose-page` and doesn't touch the library's own UI
+sizes.
+
+**The two columns are aligned by cap top, and the numbers are measured.** A
+heading's line box starts about 7px above its capitals at 32px, so aligning
+boxes leaves the eye seeing two different starts. The FAQ's first question
+needed 17px removing (a row's top padding plus the list's top border, which is
+why the list has no top rule); a feature card's grid needs pushing *down* 7px
+so the card's edge meets the cap line. Verified at 0.02px, 0.28px and 1.02px
+out on FAQ, features and about. Change a heading size and these want
+re-measuring.
+
 **`--brand-ink` is the wordmark's colour, and it isn't `--text`.** A very dark
 purple, picked to land on the same contrast as the black it replaced — 16.25:1
 against the page where #1a1a1a was 16.26 — so only the cast changed. It carries

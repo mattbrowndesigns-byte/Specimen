@@ -129,6 +129,21 @@ did, so the server rendered one line and the browser another, and every page
 carrying a rotator threw a hydration error and re-rendered that subtree from
 scratch. Randomise in an effect after mount.
 
+**Everything lays out on one 12-column grid.** `--grid-columns: 12`,
+`--grid-gutter: 24px`, `--grid-margin: 24px`, `--grid-max: 1440px` in `:root`,
+and nothing picks its own numbers. At the ceiling a track is 94px, so a 4-span
+is 448px and an 8-span 920px — a span of n is n tracks plus the n-1 gutters
+inside it, which is why 4 + 8 comes to 1392 and not 1368. The card grid is
+spans (large 4, medium 3, small 2) stepping up one span per breakpoint, the
+detail page is 8 + 4, the written pages are 4 + 8, and the feature cards are
+two equal columns of an 8-span, which comes to 448 each and therefore lands on
+the master grid's columns 5, 8, 9 and 12.
+
+**`.page-wide` is now the same canvas as `.page`.** It existed because
+`auto-fill` turned a wider window into more columns; a span turns it into wider
+cards instead, so full-bleed stopped buying anything. To put the library back
+to tracking the viewport, that rule's `max-width` is the one line to change.
+
 **The prose pages have their own type scale, built from a 20px body.** 20/30
 body, 24 for h3, 32 for h2, a clamp to 52 for h1, 18 for the aside note, 16 in
 a feature card. The old 15px body was why the copy never reached the right of

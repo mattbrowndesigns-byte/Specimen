@@ -83,6 +83,19 @@
   --ok-text: #1f6b33;
 
   --overlay: rgba(20, 20, 22, 0.45);
+
+  /* The page grid: twelve columns, one gutter, one margin, one ceiling.
+     Everything that lays anything out subscribes to these rather than picking
+     its own numbers -- which is what makes a span mean the same thing on the
+     dashboard, a detail page and the written pages.
+     
+     At the 1440 ceiling a track is 98px and a gutter 24, so a 4-span is 464px
+     and an 8-span is 952px. A span of n is n tracks plus the n-1 gutters
+     inside it, which is why 4 + 8 comes to 1440 rather than to 1416. */
+  --grid-columns: 12;
+  --grid-gutter: 24px;
+  --grid-margin: 24px;
+  --grid-max: 1440px;
 }
 
 :root[data-theme="dark"] {
@@ -177,18 +190,70 @@ body {
 
 .page {
   flex: 1 0 auto;
-  max-width: 1200px;
+  max-width: var(--grid-max);
   margin: 0 auto;
-  padding: 24px 24px 80px;
+  padding: 24px var(--grid-margin) 80px;
   width: 100%;
 }
 
-/* The library tracks the viewport instead of sitting in a 1200px column: on a
-   wide screen you want more columns, not wider cards or empty gutters. Detail,
-   review and tag pages keep the narrower readable measure. Padding stays 24px
-   so the grid lines up with the utility bar above it. */
+/* Twelve columns. Used directly by anything laying out a page region, and by
+   the card grid and the two-column pages below.
+   
+   minmax(0, 1fr) rather than 1fr: a plain 1fr floors at min-content, so one
+   long unbroken string in a cell pushes its track past its share and drags
+   every other column out of alignment. */
+.grid-12 {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+.span-3 {
+  grid-column: span 3;
+}
+
+.span-4 {
+  grid-column: span 4;
+}
+
+.span-6 {
+  grid-column: span 6;
+}
+
+.span-8 {
+  grid-column: span 8;
+}
+
+.span-12 {
+  grid-column: span 12;
+}
+
+/* One column below the tablet break: four columns of a phone is not a grid,
+   it's four slivers. */
+@media (max-width: 700px) {
+  .span-2,
+  .span-3,
+  .span-4,
+  .span-6,
+  .span-8 {
+    grid-column: span 12;
+  }
+}
+
+/* Once the card grid became twelve columns, this stopped meaning anything.
+   auto-fill turned a wider window into more columns; a span turns it into
+   wider cards. So the library now sits on the same 1440 canvas as everything
+   else, which is the point of having one grid.
+   
+   Kept as a class because the markup uses it, and because a page that should
+   break out of the canvas one day has somewhere to say so. To go back to
+   full-bleed, this is the one line: max-width: none. */
 .page-wide {
-  max-width: none;
+  max-width: var(--grid-max);
 }
 
 h1 {
@@ -244,14 +309,38 @@ h1 {
   text-align: center;
 }
 
-/* auto-fill, not fixed breakpoints: 260px is roughly the card width the
-   4-column layout used to produce, so a wide window gains columns and a
-   narrow one drops to a single column without any media queries. */
+/* The card grid is the page grid, not a second one. A card size is a span
+   rather than a minimum width: large is 4 of 12 and so three across, medium 3
+   and four across, small 2 and six across. auto-fill got to a similar answer
+   by a different route, but its columns never lined up with anything else on
+   the page. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  gap: var(--grid-gutter);
   margin-top: 24px;
+}
+
+.grid > * {
+  grid-column: span 3;
+}
+
+@media (max-width: 1180px) {
+  .grid > * {
+    grid-column: span 4;
+  }
+}
+
+@media (max-width: 880px) {
+  .grid > * {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 560px) {
+  .grid > * {
+    grid-column: span 12;
+  }
 }
 
 .card {
@@ -1295,15 +1384,26 @@ h1 {
    would push the sidebar off the page. */
 .detail-columns {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
-  gap: 20px;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
   align-items: start;
   margin-bottom: 28px;
 }
 
+/* Eight and four of the page grid, where this used to be 1fr against a
+   clamped 320-400px sidebar. Same shape, but the capture and the panel beside
+   it now line up with the card grid on the dashboard. */
+.detail-main {
+  grid-column: span 8;
+}
+
+.detail-side {
+  grid-column: span 4;
+}
+
 /* Cropping needs the whole width to draw a region on a full-page screenshot. */
-.detail-columns-single {
-  grid-template-columns: minmax(0, 1fr);
+.detail-columns-single .detail-main {
+  grid-column: span 12;
 }
 
 .detail-side .detail-section:last-child {
@@ -1373,8 +1473,9 @@ h1 {
 /* Below this the sidebar would be too narrow for the tag comboboxes, so the
    two columns stack instead. */
 @media (max-width: 1080px) {
-  .detail-columns {
-    grid-template-columns: minmax(0, 1fr);
+  .detail-main,
+  .detail-side {
+    grid-column: span 12;
   }
 }
 
@@ -3098,8 +3199,10 @@ a.card {
    rather than indented by whatever a centred 1200px column leaves over. The
    reading measure is controlled by the column and by the paragraphs
    themselves, not by narrowing the page. */
+/* The written pages sit inside the page grid's own ceiling rather than
+   overriding it, so their title starts on the same margin as the wordmark. */
 .prose-page {
-  max-width: none;
+  max-width: var(--grid-max);
 }
 
 /* Sized so the content column lands on a readable measure at 20px without the
@@ -3108,11 +3211,26 @@ a.card {
    so the copy fills its column instead of stopping short of it. */
 .prose-row {
   display: grid;
-  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
-  gap: 24px 48px;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+  row-gap: 24px;
   align-items: start;
   margin-bottom: 64px;
-  max-width: 1440px;
+}
+
+.prose-row > :first-child {
+  grid-column: span 4;
+}
+
+.prose-row > :last-child {
+  grid-column: span 8;
+}
+
+@media (max-width: 900px) {
+  .prose-row > :first-child,
+  .prose-row > :last-child {
+    grid-column: span 12;
+  }
 }
 
 /* The left column stays put while the right one scrolls past it, which is what
@@ -3124,8 +3242,7 @@ a.card {
 
 @media (max-width: 900px) {
   .prose-row {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    row-gap: 16px;
     margin-bottom: 40px;
   }
 
@@ -3135,7 +3252,6 @@ a.card {
 }
 
 .prose-head {
-  max-width: 1440px;
   margin: 8px 0 56px;
 }
 
@@ -3239,7 +3355,6 @@ a.card {
 }
 
 .prose-cta {
-  max-width: 1440px;
   margin: 8px 0 8px;
   padding: 32px 34px;
   border: 1px solid var(--border);
@@ -3306,11 +3421,21 @@ a.card {
 /* Pushed down so a card's top edge lands on the cap top of the heading beside
    it rather than on the top of that heading's line box, which is 7px above the
    cap and belongs to nothing you can see. Measured at 0.3px out. */
+/* Two across, and lining up with the page grid rather than merely sitting
+   inside it: two equal columns of the 8-span with the same gutter come out at
+   464px each, which is exactly the width of a 4-span. So a card edge lands on
+   columns 5, 8, 9 and 12 of the master grid. */
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--grid-gutter);
   margin-top: 7px;
+}
+
+@media (max-width: 700px) {
+  .feature-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .feature-card {
@@ -4225,9 +4350,31 @@ a.card {
 
 .collection-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  gap: var(--grid-gutter);
   margin-top: 20px;
+}
+
+.collection-grid > * {
+  grid-column: span 3;
+}
+
+@media (max-width: 1180px) {
+  .collection-grid > * {
+    grid-column: span 4;
+  }
+}
+
+@media (max-width: 880px) {
+  .collection-grid > * {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 560px) {
+  .collection-grid > * {
+    grid-column: span 12;
+  }
 }
 
 .collection-card {
@@ -4623,19 +4770,58 @@ a.card {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-/* The minimum is what changes; auto-fill still decides the column count, so
-   every size stays responsive rather than pinning a number of columns. */
-.grid-small {
-  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
-  gap: 16px;
+/* Six across, four, three. The breakpoints step each size up a span rather
+   than letting a card get too narrow to read. */
+.grid-small > * {
+  grid-column: span 2;
 }
 
-/* 340, not 380: at a typical laptop width 380 drops straight from four columns
-   to two, which reads as a different layout rather than a larger card. 340
-   steps 5 -> 4 -> 3. */
-.grid-large {
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 24px;
+.grid-medium > * {
+  grid-column: span 3;
+}
+
+.grid-large > * {
+  grid-column: span 4;
+}
+
+/* Each size steps up one span at each break, so a card never gets narrower
+   than it can carry a title, a favicon and a row of tags. */
+@media (max-width: 1180px) {
+  .grid-small > * {
+    grid-column: span 3;
+  }
+
+  .grid-medium > * {
+    grid-column: span 4;
+  }
+
+  .grid-large > * {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 880px) {
+  .grid-small > * {
+    grid-column: span 4;
+  }
+
+  .grid-medium > * {
+    grid-column: span 6;
+  }
+
+  .grid-large > * {
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 560px) {
+  .grid-small > * {
+    grid-column: span 6;
+  }
+
+  .grid-medium > * {
+    grid-column: span 12;
+  }
 }
 
 /* Progress row: status left, feature line right. */

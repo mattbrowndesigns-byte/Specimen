@@ -3162,6 +3162,20 @@ a.card {
   color: var(--text-faint);
 }
 
+/* The match rows arrive after the rest of the card, so the slot says what it
+   is waiting for rather than sitting empty. Pulses, because unlike the "no
+   close match" line it is a state and not a result. */
+.font-checking {
+  color: var(--text-faint);
+  animation: style-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .font-checking {
+    animation: none;
+  }
+}
+
 .style-changed {
   margin: 12px 0 0;
   font-size: 12px;

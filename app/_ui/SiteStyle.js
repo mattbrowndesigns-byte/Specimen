@@ -105,6 +105,14 @@ function matchGroups(font) {
   ].filter((group) => group.items.length);
 }
 
+// How much longer to wait for the naming write after the measurement lands.
+// The callback stores what was measured first and what it names second, so a
+// finished reading arrives in two parts and the client has to wait for both.
+// Past this the names aren't coming -- the route's own ceiling is 35 seconds
+// plus a write -- and a panel still claiming a run is in flight would be
+// waiting for nothing.
+const NAMING_GRACE_MS = 75000;
+
 // Both panels keep their heading and their shape before there's anything in
 // them. A single line of grey text where two sections belong reads as though
 // the feature is missing rather than pending, and the page rearranges itself
@@ -202,14 +210,20 @@ export default function SiteStyle({ site, onRefresh }) {
     return () => clearInterval(poll);
   }, [analyzing]);
 
-  // A fresh analyzed_at is the run reporting in. Comparing against the stamp
-  // taken when the run started is what makes this work on a re-read, where the
-  // column was already set.
+  // A fresh analyzed_at is the run reporting in -- but only the first half of
+  // it. The callback writes the measurement, then the names and matches, so
+  // stopping here left three checked font matches sitting in the database
+  // until the next reload. Keep going until every face has been through the
+  // naming pass, or until waiting stops being reasonable.
+  const namingPending = fonts.length > 0 && fonts.some((font) => !named(font));
+
   useEffect(() => {
-    if (analyzing && site.analyzed_at && site.analyzed_at !== startedAt.current?.stamp) {
-      setAnalyzing(false);
-    }
-  }, [site.analyzed_at, analyzing]);
+    if (!analyzing) return;
+    const landed = site.analyzed_at && site.analyzed_at !== startedAt.current?.stamp;
+    if (!landed) return;
+    if (namingPending && Date.now() - startedAt.current.at < NAMING_GRACE_MS) return;
+    setAnalyzing(false);
+  }, [site.analyzed_at, site.fonts, analyzing, namingPending]);
 
   // Pull the web-font file for any face that's on Google Fonts, so its
   // specimen is the actual typeface rather than a stand-in. Same trade as the
@@ -431,9 +445,18 @@ export default function SiteStyle({ site, onRefresh }) {
                         the page with its matches still unchecked -- and
                         claiming there's nothing close would be inventing a
                         result rather than reporting one. */}
-                    {!groups.length && named(font) && (
-                      <span className="font-no-match">No close match found on Google or Adobe Fonts</span>
-                    )}
+                    {!groups.length &&
+                      (named(font) ? (
+                        <span className="font-no-match">
+                          No close match found on Google or Adobe Fonts
+                        </span>
+                      ) : (
+                        analyzing && (
+                          <span className="font-no-match font-checking">
+                            Checking Google and Adobe Fonts&hellip;
+                          </span>
+                        )
+                      ))}
                   </div>
                 </li>
               );

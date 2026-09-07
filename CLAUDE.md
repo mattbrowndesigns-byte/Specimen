@@ -388,10 +388,21 @@ put that request over the limit in the first place. Preference order is still
 honoured; only the waiting is shared.
 
 **A font card says "no close match" only where the check actually ran.**
-`described` is stamped by `describeFonts`, so a row stored by the write-first
-callback and never named shows nothing rather than asserting a negative nobody
-established. Rows written before that flag existed are recognised by
-`provider`, the one field that pass has always added.
+`described` means the Google and Adobe lookups happened for that face, and
+nothing else — so it is absent on a row the write-first callback stored and
+never named, on a face the model declined to name, and on the rows handed back
+when the identify call fails. None of those were checked, and a card that
+claimed otherwise would be inventing a result. Rows written before the flag
+existed are recognised by `provider`, the one field that pass has always
+added, and become precise on their next re-read.
+
+**A finished reading arrives in two writes, so the client waits for both.**
+Stopping the poll on `analyzed_at` was right when there was one write; after
+the write-first fix it meant three checked font matches sat in the database
+until the next reload, and the panel looked like a face with no match rather
+than one still being looked up. `SiteStyle` now keeps polling while any face
+is unnamed, bounded by `NAMING_GRACE_MS`, and the card says it is checking
+rather than showing an empty slot.
 
 **Both style panels keep their heading and their shape when empty.** The
 placeholders reuse `.palette-bar`, `.font-card` and `.font-sample` and only

@@ -3115,9 +3115,14 @@ a.card {
 
 /* Sentence case. Set in caps it read as a section heading competing with the
    real one two lines up, when all it does is label two links. */
+/* A label for the chips under it, not a third line of description. At the
+   same faint grey and normal weight as .font-meta it read as a peer of
+   "Headline · high-contrast serif" and competed with it; the step up in
+   colour and weight is what makes it read as a heading for its own row. */
 .font-match-label {
   font-size: 11px;
-  color: var(--text-faint);
+  font-weight: 500;
+  color: var(--text);
 }
 
 .font-matches {

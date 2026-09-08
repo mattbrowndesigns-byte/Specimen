@@ -363,6 +363,48 @@ brutally top-heavy — a page background routinely holds 80% — so a literal ba
 is one white rectangle and five slivers. `SiteStyle.js` raises each share to
 0.55 for width only; the real percentage is on every swatch.
 
+**`document.fonts.check()` is not an availability test, and treating it as one
+was a silent lie in two places.** It answers "would this text render", and text
+always renders — in a fallback — so
+`document.fonts.check('64px "ThisDoesNotExist"')` is **true**. It returns false
+only for a face the page *declared* and hasn't loaded, which means the answer
+also flips with the weight you ask about: squareup.com declares Square Sans
+Text at weights it never loads, so asking at 400 said no and 700 said yes. It
+was guarding both the specimen and the ink attribution, so a face nobody
+rendered could be named, measured and drawn from the runner's default serif.
+`isAvailable()` in `analyze.js` now tests whether naming the family changes
+what gets drawn, against all three generics — one is not enough, because a
+face can coincidentally match one generic's advance widths but not all three.
+Weight-free on purpose: Cash Sans ships no 700, and a synthesised bold is
+still Cash Sans.
+
+**The naming pass sees the letterforms, because the name lies.** `identifyFonts`
+used to get a CSS string and nothing else, so it answered the way the string
+reads: Square's "Exact Block" came back "heavy geometric display", matched to
+Syne — a sans. It is a transitional serif whose own fallback stack is Georgia
+and Times New Roman. `analyze.js` now draws a second specimen for the model,
+black on white with more glyphs than "Aa", passed as `specimen_probes` keyed by
+family and deliberately *not* on the font rows so a throwaway image can't reach
+the database. With the image the same call returns "transitional serif" and
+Lora / Freight Text. It costs nothing — the page is already open and already
+has the font.
+
+**Matches may be loose but must never cross species.** A serif answered with a
+sans sends someone to look at something that could never stand in, which is
+worse than nothing; but an empty slot where a designer wanted a starting point
+is its own failure. So the prompt ranks those two rules explicitly: stay in the
+species and temperament, then reach for the nearest relative rather than
+returning null, and say in the note how near it is.
+
+**A face's role is measured from where it is set, and the footer counts.**
+squareup.com looks like Square Sans Text should be the UI face — it is the one
+named after the company. It isn't: Cash Sans carries the 16px body copy
+(3,259 characters of it in the content area) while Square Sans Text VF is
+almost entirely the footer, 1,119 characters of legal and nav chrome. Exact
+Block is display only, 24px and up. The panel's Headline / Body & UI / Accent
+was right and the intuition was wrong, which is worth remembering before
+"fixing" a role that looks surprising.
+
 **Font and foundry links are checked before they're stored.** Gemini names the
 typeface, its foundry and the nearest Google/Adobe equivalents; every URL it
 returns is then fetched, and anything that doesn't answer is dropped rather

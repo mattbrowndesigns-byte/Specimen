@@ -37,7 +37,10 @@ export async function POST(request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const { target_id, palette, fonts, font_hosts } = await request.json();
+  // specimen_probes are black-on-white renderings sent for the naming pass to
+  // look at. They are deliberately not part of `fonts`, so there is no path
+  // by which they reach the row.
+  const { target_id, palette, fonts, font_hosts, specimen_probes } = await request.json();
   if (!target_id || !Array.isArray(palette)) {
     return NextResponse.json({ error: "invalid payload" }, { status: 400 });
   }
@@ -83,7 +86,12 @@ export async function POST(request) {
   let described = null;
   try {
     described = await withBudget(
-      describeFonts({ domain: site.domain, fonts: fonts || [], fontHosts: font_hosts || [] }),
+      describeFonts({
+        domain: site.domain,
+        fonts: fonts || [],
+        fontHosts: font_hosts || [],
+        probes: specimen_probes || {},
+      }),
       DESCRIBE_BUDGET_MS,
       null
     );

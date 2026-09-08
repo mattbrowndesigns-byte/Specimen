@@ -130,20 +130,52 @@ function measure() {
     return Math.max(0, areaOf(rect) - Math.min(covered, areaOf(rect)));
   }
 
+  // document.fonts.check() is NOT an availability test, and reading it as one
+  // is why a face nobody rendered could be named, measured and drawn.
+  //
+  //   document.fonts.check('64px "ThisFontDoesNotExist"')  ->  true
+  //
+  // It answers "would this text render", and text always renders -- in a
+  // fallback. It returns false only for a face the page declared and hasn't
+  // loaded yet, so the answer also flips depending on which weight you ask
+  // about: squareup.com declares Square Sans Text at weights it never loads,
+  // so asking at 400 said "no" and asking at 700 said "yes".
+  //
+  // The honest test is whether naming the family changes what gets drawn.
+  // Three generics rather than one, because a face can coincidentally match
+  // one generic's advance widths but not all three; matching all three means
+  // the family never resolved. Weight-free on purpose -- Cash Sans ships no
+  // 700, and a synthesised bold is still Cash Sans.
+  const PROBE = "AaBbGgQqWw0123";
+  const probeCtx = document.createElement("canvas").getContext("2d");
+  const availability = new Map();
+  function isAvailable(family) {
+    if (availability.has(family)) return availability.get(family);
+    let ok = false;
+    try {
+      ok = ["monospace", "serif", "sans-serif"].some((base) => {
+        probeCtx.font = `48px ${base}`;
+        const control = probeCtx.measureText(PROBE).width;
+        probeCtx.font = `48px "${family}", ${base}`;
+        return Math.abs(probeCtx.measureText(PROBE).width - control) > 0.5;
+      });
+    } catch {
+      ok = false;
+    }
+    availability.set(family, ok);
+    return ok;
+  }
+
   // The computed font-family is the whole stack; the face the reader saw is
-  // the first one the document can check off. Naming any other one would
-  // credit a font nobody rendered.
+  // the first one that actually resolves. Naming any other one would credit a
+  // font nobody rendered.
   const GENERIC = /^(system-ui|-apple-system|BlinkMacSystemFont|sans-serif|serif|monospace|cursive|fantasy|ui-[\w-]+|Segoe UI|Helvetica( Neue)?|Arial|Roboto|Apple Color Emoji|Segoe UI Emoji)$/i;
-  function renderedFamily(stack, size, weight) {
+  function renderedFamily(stack) {
     for (const raw of String(stack).split(",")) {
       const family = raw.trim().replace(/^["']|["']$/g, "");
       if (!family) continue;
       if (GENERIC.test(family)) return { family, generic: true };
-      try {
-        if (document.fonts.check(`${weight} ${size}px "${family}"`)) return { family, generic: false };
-      } catch {
-        // An invalid family name in the stack; try the next one.
-      }
+      if (isAvailable(family)) return { family, generic: false };
     }
     return null;
   }
@@ -197,7 +229,7 @@ function measure() {
   // that was happening anyway.
   function specimenFor(family, weight) {
     try {
-      if (!document.fonts.check(`${weight} 64px "${family}"`)) return null;
+      if (!isAvailable(family)) return null;
 
       // 104px renders to roughly a 120x80 crop, which is sharp at the 56px
       // tile the panel draws it in and keeps the PNG small enough to sit in a
@@ -237,6 +269,40 @@ function measure() {
       // A specimen that somehow came out huge isn't worth carrying in a column
       // that's read with every site.
       return url.length > 40000 ? null : { src: url, width: out.width, height: out.height };
+    } catch {
+      return null;
+    }
+  }
+
+  // The panel's specimen is white-on-transparent, because the app tints it
+  // with the page's own text colour. A model can't read that -- so this draws
+  // a second one, black on white and with more glyphs than "Aa", purely to
+  // send with the identify call. It is never stored: the whole reason the
+  // naming pass guesses badly is that it has only ever seen the CSS name, and
+  // "Exact Block" sounds like a heavy geometric face when it is a high-
+  // contrast serif. The letterforms settle it, and they cost nothing -- the
+  // page is already open and already has the font.
+  function probeFor(family, weight) {
+    try {
+      if (!isAvailable(family)) return null;
+      const SIZE = 64;
+      const pad = 16;
+      const text = "AaBbGgRrKk 123";
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.font = `${weight} ${SIZE}px "${family}"`;
+      const w = Math.ceil(ctx.measureText(text).width) + pad * 2;
+      canvas.width = Math.min(w, 1400);
+      canvas.height = SIZE * 2;
+      const c = canvas.getContext("2d", { willReadFrequently: true });
+      c.fillStyle = "#fff";
+      c.fillRect(0, 0, canvas.width, canvas.height);
+      c.font = `${weight} ${SIZE}px "${family}"`;
+      c.fillStyle = "#000";
+      c.textBaseline = "alphabetic";
+      c.fillText(text, pad, SIZE * 1.35);
+      const url = canvas.toDataURL("image/png");
+      return url.length > 120000 ? null : url;
     } catch {
       return null;
     }
@@ -312,7 +378,7 @@ function measure() {
       const size = parseFloat(style.fontSize) || 16;
       const ink = inkOf(chars, size);
       add(parseColor(style.color), ink, "text");
-      const face = renderedFamily(style.fontFamily, size, style.fontWeight);
+      const face = renderedFamily(style.fontFamily);
       if (face && !face.generic)
         addFont(face.family, ink, size, style.fontWeight, /^H[1-3]$/.test(el.tagName));
     }
@@ -436,7 +502,22 @@ function measure() {
     specimen: specimenFor(f.rendered, f.weight),
   }));
 
-  return { palette, fonts: fontList, font_hosts: fontHosts, page_area: Math.round(pageArea) };
+  // Keyed separately rather than put on the font rows, so there is no way for
+  // a throwaway image to end up stored in a column that's read with every
+  // site.
+  const specimenProbes = {};
+  for (const [f] of roles.slice(0, MAX_FONTS)) {
+    const probe = probeFor(f.rendered, f.weight);
+    if (probe) specimenProbes[f.family] = probe;
+  }
+
+  return {
+    palette,
+    fonts: fontList,
+    font_hosts: fontHosts,
+    specimen_probes: specimenProbes,
+    page_area: Math.round(pageArea),
+  };
 }
 
 (async () => {

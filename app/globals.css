@@ -91,16 +91,19 @@
      
      The margin is deliberately wider than the gutter. Set equal, the grid read
      as though the cards carried on past the edge of the page instead of
-     sitting inside it; the step is what closes the block.
+     sitting inside it; the step is what closes the block. 28/20 was tried and
+     was too much air at the edges -- 24 is the margin this app wants, so the
+     step comes out of the gutter instead.
      
      .page is border-box, so the ceiling contains the margins: content is
-     1440 - 56 = 1384. Twelve tracks of 97 plus eleven gutters of 20 is exactly
-     that, so a 4-span is 448px and an 8-span 916px. A span of n is n tracks
-     plus the n-1 gutters inside it, which is why 4 + 8 comes to 1384 and not
-     to 1364. */
+     1440 - 48 = 1392. Twelve tracks of 97.67 plus eleven gutters of 20 is
+     exactly that, so a 4-span is 450.67px and an 8-span 921.33px. A span of n
+     is n tracks plus the n-1 gutters inside it, which is why 4 + 8 comes to
+     1392 and not to 1372. The track is fractional at this pairing and that is
+     fine -- it is below the ceiling at every other width anyway. */
   --grid-columns: 12;
   --grid-gutter: 20px;
-  --grid-margin: 28px;
+  --grid-margin: 24px;
   --grid-max: 1440px;
 }
 

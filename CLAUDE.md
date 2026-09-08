@@ -130,33 +130,35 @@ carrying a rotator threw a hydration error and re-rendered that subtree from
 scratch. Randomise in an effect after mount.
 
 **Everything lays out on one 12-column grid.** `--grid-columns: 12`,
-`--grid-gutter: 20px`, `--grid-margin: 28px`, `--grid-max: 1440px` in `:root`,
+`--grid-gutter: 20px`, `--grid-margin: 24px`, `--grid-max: 1440px` in `:root`,
 and nothing picks its own numbers. `.page` is border-box, so the ceiling
-*contains* the margins: content is 1384, twelve tracks of exactly 97 plus
-eleven gutters of 20. A 4-span is therefore 448px and an 8-span 916px — a span
+*contains* the margins: content is 1392, twelve tracks of 97.67 plus eleven
+gutters of 20. A 4-span is therefore 450.67px and an 8-span 921.33px — a span
 of n is n tracks plus the n-1 gutters inside it, which is why 4 + 8 comes to
-1384 and not 1364. The card grid is spans (large 4, medium 3, small 2) stepping
+1392 and not 1372. The card grid is spans (large 4, medium 3, small 2) stepping
 up one span per breakpoint, the detail page is 8 + 4, the written pages are
 4 + 8, and the feature cards are two equal columns of an 8-span, which comes to
 448 each and therefore lands on the master grid's columns 5, 8, 9 and 12.
 
-**The margin is wider than the gutter, and 28/20 is picked so the track stays
-whole.** Equal at 24/24 the grid read as though the cards continued past the
-edge of the page rather than sitting inside it. Of the pairs that divide 1440
-into an integer track, 28/20 is the one that also keeps a large card at exactly
-448px, so the change is only the relationship and has no side effect on card
-size. Below 700px both drop to 20/16: on a phone content width is worth more
-than air at the edges. Change either number and re-check the track — the whole
-system is derived from them, which is also why the feature cards' landing on
-columns 5 and 9 survived this change without being touched.
+**The margin is wider than the gutter, and the step comes out of the gutter.**
+Equal at 24/24 the grid read as though the cards continued past the edge of the
+page rather than sitting inside it. 28/20 fixed the relationship and was the
+one pairing that divides 1440 into a whole track, but 28px was visibly too much
+air at the edges — 24 is the margin this app wants, so the gutter carries the
+difference and the track is fractional. Not worth chasing: the track is
+fractional at every width below the ceiling regardless. Below 700px both drop
+to 20/16, since on a phone content width is worth more than air at the edges.
+Change either number and re-check the spans — the whole system derives from
+them, which is why the feature cards kept landing on columns 5 and 9 through
+both of these changes without being touched.
 
 **The chrome bands are full-bleed; what sits inside them is on the page
 canvas.** `.utility-bar-inner`, `.site-footer-inner` and `.shared-bar-inner`
 each take `max-width: var(--grid-max)`, `margin: 0 auto` and
 `padding: … var(--grid-margin)`, so the wordmark, the content and the footer
 mark all start on one line at every width. They used to hardcode 24px, which
-was two bugs in one: 4px out from the content once the margin moved to 28, and
-badly out at any window past the 1440 ceiling, where `.page` centres and a
+was two bugs in one: out from the content whenever the margin was not also
+24, and badly out at any window past the 1440 ceiling, where `.page` centres and a
 band pinned to the window edge does not. An earlier comment defended this as
 the two bands lining up with *each other* — which is the one arrangement where
 nothing lines up with anything. Anything new that spans the window needs the

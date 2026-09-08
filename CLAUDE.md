@@ -150,6 +150,18 @@ than air at the edges. Change either number and re-check the track — the whole
 system is derived from them, which is also why the feature cards' landing on
 columns 5 and 9 survived this change without being touched.
 
+**The chrome bands are full-bleed; what sits inside them is on the page
+canvas.** `.utility-bar-inner`, `.site-footer-inner` and `.shared-bar-inner`
+each take `max-width: var(--grid-max)`, `margin: 0 auto` and
+`padding: … var(--grid-margin)`, so the wordmark, the content and the footer
+mark all start on one line at every width. They used to hardcode 24px, which
+was two bugs in one: 4px out from the content once the margin moved to 28, and
+badly out at any window past the 1440 ceiling, where `.page` centres and a
+band pinned to the window edge does not. An earlier comment defended this as
+the two bands lining up with *each other* — which is the one arrangement where
+nothing lines up with anything. Anything new that spans the window needs the
+same three declarations.
+
 **`.page-wide` is now the same canvas as `.page`.** It existed because
 `auto-fill` turned a wider window into more columns; a span turns it into wider
 cards instead, so full-bleed stopped buying anything. To put the library back

@@ -471,12 +471,18 @@ h1 {
   border-bottom: 1px solid var(--border-soft);
 }
 
+/* The band is full-bleed; what's inside it sits on the page canvas. Both
+   numbers have to come from the grid or the wordmark stops lining up with the
+   content under it -- by 4px at a narrow window, and by half the leftover
+   width once .page starts centring at the 1440 ceiling. */
 .utility-bar-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 24px;
+  max-width: var(--grid-max);
+  margin: 0 auto;
+  padding: 12px var(--grid-margin);
 }
 
 .utility-bar h1 {
@@ -732,7 +738,7 @@ h1 {
    than letting the title and the badge wrap to two lines each. */
 @media (max-width: 560px) {
   .utility-bar-inner {
-    padding: 10px 16px;
+    padding: 10px var(--grid-margin);
     gap: 10px;
     flex-wrap: wrap;
   }
@@ -3736,7 +3742,9 @@ a.card {
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 24px;
+  max-width: var(--grid-max);
+  margin: 0 auto;
+  padding: 16px var(--grid-margin);
 }
 
 .shared-brand {
@@ -3835,16 +3843,19 @@ a.card {
   background: var(--surface);
 }
 
-/* Full width with the same 24px gutters as the utility bar, so the two bands
-   that top and tail the app line up with each other rather than with the grid
-   between them. */
+/* Full-bleed band, page-canvas contents -- same as the utility bar, and for
+   the same reason. An earlier version had the two bands agreeing with each
+   other on 24px and disagreeing with the grid between them, which is the one
+   arrangement where nothing lines up with anything. */
 .site-footer-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px 32px;
-  padding: 22px 24px;
+  max-width: var(--grid-max);
+  margin: 0 auto;
+  padding: 22px var(--grid-margin);
 }
 
 .site-footer-brand {

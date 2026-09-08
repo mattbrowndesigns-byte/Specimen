@@ -89,12 +89,18 @@
      its own numbers -- which is what makes a span mean the same thing on the
      dashboard, a detail page and the written pages.
      
-     At the 1440 ceiling a track is 98px and a gutter 24, so a 4-span is 464px
-     and an 8-span is 952px. A span of n is n tracks plus the n-1 gutters
-     inside it, which is why 4 + 8 comes to 1440 rather than to 1416. */
+     The margin is deliberately wider than the gutter. Set equal, the grid read
+     as though the cards carried on past the edge of the page instead of
+     sitting inside it; the step is what closes the block.
+     
+     .page is border-box, so the ceiling contains the margins: content is
+     1440 - 56 = 1384. Twelve tracks of 97 plus eleven gutters of 20 is exactly
+     that, so a 4-span is 448px and an 8-span 916px. A span of n is n tracks
+     plus the n-1 gutters inside it, which is why 4 + 8 comes to 1384 and not
+     to 1364. */
   --grid-columns: 12;
-  --grid-gutter: 24px;
-  --grid-margin: 24px;
+  --grid-gutter: 20px;
+  --grid-margin: 28px;
   --grid-max: 1440px;
 }
 
@@ -186,6 +192,16 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text);
+}
+
+/* A phone wants the opposite trade -- content width matters more there than
+   air at the edges -- so both come down while the margin stays the wider of
+   the two. */
+@media (max-width: 700px) {
+  :root {
+    --grid-gutter: 16px;
+    --grid-margin: 20px;
+  }
 }
 
 .page {
@@ -1941,18 +1957,24 @@ h1 {
   font-size: 13px;
 }
 
+/* Label above its field, not beside it. As a side column it cost 122px of a
+   448px panel and left Block / Pattern -- the facet that takes eight tags
+   where the others take two -- wrapping onto three lines in the narrow
+   remainder. Stacked, every field gets the full width. */
 .facet-row {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 8px 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 0 14px;
+}
+
+.facet-row:last-child {
+  padding-bottom: 0;
 }
 
 .facet-name {
   font-size: 12px;
   color: var(--text-faint);
-  min-width: 110px;
-  padding-top: 5px;
 }
 
 .facet-tags {
@@ -1983,7 +2005,7 @@ h1 {
 .combobox {
   position: relative;
   flex: 1;
-  min-width: 220px;
+  min-width: 0;
 }
 
 .combobox-field {

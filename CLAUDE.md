@@ -130,14 +130,25 @@ carrying a rotator threw a hydration error and re-rendered that subtree from
 scratch. Randomise in an effect after mount.
 
 **Everything lays out on one 12-column grid.** `--grid-columns: 12`,
-`--grid-gutter: 24px`, `--grid-margin: 24px`, `--grid-max: 1440px` in `:root`,
-and nothing picks its own numbers. At the ceiling a track is 94px, so a 4-span
-is 448px and an 8-span 920px — a span of n is n tracks plus the n-1 gutters
-inside it, which is why 4 + 8 comes to 1392 and not 1368. The card grid is
-spans (large 4, medium 3, small 2) stepping up one span per breakpoint, the
-detail page is 8 + 4, the written pages are 4 + 8, and the feature cards are
-two equal columns of an 8-span, which comes to 448 each and therefore lands on
-the master grid's columns 5, 8, 9 and 12.
+`--grid-gutter: 20px`, `--grid-margin: 28px`, `--grid-max: 1440px` in `:root`,
+and nothing picks its own numbers. `.page` is border-box, so the ceiling
+*contains* the margins: content is 1384, twelve tracks of exactly 97 plus
+eleven gutters of 20. A 4-span is therefore 448px and an 8-span 916px — a span
+of n is n tracks plus the n-1 gutters inside it, which is why 4 + 8 comes to
+1384 and not 1364. The card grid is spans (large 4, medium 3, small 2) stepping
+up one span per breakpoint, the detail page is 8 + 4, the written pages are
+4 + 8, and the feature cards are two equal columns of an 8-span, which comes to
+448 each and therefore lands on the master grid's columns 5, 8, 9 and 12.
+
+**The margin is wider than the gutter, and 28/20 is picked so the track stays
+whole.** Equal at 24/24 the grid read as though the cards continued past the
+edge of the page rather than sitting inside it. Of the pairs that divide 1440
+into an integer track, 28/20 is the one that also keeps a large card at exactly
+448px, so the change is only the relationship and has no side effect on card
+size. Below 700px both drop to 20/16: on a phone content width is worth more
+than air at the edges. Change either number and re-check the track — the whole
+system is derived from them, which is also why the feature cards' landing on
+columns 5 and 9 survived this change without being touched.
 
 **`.page-wide` is now the same canvas as `.page`.** It existed because
 `auto-fill` turned a wider window into more columns; a span turns it into wider

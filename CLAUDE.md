@@ -129,16 +129,35 @@ did, so the server rendered one line and the browser another, and every page
 carrying a rotator threw a hydration error and re-rendered that subtree from
 scratch. Randomise in an effect after mount.
 
-**Everything lays out on one 12-column grid.** `--grid-columns: 12`,
-`--grid-gutter: 20px`, `--grid-margin: 24px`, `--grid-max: 1440px` in `:root`,
-and nothing picks its own numbers. `.page` is border-box, so the ceiling
-*contains* the margins: content is 1392, twelve tracks of 97.67 plus eleven
-gutters of 20. A 4-span is therefore 450.67px and an 8-span 921.33px — a span
-of n is n tracks plus the n-1 gutters inside it, which is why 4 + 8 comes to
-1392 and not 1372. The card grid is spans (large 4, medium 3, small 2) stepping
-up one span per breakpoint, the detail page is 8 + 4, the written pages are
-4 + 8, and the feature cards are two equal columns of an 8-span, which comes to
-448 each and therefore lands on the master grid's columns 5, 8, 9 and 12.
+**Two behaviours, split by content type, not by page.** The shell *scales* —
+utility bar, footer, dashboard, collections, favourites, a site's own page —
+because a grid of things gets more useful with more room. Running prose is
+*capped*, because its limit is the reading eye and not the window. There is no
+`--grid-max`: nothing caps the shell any more. `--prose-max: 1080px` caps the
+written pages and nothing else reads it.
+
+**The 12-column grid is for page structure; the card mosaic is not on it.**
+`--grid-columns: 12`, `--grid-gutter: 20px`, `--grid-margin: 24px`. At 1440 the
+twelve tracks come to 97.67, so a 4-span is 450.67px and an 8-span 921.33 — a
+span of n is n tracks plus the n-1 gutters inside it, which is why 4 + 8 comes
+to 1392 and not 1372. The detail page is 8 + 4 (9 + 3 above 1900px, or a third
+of a large monitor goes to a sidebar that has no use for it) and the written
+pages are 4 + 8.
+
+**The mosaic is sized by its smallest card, and that is the second answer.**
+Spans were the first — large 4 of 12, medium 3, small 2 — and they read well at
+exactly one width. A span turns a wider window into *wider cards*: a large card
+is 824px on a 2560 monitor, three of them. Twelve columns can only divide into
+3, 4, 6 or 12 across; there is no 5, 7 or 9. So `.grid` is
+`repeat(auto-fill, minmax(min(var(--card-min), 100%), 1fr))` and each size class
+sets one number (`--card-min-large: 380px`, medium 290, small 190), chosen to
+reproduce 3/4/6 across at 1440 exactly. A large card then holds 397–504px from
+1280 to 3840 while going 3, 4, 5, 6, 7, 8, 9 across. The mosaic keeps the
+page's gutter and margins, so its outer edges still land where the bar and
+footer do — the alignment that was ever worth having. Card edges agreeing with
+master columns bought nothing, because nothing else on the dashboard is
+column-aligned to them. The `min()` is load-bearing: without it a container
+narrower than the card minimum overflows instead of dropping to one column.
 
 **The margin is wider than the gutter, and the step comes out of the gutter.**
 Equal at 24/24 the grid read as though the cards continued past the edge of the
@@ -152,22 +171,19 @@ Change either number and re-check the spans — the whole system derives from
 them, which is why the feature cards kept landing on columns 5 and 9 through
 both of these changes without being touched.
 
-**The chrome bands are full-bleed; what sits inside them is on the page
-canvas.** `.utility-bar-inner`, `.site-footer-inner` and `.shared-bar-inner`
-each take `max-width: var(--grid-max)`, `margin: 0 auto` and
-`padding: … var(--grid-margin)`, so the wordmark, the content and the footer
-mark all start on one line at every width. They used to hardcode 24px, which
-was two bugs in one: out from the content whenever the margin was not also
-24, and badly out at any window past the 1440 ceiling, where `.page` centres and a
-band pinned to the window edge does not. An earlier comment defended this as
-the two bands lining up with *each other* — which is the one arrangement where
-nothing lines up with anything. Anything new that spans the window needs the
-same three declarations.
+**The chrome bands are padded by `--grid-margin` and nothing else.** That one
+declaration on `.utility-bar-inner`, `.site-footer-inner` and
+`.shared-bar-inner` is what puts the wordmark, the content and the footer mark
+on one line at every width. Two wrong versions came before it: hardcoded 24px,
+which drifted the moment the margin was not also 24; then a `--grid-max`
+ceiling with `margin: 0 auto`, which was correct only while `.page` was also
+capped — the day the shell went fluid it centred the bar on a large monitor and
+left the logo floating in from the corner. Anything new that spans the window
+takes the padding and no ceiling.
 
-**`.page-wide` is now the same canvas as `.page`.** It existed because
-`auto-fill` turned a wider window into more columns; a span turns it into wider
-cards instead, so full-bleed stopped buying anything. To put the library back
-to tracking the viewport, that rule's `max-width` is the one line to change.
+**`.page-wide` is a no-op.** `.page` has no ceiling left to break out of. The
+class stays because the markup uses it and because a page that wants to opt out
+of something one day has somewhere to say so.
 
 **The prose pages have their own type scale, built from a 20px body.** 20/30
 body, 24 for h3, 32 for h2, a clamp to 52 for h1, 18 for the aside note, 16 in
@@ -175,6 +191,23 @@ a feature card. The old 15px body was why the copy never reached the right of
 its column: a reasonable line length in a small size is a narrow ribbon in a
 wide one. It's scoped to `.prose-page` and doesn't touch the library's own UI
 sizes.
+
+**`ch` does not measure characters, and trusting it cost 28 of them.** A `ch`
+is the advance of the digit zero, one of the widest glyphs in a proportional
+face, so `.prose-section p { max-width: 74ch }` resolved to 921px and fitted
+**102** characters of real prose — while reading in the source like a
+74-character measure. Measured, not calculated: set a long paragraph, divide
+its width by width-of-100-characters-of-actual-text. The measure is now `34em`,
+about 75, and `--prose-max: 1080px` sizes the 8-span copy column to 681px so it
+lands in the same place without the paragraph having to hold itself back. Use
+`em` for a measure; only use `ch` if the face is monospaced.
+
+**The written pages are capped but flush left.** `.prose-page` sets
+`margin-left: 0; margin-right: auto` against `.page`'s `margin: 0 auto`. This
+is an app with a bar anchored at the left, so the title stays on the wordmark's
+line and the slack collects on the right; centring would put the heading in the
+middle of a 2560px screen with the logo away in the corner. Deleting the two
+margin declarations centres it.
 
 **The two columns are aligned by cap top, and the numbers are measured.** A
 heading's line box starts about 7px above its capitals at 32px, so aligning

@@ -95,16 +95,32 @@
      was too much air at the edges -- 24 is the margin this app wants, so the
      step comes out of the gutter instead.
      
-     .page is border-box, so the ceiling contains the margins: content is
-     1440 - 48 = 1392. Twelve tracks of 97.67 plus eleven gutters of 20 is
-     exactly that, so a 4-span is 450.67px and an 8-span 921.33px. A span of n
-     is n tracks plus the n-1 gutters inside it, which is why 4 + 8 comes to
-     1392 and not to 1372. The track is fractional at this pairing and that is
-     fine -- it is below the ceiling at every other width anyway. */
+     There is no ceiling on the shell. The app fills the monitor: the bar, the
+     footer, the dashboard, collections and a site's own page all scale, which
+     is what a wide screen is for. Only running prose is capped, because its
+     limit is the reading eye and not the window -- see --prose-max.
+     
+     At 1440 the twelve tracks come to 97.67 with eleven gutters of 20, so a
+     4-span is 450.67px and an 8-span 921.33px. A span of n is n tracks plus
+     the n-1 gutters inside it, which is why 4 + 8 comes to 1392 and not 1372.
+     Both are fractional above and below that width, which is fine. */
   --grid-columns: 12;
   --grid-gutter: 20px;
   --grid-margin: 24px;
-  --grid-max: 1440px;
+
+  /* Prose only; everything else ignores it. Sized so the 8-span copy column
+     lands on 681px, which at the 20px body is 75 characters -- inside the
+     45-75 band rather than past it. 1440 put that column at 921px and 102
+     characters, which is what "the content gets stressed" was describing. */
+  --prose-max: 1080px;
+
+  /* The card mosaic is sized by the smallest card worth showing, not by a
+     column span, so a wider window buys more cards rather than bigger ones.
+     Chosen to reproduce 3/4/6 across at 1440 exactly, which is where the
+     dashboard was designed. */
+  --card-min-large: 380px;
+  --card-min-medium: 290px;
+  --card-min-small: 190px;
 }
 
 :root[data-theme="dark"] {
@@ -209,7 +225,6 @@ body {
 
 .page {
   flex: 1 0 auto;
-  max-width: var(--grid-max);
   margin: 0 auto;
   padding: 24px var(--grid-margin) 80px;
   width: 100%;
@@ -263,16 +278,11 @@ body {
   }
 }
 
-/* Once the card grid became twelve columns, this stopped meaning anything.
-   auto-fill turned a wider window into more columns; a span turns it into
-   wider cards. So the library now sits on the same 1440 canvas as everything
-   else, which is the point of having one grid.
-   
-   Kept as a class because the markup uses it, and because a page that should
-   break out of the canvas one day has somewhere to say so. To go back to
-   full-bleed, this is the one line: max-width: none. */
+/* Now a no-op: .page has no ceiling to break out of. Kept because the markup
+   uses it and because a page that one day wants to opt out of something has
+   somewhere to say so. */
 .page-wide {
-  max-width: var(--grid-max);
+  width: 100%;
 }
 
 h1 {
@@ -328,38 +338,30 @@ h1 {
   text-align: center;
 }
 
-/* The card grid is the page grid, not a second one. A card size is a span
-   rather than a minimum width: large is 4 of 12 and so three across, medium 3
-   and four across, small 2 and six across. auto-fill got to a similar answer
-   by a different route, but its columns never lined up with anything else on
-   the page. */
+/* A mosaic is not a column-grid problem, and this is the second answer to it.
+   Spans were the first: large 4 of 12, medium 3, small 2. That reads well at
+   one width and fails at every other, because a span turns a wider window into
+   wider cards -- a large card is 824px on a 2560 monitor, three of them, which
+   is a worse use of the screen than the capped page it replaced. Twelve
+   columns can only ever divide into 3, 4, 6 or 12 across, and there is no
+   5, 7 or 9.
+   
+   So the mosaic is sized by its smallest acceptable card and lets the column
+   count fall out. That is what keeps a card at 397-504px from 1280 all the way
+   to 3840 while going 3, 4, 5, 6, 7, 8, 9 across. It shares the page's gutter
+   and sits inside the page's margins, so its outer edges still land where the
+   bar and the footer do -- which is the alignment that was ever worth having.
+   Card edges lining up with master columns bought nothing: nothing else on the
+   dashboard is column-aligned to them.
+   
+   min() guards the case where the container is narrower than the card
+   minimum, which would otherwise overflow rather than drop to one column. */
 .grid {
+  --card-min: var(--card-min-medium);
   display: grid;
-  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min), 100%), 1fr));
   gap: var(--grid-gutter);
   margin-top: 24px;
-}
-
-.grid > * {
-  grid-column: span 3;
-}
-
-@media (max-width: 1180px) {
-  .grid > * {
-    grid-column: span 4;
-  }
-}
-
-@media (max-width: 880px) {
-  .grid > * {
-    grid-column: span 6;
-  }
-}
-
-@media (max-width: 560px) {
-  .grid > * {
-    grid-column: span 12;
-  }
 }
 
 .card {
@@ -474,17 +476,15 @@ h1 {
   border-bottom: 1px solid var(--border-soft);
 }
 
-/* The band is full-bleed; what's inside it sits on the page canvas. Both
-   numbers have to come from the grid or the wordmark stops lining up with the
-   content under it -- by 4px at a narrow window, and by half the leftover
-   width once .page starts centring at the 1440 ceiling. */
+/* Padded by the grid margin and nothing else, so the wordmark starts on the
+   same line as the content under it at every width. It had a ceiling for a
+   day, which centred the bar on a large monitor and left the logo floating in
+   from the corner while the dashboard filled the screen. */
 .utility-bar-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  max-width: var(--grid-max);
-  margin: 0 auto;
   padding: 12px var(--grid-margin);
 }
 
@@ -1424,6 +1424,20 @@ h1 {
 
 .detail-side {
   grid-column: span 4;
+}
+
+/* The page fills the monitor, so past a point a third of it is more room than
+   this panel has any use for -- a 4-span sidebar is 824px at 2560, which puts
+   the AI summary on a 100-character line. Nine and three keeps the panel near
+   the 600px it wants while the capture takes the width it gains. */
+@media (min-width: 1900px) {
+  .detail-main {
+    grid-column: span 9;
+  }
+
+  .detail-side {
+    grid-column: span 3;
+  }
 }
 
 /* Cropping needs the whole width to draw a region on a full-page screenshot. */
@@ -3318,16 +3332,23 @@ a.card {
    rather than indented by whatever a centred 1200px column leaves over. The
    reading measure is controlled by the column and by the paragraphs
    themselves, not by narrowing the page. */
-/* The written pages sit inside the page grid's own ceiling rather than
-   overriding it, so their title starts on the same margin as the wordmark. */
+/* The one page type that is capped, because a line of text has an optimum
+   length and a monitor does not. Flush left rather than centred: this is an
+   app with a persistent bar anchored at the left, so the title stays on the
+   wordmark's line and the slack collects on the right. Centring it would put
+   the heading in the middle of a 2560px screen with the logo far away in the
+   corner. To centre it anyway, delete the two margin declarations. */
 .prose-page {
-  max-width: var(--grid-max);
+  max-width: var(--prose-max);
+  margin-left: 0;
+  margin-right: auto;
 }
 
 /* Sized so the content column lands on a readable measure at 20px without the
    paragraphs having to hold themselves back inside it. Eight of twelve columns
-   of 1440 is about 920px, which is roughly 74 characters of the body size --
-   so the copy fills its column instead of stopping short of it. */
+   of --prose-max is 681px, which fits 75 characters of the body size -- so the
+   copy fills its column instead of stopping short of it. That claim used to be
+   made about 1440 and 920px, and it was wrong by 28 characters. */
 .prose-row {
   display: grid;
   grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
@@ -3435,9 +3456,17 @@ a.card {
   margin-top: 0;
 }
 
+/* 34em, not 74ch, and the unit is the whole point: `ch` is the advance of the
+   digit zero, one of the widest glyphs in a proportional face, so 74ch at 20px
+   came out 921px wide and fitted 102 characters of real prose. It read as a
+   74-character measure in the source while being nothing of the kind. An em is
+   a stable fraction of average character width, so 34em is about 75. This is a
+   guard now rather than the constraint -- --prose-max sizes the column to
+   roughly the same place -- and it holds the measure if the layout ever goes
+   single-column. */
 .prose-section p {
   margin: 0 0 18px;
-  max-width: 74ch;
+  max-width: 34em;
   font-size: 20px;
   line-height: 1.5;
   color: var(--text-body);
@@ -3745,8 +3774,6 @@ a.card {
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  max-width: var(--grid-max);
-  margin: 0 auto;
   padding: 16px var(--grid-margin);
 }
 
@@ -3856,8 +3883,6 @@ a.card {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px 32px;
-  max-width: var(--grid-max);
-  margin: 0 auto;
   padding: 22px var(--grid-margin);
 }
 
@@ -4472,33 +4497,12 @@ a.card {
 
 /* Collection covers */
 
+/* Same mosaic rule as the dashboard: collections scale with the window too. */
 .collection-grid {
   display: grid;
-  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min-medium), 100%), 1fr));
   gap: var(--grid-gutter);
   margin-top: 20px;
-}
-
-.collection-grid > * {
-  grid-column: span 3;
-}
-
-@media (max-width: 1180px) {
-  .collection-grid > * {
-    grid-column: span 4;
-  }
-}
-
-@media (max-width: 880px) {
-  .collection-grid > * {
-    grid-column: span 6;
-  }
-}
-
-@media (max-width: 560px) {
-  .collection-grid > * {
-    grid-column: span 12;
-  }
 }
 
 .collection-card {
@@ -4894,58 +4898,21 @@ a.card {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-/* Six across, four, three. The breakpoints step each size up a span rather
-   than letting a card get too narrow to read. */
-.grid-small > * {
-  grid-column: span 2;
+/* Each size is one number: the narrowest card worth rendering at that size.
+   The column count is then the window's business, not a breakpoint's, which is
+   why there are no breakpoints here at all -- a card that can't fit its
+   minimum drops the grid to fewer columns on its own, and the min() in .grid
+   handles the one-column case. */
+.grid-small {
+  --card-min: var(--card-min-small);
 }
 
-.grid-medium > * {
-  grid-column: span 3;
+.grid-medium {
+  --card-min: var(--card-min-medium);
 }
 
-.grid-large > * {
-  grid-column: span 4;
-}
-
-/* Each size steps up one span at each break, so a card never gets narrower
-   than it can carry a title, a favicon and a row of tags. */
-@media (max-width: 1180px) {
-  .grid-small > * {
-    grid-column: span 3;
-  }
-
-  .grid-medium > * {
-    grid-column: span 4;
-  }
-
-  .grid-large > * {
-    grid-column: span 6;
-  }
-}
-
-@media (max-width: 880px) {
-  .grid-small > * {
-    grid-column: span 4;
-  }
-
-  .grid-medium > * {
-    grid-column: span 6;
-  }
-
-  .grid-large > * {
-    grid-column: span 12;
-  }
-}
-
-@media (max-width: 560px) {
-  .grid-small > * {
-    grid-column: span 6;
-  }
-
-  .grid-medium > * {
-    grid-column: span 12;
-  }
+.grid-large {
+  --card-min: var(--card-min-large);
 }
 
 /* Progress row: status left, feature line right. */

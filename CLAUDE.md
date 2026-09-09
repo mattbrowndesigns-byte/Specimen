@@ -202,12 +202,16 @@ about 75, and `--prose-max: 1080px` sizes the 8-span copy column to 681px so it
 lands in the same place without the paragraph having to hold itself back. Use
 `em` for a measure; only use `ch` if the face is monospaced.
 
-**The written pages are capped but flush left.** `.prose-page` sets
-`margin-left: 0; margin-right: auto` against `.page`'s `margin: 0 auto`. This
-is an app with a bar anchored at the left, so the title stays on the wordmark's
-line and the slack collects on the right; centring would put the heading in the
-middle of a 2560px screen with the logo away in the corner. Deleting the two
-margin declarations centres it.
+**The written pages are capped and centred, and flush left was tried first.**
+Keeping them flush left preserved the title's alignment with the wordmark, and
+it reads as a page that failed to load: at 1860 the canvas ends at 1080 and the
+right third is void. Splitting that slack is what makes it look chosen — 390px
+each side at 1860, 740 at 2560. It survives centring better than most documents
+do because the section headings live in the aside column, so the canvas has a
+real left edge to read instead of text floating in the middle. The cost is that
+the title no longer lines up with the logo *above* 1080; below it, centring is
+a no-op and the alignment is exact, so every laptop and phone is unaffected.
+`.prose-page` just inherits `.page`'s `margin: 0 auto` now.
 
 **The two columns are aligned by cap top, and the numbers are measured.** A
 heading's line box starts about 7px above its capitals at 32px, so aligning

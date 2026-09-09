@@ -3333,15 +3333,20 @@ a.card {
    reading measure is controlled by the column and by the paragraphs
    themselves, not by narrowing the page. */
 /* The one page type that is capped, because a line of text has an optimum
-   length and a monitor does not. Flush left rather than centred: this is an
-   app with a persistent bar anchored at the left, so the title stays on the
-   wordmark's line and the slack collects on the right. Centring it would put
-   the heading in the middle of a 2560px screen with the logo far away in the
-   corner. To centre it anyway, delete the two margin declarations. */
+   length and a monitor does not. Centred, inheriting .page's margin: 0 auto.
+   
+   Flush left was tried first, to keep the title on the wordmark's line. It
+   reads as a page that failed to load: at 1860 the canvas ends at 1080 and the
+   right third is simply void. Splitting that slack is what makes it look
+   chosen. The headings sit in the aside column, so the canvas still has a real
+   left edge to read rather than text floating in the middle -- which is the
+   thing that usually goes wrong with a centred document.
+   
+   The cost is that the title no longer lines up with the logo above 1080. On a
+   document that alignment isn't legible anyway; on the dashboard it is, and
+   the dashboard still has it. */
 .prose-page {
   max-width: var(--prose-max);
-  margin-left: 0;
-  margin-right: auto;
 }
 
 /* Sized so the content column lands on a readable measure at 20px without the

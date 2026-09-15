@@ -420,6 +420,22 @@ the synthetic canvas entry in `analyze.js`, the colour covering 70% of the page
 was missing from its palette entirely. Body wins over html, white is the
 fallback.
 
+**Area is the wrong question to ask about an accent, so one is rescued from
+under the floor.** A call to action is deliberately small and deliberately the
+most saturated thing on the page, and those two properties are linked --
+weighting purely by painted area throws away the one colour the designer
+actually chose. x-energy.com's teal is `#00d5cf` on a single newsletter
+button: 0.0157% of painted area against a `MIN_SHARE` of 0.2%, sixteen times
+under, while being the only colour on the site with real chroma (213 against
+45 for the next). So `analyze.js` readmits up to two colours from under the
+floor when they are painted on something clickable *and* have chroma >= 60.
+Both halves are load-bearing: without the control test this readmits every
+stray tint, and without the chroma test it readmits every dark grey button --
+x-energy's own `#1a3847` search button is the case that proves the second,
+and it is correctly left out. Their real shares are stored unchanged and the
+role is `accent`, so the bar still reads dominant to minimal with the accent
+at the minimal end.
+
 **The palette bar compresses widths and stores true shares.** Painted area is
 brutally top-heavy — a page background routinely holds 80% — so a literal bar
 is one white rectangle and five slivers. `SiteStyle.js` raises each share to
@@ -484,6 +500,17 @@ perfect reading of the palette died with the request — the step showed green
 in Actions because `continue-on-error` reports a failed step as success. So
 there are two writes, and the naming pass also has a `DESCRIBE_BUDGET_MS`
 ceiling. The worst case is now a panel with real colours and unnamed faces.
+
+That ceiling started at 35s, which was *inside* the work rather than outside
+it. Timed against x-energy.com: the identify call alone, with two specimen
+images attached, is 22.9s, and `describeFonts` then spends up to 8 more on a
+foundry and two font services — ~31s on a good run, so anything slower came
+back with colours and unnamed faces, which is exactly what x-energy did. It is
+45s now. Note what is still unsolved: `callGemini` retries at 2s, 4s and 8s, so
+a naming pass that hits a 503 can still miss its window, and unlike enrichment
+there is no queue to catch it — the names simply wait for the next re-read. If
+this recurs, the fix is to give naming its own request and its own 60s rather
+than sharing one with the measurement write.
 
 **`firstResolving` checks its candidates in parallel, and that is the fix, not
 a tidy-up.** Sequentially it cost the *sum* of its misses — three Adobe slugs

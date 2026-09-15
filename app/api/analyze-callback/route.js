@@ -16,7 +16,16 @@ const HISTORY_LIMIT = 12;
 // of unknown latency, then link checks against Adobe and a foundry. Past this
 // the measurement is already saved and the request has better things to do
 // than die holding an update nobody will retry.
-const DESCRIBE_BUDGET_MS = 35000;
+//
+// 45s, not the 35 it started at, because 35 was inside the actual cost rather
+// than outside it. Timed against x-energy.com: the identify call alone, with
+// two specimen images attached, takes 22.9s, and describeFonts then spends up
+// to 8 more checking a foundry and two font services. That is ~31s on a good
+// run, so 35 was a ceiling the work hit rather than a limit it stayed under --
+// x-energy came back with its colours and two unnamed faces. Kept well inside
+// maxDuration so the request still returns rather than being killed, which is
+// the failure that loses the response instead of just the names.
+const DESCRIBE_BUDGET_MS = 45000;
 
 function withBudget(promise, ms, fallback) {
   let timer;

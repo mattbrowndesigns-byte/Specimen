@@ -36,6 +36,10 @@ const ROLE_LABEL = {
   text: "Text",
   border: "Borders",
   graphic: "Icons & graphics",
+  // Rescued from under the area floor by analyze.js because it is painted on
+  // something clickable. Tiny by area and usually the only real colour on the
+  // page -- which is exactly why it is worth a swatch.
+  accent: "Accent",
 };
 
 // The generic to fall back to when the real face isn't available to the

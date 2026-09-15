@@ -74,6 +74,17 @@ function measure() {
     "#" + [c.r, c.g, c.b].map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
 
   const paint = new Map();
+
+  // Colours that appear on something you can click. Kept separately from
+  // `sources` so roles are unaffected -- this only decides what survives the
+  // area floor below.
+  const onControl = new Set();
+  const CONTROL_TAGS = new Set(["BUTTON", "A", "SUMMARY", "SELECT"]);
+  const isControl = (el) =>
+    CONTROL_TAGS.has(el.tagName) ||
+    el.getAttribute("role") === "button" ||
+    (el.tagName === "INPUT" && /^(submit|button)$/i.test(el.type || ""));
+
   function add(color, area, source) {
     if (!color || !(area > 0)) return;
     const key = toHex(color);
@@ -336,7 +347,9 @@ function measure() {
     if (area > 0 && el !== document.body && el !== doc) {
       if (!hasPhoto(style.backgroundImage)) {
         const own = ownArea(el, rect);
-        add(parseColor(style.backgroundColor), own, "background");
+        const bg = parseColor(style.backgroundColor);
+        add(bg, own, "background");
+        if (bg && bg.a > 0.05 && isControl(el)) onControl.add(toHex(bg));
         const stops = gradientStops(style.backgroundImage);
         for (const stop of stops) add(stop, own / stops.length, "background");
       }
@@ -459,15 +472,42 @@ function measure() {
   }
 
   const total = merged.reduce((s, c) => s + c.area, 0) || 1;
-  const palette = merged
-    .map((c) => ({
-      hex: c.hex,
-      share: c.area / total,
-      role: Object.entries(c.sources).sort((a, b) => b[1] - a[1])[0][0],
-    }))
-    .filter((c) => c.share >= MIN_SHARE)
-    .slice(0, MAX_COLORS)
-    .map((c) => ({ ...c, share: +c.share.toFixed(4) }));
+  const scored = merged.map((c) => ({
+    hex: c.hex,
+    share: c.area / total,
+    role: Object.entries(c.sources).sort((a, b) => b[1] - a[1])[0][0],
+    chroma: Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b),
+  }));
+
+  // Area is the wrong question to ask about an accent, and the two properties
+  // are linked: a call to action is deliberately small and deliberately the
+  // most saturated thing on the page. x-energy.com's teal is #00d5cf on one
+  // newsletter button -- 0.0157% of painted area, sixteen times under the
+  // floor, and the only colour on the site with any chroma at all (213 against
+  // 45 for the next). Weighting purely by area threw away the one colour a
+  // designer had actually chosen.
+  //
+  // So the floor still decides the body of the palette, and a colour is
+  // rescued from under it when it is painted on something you can click and is
+  // genuinely colourful. Both halves matter: without the control test this
+  // readmits every stray tint, and without the chroma test it readmits every
+  // dark grey button. Two at most, and their real shares are stored unchanged,
+  // so the bar still reads dominant to minimal and an accent lands at the
+  // minimal end where it belongs.
+  const ACCENT_CHROMA = 60;
+  const MAX_ACCENTS = 2;
+
+  const kept = scored.filter((c) => c.share >= MIN_SHARE);
+  const rescued = scored
+    .filter((c) => c.share < MIN_SHARE && c.chroma >= ACCENT_CHROMA && onControl.has(c.hex))
+    .slice(0, MAX_ACCENTS)
+    .map((c) => ({ ...c, role: "accent" }));
+
+  const palette = [...kept.slice(0, MAX_COLORS - rescued.length), ...rescued].map((c) => ({
+    hex: c.hex,
+    share: +c.share.toFixed(4),
+    role: c.role,
+  }));
 
   // Roles, not a ranking.
   //

@@ -3803,12 +3803,17 @@ a.card {
   background: var(--surface);
 }
 
+/* The same band as the utility bar, to the pixel: 12px of padding around a
+   trimmed 44px mark. It was `align-items: baseline` at 16px, which made it
+   both taller than the dashboard's and hung the button off the wordmark's
+   baseline instead of centring it -- a baseline is the right alignment for a
+   wordmark and a tagline, and the wrong one for a wordmark and a button. */
 .shared-bar-inner {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px var(--grid-margin);
+  padding: 12px var(--grid-margin);
 }
 
 .shared-brand {
@@ -5275,10 +5280,14 @@ a.card {
 
 /* Small, solid, and the only button in the bar -- a stranger who wants one of
    these should not have to scroll to the bottom to find out how. */
+/* 34px, matching the dashboard's Add button rather than the 32px results-bar
+   controls -- the two bands are both padded 12px around their tallest child,
+   so the button's height IS the bar's height, and 32 made the shared bar 2px
+   shorter than the one it's meant to mirror. */
 .shared-cta-btn {
   display: inline-flex;
   align-items: center;
-  height: var(--control-h);
+  height: 34px;
   padding: 0 14px;
   border-radius: 8px;
   background: var(--invert-bg);
@@ -5302,24 +5311,33 @@ a.card {
   color: var(--text-muted);
 }
 
+/* A number with nothing around it floats beside its label rather than
+   belonging to it. The pill is the same one a chip wears, at the same 11px, so
+   a count reads as part of the tab it's on. */
 .tab-count {
-  margin-left: 6px;
+  margin-left: 7px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--chip-bg);
   font-size: 11px;
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .tab-switcher button.active .tab-count {
-  color: var(--text-muted);
+  background: var(--invert-bg);
+  color: var(--invert-text);
 }
 
 /* The end of someone else's library is the moment a stranger is most likely to
    want their own, so the invitation lives there rather than in a banner that
    would have interrupted the thing they came to look at. */
+/* Full width, so it reads as the end of the page rather than as one more card
+   that happens to be centred. The measure moves onto the paragraph, which is
+   the only thing in here that needs one. */
 .shared-invite {
-  margin: 64px auto 0;
-  padding: 40px 32px;
-  max-width: 34em;
+  margin: 64px 0 0;
+  padding: 48px 32px;
   text-align: center;
   border: 1px solid var(--border-soft);
   border-radius: 16px;
@@ -5347,6 +5365,7 @@ a.card {
 
 .shared-invite p {
   margin: 0 auto 24px;
+  max-width: 34em;
   font-size: 16px;
   line-height: 1.55;
   color: var(--text-muted);
@@ -5393,6 +5412,16 @@ a.card {
    have taken goes back to the summary. */
 .shared-page .resource-row:hover {
   background: none;
+}
+
+/* The shared page's footer carries only the pages that explain what this is.
+   The app's own footer is a list of places a stranger cannot go. */
+.shared-footer .site-footer-links a {
+  gap: 0;
+}
+
+.shared-footer .site-footer-brand {
+  text-decoration: none;
 }
 
 /* Share scopes

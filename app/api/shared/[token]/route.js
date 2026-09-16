@@ -17,10 +17,22 @@ import { SCOPE_NOUN } from "@/lib/shareKinds";
 // a copy of someone's desk.
 const SITE_FIELDS =
   "id, url, domain, name, summary, saved_at, favicon_url, favicon_fills, palette, fonts";
-const COMPONENT_FIELDS =
-  "id, name, summary, image_url, source_url, created_at, favicon_url, favicon_fills";
+// No favicon columns here: `component` has never had them -- a component's
+// icon is derived from its source_url at render time (see ComponentsTab's
+// adapter). Selecting them returned an error and an empty array, so a library
+// share silently arrived with no components at all and no way to tell why.
+const COMPONENT_FIELDS = "id, name, summary, image_url, source_url, created_at";
 const RESOURCE_FIELDS =
   "id, url, domain, title, summary, saved_at, favicon_url, favicon_fills";
+
+// Every read logs its own failure. The previous version destructured `data`
+// alone, so a bad column name came back as an empty array that looked exactly
+// like an empty library -- which is how a share went out missing every
+// component without anything, anywhere, saying so.
+function checked(label, { data, error }) {
+  if (error) console.error(`Shared read (${label}) failed:`, error.message);
+  return data || [];
+}
 
 async function readSites(supabase, userId, ids) {
   let query = supabase.from("site").select(SITE_FIELDS).eq("user_id", userId).eq("is_hidden", false);
@@ -28,8 +40,8 @@ async function readSites(supabase, userId, ids) {
     if (!ids.length) return [];
     query = query.in("id", ids);
   }
-  const { data } = await query.order("saved_at", { ascending: false });
-  return attachCapturesAndTags(supabase, data || []);
+  const rows = checked("sites", await query.order("saved_at", { ascending: false }));
+  return attachCapturesAndTags(supabase, rows);
 }
 
 async function readComponents(supabase, userId, ids) {
@@ -38,8 +50,8 @@ async function readComponents(supabase, userId, ids) {
     if (!ids.length) return [];
     query = query.in("id", ids);
   }
-  const { data } = await query.order("created_at", { ascending: false });
-  return attachTags(supabase, data || [], "component");
+  const rows = checked("components", await query.order("created_at", { ascending: false }));
+  return attachTags(supabase, rows, "component");
 }
 
 async function readResources(supabase, userId, ids) {
@@ -48,8 +60,8 @@ async function readResources(supabase, userId, ids) {
     if (!ids.length) return [];
     query = query.in("id", ids);
   }
-  const { data } = await query.order("saved_at", { ascending: false });
-  return attachTags(supabase, data || [], "resource");
+  const rows = checked("resources", await query.order("saved_at", { ascending: false }));
+  return attachTags(supabase, rows, "resource");
 }
 
 const GONE = () =>

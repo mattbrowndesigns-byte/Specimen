@@ -4,6 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import Favicon from "../../_ui/Favicon";
 import TagRow from "../../_ui/TagRow";
 import Wordmark from "../../_ui/Wordmark";
+import SharedFooter from "../../_ui/SharedFooter";
 import { latestCapture } from "@/lib/captures";
 
 // What someone without an account sees.
@@ -18,10 +19,16 @@ import { latestCapture } from "@/lib/captures";
 
 const TAB_LABELS = { sites: "Websites", components: "Components", resources: "Resources" };
 
+// The same first screenful the dashboard shows. A library of 150 sites should
+// not render 150 cards to a stranger deciding whether to look at the second
+// row.
+const PAGE_SIZE = 24;
+
 export default function SharedPage({ params }) {
   const { token } = usePromise(params);
   const [state, setState] = useState({ status: "loading" });
   const [tab, setTab] = useState(null);
+  const [shown, setShown] = useState(PAGE_SIZE);
 
   useEffect(() => {
     fetch(`/api/shared/${token}`)
@@ -52,6 +59,15 @@ export default function SharedPage({ params }) {
 
   const active = tab && tabs.some(([id]) => id === tab) ? tab : tabs[0]?.[0];
   const total = sites.length + components.length + resources.length;
+
+  const all = active === "sites" ? sites : active === "components" ? components : resources;
+  const page = all.slice(0, shown);
+  const remaining = all.length - page.length;
+
+  function choose(id) {
+    setTab(id);
+    setShown(PAGE_SIZE);
+  }
 
   if (state.status === "loading") {
     return (
@@ -85,14 +101,14 @@ export default function SharedPage({ params }) {
           <a className="shared-brand wordmark-link" href="/">
             <Wordmark className="shared-mark" />
           </a>
-          <div className="shared-bar-side">
-            <span className="shared-bar-meta">
-              {total} {total === 1 ? "item" : "items"}, shared with you
-            </span>
-            <a className="shared-cta-btn" href="/login">
-              Get Kivli
-            </a>
-          </div>
+          {/* No item count: the tabs carry their own, and "shared with you" is
+              a thing the reader already knows -- they followed a share link to
+              get here. "Get Kivli" was worse: a brand name means nothing to
+              someone who has never seen it, so the button says what pressing it
+              is for. */}
+          <a className="shared-cta-btn" href="/login">
+            Create Your Own
+          </a>
         </div>
       </header>
 
@@ -108,7 +124,7 @@ export default function SharedPage({ params }) {
               <button
                 key={id}
                 className={active === id ? "active" : ""}
-                onClick={() => setTab(id)}
+                onClick={() => choose(id)}
               >
                 {TAB_LABELS[id]}
                 <span className="tab-count">{count}</span>
@@ -121,7 +137,7 @@ export default function SharedPage({ params }) {
 
         {active === "sites" && (
           <div className="grid grid-medium">
-            {sites.map((site) => (
+            {page.map((site) => (
               <SharedCard
                 key={site.id}
                 href={site.url}
@@ -137,7 +153,7 @@ export default function SharedPage({ params }) {
 
         {active === "components" && (
           <div className="grid grid-medium">
-            {components.map((component) => (
+            {page.map((component) => (
               <SharedCard
                 key={component.id}
                 href={component.source_url}
@@ -156,7 +172,7 @@ export default function SharedPage({ params }) {
             resource is a link and the link is the whole of it. */}
         {active === "resources" && (
           <div className="resource-list">
-            {resources.map((resource) => (
+            {page.map((resource) => (
               <div className="resource-row" key={resource.id}>
                 <Favicon
                   url={resource.url}
@@ -194,6 +210,17 @@ export default function SharedPage({ params }) {
           </div>
         )}
 
+        {remaining > 0 && (
+          <div className="load-more-row">
+            <button className="load-more" onClick={() => setShown((n) => n + PAGE_SIZE)}>
+              Load More
+            </button>
+            <span className="load-more-count">
+              Showing {page.length} of {all.length}
+            </span>
+          </div>
+        )}
+
         {/* The end of someone else's library is the one moment a stranger is
             most likely to want their own, so it says so plainly -- and says
             what it actually takes, because pointing at a signup form that
@@ -208,7 +235,7 @@ export default function SharedPage({ params }) {
           </p>
           <div className="shared-invite-actions">
             <a className="shared-invite-primary" href="/login">
-              Redeem an invite
+              Create Your Library
             </a>
             <a className="shared-invite-secondary" href="/features">
               See what it does
@@ -216,6 +243,7 @@ export default function SharedPage({ params }) {
           </div>
         </section>
       </main>
+      <SharedFooter />
     </>
   );
 }

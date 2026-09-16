@@ -557,6 +557,51 @@ many requests arrived at once. GitHub disables scheduled workflows on a repo
 idle for 60 days — if tags stop filling in on their own, check it's still
 enabled.
 
+**A shared library arrived with no components, and nothing said why.**
+`component` has never had `favicon_url` / `favicon_fills` -- a component's icon
+is derived from its `source_url` when it renders -- so selecting them in the
+public read errored, and the read destructured `data` alone and returned `[]`.
+An empty array is indistinguishable from an empty library, so the share went
+out silently missing a whole tab. Every read in that route now goes through
+`checked()`, which logs the failure. Destructuring `data` without `error` from
+a Supabase query is the bug pattern: it turns "your query is wrong" into
+"you have nothing", which is a sentence the UI will happily render.
+
+**Measure the ink, not the box, before "fixing" the wordmark's alignment.**
+The shared bar looked like its mark sat low against the button, and the box
+centres said 34.29 against 29.00 -- a convincing 5.3px. That number is
+worthless: the border box is 44px because Lalezar declares a descender "Kivli"
+never uses, which is the whole reason the trim margins exist. The *glyph*
+centre, computed from the measured baseline at 0.7045em and ink top at
+0.6825em, was 28.27 against the button's 28.00. It was already centred to
+0.27px, and correcting the phantom 5.3px would have pushed a correct lockup
+visibly high. The real defect was the bar being 2px shorter than the
+dashboard's, because `.shared-cta-btn` took `--control-h` (32px) while the Add
+button it mirrors is 34 -- both bands pad 12px around their tallest child, so
+the button's height *is* the bar's height.
+
+**`RecordGrid` tabs only when it's holding more than one kind.** A collection
+of six websites has nothing to separate and a one-tab strip is furniture; a
+mixed one answers the question someone opening a shared collection actually
+has. The resource tab renders rows, not cards, for the same reason the
+dashboard's does -- a resource has no picture and a card built around a missing
+one is mostly empty rectangle. Favourites gets this for free, which is correct:
+it's the same mixed grid.
+
+**The shared page has its own footer, and must.** `SiteFooter` lists
+Favorites, Collections, Manage Tags and Review Queue -- four links that all
+bounce a stranger off the login screen. `SharedFooter` carries only the three
+pages that explain what they're looking at. Same rule as the utility bar:
+nothing in the app's chrome applies to someone without an account, so don't
+reach for it.
+
+**Nothing in a shared page's chrome may assume brand knowledge.** "Get Kivli"
+means nothing to someone who has never heard the word; the button says
+"Create Your Own" and the panel's is "Create Your Library". The "N items,
+shared with you" line is gone too: the tabs carry their own counts, and a
+reader who followed a share link does not need telling that it was shared
+with them.
+
 **A share has a scope, and each scope is its own row with its own token.**
 `kind` is now library / sites / components / resources / collection / folder.
 Sharing used to be all-or-nothing, which with three tabs is an over-answer:

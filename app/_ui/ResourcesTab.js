@@ -308,18 +308,23 @@ export default function ResourcesTab({
           {filtered.length} {filtered.length === 1 ? "resource" : "resources"}
         </span>
         <div className="results-controls">
-          {/* Only a real folder can be shared. "Unsorted" is the absence of a
-              tag rather than a tag, so there is nothing for a link to resolve
+          {/* An icon, not a labelled button: sharing is an occasional aside and
+              a third button beside List / Headlines / Newest First competed
+              with the controls you actually reach for. Same treatment as the
+              share control on a collection's page.
+
+              Only a real folder can be shared. "Unsorted" is the absence of a
+              tag rather than a tag, so there's nothing for a link to resolve
               to -- and a link whose contents change every time you file
               something would be a strange thing to have sent. */}
           {openFolder && (
             <button
-              className="sort-btn"
+              className="icon-btn"
               onClick={() => setSharingFolder(openFolder)}
-              title={`Share ${openFolder.label}`}
+              title={`Share the ${openFolder.label} folder`}
+              aria-label={`Share the ${openFolder.label} folder`}
             >
-              <Share2 size={14} />
-              Share Folder
+              <Share2 size={16} />
             </button>
           )}
 

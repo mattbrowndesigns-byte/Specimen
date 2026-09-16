@@ -1,4 +1,5 @@
 "use client";
+import { useMemo, useState } from "react";
 import { latestCapture } from "@/lib/captures";
 import SaveActions from "./SaveActions";
 import Favicon from "./Favicon";
@@ -10,17 +11,90 @@ import Favicon from "./Favicon";
 //
 // Each entry is { kind: "site" | "component" | "resource", item }.
 //
-// A resource has no capture and no detail page, so it gets a cover drawn from
-// its own favicon rather than the "No image" placeholder the other two fall
-// back to. That placeholder means "the capture hasn't landed yet", which would
-// be a lie on a record that is never going to have one, and it's the whole
-// reason resources are rows on their own tab.
+// It tabs when it's holding more than one kind, and doesn't when it isn't --
+// a collection of six websites has nothing to separate, and a tab strip with
+// one tab on it is furniture. With a mix, the tabs answer the question someone
+// opening a shared collection actually has: what did you save, and of what.
+//
+// The resources tab renders rows rather than cards for the same reason the
+// Resources tab does on the dashboard: a resource has no picture, and a card
+// built around a missing one is mostly empty rectangle.
+const TAB_LABELS = { site: "Websites", component: "Components", resource: "Resources" };
+const TAB_ORDER = ["site", "component", "resource"];
 export default function RecordGrid({ entries, emptyMessage, onRemove, removeLabel }) {
+  const [tab, setTab] = useState(null);
+
+  const tabs = useMemo(() => {
+    const counts = new Map();
+    for (const { kind } of entries) counts.set(kind, (counts.get(kind) || 0) + 1);
+    return TAB_ORDER.filter((kind) => counts.get(kind)).map((kind) => [kind, counts.get(kind)]);
+  }, [entries]);
+
   if (entries.length === 0) return <p className="empty">{emptyMessage}</p>;
 
+  const active = tab && tabs.some(([kind]) => kind === tab) ? tab : tabs[0]?.[0];
+  const shown = tabs.length > 1 ? entries.filter((e) => e.kind === active) : entries;
+  const strip =
+    tabs.length > 1 ? (
+      <div className="tab-switcher">
+        {tabs.map(([kind, count]) => (
+          <button
+            key={kind}
+            className={active === kind ? "active" : ""}
+            onClick={() => setTab(kind)}
+          >
+            {TAB_LABELS[kind]}
+            <span className="tab-count">{count}</span>
+          </button>
+        ))}
+      </div>
+    ) : null;
+
+  // One tab's worth of resources is the Resources tab, rows and all.
+  if (tabs.length > 1 && active === "resource") {
+    return (
+      <>
+        {strip}
+        <div className="resource-list">
+          {shown.map(({ item }) => (
+            <div className="resource-row" key={item.id}>
+              <Favicon
+                url={item.url}
+                faviconUrl={item.favicon_url}
+                fills={item.favicon_fills !== false}
+                alt={item.title}
+              />
+              <div className="resource-body">
+                <span className="resource-head">
+                  <a
+                    className="resource-title"
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {item.title}
+                  </a>
+                  <span className="resource-domain">{item.domain}</span>
+                </span>
+                {item.summary && <span className="resource-summary">{item.summary}</span>}
+              </div>
+              {onRemove && (
+                <button className="link-btn" onClick={() => onRemove("resource", item.id)}>
+                  {removeLabel}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+
   return (
-    <div className="grid">
-      {entries.map(({ kind, item }) => {
+    <>
+      {strip}
+      <div className="grid">
+      {shown.map(({ kind, item }) => {
         const isResource = kind === "resource";
         const href = isResource
           ? item.url
@@ -94,6 +168,7 @@ export default function RecordGrid({ entries, emptyMessage, onRemove, removeLabe
           </div>
         );
       })}
-    </div>
+      </div>
+    </>
   );
 }

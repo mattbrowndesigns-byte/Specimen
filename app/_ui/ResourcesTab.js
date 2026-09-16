@@ -395,8 +395,14 @@ export default function ResourcesTab({
 
               <div className="resource-body">
                 <span className="resource-head">
+                  {/* `stretch-link` grows this anchor's hit area to the whole
+                      row. It stays one real link -- middle-click, right-click
+                      and the focus order are unchanged -- and the edit,
+                      favourite and collection controls sit above the overlay,
+                      so the row opens the site and the controls still act on
+                      the record. */}
                   <a
-                    className="resource-title"
+                    className="resource-title stretch-link"
                     href={resource.url}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -462,7 +468,7 @@ export default function ResourcesTab({
                 alt={resource.title}
               />
               <a
-                className="row-name"
+                className="row-name stretch-link"
                 href={resource.url}
                 target="_blank"
                 rel="noopener noreferrer"

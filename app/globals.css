@@ -64,6 +64,15 @@
   --ramp-warm: #e8502e;
   --ramp-lit: #ff9153;
 
+  /* The invitation panel carries that same ramp, so it needs a ground dark
+     enough for the sweep to sit on -- and it stays dark in both themes, which
+     is why it has its own text tokens rather than `--invert-*`. Those flip,
+     and a panel that is always dark needs type that is always light. */
+  --invite-ground: #17101f;
+  --invite-text: #fff;
+  --invite-text-rgb: 255, 255, 255;
+  --invite-text-muted: #e8e2ee;
+
   --invert-bg: #1a1a1a;
   --invert-bg-hover: #333338;
   --invert-text: #fff;
@@ -1133,9 +1142,30 @@ h1 {
   color: var(--invert-text);
 }
 
-.chip-clear {
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
+/* Clear is an action, not a word from the vocabulary, and as a bordered pill
+   it read as one more tag -- the eye ran straight past it looking for a label
+   it recognised. So it keeps the strip's padding and font size, which is what
+   holds its baseline on the chips' line, and gives up everything that made it
+   look like a chip: no fill, no pill, underlined like the action it is. The
+   hairline after it is the delineation -- it stretches to the strip's full
+   height, so it separates the action from the vocabulary without adding
+   another shape to the row. It also gives up the pill's left inset: a chip's
+   edge belongs on the page's margin, a word's first letter does, and Clear is
+   a word now. */
+.chip-clear.chip-clear {
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border-strong);
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 12px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.chip-clear.chip-clear:hover {
+  color: var(--text);
 }
 
 .chip-more {
@@ -5052,15 +5082,21 @@ a.card {
   font-weight: 500;
 }
 
+/* The same pill the filter strip's counts and the shared page's tabs wear. A
+   number with nothing around it floats beside its label instead of belonging
+   to it, and these are the only counts in the app that were still bare. */
 .folder-count {
   font-size: 11px;
-  color: var(--text-faint);
+  color: var(--text-muted);
+  background: var(--chip-bg);
+  border-radius: 999px;
+  padding: 1px 6px;
   font-variant-numeric: tabular-nums;
 }
 
 .folder-on .folder-count {
+  background: rgba(var(--invert-text-rgb), 0.22);
   color: var(--invert-text);
-  opacity: 0.6;
 }
 
 /* Everything unsorted is one folder rather than a state you go looking for.
@@ -5079,6 +5115,7 @@ a.card {
    in it than a site does, and boxing each one put more border on the page than
    content. The last row's rule is the end of the list. */
 .resource-row {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -5087,6 +5124,48 @@ a.card {
 }
 
 .resource-row:hover {
+  background: var(--surface-sunken);
+}
+
+/* The whole row opens the link, because the whole row IS the link -- a
+   resource has no detail page and nothing else a click could mean. Reaching
+   back to a 90px run of title text to act on a 1,900px row was work the row
+   was already asking for and not getting paid for.
+   
+   It's one anchor with its hit area stretched, not a click handler on the div:
+   the <a> stays the real link, so middle-click, right-click, "open in new tab",
+   the focus order and the accessible name are all untouched, and only the
+   target grows. The pseudo-element is a child of the anchor, so hovering
+   anywhere in the row is hovering the link -- which is why the title underlines
+   from the far edge.
+   
+   The cost is that the summary can no longer be selected with the mouse. That
+   is the trade every list of links makes, and a generated blurb is not text
+   anyone copies. Anything that must stay clickable inside the row lifts above
+   the overlay. */
+.stretch-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.resource-row .resource-tags .chip-filter,
+.resource-row .resource-actions,
+.headline-item .resource-actions {
+  position: relative;
+  z-index: 1;
+}
+
+/* A clickable row has to say so before it's clicked. The list view already
+   had a hover fill; headlines shares its markup with the library's own
+   title-only view, where the row is not a link, so this is scoped to the rows
+   that actually carry one. */
+.headline-item {
+  position: relative;
+}
+
+.headline-item:has(.stretch-link):hover {
   background: var(--surface-sunken);
 }
 
@@ -5335,40 +5414,72 @@ a.card {
 /* Full width, so it reads as the end of the page rather than as one more card
    that happens to be centred. The measure moves onto the paragraph, which is
    the only thing in here that needs one. */
+/* The ramp, at rest. Everywhere else in the app this gradient means "something
+   is happening"; here it means "this is the thing that made all of it", and
+   it's the one panel on the page that should be the most saturated thing in
+   view -- a stranger who has just scrolled a library of someone else's work is
+   at the exact moment they might want their own.
+   
+   It's the capture bar's own stop list, unchanged, laid over a dark ground at
+   46% rather than painted at full strength. Full strength was the wrong
+   answer twice over: the sweep runs through #ff9153, which carries neither
+   white text (2.2:1) nor the page's ink, so a literal gradient panel would
+   have had a stripe down the middle where the copy stopped being readable.
+   Held back to 46% over `--invite-ground`, the lightest point of the sweep
+   measures 6.97:1 against white and 5.50:1 against the muted tone the
+   paragraph uses; in dark mode, where the ramp's own stops lift, 6.49 and
+   5.11. The sweep is still plainly the sweep, and every stop clears AA.
+   
+   Dark in both themes on purpose, which is why the type comes from
+   `--invite-*` and not from `--invert-*`: those flip with the theme and this
+   panel does not. */
 .shared-invite {
+  position: relative;
+  overflow: hidden;
   margin: 64px 0 0;
-  padding: 48px 32px;
+  padding: 52px 32px;
   text-align: center;
-  border: 1px solid var(--border-soft);
+  border: 1px solid rgba(var(--invite-text-rgb), 0.12);
   border-radius: 16px;
-  background: var(--surface);
+  background: var(--invite-ground);
+  color: var(--invite-text);
 }
 
-/* Doubled to beat `.shared-invite p`, which is (0,1,1) and styles bare
-   elements -- the same specificity trap `.icon-btn.icon-btn` exists for. The
-   mark is a <p> so it isn't a second heading on a page that already has two. */
-.shared-invite-mark.shared-invite-mark {
-  margin: 0 0 18px;
-  font-family: var(--font-wordmark), "Arial Black", "Helvetica Neue", sans-serif;
-  font-size: 34px;
-  font-weight: 400;
-  line-height: 1;
-  color: var(--brand-ink);
+.shared-invite::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.46;
+  background: linear-gradient(
+    100deg,
+    var(--ramp-deep) 0%,
+    var(--ramp-mid) 26%,
+    var(--ramp-warm) 52%,
+    var(--ramp-lit) 68%,
+    var(--ramp-mid) 88%,
+    var(--ramp-deep) 100%
+  );
+}
+
+/* The sweep is a painted layer rather than a background shorthand so it can be
+   dimmed on its own; everything in the panel has to be lifted back over it. */
+.shared-invite > * {
+  position: relative;
 }
 
 .shared-invite h2 {
   margin: 0 0 12px;
   font-size: 26px;
   line-height: 1.25;
-  color: var(--text);
+  color: var(--invite-text);
 }
 
 .shared-invite p {
-  margin: 0 auto 24px;
+  margin: 0 auto 26px;
   max-width: 34em;
   font-size: 16px;
   line-height: 1.55;
-  color: var(--text-muted);
+  color: var(--invite-text-muted);
 }
 
 .shared-invite-actions {
@@ -5390,29 +5501,31 @@ a.card {
   text-decoration: none;
 }
 
+/* On a dark panel the solid button is the light one, in both themes -- which
+   is the other reason the panel can't borrow `--invert-*`. */
 .shared-invite-primary {
-  background: var(--invert-bg);
-  color: var(--invert-text);
+  background: var(--invite-text);
+  color: var(--invite-ground);
 }
 
 .shared-invite-primary:hover {
-  opacity: 0.88;
+  opacity: 0.9;
 }
 
 .shared-invite-secondary {
-  border: 1px solid var(--border-strong);
-  color: var(--text);
+  border: 1px solid rgba(var(--invite-text-rgb), 0.34);
+  color: var(--invite-text);
 }
 
 .shared-invite-secondary:hover {
-  background: var(--surface-hover);
+  background: rgba(var(--invite-text-rgb), 0.12);
+  border-color: rgba(var(--invite-text-rgb), 0.5);
 }
 
 /* A shared resource row has no controls at all, so the space the actions would
-   have taken goes back to the summary. */
-.shared-page .resource-row:hover {
-  background: none;
-}
+   have taken goes back to the summary. It keeps the hover fill, though -- the
+   row opens the link here as well, and a row that does something on click has
+   to say so before it's clicked. */
 
 /* The shared page's footer carries only the pages that explain what this is.
    The app's own footer is a list of places a stranger cannot go. */

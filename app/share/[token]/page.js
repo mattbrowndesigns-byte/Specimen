@@ -183,7 +183,7 @@ export default function SharedPage({ params }) {
                 <div className="resource-body">
                   <span className="resource-head">
                     <a
-                      className="resource-title"
+                      className="resource-title stretch-link"
                       href={resource.url}
                       target="_blank"
                       rel="noopener noreferrer nofollow"
@@ -226,7 +226,15 @@ export default function SharedPage({ params }) {
             what it actually takes, because pointing at a signup form that
             needs a code nobody has is worse than not asking. */}
         <section className="shared-invite">
-          <Wordmark className="shared-invite-mark" as="p" />
+          {/* No wordmark in here. It sat between the bar's mark and the
+              footer's, which is three of the same lockup inside one screen,
+              and the panel now carries the brand in colour instead. It was
+              also off-centre, and for a reason worth remembering: the doubled
+              `.shared-invite-mark` beat `.shared-invite p` on every property
+              it restated and lost on the one it didn't -- the paragraph rule's
+              `max-width: 34em` still applied, and with `margin: 0` rather than
+              `0 auto` that box sat hard left while its text centred inside
+              it. Doubling a class only wins the declarations you write out. */}
           <h2>Want one of your own?</h2>
           <p>
             Kivli captures any site you paste, reads its colours and typefaces, tags it for you, and

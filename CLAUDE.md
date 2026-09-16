@@ -775,6 +775,60 @@ and 84.7 characters, with a 2-line clamp so a verbose model can't make one row
 four lines tall. An `em` measure is about 2.2 characters per em in this face at
 any size; multiply, don't eyeball.
 
+**The invitation panel is the ramp at rest, held to 46%.** Everywhere else
+that gradient means "something is happening"; on the stranger's page it means
+"this is the thing that made all of it", and the panel that asks someone to
+sign up should be the most saturated thing in view. Painted at full strength it
+would be unreadable in one place: the sweep runs through `--ramp-lit` (#ff9153),
+which carries neither white text at 2.2:1 nor the page's own ink, so a literal
+gradient panel gets a stripe down the middle where the copy stops working.
+Laid over `--invite-ground` at 46% opacity the lightest stop measures 6.97:1
+against white and 5.50:1 against the body tone -- 6.49 and 5.11 in dark mode,
+where the ramp's stops lift. The panel is dark in **both** themes, which is why
+it carries `--invite-text` / `--invite-text-muted` rather than `--invert-*`:
+those flip with the theme, and the solid button here has to be the light one
+either way.
+
+**Doubling a class only wins the declarations you actually restate.**
+`.shared-invite-mark.shared-invite-mark` was doubled to beat `.shared-invite p`
+and did -- on font-size, colour, margin, every property it named. It said
+nothing about `max-width`, so the paragraph rule's `34em` still applied, and
+with `margin: 0` rather than `0 auto` that 1,156px box sat hard left while its
+text centred inside it. The mark looked like it had a centring bug; it had an
+inheritance one. When you double a class to escape a (0,1,1) rule, read what
+else that rule sets.
+
+**A resource row is one stretched link, not a clickable div.** The whole row
+opens the site -- a resource has no detail page and nothing else a click could
+mean, and reaching back to ~47px of title text to act on a 727px row was work
+the row was asking for and not repaying. It is done with an `::after` on the
+existing anchor (`.stretch-link`), so the `<a>` stays the real link:
+middle-click, right-click, "open in new tab", focus order and the accessible
+name are all untouched and only the hit area grows, measured 47x19 to 727x115.
+The pseudo is a child of the anchor, so hovering anywhere in the row underlines
+the title. Anything that must stay clickable inside -- the tag chips, the edit
+and save controls -- takes `position: relative; z-index: 1` to sit over the
+overlay. The cost is that the summary can no longer be mouse-selected; that is
+the trade every list of links makes, and a generated blurb is not text anyone
+copies.
+
+**Clear is an action, so it stopped looking like a tag.** As a bordered pill in
+the filter strip it read as one more word from the vocabulary and the eye ran
+straight past it. It keeps the strip's padding and font size -- which is what
+holds its baseline on the chips' line, measured identical -- and gives up
+everything that made it a chip: no fill, no pill, underlined, with a hairline
+after it separating the action from the vocabulary. It also drops the pill's
+left inset, because a chip's *edge* belongs on the page margin and a word's
+first letter does. The divider is `--border-strong`, not `--border-soft`:
+#e6e6e9 on the #f7f7f8 page ground is 4% darker than what it sits on, which is
+a line nobody can see rather than a delineation.
+
+**Every count in the app wears the same pill.** The filter strip's
+`.chip-count`, the shared page's `.tab-count` and now `.folder-count` -- a
+number with nothing around it floats beside its label instead of belonging to
+it. Inverted holders get `rgba(var(--invert-text-rgb), 0.22)`, which is the
+one recipe that works on both a light and a dark holder.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

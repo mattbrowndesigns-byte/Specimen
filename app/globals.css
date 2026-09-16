@@ -1046,7 +1046,7 @@ h1 {
   left: 0;
   right: 0;
   z-index: 20;
-  padding: 8px 0;
+  padding: 8px;
   border: 1px solid var(--border-soft);
   border-radius: 16px;
   background: var(--surface);
@@ -1054,9 +1054,15 @@ h1 {
   overflow: hidden;
 }
 
+/* The highlight is inset from the panel's edges and rounded, rather than a
+   full-bleed band. A band that runs wall to wall reads as a section of the
+   panel; a shape that sits inside it reads as one item in a list -- which is
+   what you are actually pointing at. The panel's 8px padding is the inset, so
+   the label still lands 18px in. */
 .search-option {
   display: flex;
   align-items: center;
+  border-radius: 10px;
 }
 
 .search-option-pick {
@@ -1065,7 +1071,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 18px;
+  padding: 9px 10px;
   border: none;
   background: none;
   font: inherit;
@@ -1106,7 +1112,7 @@ h1 {
   justify-content: center;
   width: 32px;
   height: 32px;
-  margin-right: 10px;
+  margin-right: 2px;
   padding: 0;
   border: none;
   border-radius: 8px;
@@ -1390,10 +1396,6 @@ h1 {
   text-underline-offset: 3px;
 }
 
-.chip-clear.chip-clear:hover {
-  color: var(--text);
-}
-
 .chip-more {
   text-decoration: none;
   color: var(--text-secondary);
@@ -1401,6 +1403,47 @@ h1 {
 }
 
 /* Results bar + view switch */
+
+/* "8 sites" alone never said which 8. A search here filters live, so there is
+   no submit to mark the moment the results changed -- the count just quietly
+   becomes a different number while you look at the box you typed into, and the
+   grid below it changes without ever saying why.
+   
+   So the term is echoed where the answer is, as a chip you can lift back off.
+   It stays in the field as well, deliberately: the field is where it is still
+   editable, and "minimal" wanting to become "minimalist" should be four
+   keystrokes rather than a delete and a retype. */
+.result-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.result-query {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px 3px 11px;
+  border: none;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.result-query svg {
+  color: var(--text-faint);
+}
+
+.result-query:hover {
+  background: var(--chip-strong-bg);
+}
+
+.result-query:hover svg {
+  color: var(--text);
+}
 
 .results-bar {
   display: flex;
@@ -2802,6 +2845,16 @@ a.card {
 
 .chip-filter:hover:not(.chip-selected) {
   background: var(--chip-strong-bg);
+  color: var(--text);
+}
+
+/* Clear gave up the pill, so it must give up the pill's hover too -- a fill
+   behind it is the chip shape coming back through the one state nobody styled
+   for. It goes from grey ink to near-black instead, which is what an
+   underlined word does. This lives beside the rule it is an exception to
+   because it ties with it on specificity and would otherwise lose on order. */
+.chip-clear.chip-clear:hover {
+  background: none;
   color: var(--text);
 }
 

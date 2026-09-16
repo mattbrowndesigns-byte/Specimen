@@ -929,6 +929,30 @@ reachable, correctly announced, and not claiming a richer pattern it would only
 implement 80% of. Arrow keys move a highlight that is the same index the mouse
 sets, so there is never a row that looks chosen and a different row that is.
 
+**The search's result line echoes the term, because live filtering has no
+moment.** There is no submit here, so "8 sites" quietly becomes a different
+number while you are still looking at the box you typed into, and the grid
+changes without anything saying why -- searching for "Minimal" and getting 8
+when the Minimal *tag* says 12 is the case that makes it confusing rather than
+merely quiet. `ResultCount` puts the term next to the count as a chip you can
+lift back off, so the affordance lands where the eye already went to check the
+number. It deliberately stays in the field as well: the field is where it is
+still editable, and "minimal" wanting to become "minimalist" should be four
+keystrokes rather than a delete and a retype.
+
+**A dropdown's highlight is inset from the panel, not full-bleed.** A band that
+runs wall to wall reads as a *section* of the panel; a rounded shape sitting
+inside it reads as one item in a list, which is what you are pointing at. The
+panel's own 8px padding is the inset, so the row's text still lands where it
+did.
+
+**Clear gave up the pill, so it had to give up the pill's hover.** The fill was
+coming back through the one state nobody restyled -- `.chip-filter:hover:not
+(.chip-selected)` ties with `.chip-clear.chip-clear` on specificity and sits
+further down the file, so it won on order. The exception now lives beside the
+rule it is an exception to, which is the only place it can win without a third
+class. Grey ink to near-black, no fill: what an underlined word does.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

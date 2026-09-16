@@ -19,6 +19,7 @@ import ResourceProgress from "./ResourceProgress";
 import ShareModal from "./ShareModal";
 import FeatureRotator from "./FeatureRotator";
 import SearchField from "./SearchField";
+import ResultCount from "./ResultCount";
 
 // Two views, not the library's three. A card needs a picture and a resource
 // hasn't got one, so the choice here is how much of the record you want beside
@@ -322,9 +323,12 @@ export default function ResourcesTab({
       )}
 
       <div className="results-bar">
-        <span>
-          {filtered.length} {filtered.length === 1 ? "resource" : "resources"}
-        </span>
+        <ResultCount
+          count={filtered.length}
+          noun="resource"
+          query={query}
+          onClear={() => setQuery("")}
+        />
         <div className="results-controls">
           {/* An icon, not a labelled button: sharing is an occasional aside and
               a third button beside List / Headlines / Newest First competed

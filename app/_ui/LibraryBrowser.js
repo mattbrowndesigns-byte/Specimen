@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import FilterModal from "./FilterModal";
 import SearchField from "./SearchField";
+import ResultCount from "./ResultCount";
 import SaveActions from "./SaveActions";
 import Favicon from "./Favicon";
 import AddMenu from "./AddMenu";
@@ -300,9 +301,12 @@ export default function LibraryBrowser({
       )}
 
       <div className="results-bar">
-        <span>
-          {visible.length} {visible.length === 1 ? noun : `${noun}s`}
-        </span>
+        <ResultCount
+          count={visible.length}
+          noun={noun}
+          query={query}
+          onClear={() => onQueryChange("")}
+        />
         <div className="results-controls">
           {view === "cards" && (
             <div className="size-switch">

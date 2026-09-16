@@ -9,6 +9,7 @@ import {
   Check,
   Grid3x3,
   Square,
+  ArrowUpRight,
 } from "lucide-react";
 import FilterModal from "./FilterModal";
 import SearchField from "./SearchField";
@@ -414,7 +415,7 @@ export default function LibraryBrowser({
                   rel="noopener noreferrer"
                   title="Launch site"
                 >
-                  ↗
+                  <ArrowUpRight size={15} />
                 </a>
               </div>
               <TagRow tags={item.tags || []} href={adapter.href(item)} />
@@ -464,7 +465,7 @@ export default function LibraryBrowser({
                 rel="noopener noreferrer"
                 title="Launch site"
               >
-                ↗
+                <ArrowUpRight size={15} />
               </a>
             </div>
           ))}
@@ -481,7 +482,7 @@ export default function LibraryBrowser({
                 fills={item.favicon_fills !== false}
                 alt={adapter.name(item)}
               />
-              <a className="row-name" href={adapter.href(item)}>
+              <a className="row-name stretch-link" href={adapter.href(item)}>
                 {adapter.name(item)}
               </a>
               <span className="row-domain">{adapter.meta(item)}</span>
@@ -492,7 +493,7 @@ export default function LibraryBrowser({
                 rel="noopener noreferrer"
                 title="Launch site"
               >
-                ↗
+                <ArrowUpRight size={15} />
               </a>
             </div>
           ))}

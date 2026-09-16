@@ -775,19 +775,19 @@ and 84.7 characters, with a 2-line clamp so a verbose model can't make one row
 four lines tall. An `em` measure is about 2.2 characters per em in this face at
 any size; multiply, don't eyeball.
 
-**The invitation panel is the ramp at rest, held to 46%.** Everywhere else
-that gradient means "something is happening"; on the stranger's page it means
-"this is the thing that made all of it", and the panel that asks someone to
-sign up should be the most saturated thing in view. Painted at full strength it
-would be unreadable in one place: the sweep runs through `--ramp-lit` (#ff9153),
-which carries neither white text at 2.2:1 nor the page's own ink, so a literal
-gradient panel gets a stripe down the middle where the copy stops working.
-Laid over `--invite-ground` at 46% opacity the lightest stop measures 6.97:1
-against white and 5.50:1 against the body tone -- 6.49 and 5.11 in dark mode,
-where the ramp's stops lift. The panel is dark in **both** themes, which is why
-it carries `--invite-text` / `--invite-text-muted` rather than `--invert-*`:
-those flip with the theme, and the solid button here has to be the light one
-either way.
+**Every call to action wears the ramp as a 4px line across its top.** The first
+answer was the whole panel: the capture bar's gradient over a dark ground at
+46%, with the type inverted. It was legible -- every stop measured, all of it
+clearing AA -- and it was still wrong, because the warm stops sat *behind the
+sentence*, which is where the gradient is most saturated. It read as a panel
+doing an impression of the loading bar rather than a panel wearing it, and it
+fought the copy it was meant to frame. Four pixels along the top edge is the
+same gradient making the same point, in the shape the bar actually is. The
+panel goes back to `--surface` and the type back to `--text`, which also
+retired a set of colour tokens that existed only to survive a permanently dark
+panel. `.shared-invite` and `.prose-cta` share the rule, so the invitation on a
+shared page and the one at the foot of a written page are recognisably the same
+object.
 
 **Doubling a class only wins the declarations you actually restate.**
 `.shared-invite-mark.shared-invite-mark` was doubled to beat `.shared-invite p`
@@ -1022,6 +1022,41 @@ end you back out of in a second, not the first thing a new account ever sees.
 The headline names the term, since by the time you have read "nothing matches"
 your eye has left the search box and the word is the thing you are about to
 doubt.
+
+**A list row's picture sets its height, and the two numbers are a pair.** The
+thumb was a fixed 140px against a body that ran taller, so every row carried a
+band of dead space under the picture -- 12px of padding at the top and thirty
+at the bottom. `--row-thumb-w` (180) gives a 101.25px picture and
+`--row-body-min` (100) sits just under it, so the picture is the tallest thing
+in the row whatever the record holds, including one with no summary and no
+tags. Change either and check the other. The chips are pushed to the foot of
+the body with `margin-top: auto`, so their bottom edge lands on the picture's
+rather than wherever the summary stopped -- measured 0.0px apart.
+
+**Letting the thumb stretch and take its width from its height is a trap.** It
+reads better in the source and it was the first attempt: `align-self: stretch`,
+`width: auto`, `aspect-ratio: 16/9`. A flex line's cross size comes from its
+items' *hypothetical* sizes, and a thumb with `width: auto` has the size of its
+content -- which is a full-page screenshot. Every row came out 180px tall. A
+definite width and `align-self: flex-start` is the only version where the
+aspect ratio decides the height.
+
+**`.visit` is `.icon-btn`'s geometry by hand, and it has to stay that way.** It
+was a 28px circle sitting in a row beside two 32px rounded squares, which is
+what made the three of them read as three unrelated controls rather than one
+set. It is not literally `.icon-btn` because it is an anchor carrying its own
+layout hooks (`margin-left: auto` in a headline row), so the box is duplicated
+-- if one changes, both do. Its glyph was also the literal `↗` character, a
+different weight and size to every lucide icon next to it; it is
+`ArrowUpRight` now, in all three views.
+
+**A headline strip is a link, like a resource row.** Same `.stretch-link`
+overlay, and for the same reason: the row is 1,900px wide and the title was
+~80px of it. The difference is where it goes -- a resource row opens the site
+because a resource *is* a URL, while a site or component opens its detail page,
+and the arrow beside it still goes out to the live site. Anything in a
+stretched row that is its own link has to lift over the overlay, which is what
+`.headline-item .visit` and `.headline-item .save-actions` are doing.
 
 ## Local environment
 

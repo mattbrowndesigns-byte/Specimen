@@ -82,6 +82,11 @@ export default function LibraryBrowser({
   onAdd,
   storageKey,
 }) {
+  // The recents list is per tab, and the tab already has a storage key, so it
+  // derives from that rather than adding a prop every caller has to remember
+  // to pass.
+  const historyKey = storageKey?.replace(".view.", ".recent.");
+
   const [selectedTagIds, setSelectedTagIds] = useState(new Set());
   const [view, setView] = useState("cards");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -211,6 +216,24 @@ export default function LibraryBrowser({
     setShown(PAGE_SIZE);
   }, [query, sort, selectedTagIds, items.length]);
 
+  // What the search box may suggest. Tags lead and are ranked by how many
+  // saves carry them, which is what makes the empty-field list read as
+  // "what this library is mostly about" rather than as an alphabet. Names come
+  // after, because a tag finds a shelf and a name finds one thing.
+  const searchTerms = useMemo(() => {
+    const tags = [...allTags]
+      .sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0))
+      .map((tag) => tag.label);
+    const names = items.map((item) => adapter.name(item)).filter(Boolean);
+    const seen = new Set();
+    return [...tags, ...names].filter((label) => {
+      const key = label.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [allTags, items, adapter]);
+
   const page = useMemo(() => ordered.slice(0, shown), [ordered, shown]);
   const remaining = ordered.length - page.length;
 
@@ -242,6 +265,8 @@ export default function LibraryBrowser({
           placeholder={searchPlaceholder}
           value={query}
           onChange={onQueryChange}
+          historyKey={historyKey}
+          terms={searchTerms}
         />
         <button className="filters-btn" onClick={() => setFiltersOpen(true)}>
           <SlidersHorizontal size={15} />

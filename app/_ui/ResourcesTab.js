@@ -184,6 +184,23 @@ export default function ResourcesTab({
     return { used, unsorted };
   }, [allTags, resources]);
 
+  // Folders lead, ranked by how full they are, then titles, then domains. A
+  // domain is worth offering here and isn't on the other tabs: half of what a
+  // resource is remembered by is where it lives -- you look for "figma", not
+  // for the title of the page.
+  const searchTerms = useMemo(() => {
+    const labels = folders.used.map((tag) => tag.label);
+    const titles = resources.map((r) => r.title).filter(Boolean);
+    const domains = resources.map((r) => r.domain).filter(Boolean);
+    const seen = new Set();
+    return [...labels, ...titles, ...domains].filter((label) => {
+      const key = label.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [folders, resources]);
+
   const openFolder = useMemo(
     () => (folder && folder !== UNSORTED ? folders.used.find((t) => t.id === folder) || null : null),
     [folder, folders]
@@ -268,6 +285,8 @@ export default function ResourcesTab({
           placeholder="Search resources by name, summary, notes or tag…"
           value={query}
           onChange={setQuery}
+          historyKey="specimen.recent.resources"
+          terms={searchTerms}
         />
       </div>
 

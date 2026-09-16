@@ -879,6 +879,56 @@ field and the button are both 44px; the circle is 36 with 4px around it, so it
 centres without a translate that has to be re-derived every time the field's
 height changes. Measured 44.00 / 44.00, and 4/4/4 on the circle.
 
+**Search suggestions come from the library's own words, and that is the whole
+design.** A site with millions of records can suggest "carousel" because
+somebody's carousel is certainly in there. A personal library of 150 saves
+cannot -- a suggestion that returns nothing is worse than no suggestion,
+because it reads as a promise. So `SearchField`'s corpus is the tag vocabulary
+first, ranked by `usage_count`, then the names of the things themselves. That
+ranking is also what makes the empty-field list mean something: "popular" here
+is the tags with the most saves against them, which answers "what is this
+library mostly about" on the way past. The Resources tab adds domains, because
+half of what a resource is remembered by is where it lives -- you look for
+"figma", not for the title of the page.
+
+**Recent searches live in `localStorage`, not in a table.** A search history is
+a per-device convenience, and a table for it would want a `user_id`, RLS, a
+policy and a scoped query in every route that touched it -- for a list nobody
+would miss if a browser lost it. The key derives from the tab's existing view
+key (`.view.` -> `.recent.`) rather than being a prop every caller has to
+remember. Reads and writes are both wrapped: a blocked localStorage means no
+history, not a broken search.
+
+**Two bugs that a dropdown attached to an input will always have.** First:
+choosing a row refocuses the input, focus is what opens the panel, so the panel
+reopens on the row you just picked from -- `skipOpen` is a ref that swallows
+exactly one focus event and clears on the next tick. Second, and worse because
+it only shows up in one browser: Safari blurs the field on mousedown *without*
+focusing the button, so a blur-closes-the-panel handler unmounts the row before
+its own click can fire. Every button inside the field carries
+`onMouseDown={(e) => e.preventDefault()}` for that reason. Neither is
+theoretical; both were in the first draft.
+
+**The search field has three states and the fill carries two of them.** At rest
+it's filled and flat; hover empties the fill to `--surface` and draws a light
+ring; focus keeps that and doubles the ring. Going *pale* on hover rather than
+darker is the counterintuitive half and the right one -- a resting fill says
+"there is something here" and clearing it says "it's yours now". The ring is a
+tint of `--brand-ink`, matching the circle, and its strength is not a taste
+judgment: 0.5 over the focused surface measures 3.35:1 in light and 4.52:1 in
+dark, which is the floor WCAG puts under a focus indicator. Anything lighter
+photographs better and stops being an indicator. It replaced a solid `--text`
+ring at 17.4:1, which was an indicator and a sledgehammer. Hover has no floor
+to clear, so it sits at 0.22 and is genuinely faint.
+
+**No combobox/listbox roles on the suggestion panel.** Doing that pattern
+properly needs `aria-activedescendant` pointing at options that may not contain
+interactive children -- and a recent row contains a delete button. What the
+panel actually is, is a search box with a set of labelled buttons under it:
+reachable, correctly announced, and not claiming a richer pattern it would only
+implement 80% of. Arrow keys move a highlight that is the same index the mouse
+sets, so there is never a row that looks chosen and a different row that is.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

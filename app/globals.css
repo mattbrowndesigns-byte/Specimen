@@ -64,6 +64,7 @@
      same contrast as the black it replaces -- 16.25:1 against the page, where
      #1a1a1a was 16.26 -- so nothing about legibility changes, only the cast. */
   --brand-ink: #211430;
+  --brand-ink-rgb: 33, 20, 48;
 
   /* The capture bar's ramp, deep purple through to lit orange. Four stops
      rather than two: a two-colour sweep reads as a loading bar, and this one
@@ -191,6 +192,7 @@
   /* The same cast, the other way up: a near-white carrying a trace of the
      purple rather than a dark ink nobody could read here. */
   --brand-ink: #f0eaf7;
+  --brand-ink-rgb: 240, 234, 247;
 
   /* The deep stop lifts on a dark track, or the ramp begins in something
      indistinguishable from the groove it sits in. */
@@ -925,10 +927,27 @@ h1 {
   color: var(--text-muted);
 }
 
-/* With the border gone the focus state has to come from somewhere, and a ring
-   outside the shape is the only thing that doesn't move the text. */
+/* Three states, and the fill is what carries two of them. At rest the field is
+   filled and flat. Hover empties the fill to the surface colour and draws a
+   light ring, so the shape lifts toward you before you've committed to it;
+   focus keeps that and doubles the ring. Going pale on hover rather than
+   darker is the counterintuitive half and the right one: an input's resting
+   fill says "there is something here", and clearing it says "it's yours now".
+   
+   The ring is a tint of `--brand-ink` because the circle at the end of the
+   field already is, so the whole control belongs to one colour. Its strength
+   is not a taste judgment: at 0.5 over the focused white it measures 3.35:1,
+   which is the floor WCAG puts under a focus indicator. Anything lighter looks
+   better in a screenshot and stops being an indicator. Hover has no such
+   floor, so it sits at 0.22 and is genuinely faint. */
+.search-input:hover {
+  background: var(--surface);
+  box-shadow: 0 0 0 1px rgba(var(--brand-ink-rgb), 0.22);
+}
+
 .search-input:focus {
-  box-shadow: 0 0 0 2px var(--text);
+  background: var(--surface);
+  box-shadow: 0 0 0 2px rgba(var(--brand-ink-rgb), 0.5);
 }
 
 /* WebKit draws its own clear button in exactly the space the circle occupies.
@@ -938,15 +957,23 @@ h1 {
   display: none;
 }
 
+/* The positioning context for the circle, the clear button and the suggestion
+   panel -- which is why this exists at all rather than the input sitting
+   straight in the toolbar. A block, not a flex row: the input is the only
+   thing in normal flow here and everything else is absolute. */
 .search-field {
   position: relative;
-  display: flex;
   min-width: 0;
 }
 
 .search-field .search-input {
   margin-bottom: 0;
   padding-right: 52px;
+}
+
+/* Room for the clear button as well, but only while there is one. */
+.search-field:has(.search-clear) .search-input {
+  padding-right: 78px;
 }
 
 /* 4 + 36 + 4 = 44, so the circle is centred in the field by arithmetic rather
@@ -980,6 +1007,117 @@ h1 {
 
 .search-go:hover {
   opacity: 0.88;
+}
+
+/* Ours, because WebKit draws its native one underneath the circle. It exists
+   only when there is something to clear, which is why the field can't simply
+   reserve the room: an empty field with a dead x in it is furniture. */
+.search-clear {
+  position: absolute;
+  top: 50%;
+  right: 48px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.search-clear:hover {
+  background: var(--chip-bg);
+  color: var(--text);
+}
+
+/* The suggestion panel
+   ---------------------------------------------------------------------------
+   Recents carry a clock and a way to forget them; completions carry a
+   magnifier. No section headings: two icons say the same thing in less room,
+   and a heading over three lines is a label with more weight than the list. */
+.search-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  padding: 8px 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.search-option {
+  display: flex;
+  align-items: center;
+}
+
+.search-option-pick {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 18px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-option-pick svg {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.search-option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The completion is the bold half, so the eye reads what's being offered
+   rather than re-reading the letters it just typed. */
+.search-option-label b {
+  font-weight: 600;
+}
+
+/* One highlight for both the mouse and the arrow keys: hovering sets the same
+   active index Enter acts on, so there is never a row that looks chosen and a
+   different row that is. */
+.search-option-on {
+  background: var(--surface-hover);
+}
+
+.search-forget {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.search-forget:hover {
+  background: var(--chip-bg);
+  color: var(--danger);
 }
 
 /* Dashboard toolbar: search leads, actions on the right */

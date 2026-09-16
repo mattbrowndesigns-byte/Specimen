@@ -19,6 +19,7 @@ import ResourceProgress from "./ResourceProgress";
 import ShareModal from "./ShareModal";
 import FeatureRotator from "./FeatureRotator";
 import SearchField from "./SearchField";
+import SearchElsewhere from "./SearchElsewhere";
 import ResultCount from "./ResultCount";
 
 // Two views, not the library's three. A card needs a picture and a resource
@@ -53,6 +54,9 @@ export default function ResourcesTab({
   newResource,
   describeId,
   onResourceHandled,
+  incomingQuery,
+  onIncomingUsed,
+  onSearchElsewhere,
 }) {
   const [resources, setResources] = useState([]);
   const [query, setQuery] = useState("");
@@ -83,6 +87,15 @@ export default function ResourcesTab({
   useEffect(() => {
     load();
   }, [load, refreshKey]);
+
+  // A query handed over from another tab's dead end. It arrives once, is
+  // applied once, and is cleared by the parent so switching back later doesn't
+  // re-run a search you have since moved on from.
+  useEffect(() => {
+    if (incomingQuery == null) return;
+    setQuery(incomingQuery);
+    onIncomingUsed?.();
+  }, [incomingQuery, onIncomingUsed]);
 
   useEffect(() => {
     try {
@@ -401,7 +414,12 @@ export default function ResourcesTab({
         </div>
       )}
       {resources.length > 0 && filtered.length === 0 && (
-        <p className="empty">Nothing matches that.</p>
+        <>
+          <p className="empty">Nothing matches that.</p>
+          {onSearchElsewhere && query.trim() && (
+            <SearchElsewhere query={query} kind="resource" onGo={onSearchElsewhere} />
+          )}
+        </>
       )}
 
       {view === "list" && page.length > 0 && (

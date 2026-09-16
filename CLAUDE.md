@@ -953,6 +953,46 @@ further down the file, so it won on order. The exception now lives beside the
 rule it is an exception to, which is the only place it can win without a third
 class. Grey ink to near-black, no fill: what an underlined word does.
 
+**The cross-tab nudge is a pointer, not a merged result list.** Searching,
+finding nothing, and concluding you never saved it is the worst failure this
+app has -- it breaks the only promise it makes -- and the likeliest cause is
+that the thing is one tab over. So an empty result asks `/api/search-counts`
+and offers "3 resources match ->", which switches tab and carries the query.
+What it is *not* is one blended list: the three tabs are three ways of looking
+(screenshots you scan, crops you compare, rows you read), so a single list has
+to pick one shape and two thirds of the results arrive in the wrong one. It
+also only appears at zero -- with results on screen you are not lost, and a
+line under every search saying where else you could have looked is wallpaper
+inside a week.
+
+**The counts have to agree with the tab they point at, so sites reuse the
+RPC.** `search_sites` covers a full-text vector plus tag labels plus
+discovered-page labels; no `ilike` over columns would reproduce that, and a
+nudge promising 3 that lands on 0 is worse than no nudge. Components and
+resources filter in the browser, so the route mirrors their predicate:
+the text columns via one `or`, then tag labels through `taggable`, then a
+single **scoped** read over the union -- ids reached through `taggable` carry
+no `user_id` of their own, so they are checked against the table rather than
+trusted because the tag they hang off belongs to the right person. A search
+string also gets double-quoted before it goes into an `or` filter, which is
+comma and parenthesis delimited and would otherwise read a query containing
+either as syntax.
+
+**"Nothing here yet" and "nothing matches" are different answers, and the
+difference is whether you asked a question.** LibraryBrowser keyed them on
+`items.length` instead, which was correct for components and wrong for sites:
+sites search on the *server*, so `items` IS the result, and a search that found
+nothing rendered "Start your library. Paste any URL" -- the one message
+guaranteed to be wrong, since you were looking for something you knew was in
+there. It keys on a `searching` flag now (a query or a tag filter), not on how
+many rows came back.
+
+**A handoff between tabs lives in the parent, because the receiving tab hasn't
+mounted.** The dashboard renders one tab at a time, so "search resources for
+this instead" has nowhere to put the query except `page.js`. It's cleared the
+moment the receiving tab takes it -- otherwise coming back to that tab a week
+later re-runs a search you have long moved on from.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

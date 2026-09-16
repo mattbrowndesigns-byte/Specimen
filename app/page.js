@@ -17,6 +17,22 @@ export default function Home() {
   const [newResource, setNewResource] = useState(null);
   const [describeId, setDescribeId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // A search carried over from another tab's empty result. The parent holds it
+  // because the tab it's going to hasn't mounted yet -- the tabs render one at
+  // a time -- so there is nobody else to hand it to.
+  const [handoff, setHandoff] = useState(null);
+
+  const searchElsewhere = useCallback((nextTab, query) => {
+    setTab(nextTab);
+    setHandoff({ tab: nextTab, query });
+  }, []);
+
+  // Cleared the moment the receiving tab has taken it, so coming back to that
+  // tab later doesn't re-run a search you've moved on from.
+  const clearHandoff = useCallback(() => setHandoff(null), []);
+
+  const incomingFor = (id) => (handoff?.tab === id ? handoff.query : null);
   const [error, setError] = useState(null);
 
   const loadTags = useCallback(async () => {
@@ -135,7 +151,14 @@ export default function Home() {
         </div>
 
         {tab === "websites" && (
-          <WebsitesTab allTags={designTags} refreshKey={refreshKey} onAdd={handleAdd} />
+          <WebsitesTab
+            allTags={designTags}
+            refreshKey={refreshKey}
+            onAdd={handleAdd}
+            incomingQuery={incomingFor("websites")}
+            onIncomingUsed={clearHandoff}
+            onSearchElsewhere={searchElsewhere}
+          />
         )}
         {tab === "components" && (
           <ComponentsTab
@@ -144,6 +167,9 @@ export default function Home() {
             setPendingCapture={setPendingCapture}
             refreshKey={refreshKey}
             onAdd={handleAdd}
+            incomingQuery={incomingFor("components")}
+            onIncomingUsed={clearHandoff}
+            onSearchElsewhere={searchElsewhere}
           />
         )}
         {tab === "resources" && (
@@ -154,6 +180,9 @@ export default function Home() {
             newResource={newResource}
             describeId={describeId}
             onResourceHandled={handleResourceHandled}
+            incomingQuery={incomingFor("resources")}
+            onIncomingUsed={clearHandoff}
+            onSearchElsewhere={searchElsewhere}
           />
         )}
       </main>

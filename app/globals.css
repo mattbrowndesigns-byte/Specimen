@@ -1402,6 +1402,57 @@ h1 {
   background: var(--chip-strong-bg);
 }
 
+/* The way out of an empty result. Sits directly under "nothing matches", which
+   is the only place it appears: with results on screen you are not lost, and a
+   line under every search saying where else you could have looked would be
+   wallpaper inside a week. */
+.search-elsewhere {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: -12px 0 40px;
+}
+
+.search-elsewhere-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.search-elsewhere-go:hover {
+  border-color: var(--text);
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.search-elsewhere-go strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.search-elsewhere-go svg:first-child {
+  color: var(--text-faint);
+}
+
+.search-elsewhere-go svg:last-child {
+  color: var(--text-faint);
+}
+
+.search-elsewhere-go:hover svg {
+  color: var(--text);
+}
+
 /* Results bar + view switch */
 
 /* "8 sites" alone never said which 8. A search here filters live, so there is

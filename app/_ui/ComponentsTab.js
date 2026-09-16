@@ -23,7 +23,16 @@ const ADAPTER = {
   naturalThumb: true,
 };
 
-export default function ComponentsTab({ allTags, pendingCapture, setPendingCapture, refreshKey, onAdd }) {
+export default function ComponentsTab({
+  allTags,
+  pendingCapture,
+  setPendingCapture,
+  refreshKey,
+  onAdd,
+  incomingQuery,
+  onIncomingUsed,
+  onSearchElsewhere,
+}) {
   const [components, setComponents] = useState([]);
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
@@ -41,6 +50,15 @@ export default function ComponentsTab({ allTags, pendingCapture, setPendingCaptu
     loadComponents();
   }, [refreshKey]);
 
+  // A query handed over from another tab's dead end. It arrives once, is
+  // applied once, and is cleared by the parent so switching back later doesn't
+  // re-run a search you have since moved on from.
+  useEffect(() => {
+    if (incomingQuery == null) return;
+    setQuery(incomingQuery);
+    onIncomingUsed?.();
+  }, [incomingQuery, onIncomingUsed]);
+
   async function handleSaveCrop(cropRect) {
     setSaving(true);
     setError(null);
@@ -48,7 +66,10 @@ export default function ComponentsTab({ allTags, pendingCapture, setPendingCaptu
       const res = await fetch("/api/components", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ componentCaptureId: pendingCapture.id, cropRect }),
+        body: JSON.stringify({
+          componentCaptureId: pendingCapture.id,
+          cropRect,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -59,7 +80,7 @@ export default function ComponentsTab({ allTags, pendingCapture, setPendingCaptu
       setComponents((prev) => [data.component, ...prev]);
       if (data.enrichmentError) {
         setError(
-          "Crop saved, but the AI couldn't describe it just now. Open the component and hit Regenerate."
+          "Crop saved, but the AI couldn't describe it just now. Open the component and hit Regenerate.",
         );
       }
     } catch {
@@ -75,9 +96,15 @@ export default function ComponentsTab({ allTags, pendingCapture, setPendingCaptu
     const q = query.trim().toLowerCase();
     if (!q) return components;
     return components.filter((c) =>
-      [c.name, c.summary, c.notes, c.source_url, ...(c.tags || []).map((t) => t.label)]
+      [
+        c.name,
+        c.summary,
+        c.notes,
+        c.source_url,
+        ...(c.tags || []).map((t) => t.label),
+      ]
         .filter(Boolean)
-        .some((field) => field.toLowerCase().includes(q))
+        .some((field) => field.toLowerCase().includes(q)),
     );
   }, [components, query]);
 
@@ -115,7 +142,8 @@ export default function ComponentsTab({ allTags, pendingCapture, setPendingCaptu
         noun="component"
         adapter={ADAPTER}
         onAdd={onAdd}
-      storageKey="specimen.view.components"
+        storageKey="specimen.view.components"
+        onSearchElsewhere={onSearchElsewhere}
       />
     </>
   );

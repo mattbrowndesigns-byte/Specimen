@@ -13,6 +13,7 @@ import {
 import FilterModal from "./FilterModal";
 import SearchField from "./SearchField";
 import ResultCount from "./ResultCount";
+import SearchElsewhere from "./SearchElsewhere";
 import SaveActions from "./SaveActions";
 import Favicon from "./Favicon";
 import AddMenu from "./AddMenu";
@@ -82,6 +83,7 @@ export default function LibraryBrowser({
   adapter,
   onAdd,
   storageKey,
+  onSearchElsewhere,
 }) {
   // The recents list is per tab, and the tab already has a storage key, so it
   // derives from that rather than adding a prop every caller has to remember
@@ -235,6 +237,10 @@ export default function LibraryBrowser({
     });
   }, [allTags, items, adapter]);
 
+  // "Nothing here yet" and "nothing matches" are different answers, and the
+  // difference is whether you asked a question -- not how many rows came back.
+  const searching = Boolean(query.trim()) || selectedTagIds.size > 0;
+
   const page = useMemo(() => ordered.slice(0, shown), [ordered, shown]);
   const remaining = ordered.length - page.length;
 
@@ -366,16 +372,31 @@ export default function LibraryBrowser({
       {/* An empty library is the first thing a new account sees, so it gets the
           panel the cards would have filled rather than one grey sentence. The
           filtered-to-nothing case stays a plain line -- that's a dead end you
-          back out of, not a place to be welcomed. */}
-      {items.length === 0 && (
-        <div className="empty-state">
-          <h2 className="empty-state-headline">{emptyHeadline}</h2>
-          <p className="empty-state-body">{emptyMessage}</p>
-          {onAdd && <AddMenu onSubmit={onAdd} variant="hero" />}
-          <FeatureRotator className="empty-state-rotator" />
-        </div>
-      )}
-      {items.length > 0 && visible.length === 0 && <p className="empty">Nothing matches those filters.</p>}
+          back out of, not a place to be welcomed.
+          
+          Which of the two you get turns on whether you are searching, not on
+          how many items came back. Sites search on the server, so `items` IS
+          the result: a search that found nothing left the list empty and this
+          told you to start your library -- the one message guaranteed to be
+          wrong, since you were looking for something you knew was in there.
+          Components never hit it because they filter in the browser and keep
+          the full list in `items`. */}
+      {visible.length === 0 &&
+        (searching ? (
+          <>
+            <p className="empty">Nothing matches those filters.</p>
+            {onSearchElsewhere && query.trim() && (
+              <SearchElsewhere query={query} kind={adapter.kind} onGo={onSearchElsewhere} />
+            )}
+          </>
+        ) : (
+          <div className="empty-state">
+            <h2 className="empty-state-headline">{emptyHeadline}</h2>
+            <p className="empty-state-body">{emptyMessage}</p>
+            {onAdd && <AddMenu onSubmit={onAdd} variant="hero" />}
+            <FeatureRotator className="empty-state-rotator" />
+          </div>
+        ))}
 
       {view === "cards" && (
         <div className={`grid grid-${size}`}>

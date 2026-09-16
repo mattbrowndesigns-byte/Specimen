@@ -15,12 +15,21 @@ const ADAPTER = {
   pendingLabel: "Capturing…",
 };
 
-export default function WebsitesTab({ allTags, refreshKey, onAdd }) {
+export default function WebsitesTab({
+  allTags,
+  refreshKey,
+  onAdd,
+  incomingQuery,
+  onIncomingUsed,
+  onSearchElsewhere,
+}) {
   const [sites, setSites] = useState([]);
   const [query, setQuery] = useState("");
 
   async function loadSites(q) {
-    const res = await fetch(`/api/sites${q ? `?q=${encodeURIComponent(q)}` : ""}`);
+    const res = await fetch(
+      `/api/sites${q ? `?q=${encodeURIComponent(q)}` : ""}`,
+    );
     if (res.ok) {
       const data = await res.json();
       setSites(data.sites || []);
@@ -38,6 +47,15 @@ export default function WebsitesTab({ allTags, refreshKey, onAdd }) {
     return () => clearInterval(interval);
   }, [query]);
 
+  // A query handed over from another tab's dead end. It arrives once, is
+  // applied once, and is cleared by the parent so switching back later doesn't
+  // re-run a search you have since moved on from.
+  useEffect(() => {
+    if (incomingQuery == null) return;
+    setQuery(incomingQuery);
+    onIncomingUsed?.();
+  }, [incomingQuery, onIncomingUsed]);
+
   return (
     <LibraryBrowser
       items={sites}
@@ -51,6 +69,7 @@ export default function WebsitesTab({ allTags, refreshKey, onAdd }) {
       adapter={ADAPTER}
       onAdd={onAdd}
       storageKey="specimen.view.websites"
+      onSearchElsewhere={onSearchElsewhere}
     />
   );
 }

@@ -1,11 +1,22 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDownUp, Check, Folder, FolderOpen, Pencil, Inbox, List, AlignJustify } from "lucide-react";
+import {
+  ArrowDownUp,
+  Check,
+  Folder,
+  FolderOpen,
+  Pencil,
+  Inbox,
+  List,
+  AlignJustify,
+  Share2,
+} from "lucide-react";
 import Favicon from "./Favicon";
 import SaveActions from "./SaveActions";
 import AddMenu from "./AddMenu";
 import ResourceModal from "./ResourceModal";
 import ResourceProgress from "./ResourceProgress";
+import ShareModal from "./ShareModal";
 import FeatureRotator from "./FeatureRotator";
 
 // Two views, not the library's three. A card needs a picture and a resource
@@ -50,6 +61,7 @@ export default function ResourcesTab({
   const [sortOpen, setSortOpen] = useState(false);
   const [shown, setShown] = useState(PAGE_SIZE);
   const [editing, setEditing] = useState(null);
+  const [sharingFolder, setSharingFolder] = useState(null);
   const [describing, setDescribing] = useState(new Set());
   const [error, setError] = useState(null);
   const [loaded, setLoaded] = useState(false);
@@ -171,6 +183,11 @@ export default function ResourcesTab({
     return { used, unsorted };
   }, [allTags, resources]);
 
+  const openFolder = useMemo(
+    () => (folder && folder !== UNSORTED ? folders.used.find((t) => t.id === folder) || null : null),
+    [folder, folders]
+  );
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = resources;
@@ -291,6 +308,21 @@ export default function ResourcesTab({
           {filtered.length} {filtered.length === 1 ? "resource" : "resources"}
         </span>
         <div className="results-controls">
+          {/* Only a real folder can be shared. "Unsorted" is the absence of a
+              tag rather than a tag, so there is nothing for a link to resolve
+              to -- and a link whose contents change every time you file
+              something would be a strange thing to have sent. */}
+          {openFolder && (
+            <button
+              className="sort-btn"
+              onClick={() => setSharingFolder(openFolder)}
+              title={`Share ${openFolder.label}`}
+            >
+              <Share2 size={14} />
+              Share Folder
+            </button>
+          )}
+
           <div className="view-switch">
             {VIEWS.map(({ id, label, Icon }) => (
               <button
@@ -463,6 +495,15 @@ export default function ResourcesTab({
             Showing {page.length} of {filtered.length}
           </span>
         </div>
+      )}
+
+      {sharingFolder && (
+        <ShareModal
+          kind="folder"
+          targetId={sharingFolder.id}
+          title={`the ${sharingFolder.label} folder`}
+          onClose={() => setSharingFolder(null)}
+        />
       )}
 
       {editing && (

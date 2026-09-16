@@ -2,6 +2,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
+import Wordmark from "../_ui/Wordmark";
 
 function LoginForm() {
   const router = useRouter();
@@ -12,6 +13,7 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
+  const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -29,7 +31,7 @@ function LoginForm() {
         const res = await fetch("/api/auth/redeem", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, code, password }),
+          body: JSON.stringify({ email, code, password, name }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -69,7 +71,7 @@ function LoginForm() {
   return (
     <main className="auth-page">
       <div className="auth-card">
-        <h1 className="wordmark auth-wordmark">Kivli</h1>
+        <Wordmark className="auth-wordmark" />
         <p className="auth-tagline">Your visual inspiration library</p>
 
         <div className="auth-switch">
@@ -109,6 +111,26 @@ function LoginForm() {
               autoFocus
             />
           </label>
+
+          {mode === "invite" && (
+            <label className="field">
+              {/* Optional, and only asked once. It shows in exactly one place:
+                  the title of any page you share, which reads better as
+                  "Sam's inspiration library" than as a generic noun. Left
+                  blank, the email's local part stands in. */}
+              <span>Your name</span>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Optional"
+                autoComplete="given-name"
+                maxLength={40}
+              />
+              <small className="field-hint">
+                Shown on pages you share, so people know whose library it is.
+              </small>
+            </label>
+          )}
 
           {mode === "invite" && (
             <label className="field">

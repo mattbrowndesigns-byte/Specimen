@@ -557,6 +557,53 @@ many requests arrived at once. GitHub disables scheduled workflows on a repo
 idle for 60 days — if tags stop filling in on their own, check it's still
 enabled.
 
+**A share has a scope, and each scope is its own row with its own token.**
+`kind` is now library / sites / components / resources / collection / folder.
+Sharing used to be all-or-nothing, which with three tabs is an over-answer:
+sending someone your component crops is no reason to hand over 150 saved
+websites. Separate rows are what make the links independently revocable —
+killing the components link must leave the library link working — and
+`share_one_per_target_idx` already keyed on (user_id, kind, target) so it
+needed no change. `folder` points at one `resource_type` tag, and the share
+route checks that facet explicitly: without it a link could point at an
+aesthetic and render an empty page.
+
+**Sharing a single resource was asked for and deliberately not built.** A
+resource *is* a URL. "Sharing" one is sending that URL, which is what the row's
+title already is — a share page wrapping one link would be a redirect with
+branding on it. Folders and the whole tab are the units that mean something.
+
+**The owner's name lives in `auth.users.raw_user_meta_data`, not in a table.**
+It is one string read in two places (the share payload and the account menu),
+and a table would need a user_id, RLS, a policy and a scoped query everywhere
+it was touched. `displayNameFor()` falls back to the capitalised local part of
+the email, which matters more than it looks: every account that predates the
+field has no name, and a page reading "'s inspiration library" is worse than
+the generic title it replaced. The name is resolved from the auth record on
+every public read rather than copied onto the share row, so renaming yourself
+renames every link you have already sent.
+
+**`Wordmark` is a component because the one page strangers see was the one page
+the mark sat dead on.** The animation was keyed `.utility-bar
+a.utility-bar-title:hover`, and the shared page had a plain `<h1>Kivli</h1>`
+beside it — same font, no letter spans, nothing to animate, and 30px against
+the bar's 44px. The letters now come from `app/_ui/Wordmark.js` and the hover
+is keyed on `.wordmark-link`, which the utility bar, the shared bar and the
+login card all carry. Anything else that shows the mark takes that class and
+sets only `font-size`; the em-based descender trim is the same everywhere
+(`margin-bottom: -0.307em`) and was triplicated before.
+
+**The shared page tabs on contents, not on scope.** A library share from an
+account with no components shouldn't offer an empty Components tab — the scope
+says what was shared, the array lengths say what is worth showing, and with one
+non-empty kind there is no tab strip at all. The collection read also grew
+components and resources: it used to select sites only, so anything else
+bookmarked into a collection silently vanished from the shared view.
+
+**`.shared-invite-mark` is doubled for the same reason `.icon-btn` is.**
+`.shared-invite p` is (0,1,1) and styles bare elements, so a single class on a
+`<p>` lost to it and the wordmark rendered at the body's 16px instead of 34.
+
 **A share link's token is the whole of its authorisation.** `/api/shared/
 [token]` takes no session and scopes every query by the row that token
 resolves to, never by anything else in the request — so a caller can ask for a

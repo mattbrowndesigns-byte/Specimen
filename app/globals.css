@@ -662,7 +662,10 @@ h1 {
   color: inherit;
 }
 
-.utility-bar a.utility-bar-title:hover .wordmark-letter {
+/* Keyed off the link, not off the utility bar. The shared page has the same
+   wordmark in a different band, and scoping the animation to one ancestor is
+   why the one page strangers see was the one page where the mark sat dead. */
+.wordmark-link.wordmark-link:hover .wordmark-letter {
   animation: wordmark-warm 0.5s ease-out;
   animation-delay: calc(var(--step) * 55ms);
 }
@@ -702,7 +705,7 @@ h1 {
 
 /* A beat behind its letter's colour, so the dot lifts as the warmth arrives
    rather than before it. */
-.utility-bar a.utility-bar-title:hover .wordmark-i-dot {
+.wordmark-link.wordmark-link:hover .wordmark-i-dot {
   animation: wordmark-hop 0.42s ease-out;
   animation-delay: calc(var(--step) * 55ms + 40ms);
 }
@@ -720,12 +723,12 @@ h1 {
 /* The sweep and the hop are the whole effect, so with motion off neither runs
    and the hover is a plain colour change. */
 @media (prefers-reduced-motion: reduce) {
-  .utility-bar a.utility-bar-title:hover .wordmark-letter,
-  .utility-bar a.utility-bar-title:hover .wordmark-i-dot {
+  .wordmark-link.wordmark-link:hover .wordmark-letter,
+  .wordmark-link.wordmark-link:hover .wordmark-i-dot {
     animation: none;
   }
 
-  .utility-bar a.utility-bar-title:hover h1 {
+  .wordmark-link.wordmark-link:hover .wordmark {
     color: var(--text-muted);
   }
 }
@@ -3812,12 +3815,21 @@ a.card {
   text-decoration: none;
 }
 
-.shared-mark {
+/* Same size and same trim as the utility bar's, because it is the same mark in
+   the same position -- a stranger's first look at this app shouldn't be a
+   smaller, flatter version of it. The negative margins are the identical
+   descender trim: Lalezar declares 26/44 of an em that "Kivli" never uses, so
+   an untrimmed box is 44px tall and hangs the mark above the row's optical
+   centre. Both values are in em, so they hold at any size. */
+.shared-mark.shared-mark {
   font-family: var(--font-wordmark), "Arial Black", "Helvetica Neue", sans-serif;
-  font-size: 30px;
+  font-size: 44px;
   font-weight: 400;
   line-height: 1;
+  letter-spacing: 0.005em;
   color: var(--brand-ink);
+  margin-top: -0.021em;
+  margin-bottom: -0.307em;
 }
 
 .shared-bar-meta {
@@ -5238,4 +5250,206 @@ a.card {
   width: 38%;
   height: 38%;
   object-fit: contain;
+}
+
+/* Shared pages, second pass
+   ---------------------------------------------------------------------------
+   This is the only page most people will ever see of this app, so it stopped
+   being a read-only dump of a grid and became a page that introduces itself:
+   the real animated wordmark, whose library it is, and a way in at the end. */
+
+.shared-bar-side {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* The wordmark is now the component the utility bar uses, so it animates on
+   hover like everywhere else. It needs its own size here because the shared
+   bar has no tagline beside it to set the scale. */
+.shared-brand {
+  text-decoration: none;
+  display: inline-flex;
+}
+
+
+/* Small, solid, and the only button in the bar -- a stranger who wants one of
+   these should not have to scroll to the bottom to find out how. */
+.shared-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-h);
+  padding: 0 14px;
+  border-radius: 8px;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.shared-cta-btn:hover {
+  opacity: 0.88;
+}
+
+/* A collection and a folder carry their own name, so the owner moves to a
+   byline under it. A library share puts the owner in the title itself and
+   doesn't render this at all. */
+.shared-byline {
+  margin: -20px 0 28px;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.tab-count {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.tab-switcher button.active .tab-count {
+  color: var(--text-muted);
+}
+
+/* The end of someone else's library is the moment a stranger is most likely to
+   want their own, so the invitation lives there rather than in a banner that
+   would have interrupted the thing they came to look at. */
+.shared-invite {
+  margin: 64px auto 0;
+  padding: 40px 32px;
+  max-width: 34em;
+  text-align: center;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+/* Doubled to beat `.shared-invite p`, which is (0,1,1) and styles bare
+   elements -- the same specificity trap `.icon-btn.icon-btn` exists for. The
+   mark is a <p> so it isn't a second heading on a page that already has two. */
+.shared-invite-mark.shared-invite-mark {
+  margin: 0 0 18px;
+  font-family: var(--font-wordmark), "Arial Black", "Helvetica Neue", sans-serif;
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--brand-ink);
+}
+
+.shared-invite h2 {
+  margin: 0 0 12px;
+  font-size: 26px;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.shared-invite p {
+  margin: 0 auto 24px;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.shared-invite-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.shared-invite-primary,
+.shared-invite-secondary {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.shared-invite-primary {
+  background: var(--invert-bg);
+  color: var(--invert-text);
+}
+
+.shared-invite-primary:hover {
+  opacity: 0.88;
+}
+
+.shared-invite-secondary {
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+}
+
+.shared-invite-secondary:hover {
+  background: var(--surface-hover);
+}
+
+/* A shared resource row has no controls at all, so the space the actions would
+   have taken goes back to the summary. */
+.shared-page .resource-row:hover {
+  background: none;
+}
+
+/* Share scopes
+   ---------------------------------------------------------------------------
+   Sharing is no longer one decision, so the modal asks it. Each scope keeps
+   its own token, which is why one can be revoked while the others stay live --
+   and why the picker marks the ones that already are. */
+.share-scopes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.share-scope {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--border-soft);
+  border-radius: 9px;
+  background: var(--surface);
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.share-scope:hover {
+  border-color: var(--border-strong);
+}
+
+.share-scope-on,
+.share-scope-on:hover {
+  border-color: var(--text);
+}
+
+.share-scope-text strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.share-scope-text small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.share-scope-live {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  color: var(--text-secondary);
 }

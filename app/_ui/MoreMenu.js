@@ -15,8 +15,10 @@ import {
   Moon,
   Sun,
   LogOut,
+  UserRound,
 } from "lucide-react";
 import ShareModal from "./ShareModal";
+import NameModal from "./NameModal";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { THEME_KEY } from "@/lib/theme";
 
@@ -45,6 +47,7 @@ export default function MoreMenu() {
   const [isOwner, setIsOwner] = useState(false);
   const [theme, setTheme] = useState("light");
   const [sharing, setSharing] = useState(false);
+  const [naming, setNaming] = useState(false);
   const wrapRef = useRef(null);
 
   // The boot script in the document head has already set data-theme from
@@ -150,6 +153,16 @@ export default function MoreMenu() {
 
           <div className="more-divider" />
           <span className="more-section-head">Settings</span>
+          <button
+            className="more-item more-item-button"
+            onClick={() => {
+              setOpen(false);
+              setNaming(true);
+            }}
+          >
+            <UserRound size={15} />
+            Your Name
+          </button>
           <button className="more-item more-item-button" onClick={toggleTheme}>
             {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
             {theme === "dark" ? "Light Mode" : "Dark Mode"}
@@ -165,6 +178,7 @@ export default function MoreMenu() {
       )}
 
       {sharing && <ShareModal kind="library" title="your library" onClose={() => setSharing(false)} />}
+      {naming && <NameModal onClose={() => setNaming(false)} />}
     </div>
   );
 }

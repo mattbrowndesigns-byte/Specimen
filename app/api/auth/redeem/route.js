@@ -10,9 +10,10 @@ import { seedStarterTags } from "@/lib/starterTags";
 // the gate real: Supabase's own signup endpoint has no idea about invite codes,
 // so if it were reachable, anyone could bypass this.
 export async function POST(request) {
-  const { email, code, password } = await request.json();
+  const { email, code, password, name } = await request.json();
   const cleanEmail = (email || "").trim().toLowerCase();
   const cleanCode = (code || "").trim().toUpperCase();
+  const displayName = (name || "").trim().slice(0, 40);
 
   if (!cleanEmail || !cleanCode || !password) {
     return NextResponse.json({ error: "Email, invite code and password are all required" }, { status: 400 });
@@ -38,6 +39,11 @@ export async function POST(request) {
     email: cleanEmail,
     password,
     email_confirm: true,
+    // Asked for once, here, because the only place it shows is on a page other
+    // people see -- a share link reading "Matt's inspiration library" rather
+    // than "A design library". Optional: an account without one falls back to
+    // the capitalised local part of its email, which is almost always right.
+    user_metadata: displayName ? { display_name: displayName } : {},
   });
 
   if (error) {

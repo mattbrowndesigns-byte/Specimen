@@ -65,24 +65,30 @@ export default function AddMenu({ onSubmit, variant }) {
       {open && !kind && (
         <div className="add-pop">
           <button className="add-option" onClick={() => setKind("website")}>
-            <Globe size={18} />
+            <span className="add-option-icon">
+              <Globe size={17} />
+            </span>
             <span>
               <strong>Website</strong>
               <small>Capture and tag a whole page</small>
             </span>
           </button>
           <button className="add-option" onClick={() => setKind("component")}>
-            <Crop size={18} />
+            <span className="add-option-icon">
+              <Crop size={17} />
+            </span>
             <span>
               <strong>Component</strong>
               <small>Capture a page, then crop a region</small>
             </span>
           </button>
           <button className="add-option" onClick={() => setKind("resource")}>
-            <Link2 size={18} />
+            <span className="add-option-icon">
+              <Link2 size={17} />
+            </span>
             <span>
               <strong>Resource</strong>
-              <small>Save a tool or reference — no screenshot</small>
+              <small>Save a tool or reference</small>
             </span>
           </button>
         </div>

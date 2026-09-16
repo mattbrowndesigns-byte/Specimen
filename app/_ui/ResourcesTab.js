@@ -1,11 +1,20 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDownUp, Check, Folder, FolderOpen, Pencil, Inbox } from "lucide-react";
+import { ArrowDownUp, Check, Folder, FolderOpen, Pencil, Inbox, List, AlignJustify } from "lucide-react";
 import Favicon from "./Favicon";
 import SaveActions from "./SaveActions";
 import AddMenu from "./AddMenu";
 import ResourceModal from "./ResourceModal";
+import ResourceProgress from "./ResourceProgress";
 import FeatureRotator from "./FeatureRotator";
+
+// Two views, not the library's three. A card needs a picture and a resource
+// hasn't got one, so the choice here is how much of the record you want beside
+// the title: the summary and tags, or nothing at all.
+const VIEWS = [
+  { id: "list", label: "List", Icon: List },
+  { id: "headlines", label: "Headlines", Icon: AlignJustify },
+];
 
 const SORTS = [
   { id: "newest", label: "Newest First" },
@@ -36,6 +45,8 @@ export default function ResourcesTab({
   const [query, setQuery] = useState("");
   const [folder, setFolder] = useState(null);
   const [sort, setSort] = useState("newest");
+  const [view, setView] = useState("list");
+  const [progress, setProgress] = useState(null);
   const [sortOpen, setSortOpen] = useState(false);
   const [shown, setShown] = useState(PAGE_SIZE);
   const [editing, setEditing] = useState(null);
@@ -61,10 +72,12 @@ export default function ResourcesTab({
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("specimen.sort.resources");
-      if (saved && SORTS.some((o) => o.id === saved)) setSort(saved);
+      const savedSort = localStorage.getItem("specimen.sort.resources");
+      if (savedSort && SORTS.some((o) => o.id === savedSort)) setSort(savedSort);
+      const savedView = localStorage.getItem("specimen.view.resources");
+      if (savedView && VIEWS.some((o) => o.id === savedView)) setView(savedView);
     } catch {
-      // localStorage can be unavailable; the default is fine.
+      // localStorage can be unavailable; the defaults are fine.
     }
   }, []);
 
@@ -86,14 +99,26 @@ export default function ResourcesTab({
   // A saved resource is shown the instant its row exists and is described
   // afterwards, because there's no capture to wait on — the only slow part is
   // the model, and a row with a title and a favicon is already useful.
-  const describe = useCallback(async (id) => {
+  const describe = useCallback(async (id, label) => {
     setDescribing((prev) => new Set(prev).add(id));
+    // Only an Add shows the bar. A Regenerate from the modal has its own
+    // spinner and shouldn't put a progress panel at the top of the page.
+    if (label) setProgress({ label, done: false, queued: false });
     try {
       const res = await fetch(`/api/resources/${id}/enrich`, { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         setResources((prev) => prev.map((r) => (r.id === id ? data.resource : r)));
-        if (!data.described) {
+        if (label) {
+          setProgress({
+            label: data.resource.title || label,
+            done: true,
+            queued: Boolean(data.queued),
+          });
+          // A queued result is the only place that message appears and it asks
+          // the reader to do nothing, so it sits longer than a clean finish.
+          setTimeout(() => setProgress(null), data.queued ? 9000 : 2500);
+        } else if (!data.described) {
           setError(
             data.queued
               ? "Saved. The AI was busy, so its summary will fill in within the hour."
@@ -102,6 +127,7 @@ export default function ResourcesTab({
         }
       }
     } catch {
+      setProgress(null);
       setError("Saved, but the AI couldn't be reached.");
     } finally {
       setDescribing((prev) => {
@@ -124,7 +150,7 @@ export default function ResourcesTab({
       );
     }
     onResourceHandled?.();
-    describe(describeId);
+    describe(describeId, newResource?.title || newResource?.domain || "that link");
   }, [describeId, newResource, describe, onResourceHandled]);
 
   const folders = useMemo(() => {
@@ -176,14 +202,23 @@ export default function ResourcesTab({
     setShown(PAGE_SIZE);
   }, [query, folder, sort]);
 
+  function remember(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // Not being able to remember a preference is not worth an error.
+    }
+  }
+
   function chooseSort(id) {
     setSort(id);
     setSortOpen(false);
-    try {
-      localStorage.setItem("specimen.sort.resources", id);
-    } catch {
-      // Not being able to remember the sort is not worth an error.
-    }
+    remember("specimen.sort.resources", id);
+  }
+
+  function chooseView(id) {
+    setView(id);
+    remember("specimen.view.resources", id);
   }
 
   function applyEdit(updated) {
@@ -204,6 +239,10 @@ export default function ResourcesTab({
         <p className="error">
           {error} <button onClick={() => setError(null)}>Dismiss</button>
         </p>
+      )}
+
+      {progress && (
+        <ResourceProgress label={progress.label} done={progress.done} queued={progress.queued} />
       )}
 
       <div className="toolbar">
@@ -252,6 +291,21 @@ export default function ResourcesTab({
           {filtered.length} {filtered.length === 1 ? "resource" : "resources"}
         </span>
         <div className="results-controls">
+          <div className="view-switch">
+            {VIEWS.map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                className={view === id ? "active" : ""}
+                onClick={() => chooseView(id)}
+                title={label}
+                aria-pressed={view === id}
+              >
+                <Icon size={15} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+
           <div className="sort-menu" ref={sortRef}>
             <button className="sort-btn" onClick={() => setSortOpen((v) => !v)} aria-expanded={sortOpen}>
               <ArrowDownUp size={14} />
@@ -291,7 +345,7 @@ export default function ResourcesTab({
         <p className="empty">Nothing matches that.</p>
       )}
 
-      {page.length > 0 && (
+      {view === "list" && page.length > 0 && (
         <div className="resource-list">
           {page.map((resource) => (
             <div className="resource-row" key={resource.id}>
@@ -337,6 +391,49 @@ export default function ResourcesTab({
               </div>
 
               <span className="resource-actions">
+                <button
+                  className="icon-btn"
+                  onClick={() => setEditing(resource)}
+                  title="Edit"
+                  aria-label={`Edit ${resource.title}`}
+                >
+                  <Pencil size={15} />
+                </button>
+                <SaveActions
+                  kind="resource"
+                  id={resource.id}
+                  name={resource.title}
+                  isFavorite={resource.is_favorite}
+                />
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Title only: the favicon, the name, where it lives, and nothing else.
+          For when you know what you're looking for and want forty of them on
+          screen rather than eight. */}
+      {view === "headlines" && page.length > 0 && (
+        <div className="headline-list">
+          {page.map((resource) => (
+            <div className="headline-item" key={resource.id}>
+              <Favicon
+                url={resource.url}
+                faviconUrl={resource.favicon_url}
+                fills={resource.favicon_fills !== false}
+                alt={resource.title}
+              />
+              <a
+                className="row-name"
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {resource.title}
+              </a>
+              <span className="row-domain">{resource.domain}</span>
+              <span className="resource-actions headline-actions">
                 <button
                   className="icon-btn"
                   onClick={() => setEditing(resource)}

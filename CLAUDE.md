@@ -578,6 +578,46 @@ runner has no session, so a callback left off that list is redirected to
 capture, `image_url` the cropped derivative, `crop_rect` the region.
 Re-cropping reads the original, so cropped-out content stays recoverable.
 
+**Every control in the results bar is `--control-h`, and they were a pixel or
+two apart before that.** The size switch is a padded container around 26px
+buttons, the view switch a padded container around 13px text, the sort button a
+bordered box with its own padding — three independent recipes that happened to
+land near 30px and read as a wobble rather than a row. They now set
+`height: var(--control-h)` with `box-sizing: border-box` and let their insides
+fill it. Measured at 32.00 / 32.00 / 32.00. Anything new that joins that row
+takes the token rather than a padding pair.
+
+**`.chip-filter` throws away `.chip`'s font size, and that is why a row's tags
+came out at body size.** `.chip` sets 11px; `.chip-filter` resets the button
+with `font: inherit`, and the shorthand clears `font-size` along with
+everything else. The dashboard's strip never noticed because
+`.chip-strip .chip-filter` re-declares 13px — deliberately bigger, since a
+filter is a target. Any other place a chip is also a button has to say its size
+out loud: `.resource-tags .chip-filter` is 11px, matching a card's chips
+exactly (both 19px tall, measured).
+
+**A `resource_type` proposal is only accepted when nothing in the list fitted.**
+Asked to pick up to two types and optionally propose one, the model does both:
+lawsofux.com came back tagged "Reading" — correct — plus a proposed
+"reference", which is the same idea in different words and lands in the review
+queue as an amber chip nobody can interpret. `block_pattern` can afford
+proposals because it takes eight and is an inventory; `resource_type` answers
+"what kind of thing is this", so if that already has an answer there is no gap
+for a new word. Enforced in `enrichResource.js` (`tagIdsToLink.length === 0`)
+*and* asked for in the prompt — the code is the guarantee, the prompt just
+saves a round trip. Proposed labels are also Title Cased there, because the
+model returns lowercase and the vocabulary is not.
+
+**The resource progress bar is driven by its own request, not by a clock.**
+`CaptureProgress` races a 75-second Actions job and polls for the result;
+a resource has nothing to poll — the row already exists and the only
+outstanding work is one text call. So `ResourceProgress` takes `done` as a
+prop, estimates 8 seconds, ticks every 250ms, and wears
+`.capture-status-quick` to cut the fill's 1s width transition down to 0.25s.
+A Regenerate from the edit modal passes no label and so shows no bar: it has
+its own button state, and a progress panel at the top of the page for a thing
+you did in a modal is a jump scare.
+
 **Resources are a third library, and the point of them is leaving Raindrop.**
 A resource is a link saved for what it *does* -- an icon set, a stock library,
 an AI tool -- not for how it looks. Everything else in this app assumes a

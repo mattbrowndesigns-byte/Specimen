@@ -104,6 +104,14 @@
      4-span is 450.67px and an 8-span 921.33px. A span of n is n tracks plus
      the n-1 gutters inside it, which is why 4 + 8 comes to 1392 and not 1372.
      Both are fractional above and below that width, which is fine. */
+  /* Every control in the results bar is this tall. They were built
+     independently -- a padded container around 26px buttons, another around
+     13px text, and a bordered button -- and landed within a pixel or two of
+     each other, which reads as a wobble rather than a row. Setting the height
+     once and letting the insides fill it is the only way they stay level when
+     one of them changes. */
+  --control-h: 32px;
+
   --grid-columns: 12;
   --grid-gutter: 20px;
   --grid-margin: 24px;
@@ -975,10 +983,25 @@ h1 {
   background: var(--surface-hover);
 }
 
-.add-option svg {
-  margin-top: 2px;
+/* The same rounded tile the features page uses for its icons. A bare glyph
+   beside two lines of text has no left edge of its own, so the title and the
+   description read as floating away from it; the tile gives all three
+   something to line up against. Sized to the two lines it sits beside rather
+   than to the 34px feature card. */
+.add-option-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--chip-bg);
+  color: var(--accent);
+}
+
+.add-option:hover .add-option-icon {
+  background: var(--surface-sunken);
 }
 
 .add-option strong {
@@ -1132,6 +1155,8 @@ h1 {
 .view-switch {
   display: flex;
   gap: 2px;
+  height: var(--control-h);
+  box-sizing: border-box;
   background: var(--surface-sunken);
   border-radius: 8px;
   padding: 2px;
@@ -1141,7 +1166,8 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  height: 100%;
+  padding: 0 12px;
   border: none;
   background: none;
   border-radius: 6px;
@@ -4436,7 +4462,9 @@ a.card {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  height: var(--control-h);
+  box-sizing: border-box;
+  padding: 0 12px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   background: var(--surface);
@@ -4875,6 +4903,8 @@ a.card {
   display: flex;
   gap: 2px;
   padding: 2px;
+  height: var(--control-h);
+  box-sizing: border-box;
   background: var(--surface-sunken);
   border-radius: 8px;
 }
@@ -4884,7 +4914,7 @@ a.card {
   align-items: center;
   justify-content: center;
   width: 30px;
-  height: 26px;
+  height: 100%;
   padding: 0;
   border: none;
   border-radius: 6px;
@@ -4941,6 +4971,12 @@ a.card {
   .capture-status-row .feature-rotator {
     display: none;
   }
+}
+
+/* The capture bar's fill eases its width over a second, which is right for a
+   75-second job and a full second of lag on an 8-second one. */
+.capture-status-quick .capture-status-fill {
+  transition: width 0.25s linear;
 }
 
 /* Resources
@@ -5094,11 +5130,20 @@ a.card {
   display: block;
 }
 
+/* `.chip-filter` sets `font: inherit` to reset a button, and that shorthand
+   throws away `.chip`'s own 11px -- which is why the dashboard's filter strip
+   re-declares 13px and why these came out at body size. A row's tags are the
+   same 11px chips a card wears; only the filter strip is deliberately bigger. */
 .resource-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
   margin-top: 1px;
+}
+
+.resource-tags .chip-filter {
+  font-size: 11px;
+  padding: 3px 8px;
 }
 
 /* Clicking a tag opens that folder -- the same move as clicking the folder
@@ -5132,6 +5177,17 @@ a.card {
 .resource-actions .save-actions {
   display: flex;
   gap: 2px;
+}
+
+/* In headlines the actions sit at the end of the line rather than in a column
+   of their own, so they take the row's remaining space the way `.visit` does
+   in the library's own headline view. */
+.headline-actions {
+  margin-left: auto;
+}
+
+.headline-item:hover .resource-actions {
+  opacity: 1;
 }
 
 .resource-modal-link {

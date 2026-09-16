@@ -21,6 +21,15 @@
   --chip-bg: #f0f0f1;
   --chip-strong-bg: #e7e7e9;
 
+  /* The fill under a search field and under the tab you're on. It needs its
+     own token because neither existing one survives both themes: the fill has
+     to sit *below* the page in light and *above* it in dark, and `--chip-bg`
+     is 240 against a 247 page (1.03, a smudge) while `--surface-sunken` is 13
+     against a 18 page (1.04, near enough invisible). These two are picked to
+     land on the same perceived step from the page either way -- 1.10 light,
+     1.21 dark. */
+  --field-bg: #ececed;
+
   --border-soft: #e6e6e9;
   --border: #e0e0e2;
   --border-strong: #d8d8dc;
@@ -155,6 +164,7 @@
   --surface-hover: #2a2a31;
 
   --chip-bg: #26262c;
+  --field-bg: #24242a;
   --chip-strong-bg: #303037;
 
   --border-soft: #2a2a31;
@@ -889,18 +899,87 @@ h1 {
   gap: 10px;
 }
 
+/* A filled pill, not a bordered box. A search field is the one control on the
+   page that wants to be entered rather than read, and a fill invites that in a
+   way an outline doesn't -- an outline draws the boundary of a thing, a fill
+   draws the thing.
+   
+   The fill is `--field-bg`, which exists because this is the one place the
+   light and dark palettes have to run in opposite directions: a field reads as
+   a well against a white page and as a raised shape against a dark one. See
+   the token for the numbers. */
 .search-input {
   width: 100%;
-  padding: 10px 14px;
+  height: 44px;
+  padding: 0 18px;
   font-size: 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border: none;
+  border-radius: 999px;
+  background: var(--field-bg);
+  color: var(--text);
   margin-bottom: 12px;
   outline: none;
 }
 
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* With the border gone the focus state has to come from somewhere, and a ring
+   outside the shape is the only thing that doesn't move the text. */
 .search-input:focus {
-  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--text);
+}
+
+/* WebKit draws its own clear button in exactly the space the circle occupies.
+   Two controls stacked on one another is worse than losing the native one; the
+   field is a live filter, so clearing it is select-all and delete. */
+.search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search-field {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+.search-field .search-input {
+  margin-bottom: 0;
+  padding-right: 52px;
+}
+
+/* 4 + 36 + 4 = 44, so the circle is centred in the field by arithmetic rather
+   than by a translate that has to be re-derived every time the field's height
+   changes.
+   
+   `--brand-ink` rather than `--accent-solid`, and that's the point of it: Add
+   is the action this app exists for and search is what you do between saves,
+   so two solid oranges side by side would have had them arguing over which one
+   you came here to press. The deep purple is still the brand -- it's the
+   wordmark's own ink -- and it reads as the quieter of the two without reading
+   as a disabled grey. It pairs with `--surface` for the glyph, which inverts
+   with it: dark circle and white mark in light mode, light circle and dark
+   mark in dark mode, 17.4:1 either way. */
+.search-go {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--brand-ink);
+  color: var(--surface);
+  cursor: pointer;
+}
+
+.search-go:hover {
+  opacity: 0.88;
 }
 
 /* Dashboard toolbar: search leads, actions on the right */
@@ -912,22 +991,31 @@ h1 {
   margin-bottom: 12px;
 }
 
-.toolbar .search-input {
+.toolbar .search-field {
   flex: 1;
+}
+
+.toolbar .search-input {
   margin-bottom: 0;
 }
 
 /* inline-flex, or the icon sits on the text's baseline rather than its centre
    -- which reads as the label hanging low -- and butts straight up against the
    first letter. Same construction as .sort-btn and .add-btn. */
+/* A pill at the field's own height, so the two read as one band rather than as
+   a control that happened to land beside a search box. It keeps its border
+   where the field gave one up: the field is filled because you type into it,
+   and this is a button -- an outline is what still tells them apart now that
+   they share a shape. */
 .filters-btn {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 16px;
+  height: 44px;
+  padding: 0 18px;
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border-radius: 999px;
   background: var(--surface);
   font-size: 14px;
   line-height: 1.25;
@@ -2332,20 +2420,31 @@ h1 {
   margin-bottom: 16px;
 }
 
+/* Pills with a fill, not an underline. An underline marks a position in a
+   sequence -- it says "you are on page two of this" -- and these aren't a
+   sequence, they're three separate libraries you switch between. A filled
+   shape says the one you're in is held, which is what's actually true.
+   
+   Each carries the icon its kind wears in the Add menu, from `_ui/kinds.js`,
+   so the button you pressed to save a thing is the button you press to find it
+   again. */
 .tab-switcher button {
-  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
   border: none;
+  border-radius: 999px;
   background: none;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-faint);
+  color: var(--text-muted);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
 }
 
 .tab-switcher button.active {
+  background: var(--field-bg);
   color: var(--text);
-  border-bottom-color: var(--text);
 }
 
 /* Components */
@@ -2581,12 +2680,14 @@ a.card {
 }
 
 .tab-switcher button {
-  transition: color 0.12s ease, border-color 0.12s ease;
+  transition: color 0.12s ease, background 0.12s ease;
 }
 
+/* Hover darkens the label and leaves the fill alone. A hover fill one shade off
+   the active one is two states wearing the same clothes -- the filled pill has
+   to mean "you are here" and nothing else. */
 .tab-switcher button:hover:not(.active) {
-  color: var(--text-secondary);
-  border-bottom-color: var(--border-strong);
+  color: var(--text);
 }
 
 .row-item,
@@ -5403,9 +5504,14 @@ a.card {
   font-variant-numeric: tabular-nums;
 }
 
+/* The active tab used to be bare page, so its count needed the near-black
+   holder to register at all. On a filled pill that reads as a black blot
+   inside a grey one -- the count is a label, not a badge. `--surface` is the
+   one step further from the page in the direction the tokens already run, so
+   it separates from the pill in both themes. */
 .tab-switcher button.active .tab-count {
-  background: var(--invert-bg);
-  color: var(--invert-text);
+  background: var(--surface);
+  color: var(--text-secondary);
 }
 
 /* The end of someone else's library is the moment a stranger is most likely to

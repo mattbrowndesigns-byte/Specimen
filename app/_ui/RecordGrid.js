@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import { latestCapture } from "@/lib/captures";
 import SaveActions from "./SaveActions";
+import { KIND, KINDS } from "./kinds";
 import Favicon from "./Favicon";
 
 // A plain grid of mixed sites, components and resources, for the pages that
@@ -19,8 +20,14 @@ import Favicon from "./Favicon";
 // The resources tab renders rows rather than cards for the same reason the
 // Resources tab does on the dashboard: a resource has no picture, and a card
 // built around a missing one is mostly empty rectangle.
-const TAB_LABELS = { site: "Websites", component: "Components", resource: "Resources" };
-const TAB_ORDER = ["site", "component", "resource"];
+const TAB_ORDER = KINDS.map((kind) => kind.id);
+
+// Same icon a kind wears in the Add menu and on the dashboard's own tabs.
+function KindIcon({ kind }) {
+  const Icon = KIND[kind].Icon;
+  return <Icon size={16} />;
+}
+
 export default function RecordGrid({ entries, emptyMessage, onRemove, removeLabel }) {
   const [tab, setTab] = useState(null);
 
@@ -43,7 +50,8 @@ export default function RecordGrid({ entries, emptyMessage, onRemove, removeLabe
             className={active === kind ? "active" : ""}
             onClick={() => setTab(kind)}
           >
-            {TAB_LABELS[kind]}
+            <KindIcon kind={kind} />
+            {KIND[kind].label}
             <span className="tab-count">{count}</span>
           </button>
         ))}

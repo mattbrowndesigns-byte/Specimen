@@ -4,6 +4,7 @@ import WebsitesTab from "./_ui/WebsitesTab";
 import ComponentsTab from "./_ui/ComponentsTab";
 import ResourcesTab from "./_ui/ResourcesTab";
 import UtilityBar from "./_ui/UtilityBar";
+import { KINDS } from "./_ui/kinds";
 import CaptureProgress from "./_ui/CaptureProgress";
 import SiteFooter from "./_ui/SiteFooter";
 import { addItem, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
@@ -116,16 +117,21 @@ export default function Home() {
           Find it when you need it.
         </h2>
 
+        {/* Icons from the shared kind list -- the same three the Add menu
+            shows, so the thing you pressed to save it is the thing you press
+            to find it again. */}
         <div className="tab-switcher">
-          <button className={tab === "websites" ? "active" : ""} onClick={() => setTab("websites")}>
-            Websites
-          </button>
-          <button className={tab === "components" ? "active" : ""} onClick={() => setTab("components")}>
-            Components
-          </button>
-          <button className={tab === "resources" ? "active" : ""} onClick={() => setTab("resources")}>
-            Resources
-          </button>
+          {KINDS.map(({ tab: id, label, Icon }) => (
+            <button
+              key={id}
+              className={tab === id ? "active" : ""}
+              onClick={() => setTab(id)}
+              aria-pressed={tab === id}
+            >
+              <Icon size={16} />
+              {label}
+            </button>
+          ))}
         </div>
 
         {tab === "websites" && (

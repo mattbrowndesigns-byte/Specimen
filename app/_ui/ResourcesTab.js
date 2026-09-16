@@ -18,6 +18,7 @@ import ResourceModal from "./ResourceModal";
 import ResourceProgress from "./ResourceProgress";
 import ShareModal from "./ShareModal";
 import FeatureRotator from "./FeatureRotator";
+import SearchField from "./SearchField";
 
 // Two views, not the library's three. A card needs a picture and a resource
 // hasn't got one, so the choice here is how much of the record you want beside
@@ -263,12 +264,10 @@ export default function ResourcesTab({
       )}
 
       <div className="toolbar">
-        <input
-          type="search"
-          className="search-input"
+        <SearchField
           placeholder="Search resources by name, summary, notes or tag…"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={setQuery}
         />
       </div>
 

@@ -11,6 +11,7 @@ import {
   Square,
 } from "lucide-react";
 import FilterModal from "./FilterModal";
+import SearchField from "./SearchField";
 import SaveActions from "./SaveActions";
 import Favicon from "./Favicon";
 import AddMenu from "./AddMenu";
@@ -237,12 +238,10 @@ export default function LibraryBrowser({
   return (
     <>
       <div className="toolbar">
-        <input
-          type="search"
-          className="search-input"
+        <SearchField
           placeholder={searchPlaceholder}
           value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
+          onChange={onQueryChange}
         />
         <button className="filters-btn" onClick={() => setFiltersOpen(true)}>
           <SlidersHorizontal size={15} />

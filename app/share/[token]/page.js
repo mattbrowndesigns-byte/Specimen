@@ -5,6 +5,7 @@ import Favicon from "../../_ui/Favicon";
 import TagRow from "../../_ui/TagRow";
 import Wordmark from "../../_ui/Wordmark";
 import SharedFooter from "../../_ui/SharedFooter";
+import { KIND } from "../../_ui/kinds";
 import { latestCapture } from "@/lib/captures";
 
 // What someone without an account sees.
@@ -17,12 +18,20 @@ import { latestCapture } from "@/lib/captures";
 // wordmark is the real animated one rather than a styled string, and why
 // there's an invitation at the bottom instead of a dead end.
 
-const TAB_LABELS = { sites: "Websites", components: "Components", resources: "Resources" };
+// The share payload keys its arrays in the plural; the shared kind list is
+// what supplies the label and the icon, so a Website looks the same to a
+// stranger as it does to the owner.
+const TABS = { sites: KIND.site, components: KIND.component, resources: KIND.resource };
 
 // The same first screenful the dashboard shows. A library of 150 sites should
 // not render 150 cards to a stranger deciding whether to look at the second
 // row.
 const PAGE_SIZE = 24;
+
+function TabIcon({ id }) {
+  const Icon = TABS[id].Icon;
+  return <Icon size={16} />;
+}
 
 export default function SharedPage({ params }) {
   const { token } = usePromise(params);
@@ -126,7 +135,8 @@ export default function SharedPage({ params }) {
                 className={active === id ? "active" : ""}
                 onClick={() => choose(id)}
               >
-                {TAB_LABELS[id]}
+                <TabIcon id={id} />
+                {TABS[id].label}
                 <span className="tab-count">{count}</span>
               </button>
             ))}

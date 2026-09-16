@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Globe, Crop, Link2 } from "lucide-react";
+import { Plus } from "lucide-react";
+import { KINDS } from "./kinds";
 
 // Lives in the page header so saving never depends on which tab is open.
 // Three kinds: a website (full record, appears in the grid), a component
@@ -64,33 +65,19 @@ export default function AddMenu({ onSubmit, variant }) {
 
       {open && !kind && (
         <div className="add-pop">
-          <button className="add-option" onClick={() => setKind("website")}>
-            <span className="add-option-icon">
-              <Globe size={17} />
-            </span>
-            <span>
-              <strong>Website</strong>
-              <small>Capture and tag a whole page</small>
-            </span>
-          </button>
-          <button className="add-option" onClick={() => setKind("component")}>
-            <span className="add-option-icon">
-              <Crop size={17} />
-            </span>
-            <span>
-              <strong>Component</strong>
-              <small>Capture a page, then crop a region</small>
-            </span>
-          </button>
-          <button className="add-option" onClick={() => setKind("resource")}>
-            <span className="add-option-icon">
-              <Link2 size={17} />
-            </span>
-            <span>
-              <strong>Resource</strong>
-              <small>Save a tool or reference</small>
-            </span>
-          </button>
+          {/* One loop over the shared kind list, so the icon a Website wears
+              here is the same one it wears on every tab in the app. */}
+          {KINDS.map(({ add, one, blurb, Icon }) => (
+            <button className="add-option" key={add} onClick={() => setKind(add)}>
+              <span className="add-option-icon">
+                <Icon size={17} />
+              </span>
+              <span>
+                <strong>{one}</strong>
+                <small>{blurb}</small>
+              </span>
+            </button>
+          ))}
         </div>
       )}
 

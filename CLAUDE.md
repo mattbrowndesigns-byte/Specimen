@@ -829,6 +829,56 @@ number with nothing around it floats beside its label instead of belonging to
 it. Inverted holders get `rgba(var(--invert-text-rgb), 0.22)`, which is the
 one recipe that works on both a light and a dark holder.
 
+**One kind, one icon, and `app/_ui/kinds.js` is the only place that says so.**
+A Website is a globe in the Add menu, on the dashboard's tabs, in a shared
+collection's tab strip and on the page a stranger lands on -- which stays true
+only because all four read the same list, the same way the rotator and
+`/features` both read `lib/features.js`. It carries three ids per kind because
+three things had already named them differently and renaming them would touch
+far more than it buys: `id` is the database's word and what RecordGrid keys on,
+`tab` is the dashboard's state, `add` is what the save routes take.
+
+**`--field-bg` exists because this is the one fill that has to run in opposite
+directions.** A search field reads as a well against a white page and as a
+raised shape against a dark one, and neither existing token survives both:
+`--chip-bg` is 240 against a 247 page in light (1.03, a smudge) and
+`--surface-sunken` is 13 against an 18 page in dark (1.04, near enough
+invisible). The two values are picked to land on the same perceived step from
+the page either way -- 1.10 light, 1.21 dark, measured. The search field and
+the active tab share it, because they are the same idea: a filled holding
+shape.
+
+**The search circle is `--brand-ink`, and that is a hierarchy decision.** Add
+is the action this app exists for; search is what you do between saves. Two
+solid oranges in one screenful would have had them arguing over which one you
+came to press, so the circle takes the wordmark's own deep purple -- still the
+brand, clearly the quieter of the two, and not a disabled grey. It pairs with
+`--surface` for the glyph, which inverts with it: dark circle and white mark in
+light, light circle and dark mark in dark, 17.4:1 and 14.1:1. In dark mode a
+filled control has no choice but to go light, which is the same flip every
+solid button in the app already makes.
+
+**The circle focuses the field; it does not submit.** Every search here filters
+as you type, so a button that "ran" the search would be claiming work that had
+already happened. What it does is label the field and give it a target you can
+hit without aiming. It also means hiding `::-webkit-search-cancel-button`,
+which WebKit draws in exactly that spot -- two controls stacked on each other
+is worse than losing the native one.
+
+**Tabs are filled pills, not an underline.** An underline marks a position in a
+sequence -- "page two of this" -- and these aren't a sequence; they're three
+separate libraries you switch between, so a filled shape saying "the one you're
+in is held" is what's actually true. Hover darkens the label and leaves the
+fill alone: a hover fill one shade off the active one is two states wearing the
+same clothes. The count pill inside an active tab dropped from `--invert-bg` to
+`--surface` at the same time, because the near-black holder it needed against
+bare page reads as a blot inside a grey pill.
+
+**The field, the Filters button and the circle are sized by arithmetic.** The
+field and the button are both 44px; the circle is 36 with 4px around it, so it
+centres without a translate that has to be re-derived every time the field's
+height changes. Measured 44.00 / 44.00, and 4/4/4 on the circle.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

@@ -21,6 +21,8 @@ import FeatureRotator from "./FeatureRotator";
 import SearchField from "./SearchField";
 import SearchElsewhere from "./SearchElsewhere";
 import ResultCount from "./ResultCount";
+import NoMatches from "./NoMatches";
+import useEdgeFade from "./useEdgeFade";
 
 // Two views, not the library's three. A card needs a picture and a resource
 // hasn't got one, so the choice here is how much of the record you want beside
@@ -100,9 +102,11 @@ export default function ResourcesTab({
   useEffect(() => {
     try {
       const savedSort = localStorage.getItem("specimen.sort.resources");
-      if (savedSort && SORTS.some((o) => o.id === savedSort)) setSort(savedSort);
+      if (savedSort && SORTS.some((o) => o.id === savedSort))
+        setSort(savedSort);
       const savedView = localStorage.getItem("specimen.view.resources");
-      if (savedView && VIEWS.some((o) => o.id === savedView)) setView(savedView);
+      if (savedView && VIEWS.some((o) => o.id === savedView))
+        setView(savedView);
     } catch {
       // localStorage can be unavailable; the defaults are fine.
     }
@@ -110,7 +114,8 @@ export default function ResourcesTab({
 
   useEffect(() => {
     function onDocClick(e) {
-      if (sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false);
+      if (sortRef.current && !sortRef.current.contains(e.target))
+        setSortOpen(false);
     }
     function onKey(e) {
       if (e.key === "Escape") setSortOpen(false);
@@ -132,10 +137,14 @@ export default function ResourcesTab({
     // spinner and shouldn't put a progress panel at the top of the page.
     if (label) setProgress({ label, done: false, queued: false });
     try {
-      const res = await fetch(`/api/resources/${id}/enrich`, { method: "POST" });
+      const res = await fetch(`/api/resources/${id}/enrich`, {
+        method: "POST",
+      });
       if (res.ok) {
         const data = await res.json();
-        setResources((prev) => prev.map((r) => (r.id === id ? data.resource : r)));
+        setResources((prev) =>
+          prev.map((r) => (r.id === id ? data.resource : r)),
+        );
         if (label) {
           setProgress({
             label: data.resource.title || label,
@@ -149,7 +158,7 @@ export default function ResourcesTab({
           setError(
             data.queued
               ? "Saved. The AI was busy, so its summary will fill in within the hour."
-              : "Saved, but the AI couldn't describe it. Open it and hit Regenerate."
+              : "Saved, but the AI couldn't describe it. Open it and hit Regenerate.",
           );
         }
       }
@@ -173,11 +182,16 @@ export default function ResourcesTab({
     if (!describeId) return;
     if (newResource) {
       setResources((prev) =>
-        prev.some((r) => r.id === newResource.id) ? prev : [newResource, ...prev]
+        prev.some((r) => r.id === newResource.id)
+          ? prev
+          : [newResource, ...prev],
       );
     }
     onResourceHandled?.();
-    describe(describeId, newResource?.title || newResource?.domain || "that link");
+    describe(
+      describeId,
+      newResource?.title || newResource?.domain || "that link",
+    );
   }, [describeId, newResource, describe, onResourceHandled]);
 
   const folders = useMemo(() => {
@@ -215,9 +229,20 @@ export default function ResourcesTab({
     });
   }, [folders, resources]);
 
+  // Redraw the edge fade when a folder appears or disappears: that changes how
+  // far the strip scrolls without changing its box, so the ResizeObserver
+  // alone would never hear about it.
+  const [folderRef, folderFade] = useEdgeFade([
+    folders.used.length,
+    folders.unsorted,
+  ]);
+
   const openFolder = useMemo(
-    () => (folder && folder !== UNSORTED ? folders.used.find((t) => t.id === folder) || null : null),
-    [folder, folders]
+    () =>
+      folder && folder !== UNSORTED
+        ? folders.used.find((t) => t.id === folder) || null
+        : null,
+    [folder, folders],
   );
 
   const filtered = useMemo(() => {
@@ -232,13 +257,20 @@ export default function ResourcesTab({
 
     if (q) {
       list = list.filter((r) =>
-        [r.title, r.summary, r.notes, r.url, ...(r.tags || []).map((t) => t.label)]
+        [
+          r.title,
+          r.summary,
+          r.notes,
+          r.url,
+          ...(r.tags || []).map((t) => t.label),
+        ]
           .filter(Boolean)
-          .some((field) => field.toLowerCase().includes(q))
+          .some((field) => field.toLowerCase().includes(q)),
       );
     }
 
-    const byName = (a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+    const byName = (a, b) =>
+      a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
     const byDate = (a, b) => new Date(b.saved_at) - new Date(a.saved_at);
     const sorted = [...list];
     if (sort === "az") return sorted.sort(byName);
@@ -271,7 +303,9 @@ export default function ResourcesTab({
   }
 
   function applyEdit(updated) {
-    setResources((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+    setResources((prev) =>
+      prev.map((r) => (r.id === updated.id ? updated : r)),
+    );
   }
 
   function removeResource(id) {
@@ -291,7 +325,11 @@ export default function ResourcesTab({
       )}
 
       {progress && (
-        <ResourceProgress label={progress.label} done={progress.done} queued={progress.queued} />
+        <ResourceProgress
+          label={progress.label}
+          done={progress.done}
+          queued={progress.queued}
+        />
       )}
 
       <div className="toolbar">
@@ -304,54 +342,53 @@ export default function ResourcesTab({
         />
       </div>
 
-      {(folders.used.length > 0 || folders.unsorted > 0) && (
-        <div className="folder-strip">
-          {folders.used.map((tag) => {
-            const on = folder === tag.id;
-            return (
+      {/* Folders and the controls that act on them share a line. Stacked, the
+          view and sort buttons sat on the count's row -- a caption -- and put
+          two bands of chrome between the search and the first result. The
+          strip takes the room and fades at whichever edge still has folders
+          past it, exactly as the dashboard's tag strip does. */}
+      <div className="folder-bar">
+        {(folders.used.length > 0 || folders.unsorted > 0) && (
+          <div className={`folder-strip${folderFade}`} ref={folderRef}>
+            {folders.used.map((tag) => {
+              const on = folder === tag.id;
+              return (
+                <button
+                  key={tag.id}
+                  className={`folder${on ? " folder-on" : ""}`}
+                  onClick={() => setFolder(on ? null : tag.id)}
+                  aria-pressed={on}
+                >
+                  {on ? <FolderOpen size={17} /> : <Folder size={17} />}
+                  <span className="folder-name">{tag.label}</span>
+                  <span className="folder-count">{tag.count}</span>
+                </button>
+              );
+            })}
+            {folders.unsorted > 0 && (
               <button
-                key={tag.id}
-                className={`folder${on ? " folder-on" : ""}`}
-                onClick={() => setFolder(on ? null : tag.id)}
-                aria-pressed={on}
+                className={`folder folder-unsorted${folder === UNSORTED ? " folder-on" : ""}`}
+                onClick={() => setFolder(folder === UNSORTED ? null : UNSORTED)}
+                aria-pressed={folder === UNSORTED}
               >
-                {on ? <FolderOpen size={17} /> : <Folder size={17} />}
-                <span className="folder-name">{tag.label}</span>
-                <span className="folder-count">{tag.count}</span>
+                <Inbox size={17} />
+                <span className="folder-name">Unsorted</span>
+                <span className="folder-count">{folders.unsorted}</span>
               </button>
-            );
-          })}
-          {folders.unsorted > 0 && (
-            <button
-              className={`folder folder-unsorted${folder === UNSORTED ? " folder-on" : ""}`}
-              onClick={() => setFolder(folder === UNSORTED ? null : UNSORTED)}
-              aria-pressed={folder === UNSORTED}
-            >
-              <Inbox size={17} />
-              <span className="folder-name">Unsorted</span>
-              <span className="folder-count">{folders.unsorted}</span>
-            </button>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
 
-      <div className="results-bar">
-        <ResultCount
-          count={filtered.length}
-          noun="resource"
-          query={query}
-          onClear={() => setQuery("")}
-        />
         <div className="results-controls">
           {/* An icon, not a labelled button: sharing is an occasional aside and
-              a third button beside List / Headlines / Newest First competed
-              with the controls you actually reach for. Same treatment as the
-              share control on a collection's page.
+            a third button beside List / Headlines / Newest First competed
+            with the controls you actually reach for. Same treatment as the
+            share control on a collection's page.
 
-              Only a real folder can be shared. "Unsorted" is the absence of a
-              tag rather than a tag, so there's nothing for a link to resolve
-              to -- and a link whose contents change every time you file
-              something would be a strange thing to have sent. */}
+            Only a real folder can be shared. "Unsorted" is the absence of a
+            tag rather than a tag, so there's nothing for a link to resolve
+            to -- and a link whose contents change every time you file
+            something would be a strange thing to have sent. */}
           {openFolder && (
             <button
               className="icon-btn"
@@ -379,7 +416,11 @@ export default function ResourcesTab({
           </div>
 
           <div className="sort-menu" ref={sortRef}>
-            <button className="sort-btn" onClick={() => setSortOpen((v) => !v)} aria-expanded={sortOpen}>
+            <button
+              className="sort-btn"
+              onClick={() => setSortOpen((v) => !v)}
+              aria-expanded={sortOpen}
+            >
               <ArrowDownUp size={14} />
               {SORTS.find((o) => o.id === sort)?.label}
             </button>
@@ -392,7 +433,9 @@ export default function ResourcesTab({
                     className={`sort-option${sort === option.id ? " sort-option-on" : ""}`}
                     onClick={() => chooseSort(option.id)}
                   >
-                    <span className="sort-check">{sort === option.id && <Check size={13} />}</span>
+                    <span className="sort-check">
+                      {sort === option.id && <Check size={13} />}
+                    </span>
                     {option.label}
                   </button>
                 ))}
@@ -402,24 +445,39 @@ export default function ResourcesTab({
         </div>
       </div>
 
+      <div className="results-bar">
+        <ResultCount
+          count={filtered.length}
+          noun="resource"
+          query={query}
+          onClear={() => setQuery("")}
+        />
+      </div>
+
       {loaded && resources.length === 0 && (
         <div className="empty-state">
-          <h2 className="empty-state-headline">The tools, not the inspiration.</h2>
+          <h2 className="empty-state-headline">
+            The tools, not the inspiration.
+          </h2>
           <p className="empty-state-body">
-            An icon set, a stock library, an AI product — the links you save for what they do rather
-            than how they look. No screenshot, no detail page. Just a title, a sentence and a folder.
+            An icon set, a stock library, an AI product — the links you save for
+            what they do rather than how they look. No screenshot, no detail
+            page. Just a title, a sentence and a folder.
           </p>
           {onAdd && <AddMenu onSubmit={onAdd} variant="hero" />}
           <FeatureRotator className="empty-state-rotator" />
         </div>
       )}
       {resources.length > 0 && filtered.length === 0 && (
-        <>
-          <p className="empty">Nothing matches that.</p>
+        <NoMatches noun="resource" query={query}>
           {onSearchElsewhere && query.trim() && (
-            <SearchElsewhere query={query} kind="resource" onGo={onSearchElsewhere} />
+            <SearchElsewhere
+              query={query}
+              kind="resource"
+              onGo={onSearchElsewhere}
+            />
           )}
-        </>
+        </NoMatches>
       )}
 
       {view === "list" && page.length > 0 && (
@@ -453,9 +511,13 @@ export default function ResourcesTab({
                 </span>
 
                 {describing.has(resource.id) ? (
-                  <span className="resource-summary resource-summary-pending">Describing…</span>
+                  <span className="resource-summary resource-summary-pending">
+                    Describing…
+                  </span>
                 ) : (
-                  resource.summary && <span className="resource-summary">{resource.summary}</span>
+                  resource.summary && (
+                    <span className="resource-summary">{resource.summary}</span>
+                  )
                 )}
 
                 {(resource.tags || []).length > 0 && (
@@ -539,7 +601,10 @@ export default function ResourcesTab({
 
       {remaining > 0 && (
         <div className="load-more-row">
-          <button className="load-more" onClick={() => setShown((n) => n + PAGE_SIZE)}>
+          <button
+            className="load-more"
+            onClick={() => setShown((n) => n + PAGE_SIZE)}
+          >
             Load More
           </button>
           <span className="load-more-count">

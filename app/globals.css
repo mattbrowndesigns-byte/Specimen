@@ -1334,15 +1334,17 @@ h1 {
 /* A mask rather than an overlaid gradient, so the fade doesn't have to know
    what colour is behind the strip. The classes come from the strip's scroll
    position, so an edge only fades while there are chips past it. */
-.chip-strip-fade-right {
+/* Named for what they do, not for the one strip that used to do it: the
+   resources folder strip wears the same pair. */
+.strip-fade-right {
   mask-image: linear-gradient(to right, #000 calc(100% - 84px), transparent 100%);
 }
 
-.chip-strip-fade-left {
+.strip-fade-left {
   mask-image: linear-gradient(to right, transparent 0, #000 84px);
 }
 
-.chip-strip-fade-left.chip-strip-fade-right {
+.strip-fade-left.strip-fade-right {
   mask-image: linear-gradient(
     to right,
     transparent 0,
@@ -5191,6 +5193,27 @@ a.card {
   color: var(--text-muted);
 }
 
+/* A search that found nothing gets the same panel an empty library does, one
+   size down. It was a single grey sentence floating where the grid had been,
+   which reads as a page that failed rather than as an answer -- and it gave
+   the cross-tab nudge nowhere to sit that looked deliberate. Smaller, because
+   this is a dead end you back out of in a second, not the first thing a new
+   account ever sees. */
+.empty-state-search {
+  min-height: 0;
+  padding: 44px 24px;
+  gap: 12px;
+}
+
+.empty-state-search .empty-state-headline {
+  max-width: 24ch;
+  font-size: clamp(22px, 2.4vw, 28px);
+}
+
+.empty-state-search .search-elsewhere {
+  margin: 6px 0 0;
+}
+
 .empty-state .add-menu-hero {
   margin-top: 6px;
 }
@@ -5381,12 +5404,32 @@ a.card {
    sit in two of them and why the AI fills them in on save. Real folders would
    have forced a choice the library doesn't need to make, and a drag to move
    between them buys nothing a chip click doesn't already do. */
+/* The strip and the controls that act on it share one line. Stacked, the view
+   and sort buttons sat on the count's row -- a caption -- and put two bands of
+   chrome between the search box and the first result.
+   
+   The controls are pushed right by `margin-left: auto` rather than by the
+   strip's `flex: 1`, so they stay on the right in the one case the strip isn't
+   rendered at all: a library whose resources are none of them filed yet. */
+.folder-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.folder-bar .results-controls {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 .folder-strip {
   display: flex;
   gap: 8px;
+  flex: 1;
+  min-width: 0;
   overflow-x: auto;
   padding-bottom: 4px;
-  margin-bottom: 18px;
   scrollbar-width: none;
 }
 
@@ -5394,12 +5437,19 @@ a.card {
   display: none;
 }
 
+/* `--control-h` now that a folder shares a line with the view switch and the
+   sort button: three recipes landing near the same number is the wobble that
+   token was introduced to stop, and a strip sitting 3px proud of the controls
+   beside it is the same fault in a new place. Border-box, because a folder has
+   a border and they do not. */
 .folder {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   flex-shrink: 0;
-  padding: 8px 13px;
+  height: var(--control-h);
+  box-sizing: border-box;
+  padding: 0 13px;
   border: 1px solid var(--border-soft);
   border-radius: 10px;
   background: var(--surface);

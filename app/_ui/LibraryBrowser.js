@@ -14,6 +14,8 @@ import FilterModal from "./FilterModal";
 import SearchField from "./SearchField";
 import ResultCount from "./ResultCount";
 import SearchElsewhere from "./SearchElsewhere";
+import NoMatches from "./NoMatches";
+import useEdgeFade from "./useEdgeFade";
 import SaveActions from "./SaveActions";
 import Favicon from "./Favicon";
 import AddMenu from "./AddMenu";
@@ -93,13 +95,12 @@ export default function LibraryBrowser({
   const [selectedTagIds, setSelectedTagIds] = useState(new Set());
   const [view, setView] = useState("cards");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [stripFade, setStripFade] = useState({ left: false, right: false });
   const [sort, setSort] = useState("newest");
   const [size, setSize] = useState("medium");
   const [sortOpen, setSortOpen] = useState(false);
   const [shown, setShown] = useState(PAGE_SIZE);
-  const stripRef = useRef(null);
   const sortRef = useRef(null);
+  const [stripRef, stripFade] = useEdgeFade([allTags.length, selectedTagIds.size]);
 
   useEffect(() => {
     try {
@@ -157,28 +158,6 @@ export default function LibraryBrowser({
     }
   }
 
-  // The tag strip scrolls sideways, so it fades out at whichever edge still has
-  // chips beyond it -- and stops fading once you reach the end, which is what
-  // tells you there's nothing more to scroll to.
-  useEffect(() => {
-    const el = stripRef.current;
-    if (!el) return;
-    function update() {
-      const overflow = el.scrollWidth - el.clientWidth;
-      setStripFade({
-        left: el.scrollLeft > 4,
-        right: overflow > 4 && el.scrollLeft < overflow - 4,
-      });
-    }
-    update();
-    el.addEventListener("scroll", update, { passive: true });
-    const observer = new ResizeObserver(update);
-    observer.observe(el);
-    return () => {
-      el.removeEventListener("scroll", update);
-      observer.disconnect();
-    };
-  }, [allTags.length, selectedTagIds.size]);
 
   function toggleTag(id) {
     setSelectedTagIds((prev) => {
@@ -283,9 +262,7 @@ export default function LibraryBrowser({
 
       {sortedTags.length > 0 && (
         <div
-          className={`chip-strip${stripFade.left ? " chip-strip-fade-left" : ""}${
-            stripFade.right ? " chip-strip-fade-right" : ""
-          }`}
+          className={`chip-strip${stripFade}`}
           ref={stripRef}
         >
           {selectedTagIds.size > 0 && (
@@ -383,12 +360,11 @@ export default function LibraryBrowser({
           the full list in `items`. */}
       {visible.length === 0 &&
         (searching ? (
-          <>
-            <p className="empty">Nothing matches those filters.</p>
+          <NoMatches noun={noun} query={query}>
             {onSearchElsewhere && query.trim() && (
               <SearchElsewhere query={query} kind={adapter.kind} onGo={onSearchElsewhere} />
             )}
-          </>
+          </NoMatches>
         ) : (
           <div className="empty-state">
             <h2 className="empty-state-headline">{emptyHeadline}</h2>

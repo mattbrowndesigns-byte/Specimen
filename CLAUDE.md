@@ -993,6 +993,36 @@ this instead" has nowhere to put the query except `page.js`. It's cleared the
 moment the receiving tab takes it -- otherwise coming back to that tab a week
 later re-runs a search you have long moved on from.
 
+**Folders and the controls that act on them share one line.** Stacked, the
+view switch and sort button sat on the count's row -- which is a caption, not a
+control bar -- and put two bands of chrome between the search box and the first
+result. The strip takes the room and fades at whichever edge still has folders
+past it; the controls are pushed right by `margin-left: auto` rather than by
+the strip's `flex: 1`, so they stay right in the one case the strip isn't
+rendered at all, a library whose resources are none of them filed yet. A folder
+also took `--control-h` at the same time: three recipes landing near the same
+number is the wobble that token exists to stop, and a strip sitting 3px proud
+of the controls beside it is that fault in a new place. Measured 32.00 across
+all four.
+
+**`useEdgeFade` is a hook because two strips do this now**, and the classes are
+`.strip-fade-left` / `.strip-fade-right` rather than named after the chip strip
+that first needed them. Its `watch` argument is what changes a strip's
+*contents* without changing its box -- adding a folder to a strip that was
+already full changes `scrollWidth` and nothing else, so the ResizeObserver
+never fires. Each caller passes a fixed-length list of numbers, which is what
+React needs.
+
+**A search that found nothing gets the grey panel, not a grey sentence.** One
+line of type floating where the grid had been reads as a page that failed
+rather than as an answer, and it gave the cross-tab nudge nowhere to sit that
+looked deliberate. `NoMatches` reuses `.empty-state` a size down
+(`.empty-state-search`: no min-height, smaller headline) because this is a dead
+end you back out of in a second, not the first thing a new account ever sees.
+The headline names the term, since by the time you have read "nothing matches"
+your eye has left the search box and the word is the thing you are about to
+doubt.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

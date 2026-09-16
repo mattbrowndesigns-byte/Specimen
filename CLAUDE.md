@@ -578,6 +578,71 @@ runner has no session, so a callback left off that list is redirected to
 capture, `image_url` the cropped derivative, `crop_rect` the region.
 Re-cropping reads the original, so cropped-out content stays recoverable.
 
+**Resources are a third library, and the point of them is leaving Raindrop.**
+A resource is a link saved for what it *does* -- an icon set, a stock library,
+an AI tool -- not for how it looks. Everything else in this app assumes a
+record has a screenshot worth studying; these have none, which is why they are
+their own table (`resource`), their own tab, and rows rather than cards. The
+feature exists because a tool that replaces 70% of a workflow replaces none of
+it: without somewhere to put the non-visual saves, the owner keeps a second
+bookmarking app and keeps saving to it out of habit. Deliberately absent from
+the table: capture, page, palette, fonts, style_history, is_hidden.
+
+**`resource_type` is a fifth facet and nothing else may touch it.** The other
+four describe how a page is *designed*; "Mega Footer" and "Brutalist" say
+nothing about Lucide. Sharing a vocabulary across the two libraries put words
+in the dashboard's chip strip that no website could ever match. `/api/tags`
+returns all five, so the dashboard splits the list and hands each tab only its
+own -- `designTags` to Websites and Components, `resourceTags` to Resources.
+`FilterModal` iterates a hardcoded `FACETS`, so the fifth stays out of the
+website filters by not being listed there. Add a sixth facet and both of those
+places need revisiting.
+
+**The folder strip is a rendering of that facet, not a second organisation
+system.** Folders were asked for, and tags are what got built: a folder here IS
+a `resource_type` tag, so one resource can sit in two, the AI fills them in on
+save (which is the whole premise -- hand-sorting is too slow to actually do),
+and "Unsorted" is free because it means "no type tag yet". Real folders would
+force a choice the library doesn't need to make, and drag-and-drop -- the
+expensive part, with pointer events, touch and keyboard to get right -- buys
+only re-tagging, which is one click on a chip. Collections stay the
+hand-curated, cross-cutting thing and now accept resources too.
+
+**A resource saves in two steps so the row is instant.** POST creates it from
+one `fetchResourceMeta` fetch (title, favicon) and returns; the client then
+calls `/api/resources/[id]/enrich`, which is text-only -- no screenshot, no
+`imageToBase64`, no vision call. That second call is also the Regenerate button
+in the edit modal, which is why enrichment re-fetches the page itself rather
+than having the POST hand its HTML over. A rate-limited run queues on the
+`resource` row and `enrich-queue.yml` drains it, in its own batch of three
+beside the sites' -- a text call costs seconds against a site's forty, so
+making them compete would let cheap work starve expensive work for nothing.
+
+**Anything polymorphic needs the new `target_type`, and anything reading one
+needs the new branch.** `taggable` and `collection_item` each took one more
+value in `schema_m13.sql`; the expensive half was every *reader*. The
+collection detail page resolved `target_type === "site" ? sites : components`,
+so a resource fell into the else-branch, missed, and vanished from the
+collection without an error. Favourites, the notification bell, the review
+count and `RecordGrid` all needed the same treatment. Grep for
+`target_type` before adding a fourth kind.
+
+**A resource never gets the "No image" placeholder.** That placeholder means a
+capture hasn't landed yet, which on a record that will never have one is a
+permanent apology for a screenshot nobody asked for. In a card grid
+(favourites, a collection) a resource gets `.resource-cover` -- its brand mark
+on a plain field, still 16/9 so the grid keeps its rhythm. In the review queue
+its row passes `hideThumb` and gets no frame at all. `ReviewRow` reads `name`
+while a resource stores `title`, so the queue aliases it at the call site.
+
+**`78em` is the `ch` trap wearing a different hat.** `.resource-summary` shipped
+its first draft at `max-width: 78em`, which reads like a measure and resolves to
+1014px -- **174 characters** at 13px. It only looked survivable because most
+summaries wrapped before reaching it. Measured, not calculated: 38em is 494px
+and 84.7 characters, with a 2-line clamp so a verbose model can't make one row
+four lines tall. An `em` measure is about 2.2 characters per em in this face at
+any size; multiply, don't eyeball.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

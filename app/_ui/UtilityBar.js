@@ -2,7 +2,7 @@
 import AddMenu from "./AddMenu";
 import MoreMenu from "./MoreMenu";
 import NotificationBell from "./NotificationBell";
-import { addItem, jobHandoffUrl } from "@/lib/addItem";
+import { addItem, jobHandoffUrl, resourceHandoffUrl } from "@/lib/addItem";
 
 // The library's chrome, the same on every page: identity (which doubles as the
 // way home), the review bell, Add, and a menu holding everything that isn't a
@@ -20,7 +20,12 @@ export default function UtilityBar({ onAdd, onError }) {
       onError?.(result.error);
       return false;
     }
-    window.location.href = jobHandoffUrl(result.job);
+    // A resource comes back with a row and no job, since there's no capture to
+    // watch -- so it hands over an id instead and the dashboard takes it from
+    // there. Reading result.job blindly here threw on the third kind of save.
+    window.location.href = result.resource
+      ? resourceHandoffUrl(result.resource)
+      : jobHandoffUrl(result.job);
     return true;
   }
 

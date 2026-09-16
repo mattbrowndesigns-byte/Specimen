@@ -4942,3 +4942,244 @@ a.card {
     display: none;
   }
 }
+
+/* Resources
+   ---------------------------------------------------------------------------
+   The third tab. A resource is a link saved for what it does, so there is no
+   thumbnail, no detail page and nothing for a card to show -- a grid of them
+   would be a grid of empty rectangles with a favicon in the corner. Rows
+   instead, and the whole record fits on one. */
+
+/* The folder strip is a rendering of the resource_type facet, not a second
+   organisational system. A folder here IS a tag, which is why one resource can
+   sit in two of them and why the AI fills them in on save. Real folders would
+   have forced a choice the library doesn't need to make, and a drag to move
+   between them buys nothing a chip click doesn't already do. */
+.folder-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 18px;
+  scrollbar-width: none;
+}
+
+.folder-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.folder {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  padding: 8px 13px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.folder:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.folder-on,
+.folder-on:hover {
+  background: var(--invert-bg);
+  border-color: var(--invert-bg);
+  color: var(--invert-text);
+}
+
+.folder-name {
+  font-weight: 500;
+}
+
+.folder-count {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.folder-on .folder-count {
+  color: var(--invert-text);
+  opacity: 0.6;
+}
+
+/* Everything unsorted is one folder rather than a state you go looking for.
+   A resource with no type is the only one that needs you, so it gets a place
+   on the strip rather than being invisible until you filter for it. */
+.folder-unsorted {
+  border-style: dashed;
+}
+
+.resource-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Rules between rows rather than eight separate cards: a resource has far less
+   in it than a site does, and boxing each one put more border on the page than
+   content. The last row's rule is the end of the list. */
+.resource-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.resource-row:hover {
+  background: var(--surface-sunken);
+}
+
+.resource-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.resource-head {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+/* The title is the link out, because the link is the whole of what was saved.
+   There is no detail page to send it to and nothing that page would hold. */
+.resource-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: inherit;
+  text-decoration: none;
+}
+
+.resource-title:hover {
+  text-decoration: underline;
+}
+
+.resource-domain {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* 38em is measured, not chosen to look right in the source. At 13px it comes
+   to 494px and fits about 85 characters -- a touch longer than the 34em the
+   prose pages use, because this is a blurb of a sentence or two rather than
+   running text. The first attempt said 78em, which reads like a measure and is
+   in fact 174 characters; it only looked survivable because most summaries
+   wrapped before reaching it. Same trap as `ch`, wearing a different hat. */
+.resource-summary {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  max-width: 38em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+
+.resource-summary-pending {
+  color: var(--text-faint);
+  font-style: italic;
+  display: block;
+}
+
+.resource-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 1px;
+}
+
+/* Clicking a tag opens that folder -- the same move as clicking the folder
+   itself, from wherever you happened to spot the word. */
+.resource-tags .chip-filter:hover {
+  background: var(--invert-bg);
+  color: var(--invert-text);
+}
+
+.resource-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.resource-row:hover .resource-actions,
+.resource-actions:focus-within,
+.resource-actions:has([data-favorite="true"]) {
+  opacity: 1;
+}
+
+/* A touch screen has no hover to reveal them with. */
+@media (hover: none) {
+  .resource-actions {
+    opacity: 1;
+  }
+}
+
+.resource-actions .save-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.resource-modal-link {
+  display: block;
+  margin: -6px 0 16px;
+  font-size: 12px;
+  color: var(--text-faint);
+  word-break: break-all;
+}
+
+/* A resource in a card grid -- favorites, or a collection holding one. The
+   grid's rhythm is worth keeping, so the slot stays 16/9; what changes is what
+   fills it. A brand mark on a plain field reads as a considered cover, where
+   the "No image" placeholder would read as a capture that failed. */
+.resource-cover {
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface-sunken);
+}
+
+.resource-cover .favicon-badge {
+  width: 44px;
+  height: 44px;
+}
+
+.resource-cover-domain {
+  font-size: 12px;
+  color: var(--text-faint);
+  max-width: 85%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Same idea one size down, in a collection's cover stack. The mark is inset
+   rather than cropped to fill: a favicon is 32px of artwork and stretching it
+   across a cover slot is a mess, so the tile carries it instead. */
+.collection-cover-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: var(--surface-sunken);
+}
+
+.collection-cover-icon img {
+  width: 38%;
+  height: 38%;
+  object-fit: contain;
+}

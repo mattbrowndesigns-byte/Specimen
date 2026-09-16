@@ -15,13 +15,15 @@ export default function CollectionDetailPage({ params }) {
   const [sharing, setSharing] = useState(false);
   const [error, setError] = useState(null);
 
-  // The membership rows are ids only, so the records come from the two library
-  // endpoints and get matched up here -- the same shape RelatedSection uses.
+  // The membership rows are ids only, so the records come from the three
+  // library endpoints and get matched up here -- the same shape RelatedSection
+  // uses.
   const load = useCallback(async () => {
-    const [collectionRes, sitesRes, componentsRes] = await Promise.all([
+    const [collectionRes, sitesRes, componentsRes, resourcesRes] = await Promise.all([
       fetch(`/api/collections/${id}`),
       fetch("/api/sites"),
       fetch("/api/components"),
+      fetch("/api/resources"),
     ]);
 
     if (!collectionRes.ok) {
@@ -32,21 +34,27 @@ export default function CollectionDetailPage({ params }) {
     const { collection: found, items } = await collectionRes.json();
     setCollection(found);
 
-    const sites = new Map();
-    const components = new Map();
+    const byType = { site: new Map(), component: new Map(), resource: new Map() };
     if (sitesRes.ok) {
       const data = await sitesRes.json();
-      for (const site of data.sites || []) sites.set(site.id, site);
+      for (const site of data.sites || []) byType.site.set(site.id, site);
     }
     if (componentsRes.ok) {
       const data = await componentsRes.json();
-      for (const c of data.components || []) components.set(c.id, c);
+      for (const c of data.components || []) byType.component.set(c.id, c);
+    }
+    if (resourcesRes.ok) {
+      const data = await resourcesRes.json();
+      for (const r of data.resources || []) byType.resource.set(r.id, r);
     }
 
+    // Looked up by target_type rather than site-or-else-component: the
+    // else-branch silently swallowed every resource in a collection, since a
+    // resource id is never in the components map.
     setEntries(
       (items || [])
         .map((row) => {
-          const item = row.target_type === "site" ? sites.get(row.target_id) : components.get(row.target_id);
+          const item = byType[row.target_type]?.get(row.target_id);
           return item ? { kind: row.target_type, item } : null;
         })
         .filter(Boolean)
@@ -60,7 +68,7 @@ export default function CollectionDetailPage({ params }) {
   async function remove() {
     if (
       !confirm(
-        `Delete “${collection?.name}”? The sites and components in it stay in your library.`
+        `Delete “${collection?.name}”? Everything in it stays in your library.`
       )
     ) {
       return;

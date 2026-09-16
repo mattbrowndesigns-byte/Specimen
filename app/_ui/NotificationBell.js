@@ -15,9 +15,10 @@ export default function NotificationBell() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const [sitesRes, componentsRes] = await Promise.all([
+      const [sitesRes, componentsRes, resourcesRes] = await Promise.all([
         fetch("/api/sites"),
         fetch("/api/components"),
+        fetch("/api/resources"),
       ]);
       const pending = [];
       if (sitesRes.ok) {
@@ -44,6 +45,22 @@ export default function NotificationBell() {
               name: c.name || "Untitled component",
               kind: "Component",
               missing: !c.summary,
+            });
+          }
+        }
+      }
+      // A resource has no detail page to link to, so its row goes to the queue
+      // -- which is the one place it can be edited outside its own tab.
+      if (resourcesRes.ok) {
+        const data = await resourcesRes.json();
+        for (const r of data.resources || []) {
+          if (r.needs_review) {
+            pending.push({
+              key: `resource-${r.id}`,
+              href: "/review",
+              name: r.title,
+              kind: "Resource",
+              missing: !r.summary,
             });
           }
         }

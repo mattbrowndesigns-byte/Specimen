@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { runEnrichment } from "@/lib/enrich";
+import { runResourceEnrichment } from "@/lib/enrichResource";
 
 // Enrichment has to finish inside this request, same as the two callbacks.
 export const maxDuration = 60;
@@ -32,14 +33,14 @@ export async function POST(request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  if (!due?.length) {
-    return NextResponse.json({ ok: true, drained: 0 });
-  }
+  // No early return on an empty site queue: resources have their own, and
+  // bailing here meant a quiet day for sites left every queued resource
+  // undrained forever.
 
   // One at a time, not in parallel: these are queued precisely because too many
   // requests arrived at once.
   const results = [];
-  for (const site of due) {
+  for (const site of due || []) {
     try {
       await runEnrichment(site.id);
       results.push({ domain: site.domain, ok: true });
@@ -51,5 +52,42 @@ export async function POST(request) {
     }
   }
 
-  return NextResponse.json({ ok: true, drained: results.length, results });
+  // Resources share the queue and the batch size, but get their own budget
+  // rather than eating into the sites' — a resource call is text-only and
+  // costs a couple of seconds against a site's forty, so making them compete
+  // for three slots would let cheap work starve expensive work for no gain.
+  const resourceResults = await drainResources(supabase);
+
+  return NextResponse.json({
+    ok: true,
+    drained: results.length + resourceResults.length,
+    results: [...results, ...resourceResults],
+  });
+}
+
+async function drainResources(supabase) {
+  const { data: due, error } = await supabase
+    .from("resource")
+    .select("id, domain")
+    .eq("enrichment_state", "queued")
+    .lte("enrichment_next_at", new Date().toISOString())
+    .order("enrichment_next_at", { ascending: true })
+    .limit(BATCH);
+
+  if (error) {
+    console.error("Enrich queue: failed to read resource queue", error.message);
+    return [];
+  }
+
+  const results = [];
+  for (const resource of due || []) {
+    try {
+      const { ok } = await runResourceEnrichment(resource.id);
+      results.push({ domain: resource.domain, kind: "resource", ok });
+    } catch (err) {
+      console.error(`Enrich queue: resource ${resource.domain} threw`, err.message);
+      results.push({ domain: resource.domain, kind: "resource", ok: false });
+    }
+  }
+  return results;
 }

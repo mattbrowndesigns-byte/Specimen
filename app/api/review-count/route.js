@@ -15,7 +15,7 @@ export async function GET() {
   if (!user) return UNAUTHORIZED();
 
   const supabase = supabaseAdmin();
-  const [sites, components] = await Promise.all([
+  const [sites, components, resources] = await Promise.all([
     supabase
       .from("site")
       .select("id", { count: "exact", head: true })
@@ -27,15 +27,22 @@ export async function GET() {
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .eq("needs_review", true),
+    supabase
+      .from("resource")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("needs_review", true),
   ]);
 
-  if (sites.error || components.error) {
-    return NextResponse.json({ error: sites.error?.message || components.error?.message }, { status: 500 });
+  const failure = sites.error || components.error || resources.error;
+  if (failure) {
+    return NextResponse.json({ error: failure.message }, { status: 500 });
   }
 
   return NextResponse.json({
     sites: sites.count || 0,
     components: components.count || 0,
-    total: (sites.count || 0) + (components.count || 0),
+    resources: resources.count || 0,
+    total: (sites.count || 0) + (components.count || 0) + (resources.count || 0),
   });
 }

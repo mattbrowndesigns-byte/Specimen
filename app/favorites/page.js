@@ -9,9 +9,10 @@ export default function FavoritesPage() {
   const [error, setError] = useState(null);
 
   const load = useCallback(async () => {
-    const [sitesRes, componentsRes] = await Promise.all([
+    const [sitesRes, componentsRes, resourcesRes] = await Promise.all([
       fetch("/api/sites"),
       fetch("/api/components"),
+      fetch("/api/resources"),
     ]);
     const found = [];
     if (sitesRes.ok) {
@@ -24,6 +25,14 @@ export default function FavoritesPage() {
       const data = await componentsRes.json();
       for (const c of data.components || []) {
         if (c.is_favorite) found.push({ kind: "component", item: c });
+      }
+    }
+    // Resources carry the same heart as everything else, so leaving them out
+    // here would have made that button quietly do nothing you could find again.
+    if (resourcesRes.ok) {
+      const data = await resourcesRes.json();
+      for (const r of data.resources || []) {
+        if (r.is_favorite) found.push({ kind: "resource", item: r });
       }
     }
     setEntries(found);

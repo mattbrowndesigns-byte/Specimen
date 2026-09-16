@@ -1,17 +1,20 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import WebsitesTab from "./_ui/WebsitesTab";
 import ComponentsTab from "./_ui/ComponentsTab";
+import ResourcesTab from "./_ui/ResourcesTab";
 import UtilityBar from "./_ui/UtilityBar";
 import CaptureProgress from "./_ui/CaptureProgress";
 import SiteFooter from "./_ui/SiteFooter";
-import { addItem, jobFromSearch } from "@/lib/addItem";
+import { addItem, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
 
 export default function Home() {
   const [tab, setTab] = useState("websites");
   const [allTags, setAllTags] = useState([]);
   const [pendingCapture, setPendingCapture] = useState(null);
   const [jobs, setJobs] = useState([]);
+  const [newResource, setNewResource] = useState(null);
+  const [describeId, setDescribeId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [error, setError] = useState(null);
 
@@ -27,9 +30,26 @@ export default function Home() {
     loadTags();
   }, [loadTags, refreshKey]);
 
-  // An Add from another page arrives as ?job=…; pick it up so its progress bar
-  // shows here, then clean the URL so a refresh doesn't re-add it.
+  // The tag vocabulary is one list from one endpoint, but the two libraries do
+  // not share it. resource_type describes what a tool IS; the other four
+  // describe how a page is DESIGNED, and neither set can ever match the other's
+  // records. Handing every tab the whole list put "Icons" in the websites chip
+  // strip, where clicking it could only ever return nothing.
+  const designTags = useMemo(() => allTags.filter((t) => t.facet !== "resource_type"), [allTags]);
+  const resourceTags = useMemo(() => allTags.filter((t) => t.facet === "resource_type"), [allTags]);
+
+  // An Add from another page arrives as ?job=… (a capture to watch) or
+  // ?resource=… (a row that exists and just needs describing); pick it up, then
+  // clean the URL so a refresh doesn't re-run it.
   useEffect(() => {
+    const resourceId = resourceFromSearch(window.location.search);
+    if (resourceId) {
+      setTab("resources");
+      setDescribeId(resourceId);
+      window.history.replaceState({}, "", "/");
+      return;
+    }
+
     const job = jobFromSearch(window.location.search);
     if (!job) return;
     setTab(job.kind === "component" ? "components" : "websites");
@@ -48,6 +68,12 @@ export default function Home() {
         setError(result.error);
         return false;
       }
+      if (kind === "resource") {
+        setTab("resources");
+        setNewResource(result.resource);
+        setDescribeId(result.resource.id);
+        return true;
+      }
       setTab(kind === "website" ? "websites" : "components");
       if (result.capture) setPendingCapture(result.capture);
       if (result.site) setRefreshKey((k) => k + 1);
@@ -64,6 +90,14 @@ export default function Home() {
     setRefreshKey((k) => k + 1);
     if (job.kind === "component" && result) setPendingCapture(result);
   }
+
+  // Clearing both is what stops the describe effect firing twice, and the tag
+  // reload is how a newly proposed type reaches the folder strip.
+  const handleResourceHandled = useCallback(() => {
+    setNewResource(null);
+    setDescribeId(null);
+    loadTags();
+  }, [loadTags]);
 
   return (
     <>
@@ -89,17 +123,31 @@ export default function Home() {
           <button className={tab === "components" ? "active" : ""} onClick={() => setTab("components")}>
             Components
           </button>
+          <button className={tab === "resources" ? "active" : ""} onClick={() => setTab("resources")}>
+            Resources
+          </button>
         </div>
 
-        {tab === "websites" ? (
-          <WebsitesTab allTags={allTags} refreshKey={refreshKey} onAdd={handleAdd} />
-        ) : (
+        {tab === "websites" && (
+          <WebsitesTab allTags={designTags} refreshKey={refreshKey} onAdd={handleAdd} />
+        )}
+        {tab === "components" && (
           <ComponentsTab
-            allTags={allTags}
+            allTags={designTags}
             pendingCapture={pendingCapture}
             setPendingCapture={setPendingCapture}
             refreshKey={refreshKey}
             onAdd={handleAdd}
+          />
+        )}
+        {tab === "resources" && (
+          <ResourcesTab
+            allTags={resourceTags}
+            refreshKey={refreshKey}
+            onAdd={handleAdd}
+            newResource={newResource}
+            describeId={describeId}
+            onResourceHandled={handleResourceHandled}
           />
         )}
       </main>

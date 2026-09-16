@@ -34,6 +34,20 @@ Do not build these. They were considered and rejected.
 
 ---
 
+## Added after the original spec
+
+**Resources (M13).** The spec above frames the problem as visual retrieval, and
+that is still what the app is for. But the Raindrop workflow it replaces was
+always carrying a second load: links saved for what they *do* rather than how
+they look -- an icon set, a stock library, an AI tool. Leaving those out meant
+the owner would keep Raindrop installed and keep saving to it out of habit, so
+resources are a third tab with their own table, their own `resource_type` tag
+facet, and rows instead of cards. They deliberately have no screenshot, no
+detail page and no style reading.
+
+This does not reopen any of the non-goals below. It adds a kind of record;
+it changes nothing about how sites and components work.
+
 ## Stack
 
 | Layer | Choice | Why |

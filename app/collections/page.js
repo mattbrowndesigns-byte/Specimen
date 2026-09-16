@@ -10,16 +10,21 @@ export default function CollectionsPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
-  const [library, setLibrary] = useState({ sites: new Map(), components: new Map() });
+  const [library, setLibrary] = useState({
+    sites: new Map(),
+    components: new Map(),
+    resources: new Map(),
+  });
 
   // The collection rows carry member ids only, so the covers come from the two
   // library lists -- the same resolve-on-the-client shape the collection detail
   // page and Related use.
   const load = useCallback(async () => {
-    const [res, sitesRes, componentsRes] = await Promise.all([
+    const [res, sitesRes, componentsRes, resourcesRes] = await Promise.all([
       fetch("/api/collections"),
       fetch("/api/sites"),
       fetch("/api/components"),
+      fetch("/api/resources"),
     ]);
     if (!res.ok) {
       setError("Couldn't load your collections");
@@ -31,6 +36,7 @@ export default function CollectionsPage() {
 
     const sites = new Map();
     const components = new Map();
+    const resources = new Map();
     if (sitesRes.ok) {
       const payload = await sitesRes.json();
       for (const site of payload.sites || []) sites.set(site.id, site);
@@ -39,7 +45,11 @@ export default function CollectionsPage() {
       const payload = await componentsRes.json();
       for (const c of payload.components || []) components.set(c.id, c);
     }
-    setLibrary({ sites, components });
+    if (resourcesRes.ok) {
+      const payload = await resourcesRes.json();
+      for (const r of payload.resources || []) resources.set(r.id, r);
+    }
+    setLibrary({ sites, components, resources });
   }, []);
 
   useEffect(() => {
@@ -67,7 +77,7 @@ export default function CollectionsPage() {
   }
 
   const resolve = useMemo(
-    () => makeResolver(library.sites, library.components),
+    () => makeResolver(library.sites, library.components, library.resources),
     [library]
   );
 

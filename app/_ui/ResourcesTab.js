@@ -1,0 +1,382 @@
+"use client";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowDownUp, Check, Folder, FolderOpen, Pencil, Inbox } from "lucide-react";
+import Favicon from "./Favicon";
+import SaveActions from "./SaveActions";
+import AddMenu from "./AddMenu";
+import ResourceModal from "./ResourceModal";
+import FeatureRotator from "./FeatureRotator";
+
+const SORTS = [
+  { id: "newest", label: "Newest First" },
+  { id: "oldest", label: "Oldest First" },
+  { id: "az", label: "Name A–Z" },
+  { id: "za", label: "Name Z–A" },
+];
+
+// Rows are cheap to render next to a card, but a library of several hundred
+// links still shouldn't all arrive to show you the newest twenty.
+const PAGE_SIZE = 40;
+
+// The sentinel for "no type tag yet". It's a folder in the strip rather than a
+// state you have to go looking for: the whole point of the strip is that
+// everything is somewhere, and the things that are nowhere are the ones that
+// need you.
+const UNSORTED = "__unsorted__";
+
+export default function ResourcesTab({
+  allTags,
+  refreshKey,
+  onAdd,
+  newResource,
+  describeId,
+  onResourceHandled,
+}) {
+  const [resources, setResources] = useState([]);
+  const [query, setQuery] = useState("");
+  const [folder, setFolder] = useState(null);
+  const [sort, setSort] = useState("newest");
+  const [sortOpen, setSortOpen] = useState(false);
+  const [shown, setShown] = useState(PAGE_SIZE);
+  const [editing, setEditing] = useState(null);
+  const [describing, setDescribing] = useState(new Set());
+  const [error, setError] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+  const sortRef = useRef(null);
+
+  const load = useCallback(async () => {
+    const res = await fetch("/api/resources");
+    if (res.ok) {
+      const data = await res.json();
+      setResources(data.resources || []);
+    } else {
+      setError("Couldn't load your resources");
+    }
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load, refreshKey]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("specimen.sort.resources");
+      if (saved && SORTS.some((o) => o.id === saved)) setSort(saved);
+    } catch {
+      // localStorage can be unavailable; the default is fine.
+    }
+  }, []);
+
+  useEffect(() => {
+    function onDocClick(e) {
+      if (sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false);
+    }
+    function onKey(e) {
+      if (e.key === "Escape") setSortOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
+  // A saved resource is shown the instant its row exists and is described
+  // afterwards, because there's no capture to wait on — the only slow part is
+  // the model, and a row with a title and a favicon is already useful.
+  const describe = useCallback(async (id) => {
+    setDescribing((prev) => new Set(prev).add(id));
+    try {
+      const res = await fetch(`/api/resources/${id}/enrich`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setResources((prev) => prev.map((r) => (r.id === id ? data.resource : r)));
+        if (!data.described) {
+          setError(
+            data.queued
+              ? "Saved. The AI was busy, so its summary will fill in within the hour."
+              : "Saved, but the AI couldn't describe it. Open it and hit Regenerate."
+          );
+        }
+      }
+    } catch {
+      setError("Saved, but the AI couldn't be reached.");
+    } finally {
+      setDescribing((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  }, []);
+
+  // Two ways in, one effect. Saving from the dashboard hands over the whole row
+  // so it can be shown before any request finishes; saving from another page
+  // hands over only an id, and the row arrives with the list. Either way the
+  // id is what says "this one still needs describing".
+  useEffect(() => {
+    if (!describeId) return;
+    if (newResource) {
+      setResources((prev) =>
+        prev.some((r) => r.id === newResource.id) ? prev : [newResource, ...prev]
+      );
+    }
+    onResourceHandled?.();
+    describe(describeId);
+  }, [describeId, newResource, describe, onResourceHandled]);
+
+  const folders = useMemo(() => {
+    const types = allTags.filter((t) => t.facet === "resource_type");
+    const counts = new Map();
+    let unsorted = 0;
+    for (const resource of resources) {
+      const tags = resource.tags || [];
+      if (!tags.length) unsorted += 1;
+      for (const tag of tags) counts.set(tag.id, (counts.get(tag.id) || 0) + 1);
+    }
+    // A folder nobody has put anything in is clutter, not an invitation —
+    // the vocabulary ships with thirteen and most libraries will use six.
+    const used = types
+      .map((tag) => ({ ...tag, count: counts.get(tag.id) || 0 }))
+      .filter((tag) => tag.count > 0)
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+    return { used, unsorted };
+  }, [allTags, resources]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let list = resources;
+
+    if (folder === UNSORTED) {
+      list = list.filter((r) => !(r.tags || []).length);
+    } else if (folder) {
+      list = list.filter((r) => (r.tags || []).some((t) => t.id === folder));
+    }
+
+    if (q) {
+      list = list.filter((r) =>
+        [r.title, r.summary, r.notes, r.url, ...(r.tags || []).map((t) => t.label)]
+          .filter(Boolean)
+          .some((field) => field.toLowerCase().includes(q))
+      );
+    }
+
+    const byName = (a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+    const byDate = (a, b) => new Date(b.saved_at) - new Date(a.saved_at);
+    const sorted = [...list];
+    if (sort === "az") return sorted.sort(byName);
+    if (sort === "za") return sorted.sort((a, b) => byName(b, a));
+    if (sort === "oldest") return sorted.sort((a, b) => byDate(b, a));
+    return sorted.sort(byDate);
+  }, [resources, query, folder, sort]);
+
+  useEffect(() => {
+    setShown(PAGE_SIZE);
+  }, [query, folder, sort]);
+
+  function chooseSort(id) {
+    setSort(id);
+    setSortOpen(false);
+    try {
+      localStorage.setItem("specimen.sort.resources", id);
+    } catch {
+      // Not being able to remember the sort is not worth an error.
+    }
+  }
+
+  function applyEdit(updated) {
+    setResources((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+  }
+
+  function removeResource(id) {
+    setResources((prev) => prev.filter((r) => r.id !== id));
+    setEditing(null);
+  }
+
+  const page = filtered.slice(0, shown);
+  const remaining = filtered.length - page.length;
+
+  return (
+    <>
+      {error && (
+        <p className="error">
+          {error} <button onClick={() => setError(null)}>Dismiss</button>
+        </p>
+      )}
+
+      <div className="toolbar">
+        <input
+          type="search"
+          className="search-input"
+          placeholder="Search resources by name, summary, notes or tag…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+
+      {(folders.used.length > 0 || folders.unsorted > 0) && (
+        <div className="folder-strip">
+          {folders.used.map((tag) => {
+            const on = folder === tag.id;
+            return (
+              <button
+                key={tag.id}
+                className={`folder${on ? " folder-on" : ""}`}
+                onClick={() => setFolder(on ? null : tag.id)}
+                aria-pressed={on}
+              >
+                {on ? <FolderOpen size={17} /> : <Folder size={17} />}
+                <span className="folder-name">{tag.label}</span>
+                <span className="folder-count">{tag.count}</span>
+              </button>
+            );
+          })}
+          {folders.unsorted > 0 && (
+            <button
+              className={`folder folder-unsorted${folder === UNSORTED ? " folder-on" : ""}`}
+              onClick={() => setFolder(folder === UNSORTED ? null : UNSORTED)}
+              aria-pressed={folder === UNSORTED}
+            >
+              <Inbox size={17} />
+              <span className="folder-name">Unsorted</span>
+              <span className="folder-count">{folders.unsorted}</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="results-bar">
+        <span>
+          {filtered.length} {filtered.length === 1 ? "resource" : "resources"}
+        </span>
+        <div className="results-controls">
+          <div className="sort-menu" ref={sortRef}>
+            <button className="sort-btn" onClick={() => setSortOpen((v) => !v)} aria-expanded={sortOpen}>
+              <ArrowDownUp size={14} />
+              {SORTS.find((o) => o.id === sort)?.label}
+            </button>
+            {sortOpen && (
+              <div className="sort-pop">
+                <span className="sort-pop-head">Sort By</span>
+                {SORTS.map((option) => (
+                  <button
+                    key={option.id}
+                    className={`sort-option${sort === option.id ? " sort-option-on" : ""}`}
+                    onClick={() => chooseSort(option.id)}
+                  >
+                    <span className="sort-check">{sort === option.id && <Check size={13} />}</span>
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {loaded && resources.length === 0 && (
+        <div className="empty-state">
+          <h2 className="empty-state-headline">The tools, not the inspiration.</h2>
+          <p className="empty-state-body">
+            An icon set, a stock library, an AI product — the links you save for what they do rather
+            than how they look. No screenshot, no detail page. Just a title, a sentence and a folder.
+          </p>
+          {onAdd && <AddMenu onSubmit={onAdd} variant="hero" />}
+          <FeatureRotator className="empty-state-rotator" />
+        </div>
+      )}
+      {resources.length > 0 && filtered.length === 0 && (
+        <p className="empty">Nothing matches that.</p>
+      )}
+
+      {page.length > 0 && (
+        <div className="resource-list">
+          {page.map((resource) => (
+            <div className="resource-row" key={resource.id}>
+              <Favicon
+                url={resource.url}
+                faviconUrl={resource.favicon_url}
+                fills={resource.favicon_fills !== false}
+                alt={resource.title}
+              />
+
+              <div className="resource-body">
+                <span className="resource-head">
+                  <a
+                    className="resource-title"
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {resource.title}
+                  </a>
+                  <span className="resource-domain">{resource.domain}</span>
+                </span>
+
+                {describing.has(resource.id) ? (
+                  <span className="resource-summary resource-summary-pending">Describing…</span>
+                ) : (
+                  resource.summary && <span className="resource-summary">{resource.summary}</span>
+                )}
+
+                {(resource.tags || []).length > 0 && (
+                  <span className="resource-tags">
+                    {resource.tags.map((tag) => (
+                      <button
+                        key={tag.id}
+                        className={`chip chip-filter${tag.is_approved ? "" : " chip-pending"}`}
+                        onClick={() => setFolder(tag.id)}
+                      >
+                        {tag.label}
+                      </button>
+                    ))}
+                  </span>
+                )}
+              </div>
+
+              <span className="resource-actions">
+                <button
+                  className="icon-btn"
+                  onClick={() => setEditing(resource)}
+                  title="Edit"
+                  aria-label={`Edit ${resource.title}`}
+                >
+                  <Pencil size={15} />
+                </button>
+                <SaveActions
+                  kind="resource"
+                  id={resource.id}
+                  name={resource.title}
+                  isFavorite={resource.is_favorite}
+                />
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {remaining > 0 && (
+        <div className="load-more-row">
+          <button className="load-more" onClick={() => setShown((n) => n + PAGE_SIZE)}>
+            Load More
+          </button>
+          <span className="load-more-count">
+            Showing {page.length} of {filtered.length}
+          </span>
+        </div>
+      )}
+
+      {editing && (
+        <ResourceModal
+          resource={editing}
+          allTags={allTags}
+          onSaved={applyEdit}
+          onDeleted={removeResource}
+          onClose={() => setEditing(null)}
+        />
+      )}
+    </>
+  );
+}

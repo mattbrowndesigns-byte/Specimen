@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { latestCapture } from "@/lib/captures";
 import ReviewEditModal from "../_ui/ReviewEditModal";
+import ResourceModal from "../_ui/ResourceModal";
 import UtilityBar from "../_ui/UtilityBar";
 import Favicon from "../_ui/Favicon";
 import SiteFooter from "../_ui/SiteFooter";
@@ -11,6 +12,7 @@ const FACET_LABELS = {
   page_type: "Page Type",
   block_pattern: "Block / Pattern",
   aesthetic: "Aesthetic",
+  resource_type: "Type",
 };
 
 // Selection state is per section rather than one shared set: the three
@@ -54,6 +56,7 @@ function useSelection(items) {
 export default function ReviewPage() {
   const [sites, setSites] = useState([]);
   const [components, setComponents] = useState([]);
+  const [resources, setResources] = useState([]);
   const [pendingTags, setPendingTags] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -63,12 +66,14 @@ export default function ReviewPage() {
 
   const siteSelection = useSelection(sites);
   const componentSelection = useSelection(components);
+  const resourceSelection = useSelection(resources);
   const tagSelection = useSelection(pendingTags);
 
   async function load() {
-    const [sitesRes, componentsRes, tagsRes] = await Promise.all([
+    const [sitesRes, componentsRes, resourcesRes, tagsRes] = await Promise.all([
       fetch("/api/sites"),
       fetch("/api/components"),
+      fetch("/api/resources"),
       fetch("/api/tags"),
     ]);
     if (sitesRes.ok) {
@@ -78,6 +83,10 @@ export default function ReviewPage() {
     if (componentsRes.ok) {
       const data = await componentsRes.json();
       setComponents((data.components || []).filter((c) => c.needs_review));
+    }
+    if (resourcesRes.ok) {
+      const data = await resourcesRes.json();
+      setResources((data.resources || []).filter((r) => r.needs_review));
     }
     if (tagsRes.ok) {
       const data = await tagsRes.json();
@@ -136,7 +145,11 @@ export default function ReviewPage() {
     );
 
   const nothingToReview =
-    loaded && sites.length === 0 && components.length === 0 && pendingTags.length === 0;
+    loaded &&
+    sites.length === 0 &&
+    components.length === 0 &&
+    resources.length === 0 &&
+    pendingTags.length === 0;
 
   return (
     <>
@@ -267,7 +280,65 @@ export default function ReviewPage() {
           </section>
         )}
 
-        {editing && (
+        {resources.length > 0 && (
+          <section className="tag-section">
+            <BulkBar
+              title="Resources to review"
+              total={resources.length}
+              selection={resourceSelection}
+              busy={busy}
+              actions={[
+                {
+                  label: "Mark Reviewed",
+                  primary: true,
+                  onClick: () => markReviewed("resources", [...resourceSelection.selected]),
+                },
+              ]}
+            />
+            <div className="review-list">
+              {resources.map((r) => (
+                <ReviewRow
+                  key={r.id}
+                  /* ReviewRow reads `name`; a resource stores `title`, and
+                     aliasing here beats teaching every caller two field names. */
+                  item={{ ...r, name: r.title }}
+                  hideThumb
+                  faviconUrl={r.favicon_url}
+                  fills={r.favicon_fills !== false}
+                  linkUrl={r.url}
+                  fallbackName={r.domain}
+                  busy={busy}
+                  checked={resourceSelection.selected.has(r.id)}
+                  onToggle={() => resourceSelection.toggle(r.id)}
+                  onEdit={() => setEditing({ kind: "resources", item: r })}
+                  onMarkReviewed={() => markReviewed("resources", [r.id])}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* A resource is edited by the same modal its own tab uses -- one type,
+            no screenshot, and a Regenerate that re-reads the page. Threading it
+            through ReviewEditModal would have meant a second set of field names
+            and four facets that can never apply. */}
+        {editing?.kind === "resources" && (
+          <ResourceModal
+            resource={editing.item}
+            allTags={allTags}
+            onClose={() => setEditing(null)}
+            onSaved={async () => {
+              setEditing(null);
+              await load();
+            }}
+            onDeleted={async () => {
+              setEditing(null);
+              await load();
+            }}
+          />
+        )}
+
+        {editing && editing.kind !== "resources" && (
           <ReviewEditModal
             item={editing.item}
             kind={editing.kind}
@@ -354,6 +425,7 @@ function ReviewRow({
   fills,
   linkUrl,
   fallbackName,
+  hideThumb,
   checked,
   onToggle,
   onEdit,
@@ -369,14 +441,19 @@ function ReviewRow({
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onEdit()}
     >
       <SelectBox checked={checked} onChange={onToggle} label={`Select ${item.name || fallbackName}`} />
-      <div className="review-thumb">
-        {thumb ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={thumb} alt={item.name || fallbackName} />
-        ) : (
-          <div className="placeholder">No image</div>
-        )}
-      </div>
+      {/* "No image" means a capture that hasn't landed. A resource is never
+          going to have one, so it gets no frame at all rather than a
+          permanent apology for a screenshot nobody asked for. */}
+      {!hideThumb && (
+        <div className="review-thumb">
+          {thumb ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={thumb} alt={item.name || fallbackName} />
+          ) : (
+            <div className="placeholder">No image</div>
+          )}
+        </div>
+      )}
       <div className="review-info">
         <span className="review-name">
           <Favicon url={linkUrl} faviconUrl={faviconUrl} fills={fills} alt={item.name || fallbackName} />

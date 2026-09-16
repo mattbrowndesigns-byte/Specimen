@@ -1,10 +1,18 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Globe, Crop } from "lucide-react";
+import { Plus, Globe, Crop, Link2 } from "lucide-react";
 
 // Lives in the page header so saving never depends on which tab is open.
-// Two kinds: a website (full record, appears in the grid) or a component
-// (a page capture you then crop a region out of).
+// Three kinds: a website (full record, appears in the grid), a component
+// (a page capture you then crop a region out of), or a resource -- a link
+// saved for what it does rather than how it looks, which takes no capture at
+// all and so is the one Add that finishes while you're still looking at it.
+const URL_LABELS = {
+  website: "Website URL",
+  component: "Page to crop from",
+  resource: "Link to save",
+};
+
 export default function AddMenu({ onSubmit, variant }) {
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState(null);
@@ -70,12 +78,19 @@ export default function AddMenu({ onSubmit, variant }) {
               <small>Capture a page, then crop a region</small>
             </span>
           </button>
+          <button className="add-option" onClick={() => setKind("resource")}>
+            <Link2 size={18} />
+            <span>
+              <strong>Resource</strong>
+              <small>Save a tool or reference — no screenshot</small>
+            </span>
+          </button>
         </div>
       )}
 
       {open && kind && (
         <form className="add-pop add-pop-form" onSubmit={submit}>
-          <label htmlFor="add-url">{kind === "website" ? "Website URL" : "Page to crop from"}</label>
+          <label htmlFor="add-url">{URL_LABELS[kind]}</label>
           <input
             id="add-url"
             ref={inputRef}

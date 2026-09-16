@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsTag } from "@/lib/ownership";
 
-const FACETS = ["vertical", "page_type", "block_pattern", "aesthetic"];
+const FACETS = ["vertical", "page_type", "block_pattern", "aesthetic", "resource_type"];
 
 function slugify(label) {
   return label.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");

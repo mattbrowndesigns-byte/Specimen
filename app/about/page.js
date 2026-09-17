@@ -13,15 +13,14 @@ export default function AboutPage() {
         <header className="prose-head">
           <h1>About Kivli</h1>
           <p className="prose-lede">
-            A design library for UI, UX and product designers. It does the filing, so saving
-            something and finding it again are both things you do in seconds.
+            A design library for UI, UX and product designers. It does the filing, so finding a
+            save takes seconds.
           </p>
         </header>
 
         <section className="prose-row">
           <div className="prose-section prose-row-aside">
             <h2>The problem it solves</h2>
-            <p className="prose-aside-note">Why a folder of bookmarks never works.</p>
           </div>
           <div className="prose-section">
             <p>
@@ -42,7 +41,6 @@ export default function AboutPage() {
         <section className="prose-row">
           <div className="prose-section prose-row-aside">
             <h2>How a save works</h2>
-            <p className="prose-aside-note">One paste, then five things you do not have to do.</p>
           </div>
           <div className="prose-section">
             <ol className="prose-steps">
@@ -80,7 +78,6 @@ export default function AboutPage() {
         <section className="prose-row">
           <div className="prose-section prose-row-aside">
             <h2>A few decisions worth knowing</h2>
-            <p className="prose-aside-note">The reasoning behind how it behaves.</p>
           </div>
           <div className="prose-section">
 
@@ -98,6 +95,20 @@ export default function AboutPage() {
               weighted by area. Photographs are deliberately excluded, because a palette taken
               from the pixels reports the model&rsquo;s jumper in the hero shot rather than the
               design.
+            </p>
+            <h3>Not everything worth saving is a picture</h3>
+            <p>
+              An icon set, a stock library, an AI tool. Those are saved for what they do rather
+              than how they look, so they are their own library: a row and a sentence instead of a
+              screenshot and a detail page. The folders they sit in are written for you on the way
+              in, which is the only version of filing anyone actually keeps up.
+            </p>
+            <h3>Sharing has a scope</h3>
+            <p>
+              A link can be your whole library, one of its three tabs, a collection or a single
+              folder, and each one is revoked on its own. Sending someone your component crops is
+              no reason to hand over everything else you have ever saved. Whoever opens it needs no
+              account, and sees none of your notes.
             </p>
             <h3>Nothing is thrown away</h3>
             <p>

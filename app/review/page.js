@@ -365,6 +365,7 @@ function BulkBar({ title, total, selection, actions, busy }) {
       <label className="bulk-select-all">
         <input
           type="checkbox"
+          className="select-box"
           checked={selection.allSelected}
           ref={(el) => {
             // Partial selection is its own state, not "off".

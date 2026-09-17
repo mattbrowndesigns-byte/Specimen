@@ -26,6 +26,10 @@ const SECTIONS = [
         a: "Yes, and it's often the right thing to do. Each save keeps its own captures, so saving a site again a year later gives you both versions side by side. If you'd rather update the one you have, use Re-capture on its page, which keeps the old screenshots on a timeline too.",
       },
       {
+        q: "Can I save something that isn't a website?",
+        a: "Save it as a resource. An icon set, a stock library, an AI tool: things you keep for what they do rather than how they look. There is no screenshot, because there is nothing to look at, so a resource is a row with a title, a sentence and a folder, and it saves in about eight seconds rather than a minute.",
+      },
+      {
         q: "Can I save a page other than a homepage?",
         a: "Any URL works. Kivli also finds a site's own key pages for you and offers to capture them properly, which is what Promote To Full Capture does on the pages list.",
       },
@@ -85,6 +89,10 @@ const SECTIONS = [
         a: "Tags within one facet widen the search, tags across facets narrow it. Picking Ecommerce and Hospitality finds either; adding Dark finds either of those that are also dark.",
       },
       {
+        q: "What are folders, and how do things end up in them?",
+        a: "A folder is a tag wearing a different hat. Saving a resource works out what kind of thing it is and files it on the way in, which is why the folders stay filled: hand-sorting is the part nobody keeps up. One resource can sit in two folders, and anything not yet filed waits in Unsorted rather than disappearing.",
+      },
+      {
         q: "I hid a save. Where did it go?",
         a: "Out of the dashboard grid and nowhere else. It is still in your library and still turns up in search. Hiding keeps the grid to what you are working on rather than putting anything beyond reach. Its page has the button to bring it back.",
       },
@@ -98,12 +106,25 @@ const SECTIONS = [
         a: "Not unless you share it. Every library is separate by default, and nothing crosses between accounts on its own. You can create a link to a collection or to your whole library, and revoke it whenever you like.",
       },
       {
+        q: "What exactly does a share link give away?",
+        a: "Only what you pointed it at. A link can be your whole library, one of its three tabs, a collection or a single folder, and each is revoked separately, so killing one leaves the others working. Whoever opens it needs no account and never sees your notes, your review queue or anything you have hidden.",
+      },
+      {
         q: "Can I invite someone?",
         a: "Invites are issued by the owner. Kivli runs entirely inside free tiers, and those tiers are shared across everyone using it, so the number of people is kept deliberately small.",
       },
       {
         q: "Is anything ever deleted automatically?",
         a: "No. Captures, readings and crops all accumulate rather than replace. The only thing that trims itself is style history, which keeps the last twelve readings of a site.",
+      },
+    ],
+  },
+  {
+    title: "The name",
+    items: [
+      {
+        q: "What does Kivli mean?",
+        a: "It is shorthand for what the thing is for: keep a visual inspiration library. The rest of it is that the word came out short, easy to say, and attached to nothing else.",
       },
     ],
   },

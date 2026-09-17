@@ -235,7 +235,10 @@ stop is lighter in dark mode or it vanishes into the groove it sits in.
 **The feature list lives in `lib/features.js`, and two surfaces read it.** The
 rotator picks a `short` line while a capture runs; `/features` lays the whole
 set out with the longer `blurb`. Adding a feature in one place adds it to both,
-which is the only way those two don't drift apart.
+which is the only way those two don't drift apart -- and the corollary is that
+anything *not* in there is invisible in both. Resources, folders and sharing
+had all shipped without a line in this file, so the rotator on an empty library
+was still describing a product that only saved websites.
 
 **All colour comes from `:root` custom properties**; dark mode is the single
 `:root[data-theme="dark"]` override block, so never add a raw hex. `--invert-*`
@@ -732,6 +735,55 @@ own -- `designTags` to Websites and Components, `resourceTags` to Resources.
 website filters by not being listed there. Add a sixth facet and both of those
 places need revisiting.
 
+**A merge is the one destructive edit here that doesn't look destructive.**
+Rename and delete both announce themselves; a merge is picked from a dropdown,
+takes one click, and what it destroys is a *word*, which you may not notice is
+missing until you go looking for it weeks later. So it now asks first, in the
+numbers that matter ("Move 8 saves from Playful onto Corporate, then delete
+Playful?"), and leaves an Undo on screen afterwards that stays until you use it
+or leave the page -- a toast that fades after five seconds is no use for a
+regret that arrives the next time you filter.
+
+The undo is held in the page rather than in a table, because a table for it
+would want a `user_id`, RLS, a policy, a scoped query and a sweeper for rows
+nobody will ever use. What it holds is two lists and they are not the same
+list: `links` is everything the source tag carried, which is what goes back
+onto it, and `added` is the subset that *wasn't already on the target*, which
+is the only part the undo may take away again. Merging Minimal into Brutalist
+and undoing it must leave a save that was genuinely both still tagged both.
+That distinction is also what the first version got wrong: it upserted blind
+with `ignoreDuplicates`, so a row that already carried the target left no trace
+at all and could not have been restored by anything.
+
+Every id in an undo payload comes back from the browser, so the route re-reads
+each one scoped to the account before writing. Ids in a request body are
+exactly where a library gets tags hung off someone else's rows.
+
+**A tag's facet is not a label, so the page stopped offering to change it.**
+Manage Tags had a dropdown per row that could move a word into any of the four
+facets. A facet is the *question* the tag answers, and it is what the AI reads
+when it decides what it may pick next time, so a stray selection quietly
+rewrote a rule rather than editing a word. Nothing on that page needs to do
+that, and a tag filed under the wrong question is fixed by deleting it and
+typing it again. Merge is restricted to the same facet for the same reason:
+across facets it isn't a merge, it's that control wearing a merge's clothes.
+
+**`resource_type` was missing from Manage Tags entirely.** The page built its
+sections from a hardcoded list of the four design facets, so the folders in the
+Resources tab -- which *are* `resource_type` tags -- could be filled by the AI
+and never renamed, merged or deleted by anyone. It's the fifth section now,
+headed "Folders", which is what the rest of the app calls them. This is the
+second time a fifth facet has had to be added somewhere by hand; grep the
+facet lists before adding a sixth.
+
+**The three written pages are reached by strangers and are not public.**
+`SharedFooter` links to /features, /about and /faq precisely so someone without
+an account has somewhere to go, and the invite panel's "See what it does"
+points at /features -- but none of those paths are in `middleware.js`'s
+`PUBLIC_PATHS`, so all four bounce a signed-out reader to /login. Known and
+unfixed: the pages render `UtilityBar`, which assumes a session, so making them
+public is not a one-line change to the list.
+
 **The folder strip is a rendering of that facet, not a second organisation
 system.** Folders were asked for, and tags are what got built: a folder here IS
 a `resource_type` tag, so one resource can sit in two, the AI fills them in on
@@ -777,14 +829,18 @@ and 84.7 characters, with a 2-line clamp so a verbose model can't make one row
 four lines tall. An `em` measure is about 2.2 characters per em in this face at
 any size; multiply, don't eyeball.
 
-**Every call to action wears the ramp as a 4px line across its top.** The first
+**Every call to action wears the ramp as a line across its top, at the
+progress bar's own thickness.** The first
 answer was the whole panel: the capture bar's gradient over a dark ground at
 46%, with the type inverted. It was legible -- every stop measured, all of it
 clearing AA -- and it was still wrong, because the warm stops sat *behind the
 sentence*, which is where the gradient is most saturated. It read as a panel
 doing an impression of the loading bar rather than a panel wearing it, and it
-fought the copy it was meant to frame. Four pixels along the top edge is the
-same gradient making the same point, in the shape the bar actually is. The
+fought the copy it was meant to frame. A band along the top edge is the same
+gradient making the same point, in the shape the bar actually is. It started at
+4px, which read as a hairline on a panel that wide; it is `--ramp-h` now, the
+same 7px the capture bar is tall, so the two are the same object at the same
+weight rather than two thicknesses of the same idea. The
 panel goes back to `--surface` and the type back to `--text`, which also
 retired a set of colour tokens that existed only to survive a permanently dark
 panel. `.shared-invite` and `.prose-cta` share the rule, so the invitation on a
@@ -1031,7 +1087,11 @@ band of dead space under the picture -- 12px of padding at the top and thirty
 at the bottom. `--row-thumb-w` (180) gives a 101.25px picture and
 `--row-body-min` (100) sits just under it, so the picture is the tallest thing
 in the row whatever the record holds, including one with no summary and no
-tags. Change either and check the other. The chips are pushed to the foot of
+tags. Change either and check the other. The review queue's rows take the same
+`--row-thumb-w` rather than a number of their own: the queue and the library
+are showing the same save, and at 120 against 180 they looked like two
+different things. Measured 180 x 101.25 in both, with 13px of padding above,
+below and outside. The chips are pushed to the foot of
 the body with `margin-top: auto`, so their bottom edge lands on the picture's
 rather than wherever the summary stopped -- measured 0.0px apart.
 
@@ -1073,6 +1133,24 @@ together, which is cards, list rows and headline strips. The labelled
 `.visit-btn` on a detail page keeps 15, because there it is sized against the
 words beside it, not against other icons.
 
+**A headline row is inset by the gap it already has inside it.** The strip's
+side padding was 4px against a 10px gap between the favicon and the title, so
+the mark sat almost against the edge of a hover fill that ran wall to wall --
+which read as a band the row happened to be inside rather than as the row
+itself. Both numbers are 10 now, and the fill has an 8px radius so the thing
+under the pointer has edges. The divider had to stop being a `border-bottom`
+to survive that: a rule running the full width crosses the corner a rounded
+fill has just turned, so it is an `::after` inset to the same 10px, and the
+last row in a list doesn't draw one because the end of the list is already the
+end of the list.
+
+**Every tick in the review queue is `.select-box`, the select-all included.**
+The header's was a bare `<input type="checkbox">` at the browser's own 13px,
+sitting at the top of a column of 16s -- a different control rather than the
+same one doing more. Both are 18 now, and "Select all" went from 13px to the
+15px of the heading it sits beside, because a label and the thing it labels
+reading at two sizes is what made the pair look assembled rather than written.
+
 **The FAQ's chevron is a control, so it looks like one.** A bare 16px chevron
 at the end of a 20px question read as punctuation. It is a 36px white rounded
 square, the same family as the library's icon buttons, filled at rest rather
@@ -1081,11 +1159,18 @@ on the line and has nothing to stay out of the way of. The icon turns, not the
 holder. The row's padding came down from 18 to 14 to absorb the taller holder,
 and the two-column cap alignment was re-measured after (see above).
 
-**A written page's aside carries a heading and nothing else on the FAQ.** The
-section notes were a second voice explaining what "Saving" meant to a reader
-who had already read four questions about saving. `.prose-aside-note` stays in
-the stylesheet because the About page still uses it there, where the note is
-the only copy in that column.
+**A written page's aside carries a heading and nothing else.** The section
+notes were a second voice explaining what "Saving" meant to a reader who had
+already read four questions about saving, and the About page's were doing the
+same. `.prose-aside-note` is gone from the stylesheet with them. The features
+page keeps a line under each group heading, which is a different job: it
+introduces four to six cards that are otherwise a grid of names.
+
+**A written page's title needed room it wasn't taking.** `.prose-head` opened
+at 8px on top of `.page`'s 24, so a 52px title started 32px under the bar and
+read as though it had been pushed against it. It is 40 now, 64 in total. The
+library's own `.page-hero` is untouched: a dashboard has a grid under the fold
+to get to, and a written page has nothing above it but its own name.
 
 ## Local environment
 

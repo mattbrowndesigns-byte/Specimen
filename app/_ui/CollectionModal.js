@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, X } from "lucide-react";
 import ModalShell from "./ModalShell";
 
 // "Add this to a collection": the list is a set of toggles rather than a form
@@ -94,8 +94,8 @@ export default function CollectionModal({ kind, id, name, onClose }) {
     <ModalShell label="Add to a collection" onClose={onClose}>
       <div className="modal-head">
         <h2>Add To A Collection</h2>
-        <button className="modal-close" onClick={onClose} aria-label="Close">
-          ×
+        <button className="icon-btn modal-close" onClick={onClose} aria-label="Close">
+          <X size={18} />
         </button>
       </div>
 

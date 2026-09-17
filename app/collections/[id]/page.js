@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState, use as usePromise } from "react";
-import { Share2 } from "lucide-react";
+import { Share2, X } from "lucide-react";
 import UtilityBar from "../../_ui/UtilityBar";
 import ShareModal from "../../_ui/ShareModal";
 import RecordGrid from "../../_ui/RecordGrid";
@@ -207,8 +207,8 @@ function EditCollectionModal({ collection, onClose, onSaved, onError }) {
       <form onSubmit={save}>
         <div className="modal-head">
           <h2>Edit collection</h2>
-          <button className="modal-close" type="button" onClick={onClose} aria-label="Close">
-            ×
+          <button className="icon-btn modal-close" type="button" onClick={onClose} aria-label="Close">
+            <X size={18} />
           </button>
         </div>
 

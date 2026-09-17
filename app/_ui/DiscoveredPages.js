@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { X } from "lucide-react";
 import ModalShell from "./ModalShell";
 import { formatCaptureDate } from "@/lib/captures";
 
@@ -146,8 +147,8 @@ export default function DiscoveredPages({
             <h2>
               Pages <span className="section-count">{total}</span>
             </h2>
-            <button className="modal-close" onClick={() => setOpen(false)} aria-label="Close">
-              ×
+            <button className="icon-btn modal-close" onClick={() => setOpen(false)} aria-label="Close">
+              <X size={18} />
             </button>
           </div>
 

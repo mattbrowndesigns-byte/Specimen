@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { Check, Copy, Link2 } from "lucide-react";
+import { Check, Copy, Link2, X } from "lucide-react";
 import ModalShell from "./ModalShell";
 import { SHARE_SCOPES } from "@/lib/shareKinds";
 
@@ -105,8 +105,8 @@ export default function ShareModal({ kind, targetId, title, onClose }) {
     <ModalShell label="Share" onClose={onClose}>
       <div className="modal-head">
         <h2>Share {title}</h2>
-        <button className="modal-close" onClick={onClose} aria-label="Close">
-          ×
+        <button className="icon-btn modal-close" onClick={onClose} aria-label="Close">
+          <X size={18} />
         </button>
       </div>
 

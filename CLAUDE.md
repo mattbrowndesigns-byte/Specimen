@@ -232,6 +232,41 @@ headline. Dark mode flips it to a near-white with the same trace of purple.
 The capture bar's `--ramp-*` stops run deep purple to lit orange, and the deep
 stop is lighter in dark mode or it vanishes into the groove it sits in.
 
+**Every modal's close is `.icon-btn` plus a pull-back, and it used to be a
+character.** It was a bare `×` -- the multiplication sign, not a letter -- at
+22px with no holder, which read as punctuation rather than as the control it
+is, and didn't match the X the utility bar's own menu has always used. All nine
+of them are `lucide-react`'s `X` at 18 inside `className="icon-btn
+modal-close"`, so the geometry is the app's one icon button rather than a
+second one that agrees with it by coincidence. `.modal-close` adds only
+`margin: -5px -6px -5px 8px`: a 32px holder around an 18px glyph carries 7px of
+its own padding, so the horizontal pull-back puts the mark where the head's
+20px says it should be, and the vertical one keeps the head the height its
+*heading* sets rather than the height its button does. Measured 58px before and
+after, and the holder's right edge now lands on the arcade playfield's own 14px
+inset.
+
+**A shot is one colour at two alphas, not four colours in fifteen pixels.** The
+first version ran the full capture-bar ramp along each bullet, deep to lit,
+which is the right idea at the wrong size: four stops inside a 15px sliver come
+out as a muddy speck rather than as the gradient they are quoting. It is
+`--accent` now -- the app's own orange -- solid at the leading edge and fully
+transparent at the back, so the thing reads as travelling. That needs
+`--accent-rgb`, for the same reason `--brand-ink-rgb` and `--ramp-mid-rgb`
+exist: a hex cannot carry an alpha. The ship gave up its glow at the same time
+and got bigger, because at 22px with a halo it was reading as a smudge rather
+than as a ship.
+
+**The launcher's circle rocks and the ship inside it turns further.** The first
+version animated the button alone, which looked like only the mark was moving
+-- and it was: a rotating circle is indistinguishable from a still one, so all
+you could see was the triangle. The button now has its own gentle
+rotate-and-lift and the glyph has a wrapper with the bigger turn, on the same
+period and the same delay, or the two drift apart inside a minute. Its pressed
+state is a `filter`, not a `transform`: a running animation beats a plain
+declaration on the same property, so a `:active { transform }` there would
+simply never have appeared.
+
 **There is a game in the corner while something is loading, and it is an
 Easter egg on purpose.** A capture takes about a minute and there is nothing to
 do with that minute. `Arcade.js` puts a small purple ship at the bottom left
@@ -265,6 +300,15 @@ the open game with it. It counts rather than flags, because two captures can be
 in flight at once and the first to finish must not answer for the second.
 `useSyncExternalStore`'s server snapshot is a flat `false`; nothing is ever
 loading on a server.
+
+**The high score is in `localStorage`, like the view switches and the search
+history.** `specimen.arcade.best`, read and written through try/catch, because
+a blocked store means no high score rather than a broken game. It is written
+when a run ends *and* when the modal unmounts -- closing mid-round is the
+common way to leave -- rather than every time the number moves, which during a
+good run is several times a second. It shows at the foot opposite the controls
+and counts up live while you are beating it, which is the only moment the
+number is interesting.
 
 **The feature list lives in `lib/features.js`, and two surfaces read it.** The
 rotator picks a `short` line while a capture runs; `/features` lays the whole

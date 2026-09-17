@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
 import ModalShell from "./ModalShell";
 import { useWorkRunning } from "./workInFlight";
 
@@ -19,14 +20,38 @@ import { useWorkRunning } from "./workInFlight";
 // which is what makes it work in both themes, and its bullets carry the
 // capture bar's own gradient.
 
-const SHIP_HALF = 11;
-const SHIP_H = 22;
+const SHIP_HALF = 13;
+const SHIP_H = 27;
 const SHIP_SPEED = 320; // px per second
 const SHIP_BOTTOM = 26; // gap under the ship
 
 const FIRE_MS = 190;
 const BULLET_SPEED = 430;
-const BULLET_LEN = 12;
+const BULLET_LEN = 15;
+
+// Remembered per device, like the view switches and the search history. A high
+// score is not library data and a table for it would want a user_id, RLS, a
+// policy and a scoped query, for a number nobody would miss if a browser lost
+// it.
+const BEST_KEY = "specimen.arcade.best";
+
+function readBest() {
+  try {
+    const stored = Number(localStorage.getItem(BEST_KEY));
+    return Number.isFinite(stored) && stored > 0 ? Math.floor(stored) : 0;
+  } catch {
+    // A blocked localStorage means no high score, not a broken game.
+    return 0;
+  }
+}
+
+function writeBest(value) {
+  try {
+    localStorage.setItem(BEST_KEY, String(value));
+  } catch {
+    // Not being able to remember a score is not worth an error.
+  }
+}
 
 const ROCK_MIN = 10;
 const ROCK_MAX = 25;
@@ -105,6 +130,9 @@ function readPalette() {
     ink: v("--text") || "#1a1a1a",
     faint: v("--text-faint") || "#888",
     ship: v("--ramp-mid") || "#7b4bd8",
+    // As a triple, because a shot is one colour at two alphas and a hex
+    // cannot carry the second one.
+    accent: v("--accent-rgb") || "232, 80, 46",
     ramp: [v("--ramp-deep"), v("--ramp-mid"), v("--ramp-warm"), v("--ramp-lit")],
     // Light ink on a dark field is a starfield; dark ink on a light one is
     // dust on the lens. Same dots either way, dimmer when they'd read as dirt.
@@ -137,7 +165,9 @@ export default function Arcade() {
           title="Shoot some rocks while you wait"
           aria-label="Play a game while this loads"
         >
-          <Ship size={22} />
+          <span className="arcade-launch-ship">
+            <Ship size={22} />
+          </span>
         </button>
       )}
       {open && <ArcadeGame onClose={() => setOpen(false)} />}
@@ -151,6 +181,20 @@ function ArcadeGame({ onClose }) {
   const keysRef = useRef(new Set());
   const paletteRef = useRef(null);
   const [hud, setHud] = useState({ score: 0, lives: LIVES, over: false });
+  const [best, setBest] = useState(0);
+  const bestRef = useRef(0);
+
+  useEffect(() => {
+    const stored = readBest();
+    bestRef.current = stored;
+    setBest(stored);
+  }, []);
+
+  // Written when a run ends rather than every time the number goes up: the
+  // score advances several times a second while you are hitting things.
+  useEffect(() => {
+    if (hud.over) writeBest(bestRef.current);
+  }, [hud.over]);
 
   const restart = useCallback(() => {
     const world = worldRef.current;
@@ -382,17 +426,18 @@ function ArcadeGame({ onClose }) {
         ctx.stroke();
       }
 
-      // The capture bar's gradient, running along each shot with the lit end
-      // leading. It is the one piece of colour in here, which is the point:
-      // the ramp is what this app uses to say "something is happening".
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = p.ramp[3];
+      // The app's own orange, solid at the leading edge and gone at the back,
+      // so each shot reads as a thing travelling rather than as a dash. The
+      // four-stop ramp was here first and it was wrong at this size: fifteen
+      // pixels is not enough room for four colours, so it came out as a
+      // muddy speck rather than as the gradient it was quoting.
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = `rgba(${p.accent}, 0.7)`;
       for (const b of world.bullets) {
         const g = ctx.createLinearGradient(0, b.y, 0, b.y + BULLET_LEN);
-        g.addColorStop(0, p.ramp[3]);
-        g.addColorStop(0.4, p.ramp[2]);
-        g.addColorStop(0.75, p.ramp[1]);
-        g.addColorStop(1, p.ramp[0]);
+        g.addColorStop(0, `rgba(${p.accent}, 1)`);
+        g.addColorStop(0.45, `rgba(${p.accent}, 0.55)`);
+        g.addColorStop(1, `rgba(${p.accent}, 0)`);
         ctx.fillStyle = g;
         // roundRect is Safari 16 and up; a square shot is a fine thing to
         // fall back to and better than a blank playfield.
@@ -419,8 +464,6 @@ function ArcadeGame({ onClose }) {
       if (!world.over && !hidden) {
         const y = world.h - SHIP_BOTTOM;
         ctx.fillStyle = p.ship;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = p.ship;
         ctx.beginPath();
         ctx.moveTo(world.shipX, y - SHIP_H);
         ctx.lineTo(world.shipX + SHIP_HALF, y);
@@ -428,7 +471,6 @@ function ArcadeGame({ onClose }) {
         ctx.lineTo(world.shipX - SHIP_HALF, y);
         ctx.closePath();
         ctx.fill();
-        ctx.shadowBlur = 0;
       }
     }
 
@@ -440,6 +482,10 @@ function ArcadeGame({ onClose }) {
       draw();
 
       const world = worldRef.current;
+      if (world.score > bestRef.current) {
+        bestRef.current = world.score;
+        setBest(world.score);
+      }
       setHud((prev) =>
         prev.score === world.score && prev.lives === world.lives && prev.over === world.over
           ? prev
@@ -454,6 +500,9 @@ function ArcadeGame({ onClose }) {
       stopped = true;
       cancelAnimationFrame(frame);
       observer.disconnect();
+      // Closing mid-run is the common way to leave, so the score has to
+      // survive it as well as a game over.
+      writeBest(bestRef.current);
     };
   }, []);
 
@@ -468,8 +517,8 @@ function ArcadeGame({ onClose }) {
             </span>
           ))}
         </span>
-        <button className="modal-close" onClick={onClose} aria-label="Close">
-          ×
+        <button className="icon-btn modal-close" onClick={onClose} aria-label="Close">
+          <X size={18} />
         </button>
       </div>
 
@@ -495,9 +544,12 @@ function ArcadeGame({ onClose }) {
         )}
       </div>
 
-      <p className="arcade-hint">
-        <kbd>←</kbd> <kbd>→</kbd> to move. It fires on its own.
-      </p>
+      <div className="arcade-foot">
+        <p className="arcade-hint">
+          <kbd>←</kbd> <kbd>→</kbd> to move. It fires on its own.
+        </p>
+        {best > 0 && <span className="arcade-best">Best {best}</span>}
+      </div>
     </ModalShell>
   );
 }

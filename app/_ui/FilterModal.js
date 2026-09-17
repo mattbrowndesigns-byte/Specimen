@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { X } from "lucide-react";
 import ModalShell from "./ModalShell";
 
 const FACET_LABELS = {
@@ -27,8 +28,8 @@ export default function FilterModal({ allTags, selectedTagIds, onApply, onClose 
     <ModalShell label="Filters" onClose={onClose}>
       <div className="modal-head">
         <h2>Filters</h2>
-        <button className="modal-close" onClick={onClose} aria-label="Close">
-          ×
+        <button className="icon-btn modal-close" onClick={onClose} aria-label="Close">
+          <X size={18} />
         </button>
       </div>
 

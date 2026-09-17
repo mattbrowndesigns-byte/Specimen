@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Sparkles, Trash2 } from "lucide-react";
+import { Sparkles, Trash2, X } from "lucide-react";
 import TagCombobox from "./TagCombobox";
 import ModalShell from "./ModalShell";
 
@@ -122,8 +122,8 @@ export default function ResourceModal({ resource, allTags, onSaved, onDeleted, o
     <ModalShell label="Edit resource" wide onClose={onClose}>
       <div className="modal-head">
         <h2>Edit resource</h2>
-        <button className="modal-close" onClick={onClose} aria-label="Close">
-          ×
+        <button className="icon-btn modal-close" onClick={onClose} aria-label="Close">
+          <X size={18} />
         </button>
       </div>
 

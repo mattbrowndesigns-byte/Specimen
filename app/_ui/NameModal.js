@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import ModalShell from "./ModalShell";
 
 // The one account setting there is. It exists because of the share page: that
@@ -58,8 +59,8 @@ export default function NameModal({ onClose, onSaved }) {
     <ModalShell label="Your name" onClose={onClose}>
       <div className="modal-head">
         <h2>Your name</h2>
-        <button className="modal-close" onClick={onClose} aria-label="Close">
-          ×
+        <button className="icon-btn modal-close" onClick={onClose} aria-label="Close">
+          <X size={18} />
         </button>
       </div>
 

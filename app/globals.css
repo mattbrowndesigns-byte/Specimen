@@ -52,6 +52,7 @@
      has to be dark enough to do that -- the brand tone under white is 3.74:1,
      which fails AA for a button label. */
   --accent: #e8502e;
+  --accent-rgb: 232, 80, 46;
   --accent-hover: #cf421f;
   --accent-text: #fff;
   --accent-solid: #c93f1d;
@@ -192,6 +193,7 @@
      on a dark page, so the label goes dark instead -- 5.49:1, where white on
      the same orange is 3.26:1. */
   --accent: #f0603c;
+  --accent-rgb: 240, 96, 60;
   --accent-hover: #ff7353;
   --accent-text: #fff;
   --accent-solid: #f0603c;
@@ -1789,13 +1791,16 @@ h1 {
   font-size: 16px;
 }
 
-.modal-close {
-  border: none;
-  background: none;
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-  color: var(--text-muted);
+/* A real icon button now, and a real X rather than the multiplication sign.
+   The geometry comes from `.icon-btn` rather than being restated here, so
+   there is one icon button in this app and not two that agree by coincidence
+   -- all this adds is the pull-back. A 32px holder around an 18px glyph
+   carries 7px of its own padding, so without it the mark sits visibly further
+   from the edge than the head's 20px says it should, and the negative top and
+   bottom keep the head the height its heading sets rather than the height its
+   button does. */
+.modal-close.modal-close {
+  margin: -5px -6px -5px 8px;
 }
 
 .modal-body {
@@ -6228,8 +6233,17 @@ a.card {
     0 0 0 1px rgba(var(--ramp-mid-rgb), 0.55),
     0 2px 10px rgba(var(--ramp-mid-rgb), 0.45),
     0 10px 30px rgba(var(--ramp-mid-rgb), 0.3);
-  animation: arcade-arrive 0.32s ease-out, arcade-wiggle 5.2s ease-in-out 0.6s infinite;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  animation: arcade-arrive 0.32s ease-out, arcade-rock 5.2s ease-in-out 0.6s infinite;
+  transition: box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+/* The circle rocks and the ship inside it turns further. A rotating circle is
+   indistinguishable from a still one, so animating the button alone looked
+   like only the mark was moving -- which is what it was. Same period and same
+   delay on both, or they drift apart within a minute. */
+.arcade-launch-ship {
+  display: inline-flex;
+  animation: arcade-wiggle 5.2s ease-in-out 0.6s infinite;
 }
 
 /* White on this purple is 5.3:1 light and 4.9:1 dark, so the mark holds in
@@ -6241,8 +6255,33 @@ a.card {
     0 12px 34px rgba(var(--ramp-mid-rgb), 0.4);
 }
 
+/* Not a transform: a running animation wins over one of these, so a pressed
+   state written that way would simply never appear. */
 .arcade-launch:active {
-  transform: scale(0.94);
+  filter: brightness(0.9);
+}
+
+@keyframes arcade-rock {
+  0%,
+  70% {
+    transform: translateY(0) rotate(0deg);
+  }
+  74% {
+    transform: translateY(-2px) rotate(-4deg);
+  }
+  79% {
+    transform: translateY(0) rotate(3deg);
+  }
+  84% {
+    transform: translateY(-1px) rotate(-2deg);
+  }
+  89% {
+    transform: translateY(0) rotate(1.5deg);
+  }
+  94%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
 }
 
 @keyframes arcade-arrive {
@@ -6278,13 +6317,18 @@ a.card {
 /* The glow stays, because it is what makes the button findable in the corner.
    The movement is what someone asked not to have. */
 @media (prefers-reduced-motion: reduce) {
-  .arcade-launch {
+  .arcade-launch,
+  .arcade-launch-ship {
     animation: none;
   }
 }
 
+/* No rule under the head. The playfield is inset by 14px and the rule was
+   not, so it ran out past both of its corners and read as a seam in the
+   window rather than as a divider between two things. */
 .arcade-head {
   gap: 12px;
+  border-bottom: none;
 }
 
 .arcade-score {
@@ -6357,6 +6401,14 @@ a.card {
   cursor: pointer;
 }
 
+.arcade-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px 16px;
+}
+
 /* One line, because a game you have to read about is not one you play while
    waiting for a screenshot. */
 .arcade-hint {
@@ -6364,9 +6416,18 @@ a.card {
   align-items: center;
   gap: 4px;
   margin: 0;
-  padding: 12px 20px 16px;
   font-size: 13px;
   color: var(--text-muted);
+}
+
+/* Opposite the controls, so the two things you look at between rounds are at
+   the two ends of the same line. It counts up live while you are beating it,
+   which is the only moment the number is interesting. */
+.arcade-best {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
 }
 
 .arcade-hint kbd {

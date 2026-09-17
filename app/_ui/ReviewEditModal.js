@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { X } from "lucide-react";
 import TagCombobox from "./TagCombobox";
 import ModalShell from "./ModalShell";
 
@@ -96,8 +97,8 @@ export default function ReviewEditModal({ item, kind, allTags, onClose, onSaved 
     <ModalShell label="Review item" wide onClose={onClose}>
       <div className="modal-head">
         <h2>Review</h2>
-        <button className="modal-close" onClick={onClose} aria-label="Close">
-          ×
+        <button className="icon-btn modal-close" onClick={onClose} aria-label="Close">
+          <X size={18} />
         </button>
       </div>
 

@@ -232,6 +232,40 @@ headline. Dark mode flips it to a near-white with the same trace of purple.
 The capture bar's `--ramp-*` stops run deep purple to lit orange, and the deep
 stop is lighter in dark mode or it vanishes into the groove it sits in.
 
+**There is a game in the corner while something is loading, and it is an
+Easter egg on purpose.** A capture takes about a minute and there is nothing to
+do with that minute. `Arcade.js` puts a small purple ship at the bottom left
+for as long as work is in flight; pressing it opens a rock shoot. Nothing
+explains itself until you press it, and the whole of the instructions is one
+line, because a game you have to read about is not one you play while waiting
+for a screenshot. The wiggle is four fifths idle -- a button that moves all the
+time is one you learn to ignore in a minute, and one that twitches every five
+seconds is one you look at.
+
+Two rules hold it together. **The launcher belongs to the wait; the game does
+not.** Opening it is a decision, so closing it is one too, and a resource that
+describes itself in eight seconds must not slam the window on someone
+mid-round. And **nothing in it is a hardcoded colour**: the playfield, the
+rocks and the ship are drawn from the same tokens as the rest of the app, which
+is the only reason it works in both themes, and the shots carry the capture
+bar's own gradient. The one thing that can't be a token is the game-over scrim,
+which takes `--overlay` rather than a tint of `--brand-ink` -- the ink token
+flips to a near-white in dark mode, so a scrim built from it would have gone
+from dark veil to white sheet with white type on it. The starfield is dimmed to
+45% in light mode, where the same dots read as dust on the lens rather than as
+space.
+
+**`workInFlight.js` is a module-level counter, and it has to be.** The two
+things that can answer "is something loading" are in different branches -- a
+capture's panel is on the dashboard, a resource's is inside the Resources tab
+-- so a shared boolean would have to be threaded through both. More
+importantly, the thing that asks has to *outlive* both: a launcher rendered
+inside `CaptureProgress` would unmount the moment the capture landed and take
+the open game with it. It counts rather than flags, because two captures can be
+in flight at once and the first to finish must not answer for the second.
+`useSyncExternalStore`'s server snapshot is a flat `false`; nothing is ever
+loading on a server.
+
 **The feature list lives in `lib/features.js`, and two surfaces read it.** The
 rotator picks a `short` line while a capture runs; `/features` lays the whole
 set out with the longer `blurb`. Adding a feature in one place adds it to both,

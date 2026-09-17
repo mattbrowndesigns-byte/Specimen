@@ -6,6 +6,7 @@ import ResourcesTab from "./_ui/ResourcesTab";
 import UtilityBar from "./_ui/UtilityBar";
 import { KINDS } from "./_ui/kinds";
 import CaptureProgress from "./_ui/CaptureProgress";
+import Arcade from "./_ui/Arcade";
 import SiteFooter from "./_ui/SiteFooter";
 import { addItem, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
 
@@ -186,6 +187,9 @@ export default function Home() {
           />
         )}
       </main>
+      {/* Mounted here rather than inside a progress panel, so a capture
+          landing mid-round can't take the round with it. */}
+      <Arcade />
       <SiteFooter />
     </>
   );

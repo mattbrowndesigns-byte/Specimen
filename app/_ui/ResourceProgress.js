@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useAnnounceWork } from "./workInFlight";
 
 // A resource has nothing to poll for. The row exists the moment the save
 // returns, and the only outstanding work is one text-only Gemini call, so this
@@ -11,6 +12,8 @@ const ESTIMATE_SECONDS = 8;
 
 export default function ResourceProgress({ label, done, queued }) {
   const [elapsed, setElapsed] = useState(0);
+
+  useAnnounceWork(!done);
 
   useEffect(() => {
     if (done) return;

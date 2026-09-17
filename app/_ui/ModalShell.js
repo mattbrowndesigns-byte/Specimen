@@ -12,7 +12,7 @@ import { createPortal } from "react-dom";
 // `overflow: hidden`, so a modal opened from a card rendered 64px wide inside
 // the card and got clipped. Mounting at <body> means no ancestor can capture
 // it, whatever styling the trigger's surroundings pick up later.
-export default function ModalShell({ label, wide, onClose, children }) {
+export default function ModalShell({ label, wide, className, onClose, children }) {
   useEffect(() => {
     function onKey(e) {
       if (e.key === "Escape") onClose();
@@ -26,7 +26,7 @@ export default function ModalShell({ label, wide, onClose, children }) {
   return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className={`modal${wide ? " modal-wide" : ""}`}
+        className={`modal${wide ? " modal-wide" : ""}${className ? ` ${className}` : ""}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

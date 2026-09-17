@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useAnnounceWork } from "./workInFlight";
 import FeatureRotator from "./FeatureRotator";
 
 // Observed Actions round trip: install deps, run Playwright over both
@@ -16,6 +17,10 @@ export default function CaptureProgress({ job, onDone }) {
   const [elapsed, setElapsed] = useState(0);
   const [done, setDone] = useState(false);
   const [queued, setQueued] = useState(false);
+
+  // Says "something is happening" to anything that wants to know, which is
+  // how the arcade launcher knows to appear without this panel owning it.
+  useAnnounceWork(!done);
 
   useEffect(() => {
     const tick = setInterval(() => setElapsed((s) => s + 1), 1000);

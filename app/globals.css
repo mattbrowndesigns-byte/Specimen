@@ -1596,9 +1596,15 @@ h1 {
 }
 
 /* The controls sit on the title's line rather than in the middle of a row
-   that is now twice as tall as they are. */
-.row-item > .save-actions,
-.row-item > .visit {
+   that is now twice as tall as they are, and they share one gap. As siblings
+   of the row they took its 14px between the bookmark and the arrow while the
+   first two sat 4px apart -- a pair and a stray, which is what "disjointed"
+   looks like when you take it apart. */
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
   align-self: flex-start;
 }
 
@@ -4083,21 +4089,32 @@ a.card {
   border-top: none;
 }
 
+/* The first question's cap line meets its H2's, and the number is measured,
+   not judged. It was `padding-top: 2px` against a 16px chevron; the chevron is
+   a 36px holder now, so the question's text centres 4px lower and the row had
+   drifted 6.81px below the heading. Padding can't go negative, so the
+   remainder is a margin. Re-measure this if the chevron or either type size
+   changes -- it is the offset between two different boxes, not a constant. */
 .faq-item:first-child .faq-q {
-  padding-top: 2px;
+  padding-top: 0;
+  margin-top: -5px;
 }
 
 .faq-item {
   border-bottom: 1px solid var(--border-soft);
 }
 
+/* 14px, not 18: the chevron moved into a 36px holder, and the row's height is
+   what the two-column cap-top alignment was measured against. Keeping the row
+   at 64px keeps the question's text where it was, so the H2 beside it still
+   lines up without re-deriving the offset. */
 .faq-q {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   width: 100%;
-  padding: 18px 0;
+  padding: 14px 0;
   border: none;
   background: none;
   font: inherit;
@@ -4108,13 +4125,36 @@ a.card {
   cursor: pointer;
 }
 
-.faq-q svg {
+/* The same rounded square the library's controls wear, at the size 20px type
+   can hold its own against. A bare 16px chevron floating at the end of a long
+   question read as punctuation rather than as the thing you press. White at
+   rest rather than on hover, because unlike an icon button in a dense row this
+   is the only control on the line and has nothing to stay out of the way of. */
+.faq-chevron {
   flex-shrink: 0;
-  color: var(--text-faint);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-muted);
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.faq-q:hover .faq-chevron {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+/* The icon turns, not its holder. */
+.faq-chevron svg {
   transition: transform 0.15s ease;
 }
 
-.faq-item-open .faq-q svg {
+.faq-item-open .faq-chevron svg {
   transform: rotate(180deg);
 }
 

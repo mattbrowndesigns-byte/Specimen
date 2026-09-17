@@ -216,8 +216,10 @@ a no-op and the alignment is exact, so every laptop and phone is unaffected.
 **The two columns are aligned by cap top, and the numbers are measured.** A
 heading's line box starts about 7px above its capitals at 32px, so aligning
 boxes leaves the eye seeing two different starts. The FAQ's first question
-needed 17px removing (a row's top padding plus the list's top border, which is
-why the list has no top rule); a feature card's grid needs pushing *down* 7px
+is pulled up by its row's top padding plus a negative margin, and that pair has
+been re-derived once already: putting the chevron in a 36px holder centred the
+question's text 4px lower and the row drifted 6.81px below its heading, which
+is the whole reason this is measured and not a constant; a feature card's grid needs pushing *down* 7px
 so the card's edge meets the cap line. Verified at 0.02px, 0.28px and 1.02px
 out on FAQ, features and about. Change a heading size and these want
 re-measuring.
@@ -1057,6 +1059,33 @@ because a resource *is* a URL, while a site or component opens its detail page,
 and the arrow beside it still goes out to the live site. Anything in a
 stretched row that is its own link has to lift over the overlay, which is what
 `.headline-item .visit` and `.headline-item .save-actions` are doing.
+
+**Three controls in a row need one gap, not two.** `SaveActions` and `.visit`
+were siblings of `.row-item`, so they inherited its 14px between the bookmark
+and the arrow while the heart and bookmark sat 4px apart -- a pair and a stray,
+which is what "these feel disjointed" looks like taken apart. They share a
+`.row-actions` container now. Measured 4.0 / 4.0.
+
+**An arrow at the same nominal size as a heart reads smaller.** `ArrowUpRight`
+is a diagonal across its box, so most of the box is empty; the heart and
+bookmark fill theirs. It is 17px against their 15 wherever the three appear
+together, which is cards, list rows and headline strips. The labelled
+`.visit-btn` on a detail page keeps 15, because there it is sized against the
+words beside it, not against other icons.
+
+**The FAQ's chevron is a control, so it looks like one.** A bare 16px chevron
+at the end of a 20px question read as punctuation. It is a 36px white rounded
+square, the same family as the library's icon buttons, filled at rest rather
+than on hover -- unlike an icon button in a dense row, it is the only control
+on the line and has nothing to stay out of the way of. The icon turns, not the
+holder. The row's padding came down from 18 to 14 to absorb the taller holder,
+and the two-column cap alignment was re-measured after (see above).
+
+**A written page's aside carries a heading and nothing else on the FAQ.** The
+section notes were a second voice explaining what "Saving" meant to a reader
+who had already read four questions about saving. `.prose-aside-note` stays in
+the stylesheet because the About page still uses it there, where the note is
+the only copy in that column.
 
 ## Local environment
 

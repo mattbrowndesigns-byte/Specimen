@@ -12,7 +12,6 @@ import SiteFooter from "../_ui/SiteFooter";
 const SECTIONS = [
   {
     title: "Saving",
-    note: "What happens after you paste a URL.",
     items: [
       {
         q: "How long does a save take?",
@@ -34,7 +33,6 @@ const SECTIONS = [
   },
   {
     title: "What the AI writes",
-    note: "How much of it is yours to change.",
     items: [
       {
         q: "Can I change the summary?",
@@ -56,7 +54,6 @@ const SECTIONS = [
   },
   {
     title: "Colour and type",
-    note: "Where the numbers on those panels come from.",
     items: [
       {
         q: "Where do the colours come from?",
@@ -78,7 +75,6 @@ const SECTIONS = [
   },
   {
     title: "Finding things",
-    note: "Getting back to something months later.",
     items: [
       {
         q: "What does search actually cover?",
@@ -96,7 +92,6 @@ const SECTIONS = [
   },
   {
     title: "The account",
-    note: "Who sees what, and what gets kept.",
     items: [
       {
         q: "Can anyone else see my library?",
@@ -120,7 +115,9 @@ function Item({ q, a }) {
     <div className={`faq-item${open ? " faq-item-open" : ""}`}>
       <button className="faq-q" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
         <span>{q}</span>
-        <ChevronDown size={16} />
+        <span className="faq-chevron">
+          <ChevronDown size={20} />
+        </span>
       </button>
       {open && <p className="faq-a">{a}</p>}
     </div>
@@ -136,10 +133,9 @@ export default function FaqPage() {
         <header className="prose-head">
           <h1>Frequently Asked Questions</h1>
           <p className="prose-lede">
-            Kivli does a fair amount on its own, so most of these are about what it is doing
-            when it looks like it is doing nothing. If your question is really about what a
-            part of it is for, <a className="prose-link" href="/features">the features page</a>{" "}
-            covers that instead.
+            Most of these cover what Kivli is doing when it looks like it is doing nothing.
+            For what each part is for, see{" "}
+            <a className="prose-link" href="/features">the features page</a>.
           </p>
         </header>
 
@@ -147,7 +143,6 @@ export default function FaqPage() {
           <section className="prose-row" key={section.title}>
             <div className="prose-section prose-row-aside">
               <h2>{section.title}</h2>
-              <p className="prose-aside-note">{section.note}</p>
             </div>
             <div className="faq-list">
               {section.items.map((item) => (

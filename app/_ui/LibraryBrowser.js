@@ -415,7 +415,7 @@ export default function LibraryBrowser({
                   rel="noopener noreferrer"
                   title="Launch site"
                 >
-                  <ArrowUpRight size={15} />
+                  <ArrowUpRight size={17} />
                 </a>
               </div>
               <TagRow tags={item.tags || []} href={adapter.href(item)} />
@@ -452,21 +452,27 @@ export default function LibraryBrowser({
                 {item.summary && <p className="row-summary">{item.summary}</p>}
                 {renderTags(item, ROW_TAG_LIMIT)}
               </div>
-              <SaveActions
-                kind={adapter.kind}
-                id={item.id}
-                name={adapter.name(item)}
-                isFavorite={item.is_favorite}
-              />
-              <a
-                className="visit"
-                href={adapter.externalUrl(item)}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Launch site"
-              >
-                <ArrowUpRight size={15} />
-              </a>
+              {/* One container, so the three of them share one gap. As
+                  siblings of the row they inherited its 14px between the
+                  bookmark and the arrow while the first two sat 4px apart,
+                  which read as a pair and a stray. */}
+              <span className="row-actions">
+                <SaveActions
+                  kind={adapter.kind}
+                  id={item.id}
+                  name={adapter.name(item)}
+                  isFavorite={item.is_favorite}
+                />
+                <a
+                  className="visit"
+                  href={adapter.externalUrl(item)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Launch site"
+                >
+                  <ArrowUpRight size={17} />
+                </a>
+              </span>
             </div>
           ))}
         </div>
@@ -493,7 +499,7 @@ export default function LibraryBrowser({
                 rel="noopener noreferrer"
                 title="Launch site"
               >
-                <ArrowUpRight size={15} />
+                <ArrowUpRight size={17} />
               </a>
             </div>
           ))}

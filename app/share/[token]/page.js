@@ -296,7 +296,7 @@ function SharedCard({ href, thumb, natural, name, faviconUrl, fills, tags }) {
           rel="noopener noreferrer nofollow"
           title="Open it"
         >
-          <ArrowUpRight size={15} />
+          <ArrowUpRight size={17} />
         </a>
       </div>
       <TagRow tags={tags || []} href={href} />

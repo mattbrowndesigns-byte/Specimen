@@ -385,7 +385,7 @@ export default function LibraryBrowser({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={adapter.thumb(item)} alt={adapter.name(item)} />
                   ) : (
-                    <div className="placeholder">{adapter.pendingLabel}</div>
+                    <div className="placeholder">{adapter.pendingLabel(item)}</div>
                   )}
                 </a>
                 <SaveActions

@@ -12,7 +12,14 @@ const ADAPTER = {
   meta: (site) => site.domain,
   thumb: (site) => latestCapture(site.capture, "desktop")?.thumb_url || null,
   faviconUrl: (site) => site.favicon_url || null,
-  pendingLabel: "Capturing…",
+  // Not a constant, because there are two reasons a site has no picture and
+  // only one of them is worth waiting for. No captures at all means the job is
+  // still running. Captures but no desktop one means the run delivered and the
+  // desktop shot failed -- the callback writes every viewport in a single
+  // insert, so any row from that run means the run is over. Saying "Capturing"
+  // to the second case is a promise nothing is going to keep.
+  pendingLabel: (site) =>
+    (site.capture || []).length > 0 ? "No desktop capture" : "Capturing…",
 };
 
 export default function WebsitesTab({

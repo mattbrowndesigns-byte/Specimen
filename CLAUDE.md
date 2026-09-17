@@ -61,6 +61,41 @@ fix would mean editing `capture.js`.
 **The Storage bucket is `Captures`, capital C.** Supabase bucket names are
 case-sensitive. Every upload failed silently until this was matched.
 
+**WebP cannot be taller than 16,383px, and `capture.js` clips at 20,000.**
+The WebP container stores each dimension in 14 bits, so 16,383 is a hard
+ceiling on the format, not a guideline. The clip guard in `capture.js` only
+engages above 20,000, which leaves a 3,617px band where the page is
+screenshotted whole and then fails to encode. attio.com is the case that found
+it: `[desktop] measured height: 17599px` then `[desktop] FAILED: Processed
+image is too large for the WebP format`. Loud in the Actions log, silent
+everywhere else.
+
+Above the guard it is quieter and worse, for a different reason. The clip is
+passed *without* `fullPage`, and a `clip` on its own is viewport-relative and
+clamped to it -- so a 20,729px page does not come back clipped to 20,000, it
+comes back as **one screen**. stripe.com's mobile capture is 390 x 844 and
+weighs 29 KB, there is no error in the log, and the row stored beside it says
+`page_height: 20729` because that column is read from `capture.log` and
+records what the page *measured*, not what survived.
+
+So there are two bands and two separate faults: 16,384 to 20,000 fails to
+encode, and anything above 20,000 silently becomes a screenshot of the top of
+the page. Both live in `capture.js`, which is off limits, so this is written
+down rather than fixed.
+
+**A half-delivered capture is green everywhere.** `scripts/deliver-capture.js`
+logs `no capture produced, skipping` and sends whatever it has; the callback
+inserts it and returns ok; the Actions run reports success. So a site can end
+up with a mobile capture, no desktop one, no summary and no tags -- the
+callback guards `runEnrichment` on the desktop shot -- while nothing anywhere
+says a word. Two places now read the state instead of assuming it, and neither
+needed a column because the data already says it: `capture` rows exist and
+none of them is `desktop`. `CaptureProgress` used to call any row a success,
+which is the whole of "the bar said it was done and the card still says
+Capturing", and the card's `pendingLabel` is a function of the record now --
+no rows means the run is still going, rows without a desktop one means it
+finished badly.
+
 **Next.js `after()` does not reliably run on this Vercel deployment.**
 Enrichment registered with `after()` simply never executed — captures landed,
 tags never appeared, no error anywhere. It's now `await`ed inside the
@@ -256,6 +291,14 @@ transparent at the back, so the thing reads as travelling. That needs
 exist: a hex cannot carry an alpha. The ship gave up its glow at the same time
 and got bigger, because at 22px with a halo it was reading as a smudge rather
 than as a ship.
+
+**The launcher's ring is a spread shadow, not a border.** `box-sizing` is
+border-box for everything in this stylesheet, so two pixels of border would
+have come out of the 46px circle rather than going around it and the purple
+would have shrunk to 42. `0 0 0 2px` layers with the glow already there and
+costs the disc nothing. It takes `--surface` rather than a literal white: that
+is the white of a card in light mode and the dark of one in dark, and a true
+white ring around a purple disc in dark mode is a halo rather than an edge.
 
 **The launcher's circle rocks and the ship inside it turns further.** The first
 version animated the button alone, which looked like only the mark was moving

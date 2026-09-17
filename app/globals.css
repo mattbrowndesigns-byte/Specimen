@@ -2212,6 +2212,17 @@ h1 {
   background: var(--warn-bg);
 }
 
+/* A capture that came back without its desktop shot. Not the queued amber:
+   queued means wait, and this means the run is over and half of it is missing. */
+.capture-status-failed {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+}
+
+.capture-status-failed p {
+  color: var(--danger);
+}
+
 .capture-status-queued p {
   color: var(--warn-text);
 }
@@ -6229,9 +6240,18 @@ a.card {
   background: var(--ramp-mid);
   color: #fff;
   cursor: pointer;
+  /* The ring is a spread shadow rather than a border: `box-sizing` is
+     border-box everywhere in this file, so two pixels of border would have
+     come out of the 46px circle rather than going around it, and the purple
+     would have shrunk to 42. A shadow draws outside the box and layers with
+     the glow already there.
+     
+     --surface rather than a literal white, so it is the white of a card in
+     light mode and the dark of one in dark mode. A true white ring in dark
+     mode is a halo, not an edge. */
   box-shadow:
-    0 0 0 1px rgba(var(--ramp-mid-rgb), 0.55),
-    0 2px 10px rgba(var(--ramp-mid-rgb), 0.45),
+    0 0 0 2px var(--surface),
+    0 3px 12px rgba(var(--ramp-mid-rgb), 0.45),
     0 10px 30px rgba(var(--ramp-mid-rgb), 0.3);
   animation: arcade-arrive 0.32s ease-out, arcade-rock 5.2s ease-in-out 0.6s infinite;
   transition: box-shadow 0.12s ease, filter 0.12s ease;
@@ -6250,8 +6270,8 @@ a.card {
    both without the button needing a second pair of tokens. */
 .arcade-launch:hover {
   box-shadow:
-    0 0 0 1px rgba(var(--ramp-mid-rgb), 0.7),
-    0 2px 12px rgba(var(--ramp-mid-rgb), 0.6),
+    0 0 0 2px var(--surface),
+    0 3px 14px rgba(var(--ramp-mid-rgb), 0.6),
     0 12px 34px rgba(var(--ramp-mid-rgb), 0.4);
 }
 

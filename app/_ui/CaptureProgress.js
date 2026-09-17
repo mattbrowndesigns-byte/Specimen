@@ -13,10 +13,16 @@ const ESTIMATE_SECONDS = 75;
 // telling them everything is finished.
 const queuedHold = (state) => (state === "queued" ? 9000 : 2500);
 
+// Longer still for a failure: it is the one outcome that leaves something for
+// you to do. The card in the grid carries it from there, so this does not have
+// to stay forever.
+const FAILED_HOLD = 13000;
+
 export default function CaptureProgress({ job, onDone }) {
   const [elapsed, setElapsed] = useState(0);
   const [done, setDone] = useState(false);
   const [queued, setQueued] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   // Says "something is happening" to anything that wants to know, which is
   // how the arcade launcher knows to appear without this panel owning it.
@@ -36,14 +42,29 @@ export default function CaptureProgress({ job, onDone }) {
           const res = await fetch(`/api/sites/${job.id}`);
           if (!res.ok) return;
           const data = await res.json();
-          if (!cancelled && (data.site.capture || []).length > 0) {
+          const captures = data.site.capture || [];
+          if (!cancelled && captures.length > 0) {
+            // Any row means the run is over, because the callback writes every
+            // viewport of a run in a single insert. So a run that arrives
+            // without a desktop shot isn't going to produce one -- and the
+            // callback also skips enrichment without one, which is why a
+            // half-delivered save has no summary and no tags either.
+            //
+            // Declaring victory on `captures.length > 0` was the bug behind
+            // "the bar said it was done and the card still says Capturing":
+            // a mobile-only delivery satisfied it.
+            const shot = captures.some((capture) => capture.viewport === "desktop");
             // The screenshots are in either way; the tagging pass may still be
             // waiting on the AI's free tier. Saying so is the difference
             // between "it worked" and "half of it silently didn't".
-            setQueued(data.site.enrichment_state === "queued");
+            setFailed(!shot);
+            setQueued(shot && data.site.enrichment_state === "queued");
             setDone(true);
             clearInterval(poll);
-            setTimeout(() => onDone(null), queuedHold(data.site.enrichment_state));
+            setTimeout(
+              () => onDone(null),
+              shot ? queuedHold(data.site.enrichment_state) : FAILED_HOLD,
+            );
           }
         } else {
           const res = await fetch(`/api/components/capture/${job.id}`);
@@ -65,6 +86,17 @@ export default function CaptureProgress({ job, onDone }) {
       clearInterval(poll);
     };
   }, [job, onDone]);
+
+  if (done && failed) {
+    return (
+      <div className="capture-status capture-status-done capture-status-failed">
+        <p>
+          {job.label} is saved, but its desktop screenshot didn&rsquo;t come back, so it has no
+          summary or tags. A very tall page is the usual cause. Its mobile capture is on its page.
+        </p>
+      </div>
+    );
+  }
 
   if (done) {
     return (

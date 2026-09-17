@@ -6237,7 +6237,18 @@ a.card {
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: var(--ramp-mid);
+  /* The ramp's two purples down the disc, held at the lit end for a third so
+     the top still reads as the brand tone rather than as the midpoint of a
+     fade. `overflow: hidden` is what keeps the shots inside the circle -- an
+     element's own box-shadow is not clipped by its own overflow, so the ring
+     and the glow are untouched by it. */
+  background: linear-gradient(
+    180deg,
+    var(--ramp-mid) 0%,
+    var(--ramp-mid) 32%,
+    var(--ramp-deep) 100%
+  );
+  overflow: hidden;
   color: #fff;
   cursor: pointer;
   /* The ring is a spread shadow rather than a border: `box-sizing` is
@@ -6262,8 +6273,72 @@ a.card {
    like only the mark was moving -- which is what it was. Same period and same
    delay on both, or they drift apart within a minute. */
 .arcade-launch-ship {
+  position: relative;
   display: inline-flex;
   animation: arcade-wiggle 5.2s ease-in-out 0.6s infinite;
+}
+
+/* Two shots, staggered, fired during the wiggle and gone the rest of the time.
+   They are pseudo-elements of the *ship's* wrapper rather than the button's,
+   which is the whole detail: they inherit its rotation, so the ship fires
+   where it is pointing and the pair fan out as it turns. Same orange and the
+   same fade as the shots in the game, which is what makes the button a
+   trailer for it.
+   
+   Their default opacity is 0, so a reader who has asked for no motion gets a
+   still disc rather than two specks parked over the nose. */
+.arcade-launch-ship::before,
+.arcade-launch-ship::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 3px;
+  height: 8px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  /* Solid for the first half and then gone, rather than fading the whole way.
+     Over eight pixels on a purple disc a full-length fade spends most of its
+     length as a blend between orange and purple, which is brown -- the shot
+     read as a smudge rather than as a shot. The glow is the same idea as the
+     game's `shadowBlur`, and does more work here than it does there because
+     the thing it is lighting is this small. */
+  background: linear-gradient(
+    180deg,
+    var(--accent) 0%,
+    var(--accent) 55%,
+    rgba(var(--accent-rgb), 0) 100%
+  );
+  box-shadow: 0 0 5px rgba(var(--accent-rgb), 0.8);
+  opacity: 0;
+  animation: arcade-shot 5.2s ease-out 0.6s infinite;
+}
+
+/* Half a second behind the first. At a third they travelled close enough to
+   touch and read as one long streak rather than as two shots. */
+.arcade-launch-ship::after {
+  animation-delay: 1.1s;
+}
+
+@keyframes arcade-shot {
+  0%,
+  69% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  79% {
+    opacity: 1;
+    transform: translateY(-10px);
+  }
+  85%,
+  100% {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
 }
 
 /* White on this purple is 5.3:1 light and 4.9:1 dark, so the mark holds in
@@ -6338,7 +6413,9 @@ a.card {
    The movement is what someone asked not to have. */
 @media (prefers-reduced-motion: reduce) {
   .arcade-launch,
-  .arcade-launch-ship {
+  .arcade-launch-ship,
+  .arcade-launch-ship::before,
+  .arcade-launch-ship::after {
     animation: none;
   }
 }

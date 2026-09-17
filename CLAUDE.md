@@ -292,6 +292,26 @@ exist: a hex cannot carry an alpha. The ship gave up its glow at the same time
 and got bigger, because at 22px with a halo it was reading as a smudge rather
 than as a ship.
 
+**The launcher fires its own shots, and they belong to the ship, not to the
+button.** Two pseudo-elements on `.arcade-launch-ship` rather than on
+`.arcade-launch`, which is the whole detail: they inherit the ship's rotation,
+so it fires where it is pointing and the pair lean as it turns. The button's
+`overflow: hidden` clips them to the disc, and an element's own box-shadow is
+not clipped by its own overflow, so the ring and the glow are untouched by it.
+
+Three numbers in there were arrived at rather than chosen. The gradient is
+solid orange to 55% and transparent after, not a fade over the whole length:
+across eight pixels on a purple disc a full-length fade spends most of itself
+as a blend of orange and purple, which is brown, and the shot read as a smudge.
+They carry a `box-shadow` glow, the same idea as the game's `shadowBlur` but
+doing more work, because the thing being lit is this small. And the second is
+half a second behind the first rather than a third, because at a third they
+travelled close enough to touch and read as one long streak.
+
+**The disc is the ramp's two purples, held at the top.** `--ramp-mid` to
+`--ramp-deep` down the circle, with the lit end held for the first 32% so the
+top still reads as the brand tone rather than as the midpoint of a fade.
+
 **The launcher's ring is a spread shadow, not a border.** `box-sizing` is
 border-box for everything in this stylesheet, so two pixels of border would
 have come out of the 46px circle rather than going around it and the purple

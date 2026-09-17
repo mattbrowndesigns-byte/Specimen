@@ -1133,6 +1133,29 @@ together, which is cards, list rows and headline strips. The labelled
 `.visit-btn` on a detail page keeps 15, because there it is sized against the
 words beside it, not against other icons.
 
+**The list and headline views of one tab have to agree, because switching is
+when you can see them disagree.** A resource row was padded 8px at the sides
+against the headline row's 10, and both put the title at 44px from the edge --
+so the *avatar* jumped two pixels while the name it belongs to stayed still.
+Same padding, same 8px radius and the same inset divider now.
+
+**A badge beside a title is aligned by giving the title the badge's line box.**
+A 24px badge and a 17.5px run of 15px text, both starting at the top of a row
+with `align-items: flex-start`, put the badge's centre 3.25px below the
+title's. That is the measurement, and 3.25px of negative margin would have been
+the wrong fix: it dies the next time either the badge or the type changes size.
+`.resource-head` takes `line-height: var(--favicon-size)` instead, so the first
+line's box and the badge are the same height and share a middle by
+construction, whatever is set inside it. Headlines never had the problem
+because a single-line row can just centre everything. Measured 0.00 in
+headlines and 0.25 in the list, the quarter being sub-pixel text metrics.
+
+**`.headline-item .favicon` was nudging the artwork, not the badge.** It set
+`margin-right: 2px` on the image *inside* a centred, clipped 24px circle, so
+the mark sat 1px left of centre in headlines and centred in the list view --
+switching views moved the artwork inside its own frame. The 2px was trying to
+be space after the badge, which is the row's `gap` and always was. Gone.
+
 **A headline row is inset by the gap it already has inside it.** The strip's
 side padding was 4px against a 10px gap between the favicon and the title, so
 the mark sat almost against the edge of a hover fill that ran wall to wall --

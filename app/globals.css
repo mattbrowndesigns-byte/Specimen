@@ -128,6 +128,9 @@
      keeps the padding equal on three sides and lands the chips' bottom edge on
      the picture's. */
   --row-thumb-w: 180px;
+  /* The brand badge, named because a row that puts one beside a title has to
+     line the title's line box up with it. */
+  --favicon-size: 24px;
   /* The ramp's thickness, shared by the progress bar and the line along the
      top of every call to action. They are the same gradient making the same
      point, so a difference between them is a wobble and not a decision. */
@@ -4751,8 +4754,8 @@ a.card {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  width: var(--favicon-size);
+  height: var(--favicon-size);
   border: 1px solid var(--border);
   border-radius: 50%;
   background: var(--surface);
@@ -4799,9 +4802,11 @@ a.card {
   gap: 8px;
 }
 
-.headline-item .favicon {
-  margin-right: 2px;
-}
+/* No nudge on the mark itself. This was 2px of margin-right on the image
+   *inside* a centred, clipped, 24px circle, so it pushed the mark 1px off
+   centre -- and the row's own gap is what separates the badge from the title,
+   which is where the 2px was trying to go. In the list view the same mark was
+   centred, so switching views moved the artwork inside its frame. */
 
 /* Curated discovered pages */
 
@@ -5663,14 +5668,40 @@ a.card {
 
 /* Rules between rows rather than eight separate cards: a resource has far less
    in it than a site does, and boxing each one put more border on the page than
-   content. The last row's rule is the end of the list. */
+   content.
+   
+   Same geometry as a headline row, because switching between the two views is
+   the one moment you can see a difference: the title lands at 44px from the
+   edge in both, so at 8px of padding against the headline's 10 the *avatar*
+   jumped two pixels while the name it belongs to stayed put.
+   
+   Same 8px radius too, and the divider is inset to the same 10px for the same
+   reason it is there -- a rule running wall to wall crosses the corner a
+   rounded fill has just turned. The last row doesn't draw one, which is a
+   reversal: it used to, on the grounds that the closing rule was the end of
+   the list. It isn't worth the two views disagreeing about. */
 .resource-row {
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 14px 8px;
-  border-bottom: 1px solid var(--border-soft);
+  gap: 10px;
+  padding: 14px 10px;
+  border-radius: 8px;
+}
+
+.resource-row::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 0;
+  height: 1px;
+  background: var(--border-soft);
+  pointer-events: none;
+}
+
+.resource-row:last-child::after {
+  display: none;
 }
 
 .resource-row:hover {
@@ -5735,11 +5766,22 @@ a.card {
   gap: 5px;
 }
 
+/* The first line gets the badge's own height for a line box, which is what
+   puts the two centres on top of each other -- the badge starts at the top of
+   this line and so does the line, so 24px of badge and 24px of line box share
+   a middle whatever the type inside it is doing.
+   
+   Measured, the constant version was 3.25px: a 24px badge and a 17.5px run of
+   15px text both starting at the row's content top, so the badge's centre sat
+   that far below the title's. Nudging it by 3.25 would have been right until
+   the next time the badge or the title changed size. Headlines never had this
+   because a one-line row can just centre everything. */
 .resource-head {
   display: flex;
   align-items: baseline;
   gap: 9px;
   flex-wrap: wrap;
+  line-height: var(--favicon-size);
 }
 
 /* The title is the link out, because the link is the whole of what was saved.

@@ -13,6 +13,11 @@ const UA_DESKTOP =
 const UA_MOBILE =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
 
+// The WebP container stores each dimension in 14 bits, so 16,383 is a hard
+// ceiling on the format rather than a preference. Everything here is written
+// as WebP, so this is the real limit on how tall a capture can be.
+const MAX_WEBP_HEIGHT = 16383;
+
 const VIEWPORTS = [
   { name: "desktop", width: 1440, height: 900, mobile: false, ua: UA_DESKTOP },
   { name: "mobile", width: 390, height: 844, mobile: true, ua: UA_MOBILE },
@@ -107,17 +112,37 @@ async function captureOne(browser, vp) {
     );
   }
 
-  const shotOptions =
-    height > 20000
-      ? { clip: { x: 0, y: 0, width: vp.width, height: 20000 }, type: "png" }
-      : { fullPage: true, type: "png" };
+  // Always the whole page, and the size guard moved to after the screenshot
+  // where the real height is known.
+  //
+  // The clip that used to be here was wrong twice over. It engaged above
+  // 20,000px while the format gives up at 16,383, so every page between the
+  // two was photographed whole and then failed to encode -- attio.com's
+  // desktop page at 17,599 and homestack.com's mobile page at 18,025 both
+  // died there, loudly in the runner's log and silently everywhere else. And
+  // a `clip` passed without `fullPage` is viewport-relative, so the pages tall
+  // enough to trip it came back as a single screen rather than as a clipped
+  // one: stripe.com's mobile capture is stored as 390x844 against a row that
+  // says 20,729.
+  //
+  // Cropping in sharp instead means a page over the ceiling loses its tail
+  // rather than the whole capture, which is the outcome the guard was always
+  // for.
+  const png = await page.screenshot({ fullPage: true, type: "png" });
 
-  const png = await page.screenshot(shotOptions);
+  const meta = await sharp(png).metadata();
+  const clipped = meta.height > MAX_WEBP_HEIGHT;
+  if (clipped) {
+    console.log(`[${vp.name}] clipping ${meta.height}px to ${MAX_WEBP_HEIGHT}px for WebP`);
+  }
 
-  await sharp(png).webp({ quality: 78 }).toFile(`out/${vp.name}-full.webp`);
+  const full = clipped
+    ? sharp(png).extract({ left: 0, top: 0, width: meta.width, height: MAX_WEBP_HEIGHT })
+    : sharp(png);
+
+  await full.webp({ quality: 78 }).toFile(`out/${vp.name}-full.webp`);
 
   if (!vp.mobile) {
-    const meta = await sharp(png).metadata();
     const cropHeight = Math.min(Math.round((meta.width * 9) / 16), meta.height);
     await sharp(png)
       .extract({ left: 0, top: 0, width: meta.width, height: cropHeight })

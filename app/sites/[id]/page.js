@@ -457,7 +457,7 @@ export default function SiteDetailPage({ params }) {
                   )}{" "}
                   ·{" "}
                   <button
-                    className="capture-delete"
+                    className="danger-btn capture-delete"
                     onClick={() => deleteCaptureRun(activeRun)}
                     disabled={deletingCapture}
                   >
@@ -467,7 +467,7 @@ export default function SiteDetailPage({ params }) {
               )}
 
               {hasMobile && (
-                <div className="viewport-toggle">
+                <div className="view-switch viewport-toggle">
                   <button className={viewport === "desktop" ? "active" : ""} onClick={() => setViewport("desktop")}>
                     Desktop
                   </button>

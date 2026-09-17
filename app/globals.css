@@ -2005,6 +2005,29 @@ h1 {
   transition: background 0.12s ease, border-color 0.12s ease;
 }
 
+/* The tint is the language; the size belongs to the row. A tag row's buttons
+   are 5/10 and a bulk bar's are 6/12, and a 9/14 button dropped into either
+   stands a few pixels proud of the ones beside it -- which is the wobble
+   `--control-h` exists to stop, in a place that token doesn't reach. */
+.tag-actions .danger-btn.danger-btn {
+  padding: 5px 10px;
+}
+
+.bulk-actions .danger-btn.danger-btn {
+  padding: 6px 12px;
+}
+
+/* In a caption it sits between two links, so it takes the caption's size and
+   loses the button's own line height. It was an underlined red word there,
+   which is the one thing on that line that can't be undone dressed as the two
+   beside it that can. */
+.capture-delete.danger-btn.danger-btn {
+  padding: 3px 9px;
+  font-size: 12px;
+  vertical-align: middle;
+  text-decoration: none;
+}
+
 .danger-btn.danger-btn:hover {
   background: var(--danger-bg-hover);
   border-color: var(--danger);
@@ -2346,25 +2369,24 @@ h1 {
   cursor: default;
 }
 
+/* Nothing of its own but the gap under it: the shape, the sizing and the
+   active state all come from `.view-switch`, which is the same idea in the
+   results bar -- a set of options where one is held. Two bordered pills with
+   a near-black fill on the chosen one said "two buttons, and you have pressed
+   this one", which is a different sentence. */
 .viewport-toggle {
-  display: flex;
-  gap: 4px;
+  /* `.view-switch`'s own track is --surface-sunken, which is also what
+     `.capture-panel` is painted in -- so inside that panel the holding shape
+     would have disappeared and left one white pill floating on the ground.
+     --field-bg is the token for exactly this: it sits a step below the surface
+     in light mode and a step above it in dark, so the shape reads either way.
+     
+     fit-content because a flex container with no width of its own fills its
+     line, and a segmented control that stretches to the window is not a
+     segmented control. */
+  width: fit-content;
+  background: var(--field-bg);
   margin-bottom: 16px;
-}
-
-.viewport-toggle button {
-  padding: 6px 14px;
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.viewport-toggle button.active {
-  background: var(--invert-bg);
-  color: var(--invert-text);
-  border-color: var(--invert-bg);
 }
 
 .detail-capture {
@@ -6224,6 +6246,17 @@ a.card {
    The wiggle is four fifths idle. A button that moves all the time is a thing
    you learn to ignore in a minute; one that twitches every five seconds is
    something you look at. */
+/* A porthole onto the game rather than a badge in front of it: the same grey
+   playfield, the same purple ship, the same orange shots, cropped to a circle.
+   The purple disc with a white ship it replaced was a second object with the
+   game's parts rearranged, and pressing it swapped the two colours over.
+   
+   The gradient stays but barely: --surface to --surface-sunken is a lift of
+   about one step, and the bottom of it is exactly the colour the playfield is.
+   
+   `overflow: hidden` is what keeps the shots inside the circle. An element's
+   own box-shadow is not clipped by its own overflow, so the edge and the glow
+   are untouched by it. */
 .arcade-launch {
   position: fixed;
   left: 24px;
@@ -6237,72 +6270,74 @@ a.card {
   padding: 0;
   border: none;
   border-radius: 50%;
-  /* The ramp's two purples down the disc, held at the lit end for a third so
-     the top still reads as the brand tone rather than as the midpoint of a
-     fade. `overflow: hidden` is what keeps the shots inside the circle -- an
-     element's own box-shadow is not clipped by its own overflow, so the ring
-     and the glow are untouched by it. */
-  background: linear-gradient(
-    180deg,
-    var(--ramp-mid) 0%,
-    var(--ramp-mid) 32%,
-    var(--ramp-deep) 100%
-  );
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-sunken) 100%);
   overflow: hidden;
-  color: #fff;
+  color: var(--ramp-mid);
   cursor: pointer;
-  /* The ring is a spread shadow rather than a border: `box-sizing` is
-     border-box everywhere in this file, so two pixels of border would have
-     come out of the 46px circle rather than going around it, and the purple
-     would have shrunk to 42. A shadow draws outside the box and layers with
-     the glow already there.
-     
-     --surface rather than a literal white, so it is the white of a card in
-     light mode and the dark of one in dark mode. A true white ring in dark
-     mode is a halo, not an edge. */
+  /* A hairline now rather than the 2px ring. That ring was there to cut a
+     purple disc out of a pale page; against a disc that is itself nearly the
+     page's colour it would be invisible, and what the edge needs instead is
+     the line a card gets. The purple left the disc, so the glow is the only
+     place it still says whose button this is -- which is why it stays. */
   box-shadow:
-    0 0 0 2px var(--surface),
-    0 3px 12px rgba(var(--ramp-mid-rgb), 0.45),
-    0 10px 30px rgba(var(--ramp-mid-rgb), 0.3);
-  animation: arcade-arrive 0.32s ease-out, arcade-rock 5.2s ease-in-out 0.6s infinite;
+    0 0 0 1px var(--border),
+    0 3px 12px rgba(var(--ramp-mid-rgb), 0.38),
+    0 10px 30px rgba(var(--ramp-mid-rgb), 0.24);
+  animation: arcade-arrive 0.32s ease-out;
   transition: box-shadow 0.12s ease, filter 0.12s ease;
 }
 
-/* The circle rocks and the ship inside it turns further. A rotating circle is
-   indistinguishable from a still one, so animating the button alone looked
-   like only the mark was moving -- which is what it was. Same period and same
-   delay on both, or they drift apart within a minute. */
+/* It slides, it does not turn. The ship in the game has no rotation at all --
+   left and right and that is the whole of it -- so a launcher whose ship
+   pivoted on its own nose was inventing a move the game does not have. Still
+   for the first three fifths of the cycle, then two darts and back. */
 .arcade-launch-ship {
-  position: relative;
   display: inline-flex;
-  animation: arcade-wiggle 5.2s ease-in-out 0.6s infinite;
+  animation: arcade-fly 5.2s ease-in-out 0.6s infinite;
 }
 
-/* Two shots, staggered, fired during the wiggle and gone the rest of the time.
-   They are pseudo-elements of the *ship's* wrapper rather than the button's,
-   which is the whole detail: they inherit its rotation, so the ship fires
-   where it is pointing and the pair fan out as it turns. Same orange and the
-   same fade as the shots in the game, which is what makes the button a
-   trailer for it.
+@keyframes arcade-fly {
+  0%,
+  58% {
+    transform: translateX(0);
+  }
+  65%,
+  73% {
+    transform: translateX(-7px);
+  }
+  79%,
+  87% {
+    transform: translateX(6px);
+  }
+  94%,
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* The shots hang off the *button*, not off the ship, which is the difference
+   between a game and a mobile. A shot parented to the ship inherits its
+   movement and curves sideways as the ship slides on; these are pinned to the
+   x the ship was at when it fired -- 16px for the left dart, 29px for the
+   right -- and only travel up, exactly as a bullet does once it has left. The
+   ship holds still at each end for the moment its shot leaves, so the two
+   line up without either knowing about the other.
    
    Their default opacity is 0, so a reader who has asked for no motion gets a
    still disc rather than two specks parked over the nose. */
-.arcade-launch-ship::before,
-.arcade-launch-ship::after {
+.arcade-launch::before,
+.arcade-launch::after {
   content: "";
   position: absolute;
-  top: -5px;
-  left: 50%;
+  top: 6px;
   width: 3px;
   height: 8px;
-  margin-left: -1.5px;
   border-radius: 2px;
-  /* Solid for the first half and then gone, rather than fading the whole way.
-     Over eight pixels on a purple disc a full-length fade spends most of its
-     length as a blend between orange and purple, which is brown -- the shot
-     read as a smudge rather than as a shot. The glow is the same idea as the
-     game's `shadowBlur`, and does more work here than it does there because
-     the thing it is lighting is this small. */
+  /* Solid for the first half and then gone, rather than fading the whole way:
+     over eight pixels a full-length fade spends most of itself as a blend with
+     whatever is behind it, and the shot reads as a smudge. The glow is the
+     game's `shadowBlur`, doing more work here because what it lights is this
+     small. */
   background: linear-gradient(
     180deg,
     var(--accent) 0%,
@@ -6311,72 +6346,71 @@ a.card {
   );
   box-shadow: 0 0 5px rgba(var(--accent-rgb), 0.8);
   opacity: 0;
-  animation: arcade-shot 5.2s ease-out 0.6s infinite;
 }
 
-/* Half a second behind the first. At a third they travelled close enough to
-   touch and read as one long streak rather than as two shots. */
-.arcade-launch-ship::after {
-  animation-delay: 1.1s;
+.arcade-launch::before {
+  left: 14.5px;
+  animation: arcade-shot-left 5.2s ease-out 0.6s infinite;
 }
 
-@keyframes arcade-shot {
+.arcade-launch::after {
+  left: 27.5px;
+  animation: arcade-shot-right 5.2s ease-out 0.6s infinite;
+}
+
+@keyframes arcade-shot-left {
   0%,
-  69% {
+  66% {
     opacity: 0;
     transform: translateY(0);
   }
-  70% {
+  67% {
     opacity: 1;
     transform: translateY(0);
   }
-  79% {
+  75% {
     opacity: 1;
     transform: translateY(-10px);
   }
-  85%,
+  80%,
   100% {
     opacity: 0;
-    transform: translateY(-16px);
+    transform: translateY(-15px);
   }
 }
 
-/* White on this purple is 5.3:1 light and 4.9:1 dark, so the mark holds in
-   both without the button needing a second pair of tokens. */
-.arcade-launch:hover {
-  box-shadow:
-    0 0 0 2px var(--surface),
-    0 3px 14px rgba(var(--ramp-mid-rgb), 0.6),
-    0 12px 34px rgba(var(--ramp-mid-rgb), 0.4);
-}
-
-/* Not a transform: a running animation wins over one of these, so a pressed
-   state written that way would simply never appear. */
-.arcade-launch:active {
-  filter: brightness(0.9);
-}
-
-@keyframes arcade-rock {
+@keyframes arcade-shot-right {
   0%,
-  70% {
-    transform: translateY(0) rotate(0deg);
+  80% {
+    opacity: 0;
+    transform: translateY(0);
   }
-  74% {
-    transform: translateY(-2px) rotate(-4deg);
-  }
-  79% {
-    transform: translateY(0) rotate(3deg);
-  }
-  84% {
-    transform: translateY(-1px) rotate(-2deg);
+  81% {
+    opacity: 1;
+    transform: translateY(0);
   }
   89% {
-    transform: translateY(0) rotate(1.5deg);
+    opacity: 1;
+    transform: translateY(-10px);
   }
   94%,
   100% {
-    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+    transform: translateY(-15px);
   }
+}
+
+.arcade-launch:hover {
+  box-shadow:
+    0 0 0 1px var(--border-strong),
+    0 3px 14px rgba(var(--ramp-mid-rgb), 0.5),
+    0 12px 34px rgba(var(--ramp-mid-rgb), 0.32);
+}
+
+/* Not a transform: `arcade-arrive` owns that property, and an animation beats
+   a plain declaration on the same one. */
+.arcade-launch:active {
+  filter: brightness(0.95);
 }
 
 @keyframes arcade-arrive {
@@ -6386,36 +6420,13 @@ a.card {
   }
 }
 
-@keyframes arcade-wiggle {
-  0%,
-  70% {
-    transform: rotate(0deg);
-  }
-  74% {
-    transform: rotate(-13deg);
-  }
-  79% {
-    transform: rotate(11deg);
-  }
-  84% {
-    transform: rotate(-7deg);
-  }
-  89% {
-    transform: rotate(5deg);
-  }
-  94%,
-  100% {
-    transform: rotate(0deg);
-  }
-}
-
 /* The glow stays, because it is what makes the button findable in the corner.
    The movement is what someone asked not to have. */
 @media (prefers-reduced-motion: reduce) {
   .arcade-launch,
   .arcade-launch-ship,
-  .arcade-launch-ship::before,
-  .arcade-launch-ship::after {
+  .arcade-launch::before,
+  .arcade-launch::after {
     animation: none;
   }
 }

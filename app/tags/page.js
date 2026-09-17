@@ -190,7 +190,9 @@ export default function TagsPage() {
                   <span className="tag-label">{tag.label}</span>
                   <div className="tag-actions">
                     <button onClick={() => updateTag(tag.id, { is_approved: true })}>Approve</button>
-                    <button onClick={() => deleteTag(tag)}>Reject</button>
+                    <button className="danger-btn" onClick={() => deleteTag(tag)}>
+                      Reject
+                    </button>
                   </div>
                 </div>
               ))}
@@ -264,7 +266,9 @@ export default function TagsPage() {
                         </button>
                       )}
 
-                      <button onClick={() => deleteTag(tag)}>Delete</button>
+                      <button className="danger-btn" onClick={() => deleteTag(tag)}>
+                        Delete
+                      </button>
                     </div>
                   </div>
                 ))}

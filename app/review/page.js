@@ -177,7 +177,11 @@ export default function ReviewPage() {
                   primary: true,
                   onClick: () => approveTags([...tagSelection.selected]),
                 },
-                { label: "Reject", onClick: () => rejectTags([...tagSelection.selected]) },
+                {
+                  label: "Reject",
+                  danger: true,
+                  onClick: () => rejectTags([...tagSelection.selected]),
+                },
               ]}
             />
             <div className="tag-list">
@@ -197,7 +201,11 @@ export default function ReviewPage() {
                     <button disabled={busy} onClick={() => approveTags([tag.id])}>
                       Approve
                     </button>
-                    <button disabled={busy} onClick={() => rejectTags([tag.id])}>
+                    <button
+                      className="danger-btn"
+                      disabled={busy}
+                      onClick={() => rejectTags([tag.id])}
+                    >
                       Reject
                     </button>
                   </div>
@@ -386,7 +394,7 @@ function BulkBar({ title, total, selection, actions, busy }) {
           {actions.map((action) => (
             <button
               key={action.label}
-              className={action.primary ? "primary" : ""}
+              className={action.danger ? "danger-btn" : action.primary ? "primary" : ""}
               onClick={action.onClick}
               disabled={busy}
             >

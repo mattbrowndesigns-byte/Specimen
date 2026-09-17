@@ -50,38 +50,72 @@ Names only: `SUPABASE_URL`,
 
 ## Gotchas you would not guess from the code
 
-**`capture.js` is off limits.** Validated in M0 against four hard cases; every
-technique in it exists because a specific site broke without it (realistic UA —
-Ramp served a text-only page to `HeadlessChrome`; scroll-through for lazy
-loading; zeroed animations; consent-banner hiding; 20,000px clip guard). Known
-consequence left unfixed: a mobile retry without device emulation overwrites
-the same file instead of keeping the taller result, which the spec wants — the
-fix would mean editing `capture.js`.
+**`capture.js` is off limits, with one exception on the record.** Validated in
+M0 against four hard cases; every technique in it exists because a specific
+site broke without it (realistic UA — Ramp served a text-only page to
+`HeadlessChrome`; scroll-through for lazy loading; zeroed animations;
+consent-banner hiding; a height guard). Known consequence left unfixed: a
+mobile retry without device emulation overwrites the same file instead of
+keeping the taller result, which the spec wants.
+
+The exception, made on 2026-09-17 after the guard cost three captures in two
+days: the height guard was rewritten, and nothing else was touched. It was a
+`clip` at 20,000px passed to `page.screenshot`; it is now a crop in sharp at
+`MAX_WEBP_HEIGHT` after the screenshot. See the WebP entry below for why both
+halves of that were wrong. If any other technique in this file ever looks
+wrong, it is still off limits — ask first.
 
 **The Storage bucket is `Captures`, capital C.** Supabase bucket names are
 case-sensitive. Every upload failed silently until this was matched.
 
-**WebP cannot be taller than 16,383px, and `capture.js` clips at 20,000.**
+**WebP cannot be taller than 16,383px, and the guard used to be at 20,000.**
 The WebP container stores each dimension in 14 bits, so 16,383 is a hard
-ceiling on the format, not a guideline. The clip guard in `capture.js` only
-engages above 20,000, which leaves a 3,617px band where the page is
-screenshotted whole and then fails to encode. attio.com is the case that found
-it: `[desktop] measured height: 17599px` then `[desktop] FAILED: Processed
-image is too large for the WebP format`. Loud in the Actions log, silent
-everywhere else.
+ceiling on the format rather than a preference, and every capture here is
+written as WebP.
 
-Above the guard it is quieter and worse, for a different reason. The clip is
-passed *without* `fullPage`, and a `clip` on its own is viewport-relative and
-clamped to it -- so a 20,729px page does not come back clipped to 20,000, it
-comes back as **one screen**. stripe.com's mobile capture is 390 x 844 and
-weighs 29 KB, there is no error in the log, and the row stored beside it says
-`page_height: 20729` because that column is read from `capture.log` and
+The old guard was wrong twice over. It only engaged above 20,000, which left a
+3,617px band where the page was screenshotted whole and then failed to encode:
+`[desktop] measured height: 17599px` then `[desktop] FAILED: Processed image is
+too large for the WebP format`. attio.com died there on the desktop shot and
+homestack.com on the mobile one, two days apart -- loud in the Actions log and
+silent everywhere else, because the delivery script sends whatever it has, the
+callback stores it, and the run reports success.
+
+And the guard it *did* apply was a `clip` passed without `fullPage`, which is
+viewport-relative and clamped to it -- so a 20,729px page came back as **one
+screen** rather than as a clipped one. stripe.com's mobile capture is 390 x 844
+and 29 KB, with no error in the log and a row beside it saying
+`page_height: 20729`, because that column is read from `capture.log` and
 records what the page *measured*, not what survived.
 
-So there are two bands and two separate faults: 16,384 to 20,000 fails to
-encode, and anything above 20,000 silently becomes a screenshot of the top of
-the page. Both live in `capture.js`, which is off limits, so this is written
-down rather than fixed.
+It is now `fullPage: true` always, with the ceiling applied afterwards as a
+`sharp.extract` at `MAX_WEBP_HEIGHT` -- the only place the real height is
+known. A page over the ceiling loses its tail rather than the whole capture,
+which is what the guard was always for. Verified against a synthetic 390 x
+18,025 PNG, homestack.com's exact mobile height: the old path throws the same
+message the runner logged, the new one writes a 390 x 16,383 WebP, and a page
+under the ceiling passes through untouched.
+
+**Every destructive control wears `.danger-btn`, and the size comes from the
+row.** Tinted red with a red hairline and red type -- red enough to read as the
+one thing on a screen that cannot be undone, quiet enough not to court the
+click. It had drifted: the tags page and the review queue rendered Delete and
+Reject in the ordinary button language, the share modal revoked a link through
+a `.link-btn`, and the capture caption deleted a day's screenshots through an
+underlined word sitting between two navigation links. The class carries the
+*colour* only; a tag row sizes its buttons 5/10 and a bulk bar 6/12, so each
+gets a padding exception rather than standing a few pixels proud of its
+neighbours. Removing something from a collection is deliberately not in this
+set: it un-files a record rather than destroying one.
+
+**The desktop/mobile switch is `.view-switch`, like every other set of options
+where one is held.** Two bordered pills with a near-black fill on the chosen
+one said "two buttons, and you have pressed this one". It takes `--field-bg`
+for its track rather than the switch's own `--surface-sunken`, because
+`.capture-panel` is painted in that colour and the holding shape would have
+vanished into it, leaving one white pill floating on the ground. That token
+exists for exactly this: a step below the surface in light, a step above it in
+dark.
 
 **A half-delivered capture is green everywhere.** `scripts/deliver-capture.js`
 logs `no capture produced, skipping` and sends whatever it has; the callback
@@ -292,12 +326,31 @@ exist: a hex cannot carry an alpha. The ship gave up its glow at the same time
 and got bigger, because at 22px with a halo it was reading as a smudge rather
 than as a ship.
 
-**The launcher fires its own shots, and they belong to the ship, not to the
-button.** Two pseudo-elements on `.arcade-launch-ship` rather than on
-`.arcade-launch`, which is the whole detail: they inherit the ship's rotation,
-so it fires where it is pointing and the pair lean as it turns. The button's
+**The launcher is a porthole onto the game, not a badge in front of it.** Same
+grey playfield, same purple ship, same orange shots, cropped to a circle. The
+purple disc with a white ship it replaced was a second object made of the
+game's parts rearranged, and pressing it swapped the two colours over. The
+gradient stays but barely -- `--surface` to `--surface-sunken`, about one step,
+with the bottom of it exactly the colour the playfield is. The 2px ring went
+with the purple: it was there to cut a bright disc out of a pale page, and
+against a disc that is nearly the page's own colour it would be invisible, so
+the edge is a hairline and the glow is the only place the brand still shows.
+
+**It slides, it does not turn.** The ship in the game has no rotation at all,
+so a launcher whose ship pivoted on its nose was inventing a move the game does
+not have. Still for the first three fifths of the cycle, then two darts and
+back.
+
+**The launcher fires its own shots, and they belong to the button, not to the
+ship.** This is the reverse of the first version, and the reason is the reverse too. A
+shot parented to the ship inherits the ship's movement and curves sideways as
+it slides on, which is a mobile rather than a game. These are pinned to the x
+the ship was at when it fired -- 16px for the left dart, 29px for the right --
+and only travel up. The ship holds still at each end for the moment its shot
+leaves, so the two line up without either knowing about the other. The button's
 `overflow: hidden` clips them to the disc, and an element's own box-shadow is
-not clipped by its own overflow, so the ring and the glow are untouched by it.
+not clipped by its own overflow, so the edge and the glow are untouched by
+it.
 
 Three numbers in there were arrived at rather than chosen. The gradient is
 solid orange to 55% and transparent after, not a fade over the whole length:

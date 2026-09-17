@@ -151,7 +151,7 @@ export default function ShareModal({ kind, targetId, title, onClose }) {
                 </button>
               </div>
 
-              <button className="link-btn share-revoke" onClick={revoke} disabled={busy}>
+              <button className="danger-btn share-revoke" onClick={revoke} disabled={busy}>
                 Revoke this link
               </button>
             </>

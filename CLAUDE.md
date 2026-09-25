@@ -570,10 +570,31 @@ one template shown five times.
 
 **`block_pattern` is an inventory; the other facets are descriptions.** It
 takes up to 8 tags where the rest take 2, and enrichment is asked to work down
-the screenshot naming every distinct section. Nav, hero and footer are on every
-site ever made, so tagging them by name makes the tag useless for search --
-they're recorded only as a variety ("Mega Footer", "Type-Led Hero") or not at
-all.
+the screenshot naming every distinct section.
+
+**Every block value is family-then-variety, and a closed list beats an
+instruction.** Nav, hero and footer are on every site ever made, so a tag that
+names only the family matches everything and finds nothing. The prompt had said
+that since the beginning -- "never tag it as just hero", "not footer" -- and it
+did not matter, because `Footer`, `Accordion`, `Tab Block`, `CTA Band` and
+`Logo Wall` were all still *in the closed list the model is told to pick from*.
+829studios.com came back wearing five of them. The instruction was arguing with
+the menu, and the menu won.
+
+The families are the ones in the Propel design system, which is the vocabulary
+this library's owner already designs in: Hero, Logo, Card, Text, Media, Stat,
+Tab, Accordion, Testimonial, CTA, Layout, Table, Archive, plus Nav and Footer,
+which Propel treats as global chrome rather than blocks. The varieties are what
+a designer can see in a screenshot and would search for later -- what carries
+the block, how it is laid out, and whether it moves. `Logo Strip` and `Logo
+Carousel` are different findings and the arrows are how you tell.
+
+A handful of patterns keep standalone names (Marquee, Timeline, Pull Quote,
+Before / After) because they are already specific enough to find something.
+Anything that was a family in disguise moved into one: Stat Band became Stat
+Strip, Bento Grid became Card Bento, Pricing Table and Comparison Table became
+Table varieties. `schema_m15.sql` renames rather than replaces, so a site
+tagged Logo Wall is tagged Logo Strip afterwards with every link intact.
 
 **Card tags are measured, not counted.** `TagRow` renders every chip once,
 reads their widths back, then keeps the number that fits on one line with room
@@ -722,9 +743,35 @@ honoured; only the waiting is shared.
 nothing else — so it is absent on a row the write-first callback stored and
 never named, on a face the model declined to name, and on the rows handed back
 when the identify call fails. None of those were checked, and a card that
-claimed otherwise would be inventing a result. Rows written before the flag
-existed are recognised by `provider`, the one field that pass has always
-added, and become precise on their next re-read.
+claimed otherwise would be inventing a result.
+
+**`provider` was the wrong stand-in for that, and it took a while to bite.**
+Rows predating the flag were recognised by `provider`, on the grounds that the
+naming pass was the only thing that added one. That stopped being true when
+`describeFonts` moved the provider into the `base` mapping it builds *before*
+calling the model -- so a row whose identify call threw carried a provider and
+no names, and `named()` called it checked. 829studios.com's Onest is on Google
+Fonts, and the card said "No close match found on Google or Adobe Fonts" about
+a face nothing had looked up. It keys on `display_name` now, which only the
+naming pass writes and which the old rows have.
+
+**Google Fonts can answer for itself, so a failed naming pass still asks it.**
+Whether a family is on Google Fonts is a question Google answers, not Gemini:
+the specimen URL is the measured family name, and the service returns a real
+404 for a name it does not have (tested -- Onest and Inter 200, a nonsense name
+404). So `describeFonts`'s catch path now runs that one check per face before
+giving up. No foundry and no Adobe, whose slugs need guessing, and no
+`described`, so the card still reports the face as unchecked -- but the link
+that needed no model survives a 429.
+
+**The naming pass still has no queue, and this has now cost a reading twice.**
+`callGemini` retries at 2s, 4s and 8s; a free-tier 429 outlives that, and
+unlike enrichment there is nothing to catch it. 829studios.com was analysed at
+16:08 on 2026-09-25 while the enrichment queue was draining every fifteen
+minutes, and its font row came back measured and unnamed. The fix is the same
+shape as `enrichment_state`: a `fonts_state` column, queued on a retryable
+failure and drained by `enrich-queue.yml`. That needs a migration, so it is
+written down rather than done.
 
 **A finished reading arrives in two writes, so the client waits for both.**
 Stopping the poll on `analyzed_at` was right when there was one write; after

@@ -73,11 +73,17 @@ const ROLE_NAME = {
   accent: "Accent",
 };
 
-// Whether the naming pass has run on this face. `described` is stamped by
-// describeFonts; the provider check covers readings stored before that flag
-// existed, since a provider is the one field that pass has always added.
+// Whether the naming pass actually produced something for this face.
+//
+// This used to accept `provider` as evidence, which was true once and stopped
+// being true: `describeFonts` stamps the provider onto its rows *before* it
+// calls the model, so a row whose identify call failed still carries one. The
+// card then said "No close match found on Google or Adobe Fonts" about a face
+// nobody had looked up -- 829studios.com's Onest, which is on Google Fonts.
+// `display_name` is the honest signal, because only the naming pass writes it,
+// and readings taken before `described` existed have it too.
 function named(font) {
-  return Boolean(font.described) || "provider" in font;
+  return Boolean(font.described) || Boolean(font.display_name);
 }
 
 function fontRole(font) {

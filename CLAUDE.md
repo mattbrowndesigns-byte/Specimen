@@ -764,14 +764,39 @@ giving up. No foundry and no Adobe, whose slugs need guessing, and no
 `described`, so the card still reports the face as unchecked -- but the link
 that needed no model survives a 429.
 
-**The naming pass still has no queue, and this has now cost a reading twice.**
-`callGemini` retries at 2s, 4s and 8s; a free-tier 429 outlives that, and
-unlike enrichment there is nothing to catch it. 829studios.com was analysed at
-16:08 on 2026-09-25 while the enrichment queue was draining every fifteen
-minutes, and its font row came back measured and unnamed. The fix is the same
-shape as `enrichment_state`: a `fonts_state` column, queued on a retryable
-failure and drained by `enrich-queue.yml`. That needs a migration, so it is
-written down rather than done.
+**Retrying a 429 in the same request cannot work, and it was doing it four
+times.** The sleeps are 2s, 4s and 8s, so all four attempts land inside about
+fifteen seconds -- and a per-minute quota does not reset in fifteen seconds.
+Every retry hit the same closed window, failed identically, and spent three
+more requests of the quota that was already gone, inside a route with a
+60-second ceiling. `RETRY_NOW_STATUSES` is the 5xx set only now: a busy server
+is worth waiting eight seconds for, a spent quota is not. A 429 is still
+*retryable* so the queue takes it, and the queue's first backoff is two
+minutes, which is the wait it actually needed.
+
+**The naming pass has its own queue now, and it dispatches rather than calls.**
+Tagging had one since schema_m11 and naming never did, so the two halves of a
+save behaved differently against the same rate limit: a 429 on the tags filled
+itself in within the hour, a 429 on the typefaces waited for someone to press
+"Re-read Colours & Type", and mostly nobody did. Four of the twelve most recent
+sites were carrying measured, unnamed faces. `schema_m16.sql` adds
+`fonts_state` / `fonts_attempts` / `fonts_next_at` with the same ladder and the
+same eight-attempt cap as enrichment.
+
+What is different is the drain. It re-dispatches the whole analyze run instead
+of calling the model again, because naming needs the specimen probes to see
+letterforms rather than trust a font name, and those are deliberately never
+stored -- so there is nothing in the database to name *from*. Re-rendering them
+in a browser that is opening the page anyway costs a free runner minute;
+keeping throwaway images in the row costs a decision that was already made the
+other way. It also means that drain spends no Gemini quota and no time in the
+request, which is why it runs after the two that do.
+
+**A naming retry must not push a style-history entry.** The retry is the same
+page read again minutes later, not a redesign. Eight queued attempts would have
+pushed eight identical entries and evicted the twelve readings the history
+exists to keep, so the push is skipped when the site is already in the naming
+queue.
 
 **A finished reading arrives in two writes, so the client waits for both.**
 Stopping the poll on `analyzed_at` was right when there was one write; after

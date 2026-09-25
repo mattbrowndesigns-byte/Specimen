@@ -11,6 +11,13 @@ export const maxDuration = 60;
 // Enough to see a site's design move without carrying every reading forever.
 const HISTORY_LIMIT = 12;
 
+// The same ladder the enrichment queue climbs: 2, 4, 8, 16, 32, 64 minutes,
+// then hourly, and about four hours before it admits defeat. Deliberately
+// identical, because it is waiting on the same free tier for the same reason
+// and two different answers to one problem is how they drift apart.
+const MAX_NAMING_ATTEMPTS = 8;
+const backoffMs = (attempts) => Math.min(2 ** attempts, 60) * 60 * 1000;
+
 // The naming pass gets a hard ceiling, because it is the only part of this
 // route whose cost is set by other people's servers: a free-tier Gemini call
 // of unknown latency, then link checks against Adobe and a foundry. Past this
@@ -57,7 +64,7 @@ export async function POST(request) {
   const supabase = supabaseAdmin();
   const { data: site } = await supabase
     .from("site")
-    .select("id, domain, palette, fonts, analyzed_at, style_history")
+    .select("id, domain, url, palette, fonts, analyzed_at, style_history, fonts_attempts, fonts_state")
     .eq("id", target_id)
     .maybeSingle();
   if (!site) {
@@ -69,9 +76,17 @@ export async function POST(request) {
   // are read with every site fetch and a decade of readings would be dead
   // weight on every page load.
   const history = Array.isArray(site.style_history) ? site.style_history : [];
-  const previous = site.analyzed_at
-    ? [{ analyzed_at: site.analyzed_at, palette: site.palette, fonts: site.fonts }]
-    : [];
+
+  // A run that only exists because naming failed is not a new reading of a
+  // changed site -- it is the same page being looked at again minutes later.
+  // Without this, eight queued retries would push eight identical entries and
+  // evict the twelve-slot history of readings that meant something, which is
+  // the one thing the history exists to prevent.
+  const isNamingRetry = site.fonts_state === "queued";
+  const previous =
+    site.analyzed_at && !isNamingRetry
+      ? [{ analyzed_at: site.analyzed_at, palette: site.palette, fonts: site.fonts }]
+      : [];
 
   // The measurement is stored before anything is named, and this ordering is
   // load-bearing. Colours, roles and specimens were measured in a real browser
@@ -102,28 +117,57 @@ export async function POST(request) {
         probes: specimen_probes || {},
       }),
       DESCRIBE_BUDGET_MS,
-      null
+      // A budget expiry is worth coming back for, same as a busy free tier.
+      { fonts: null, identified: false, retryable: true }
     );
   } catch (err) {
     // The measured families and their shares are worth showing on their own;
     // losing the naming pass shouldn't lose the panel.
     console.error("Font description failed:", err.message);
+    described = { fonts: null, identified: false, retryable: true };
   }
 
-  if (!described) {
-    return NextResponse.json({ ok: true, named: false });
+  // Whatever the naming pass managed is still better than the raw measurement
+  // -- on the failure path that is the Google Fonts self-link, which needs no
+  // model. Write it either way.
+  if (described.fonts) {
+    const { error: nameError } = await supabase
+      .from("site")
+      .update({ fonts: described.fonts })
+      .eq("id", target_id);
+    if (nameError) {
+      return NextResponse.json({ error: nameError.message }, { status: 500 });
+    }
   }
 
-  // Fonts only. The history entry above already recorded what this run
-  // replaced, and pushing it a second time would duplicate the reading.
-  const { error: nameError } = await supabase
+  if (described.identified) {
+    // Clear the queue on the way out, so a site that failed once and succeeded
+    // on the retry doesn't stay in it forever.
+    await supabase
+      .from("site")
+      .update({ fonts_state: null, fonts_attempts: 0, fonts_next_at: null })
+      .eq("id", target_id);
+    return NextResponse.json({ ok: true, named: true });
+  }
+
+  // Queued rather than lost. The drain re-dispatches the whole analyze run
+  // rather than calling the model again from here, because the naming pass
+  // needs the specimen probes to see the letterforms and those are
+  // deliberately never stored -- re-rendering them in the browser that is
+  // already opening the page costs a free runner minute, and keeping throwaway
+  // images in the database costs a decision nobody wants to revisit.
+  const attempts = (site.fonts_attempts || 0) + 1;
+  const canRetry = described.retryable && attempts <= MAX_NAMING_ATTEMPTS;
+  console.error(`Naming: failed for ${site.domain}, attempt ${attempts}, requeued=${canRetry}`);
+
+  await supabase
     .from("site")
-    .update({ fonts: described })
+    .update({
+      fonts_state: canRetry ? "queued" : "failed",
+      fonts_attempts: attempts,
+      fonts_next_at: canRetry ? new Date(Date.now() + backoffMs(attempts)).toISOString() : null,
+    })
     .eq("id", target_id);
 
-  if (nameError) {
-    return NextResponse.json({ error: nameError.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ ok: true, named: true });
+  return NextResponse.json({ ok: true, named: false, queued: canRetry });
 }

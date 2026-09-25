@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { runEnrichment } from "@/lib/enrich";
 import { runResourceEnrichment } from "@/lib/enrichResource";
+import { dispatchAnalyze } from "@/lib/github";
 
 // Enrichment has to finish inside this request, same as the two callbacks.
 export const maxDuration = 60;
@@ -58,11 +59,56 @@ export async function POST(request) {
   // for three slots would let cheap work starve expensive work for no gain.
   const resourceResults = await drainResources(supabase);
 
+  // And typefaces get their own too, for a different reason: this one spends
+  // no budget here at all. It hands the work to a GitHub runner and returns.
+  const namingResults = await drainNaming(supabase);
+
   return NextResponse.json({
     ok: true,
-    drained: results.length + resourceResults.length,
-    results: [...results, ...resourceResults],
+    drained: results.length + resourceResults.length + namingResults.length,
+    results: [...results, ...resourceResults, ...namingResults],
   });
+}
+
+// Sites whose typefaces were measured but never named.
+//
+// This drain dispatches rather than calls. Naming needs the specimen probes --
+// the black-on-white renderings analyze.js draws from the live page so the
+// model sees letterforms instead of a font name that lies -- and those are
+// deliberately never stored, so there is nothing here to name *from*. Sending
+// the whole analyze run again re-renders them in a browser that is opening the
+// page anyway, on runner minutes that are free, and the callback at the end of
+// it is the same one that queued this.
+//
+// It also means this loop costs no Gemini quota and no time in this request,
+// which is why it can run after the two drains that do.
+async function drainNaming(supabase) {
+  const { data: due, error } = await supabase
+    .from("site")
+    .select("id, url, domain")
+    .eq("fonts_state", "queued")
+    .lte("fonts_next_at", new Date().toISOString())
+    .order("fonts_next_at", { ascending: true })
+    .limit(BATCH);
+
+  if (error) {
+    console.error("Enrich queue: failed to read naming queue", error.message);
+    return [];
+  }
+
+  const results = [];
+  for (const site of due || []) {
+    try {
+      await dispatchAnalyze({ targetId: site.id, url: site.url });
+      results.push({ domain: site.domain, kind: "naming", ok: true });
+    } catch (err) {
+      // Leave it queued. A dispatch that failed is not an attempt the site
+      // should be charged for, and the next run picks it up unchanged.
+      console.error(`Enrich queue: naming dispatch for ${site.domain} threw`, err.message);
+      results.push({ domain: site.domain, kind: "naming", ok: false });
+    }
+  }
+  return results;
 }
 
 async function drainResources(supabase) {

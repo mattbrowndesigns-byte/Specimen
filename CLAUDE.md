@@ -818,6 +818,52 @@ with the site and never queried across rows, so a join buys nothing — and
 columns inherit the site's own RLS instead of needing a policy, a `user_id`
 and a scoped query in every route, which is the part that's easy to get wrong.
 
+**The free tier is 20 requests a day, per model, and that is the whole
+budget.** Google names it when it refuses you: `quotaId:
+GenerateRequestsPerDayPerProjectPerModel-FreeTier, quotaValue: 20`. Not per
+minute, which is what the symptoms look like and what this was wrongly assumed
+to be for a while. A site save spends two of those -- tags first, typefaces
+second -- so one model is about ten saves a day.
+
+Measured against the real job history: 34 requests on 4 Sep, 22 on the 5th, 34
+on the 17th, against a cap of 20, with every other day in single figures. It is
+not a leak, it is that a working session is three times the daily budget. The
+sites carrying measured-but-unnamed typefaces are the ones saved on those days,
+because naming is the second call and the second call is the one refused.
+
+**Token size is not the constraint, and assuming it was sent this down a blind
+alley.** A 15,311px full-page capture costs 1,090 image tokens. An 800x450
+thumbnail costs 1,100. Gemini normalises every image to about the same budget
+whatever its size, so the entire project has spent perhaps 112,000 tokens in
+its life. Requests are scarce; tokens are not.
+
+**"Per model" is the useful half, so `GEMINI_MODELS` is a list.** A second
+model is a second allowance on the same key. `callModel` does one model with
+the 5xx retries; `callGemini` walks the list, and moves on **only** for a 429 --
+a 400 would be wrong at the next model too, and a 503 has already been waited
+out. The fallbacks are not a downgrade, they are the days that used to fail:
+the capable model answers whenever it can, and the others only ever see a
+request that would otherwise have been refused outright. Both were tested
+against a structured vision request before being trusted with one.
+
+**A full-page screenshot as one image is a screenshot the model cannot read.**
+This follows directly from the normalising above: 1440 x 15,311 squeezed into
+the detail of a postage stamp cannot show the arrows on a carousel or the tabs
+under a panel, which is exactly what the block vocabulary asks it to see.
+`screenshotParts.js` cuts the page into near-square sections with a 12% overlap
+and sends them as several parts of the SAME request -- 3,218 tokens against
+1,072 for the whole, three times the detail, and **the same one request**, which
+is the only currency that is scarce. Every failure in there falls back to the
+whole image, because slicing is an improvement on the picture and never a
+condition of getting one.
+
+**Slicing makes the model see several pages unless you tell it otherwise.**
+First run after it went in came back with Hero Split twice and two footers: it
+was reading each section as its own page. The prompt now says the images are
+one page with one navigation, one hero and one footer *in total*, and that
+block_pattern is an inventory of distinct kinds with each value returned at most
+once. Seven values, no duplicates, after.
+
 **A rate-limited enrichment is queued, not lost.** Gemini's free tier is one
 pool shared by every account on the deployment, so two people saving at once
 can trip the per-minute limit. `runEnrichment` tells a retryable failure (429,

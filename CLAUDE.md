@@ -864,6 +864,40 @@ one page with one navigation, one hero and one footer *in total*, and that
 block_pattern is an inventory of distinct kinds with each value returned at most
 once. Seven values, no duplicates, after.
 
+**The markup answers what the picture cannot, and movement is the whole
+reason.** A capture freezes animation on purpose, so a carousel mid-slide and a
+static row are the same picture -- the pagination on 829studios.com's hero is
+three faint dashes, and it was tagged Hero Split twice. `pageStructure.js`
+fetches the page's HTML (one GET, no model cost, 8s timeout, null on any
+failure) and reads what the build left behind: blocks the site names in its own
+class attributes, section headings in order, `aria-roledescription="carousel"`,
+slider libraries, `role="tablist"`, `<details>`, forms, tables, video.
+
+How good that is depends entirely on how a site was built, and the spread is
+enormous. 829studios.com is WordPress with ACF and hands over
+`hero-display > hero-slider-slide > text-lead > logo-carousel >
+related-case-study > tab-graphic > text-row > footer-cta`, which is most of the
+answer in the site's own words. stripe.com and attio.com hash their class names
+and give up nothing. So this is evidence beside the pictures, never instead of
+them.
+
+**Two things about that had to be got right, and both were wrong first.**
+
+The skip list has to match on substrings, not whole names. Matching whole names
+let ten `navigation-link` / `navigation-submenu` / `navigation-columns` variants
+through, and because nav markup comes first in the document they filled the
+list and pushed `hero-slider-slide` and `logo-carousel` off the end of it. A
+name that extends one already kept is dropped too -- `tab-graphic-tab` is part
+of `tab-graphic`, not another block.
+
+And movement has to be stated as a rule, not offered as a hint. With the
+evidence merely present and the prompt saying the pictures win where they
+disagree, the hero came back Hero Display Type twice while the markup sat there
+calling it `hero-slider-slide`. `describeStructure` now pulls the motion words
+out into their own sentence and says the screenshot cannot contradict them.
+Hero Carousel on the next run. On layout the pictures win; on movement the code
+wins, because the picture has no opinion to offer.
+
 **A rate-limited enrichment is queued, not lost.** Gemini's free tier is one
 pool shared by every account on the deployment, so two people saving at once
 can trip the per-minute limit. `runEnrichment` tells a retryable failure (429,

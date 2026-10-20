@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import CropTool from "./CropTool";
 import LibraryBrowser from "./LibraryBrowser";
+import { explainCaptureFailure } from "@/lib/captureFailure";
 
 const ADAPTER = {
   kind: "component",
@@ -127,7 +128,8 @@ export default function ComponentsTab({
       {error && <p className="error">{error}</p>}
       {pendingCapture?.status === "failed" && (
         <p className="error">
-          That page couldn't be captured.{" "}
+          <strong>{pendingCapture.domain} couldn&rsquo;t be captured.</strong>{" "}
+          {explainCaptureFailure(pendingCapture.capture_error)}{" "}
           <button onClick={() => setPendingCapture(null)}>Dismiss</button>
         </p>
       )}

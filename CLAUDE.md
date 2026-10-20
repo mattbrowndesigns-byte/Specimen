@@ -1678,6 +1678,58 @@ and the markers go with it, except the first one survived, which reads as a
 stray bullet rather than as a list. Use block flow and `li + li { margin-top }`
 for the gap.
 
+**The second exception to `capture.js` being off limits, 2026-10-20.** A page
+with a strict Content-Security-Policy made `page.addStyleTag` throw, and the
+throw escaped `captureOne` -- so the run that had already loaded the page
+perfectly produced no screenshot at all. highalpha.com died this way three
+times in one evening.
+
+The CSP was not High Alpha's. The page embeds **fourteen background Vimeo
+players**, and `player.vimeo.com` sends `default-src 'self'; style-src 'self'
+https://f.vimeocdn.com`. Nothing in the main document says a word about CSP,
+which is why the cause is invisible from a `curl -I`: the header has to be
+watched across every response the page makes, frames included.
+
+Two lines, both verified rather than reasoned about. `bypassCSP: true` on the
+context is Playwright's own option for this, and against a local server sending
+that exact directive the before/after is unambiguous: without it `addStyleTag`
+throws the identical message the runner logged, with it the style injects and
+applies. And `addStyleTag` is wrapped in try/catch, because freezing the
+animations and hiding the banners is an improvement to the picture and never a
+condition of getting one -- the same rule `screenshotParts.js` follows. The
+local test proved the important half of that: **the screenshot was always
+possible**, 5,885 bytes of it, in the run where the style was refused. The only
+reason a capture was lost is that the throw skipped it.
+
+Patched `capture.js` against the live site: 1440x2713 desktop and 390x2948
+mobile, whole page, footer included.
+
+**A failed capture now says why, and the reason was never missing -- only
+unpublished.** `capture.js` prints it, the shell tees it into `capture.log`,
+and `deliver-capture.js` read that file for heights and nothing else. So the
+one sentence explaining a failure lived in a GitHub Actions log that the person
+who saved the link has no link to, while the app said "That page couldn't be
+captured" and offered a Dismiss button.
+
+`schema_m19` adds `capture_error` to `site` and `component_capture`. The
+runner sends the raw message; `lib/captureFailure.js` turns it into English at
+render time. Raw in the column on purpose, for two reasons: the wording can be
+improved without a workflow run, and a cause nobody has written a sentence for
+yet still arrives legible instead of being flattened into "the capture failed",
+which is the sentence the whole file exists to stop the app saying.
+
+It is written on every run, not only failing ones, so the column describes the
+latest attempt rather than the worst one the row has ever had.
+
+**A site whose run produced nothing used to leave no trace whatsoever.** No
+capture rows, no error, and `insert([])` on an empty array, so the callback
+reported success over a run that delivered nothing. The card then said
+"Capturing" for ever, because "no capture rows" is also exactly what a run
+still in progress looks like -- the one state this app had already learned to
+distinguish for *half*-delivered captures and never for empty ones. The
+callback records the reason now, the card says "Capture failed", and the site's
+own page carries the sentence with Re-capture directly above it.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

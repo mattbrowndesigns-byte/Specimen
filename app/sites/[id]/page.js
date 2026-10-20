@@ -11,6 +11,7 @@ import SiteStyle from "../../_ui/SiteStyle";
 import FeatureRotator from "../../_ui/FeatureRotator";
 import SiteFooter from "../../_ui/SiteFooter";
 import { archiveUrl, captureTimeline, formatCaptureDate } from "@/lib/captures";
+import { explainCaptureFailure } from "@/lib/captureFailure";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -377,6 +378,15 @@ export default function SiteDetailPage({ params }) {
         {site.enrichment_state === "failed" && (
           <p className="queued-note queued-note-failed">
             The AI pass didn&rsquo;t finish for this one. Re-read Pages will try again.
+          </p>
+        )}
+
+        {/* The one place with room for the whole sentence, and the one place
+            with the button that acts on it. A card can only say that a capture
+            failed; this says why, and Re-capture is directly above it. */}
+        {site.capture_error && !recapturing && (
+          <p className="queued-note queued-note-failed">
+            {explainCaptureFailure(site.capture_error)} Re-capture will try again.
           </p>
         )}
 

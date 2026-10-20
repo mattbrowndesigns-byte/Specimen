@@ -23,9 +23,13 @@ const ADAPTER = {
   // started on yet. After importing a hundred bookmarks most of the grid is in
   // that state for a few hours, and ninety cards all claiming to be capturing
   // right now is the same false promise at ninety times the volume.
+  // A card's placeholder is two lines of small type, so it says which of
+  // these happened and the site's own page says why. What it must not do is
+  // keep saying "Capturing" about a run that ended hours ago, which is what
+  // "no capture rows" used to mean on its own.
   pendingLabel: (site) => {
     if (site.capture_state === "queued") return "Waiting its turn…";
-    if (site.capture_state === "failed") return "Capture failed";
+    if (site.capture_state === "failed" || site.capture_error) return "Capture failed";
     return (site.capture || []).length > 0 ? "No desktop capture" : "Capturing…";
   },
 };

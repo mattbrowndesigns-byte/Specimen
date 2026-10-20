@@ -1,0 +1,21 @@
+-- M19: a capture that failed says why.
+--
+-- The reason has always existed. It is printed by capture.js, teed into
+-- capture.log, and uploaded nowhere -- so it lived in a GitHub Actions log
+-- that nobody has a link to, while the app said "That page couldn't be
+-- captured" and offered a Dismiss button. highalpha.com failed three times in
+-- one evening against a cause that was one line of that log: the site sends a
+-- strict Content-Security-Policy, which made Chromium refuse the stylesheet
+-- capture.js injects, which threw.
+--
+-- One column per table that can hold a failed capture. Text rather than a
+-- code, because the useful content is the runner's own message and the plain
+-- English version is derived from it in lib/captureFailure.js -- keeping the
+-- wording in the app means it can be improved without a workflow run, and
+-- keeping the raw message means a cause nobody has written a sentence for yet
+-- is still legible.
+--
+-- Cleared on every successful capture, so the column always describes the
+-- most recent attempt rather than the worst one.
+alter table site add column if not exists capture_error text;
+alter table component_capture add column if not exists capture_error text;

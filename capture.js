@@ -60,6 +60,14 @@ async function captureOne(browser, vp) {
     userAgent: vp.ua,
     locale: "en-US",
     reducedMotion: "reduce",
+    // Second exception on the record, 2026-10-20. A site that sends a strict
+    // Content-Security-Policy -- highalpha.com sends `style-src 'self'
+    // https://f.vimeocdn.com` with no `unsafe-inline` -- makes Chromium refuse
+    // the stylesheet below, and Playwright throws rather than warning. The
+    // page had loaded perfectly; three attempts died holding a rendered page
+    // because of the sheet that was meant to tidy it. This is Playwright's own
+    // option for exactly that, and it changes nothing on a site without a CSP.
+    bypassCSP: true,
   });
 
   const page = await context.newPage();
@@ -67,9 +75,18 @@ async function captureOne(browser, vp) {
   console.log(`[${vp.name}] loading ${url}`);
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
-  await page.addStyleTag({
-    content: FIX_PAGE + HIDE + "{display:none !important}",
-  });
+  // Guarded, because freezing the animations and hiding the banners is an
+  // improvement to the picture and never a condition of getting one -- the
+  // same rule screenshotParts.js follows when slicing fails. bypassCSP above
+  // should mean this never throws again; if something else ever blocks it, the
+  // cost is a capture with its carousel mid-slide rather than no capture.
+  try {
+    await page.addStyleTag({
+      content: FIX_PAGE + HIDE + "{display:none !important}",
+    });
+  } catch (err) {
+    console.log(`[${vp.name}] style injection blocked, continuing: ${err.message.split("\n")[0]}`);
+  }
 
   await page.evaluate(async () => {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

@@ -50,6 +50,26 @@ function heightsFromLog() {
   return heights;
 }
 
+// The reason a viewport produced nothing. capture.js prints it and the shell
+// tees it into capture.log, which until now was read for heights and nothing
+// else -- so the one sentence explaining a failure was uploaded nowhere and
+// lived in an Actions log that the person who saved the link has no link to.
+//
+// Sent raw. Turning it into English happens in the app (lib/captureFailure.js)
+// so the wording can be improved without a workflow run, and so a cause nobody
+// has written a sentence for yet still arrives legible.
+function failuresFromLog() {
+  const failures = {};
+  if (!fs.existsSync("capture.log")) return failures;
+  const log = fs.readFileSync("capture.log", "utf8");
+  const re = /\[(desktop|mobile)\] FAILED: (.*)/g;
+  let match;
+  while ((match = re.exec(log))) {
+    failures[match[1]] = match[2].trim().slice(0, 500);
+  }
+  return failures;
+}
+
 async function uploadFile(localPath, storagePath) {
   const data = fs.readFileSync(localPath);
   const { error } = await supabase.storage
@@ -62,6 +82,7 @@ async function uploadFile(localPath, storagePath) {
 
 (async () => {
   const heights = heightsFromLog();
+  const failures = failuresFromLog();
   const stamp = Date.now();
   const captures = [];
 
@@ -96,7 +117,7 @@ async function uploadFile(localPath, storagePath) {
       "Content-Type": "application/json",
       "x-callback-secret": CALLBACK_SECRET,
     },
-    body: JSON.stringify({ target_id: TARGET_ID, target_type: TARGET_TYPE, captures }),
+    body: JSON.stringify({ target_id: TARGET_ID, target_type: TARGET_TYPE, captures, failures }),
   });
 
   if (!res.ok) {
@@ -105,6 +126,9 @@ async function uploadFile(localPath, storagePath) {
   }
 
   console.log(`Delivered ${captures.length} capture(s) for ${TARGET_TYPE} ${TARGET_ID}`);
+  for (const [viewport, reason] of Object.entries(failures)) {
+    console.log(`  reported failure [${viewport}]: ${reason.slice(0, 120)}`);
+  }
 })().catch((err) => {
   console.error(err);
   process.exit(1);

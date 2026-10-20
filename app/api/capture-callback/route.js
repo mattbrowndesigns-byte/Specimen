@@ -11,7 +11,13 @@ export async function POST(request) {
   }
 
   const body = await request.json();
-  const { target_id, target_type, captures } = body;
+  const { target_id, target_type, captures, failures } = body;
+
+  // Stored raw, so the wording can be improved later without re-running
+  // anything, and so a cause nobody has written a sentence for yet is still
+  // legible on the page. The desktop shot is the one everything depends on, so
+  // its reason wins; mobile's is the fallback for a run where only it spoke.
+  const failureReason = failures?.desktop || failures?.mobile || null;
 
   if (!target_id || !Array.isArray(captures)) {
     return NextResponse.json({ error: "invalid payload" }, { status: 400 });
@@ -29,6 +35,9 @@ export async function POST(request) {
         mobile_full_url: mobile?.full_url ?? null,
         page_height: desktop?.page_height ?? null,
         status: desktop ? "ready" : "failed",
+        // Always written, so the column describes this attempt rather than
+        // the worst one this row has ever had.
+        capture_error: desktop ? null : failureReason,
       })
       .eq("id", target_id);
 
@@ -42,19 +51,33 @@ export async function POST(request) {
   // together group into a single point on the site's capture timeline.
   const capturedAt = new Date().toISOString();
 
-  const { error: insertError } = await supabase.from("capture").insert(
-    captures.map((capture) => ({
-      site_id: target_id,
-      viewport: capture.viewport,
-      full_url: capture.full_url,
-      thumb_url: capture.thumb_url ?? null,
-      page_height: capture.page_height ?? null,
-      captured_at: capturedAt,
-    }))
-  );
+  if (captures.length) {
+    const { error: insertError } = await supabase.from("capture").insert(
+      captures.map((capture) => ({
+        site_id: target_id,
+        viewport: capture.viewport,
+        full_url: capture.full_url,
+        thumb_url: capture.thumb_url ?? null,
+        page_height: capture.page_height ?? null,
+        captured_at: capturedAt,
+      }))
+    );
 
-  if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+    if (insertError) {
+      return NextResponse.json({ error: insertError.message }, { status: 500 });
+    }
+  }
+
+  // A site whose run produced nothing used to leave no trace at all: no
+  // capture rows, no error, and a card that went on saying "Capturing" for
+  // ever because "no rows" is also what an unfinished run looks like. The
+  // reason is recorded here and cleared by the next run that works.
+  const { error: siteError } = await supabase
+    .from("site")
+    .update({ capture_error: desktop ? null : failureReason })
+    .eq("id", target_id);
+  if (siteError) {
+    console.error("Capture callback: couldn't record the result", siteError.message);
   }
 
   if (desktop) {

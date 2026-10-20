@@ -1541,6 +1541,143 @@ read as though it had been pushed against it. It is 40 now, 64 in total. The
 library's own `.page-hero` is untouched: a dashboard has a grid under the fold
 to get to, and a written page has nothing above it but its own name.
 
+**The free tier's refusal has two meanings and they want opposite answers.**
+Google names the quota it is enforcing, and `GenerateRequestsPerMinute` is a
+busy moment worth coming back for in two minutes while
+`GenerateRequestsPerDayPerProjectPerModel` is the budget being gone until
+midnight Pacific. Every ladder here topped out at an hour and gave up after
+eight tries, which is about four hours -- so a site queued at 9pm against an
+exhausted day was marked `failed` by 1am, having spent all eight attempts
+inside the window it was waiting for. For one save a day that never showed.
+For an import spanning three days it would have lost most of the library's
+tags, silently, overnight.
+
+`callGemini` now sets `quotaExhausted` on the error when the LAST model also
+refuses on a per-day quota -- meaning there is no allowance left anywhere on
+the key -- and `lib/retrySchedule.js` turns that into a wait until the reset
+instead of a wait of an hour. The attempt still counts, because eight of these
+is eight days and a thing that has not worked in eight days is not going to.
+What changed is that the eight tries are spread across the thing being waited
+for rather than spent in the first evening of it.
+
+That ladder is one file now. It was three copies of the same numbers with a
+comment on each saying the other two had to match, which is how copies drift.
+
+**One marker says the day is spent, so ninety sites don't each discover it.**
+`app_state.gemini_exhausted_until`, read at the top of `runEnrichment`,
+`runResourceEnrichment` and the analyze callback. Without it a hundred
+imported sites each walk all three models, get three 429s, and re-queue --
+every fifteen minutes, all night, for a fact one row already knew. With it the
+cost is one read and the row keeps its place in the line, because deferring is
+deliberately NOT an attempt: nothing was attempted.
+
+The reset is computed through `Intl` in `America/Los_Angeles` rather than from
+an offset, because the offset changes twice a year and a hardcoded one is
+wrong for half of it, plus five minutes -- asking at 00:00:00 exactly is asking
+at the one instant the counter is most likely to still be rolling over.
+
+Every function in `lib/quotaState.js` fails open, and that is load-bearing: a
+marker that cannot be read must never be the reason work doesn't happen. Before
+`schema_m18` is applied the table 404s, the read returns null, and the app
+behaves exactly as it did before.
+
+**`app_state` has no `user_id`, and it is the one table that shouldn't.** The
+Gemini pool belongs to the deployment, not to an account, so "today's budget is
+gone" is true for everyone at once. RLS is on with no policies granted, which
+makes the service role the only thing that can read it -- every route in this
+app and nothing in a browser. A new table holding *user* data still needs the
+`user_id`, the RLS and the scoped query in every route.
+
+**Captures are queued now too, and not because they are expensive.** A capture
+is free runner minutes on a public repo; what cannot be done a hundred times
+at once is the part `/api/sites` does *before* dispatching -- a page fetch, a
+favicon resolution and a shape measurement, per link, inside one HTTP request.
+So a bulk import stores a URL and a domain and nothing else, and
+`/api/capture-queue` does all the per-link work at the moment it dispatches.
+
+Eight per run against enrichment's three, because the two queues ration
+different things: eight page fetches spend seconds, three enrichments spend
+three of twenty daily requests. Eight every fifteen minutes is thirty an hour,
+so a hundred bookmarks are all photographed inside four hours while never
+putting more into GitHub's queue than it runs at once. It drains from the same
+scheduled workflow as the Gemini queues but through its own request and with
+`if: always()`, since a busy free tier failing that step is the most likely
+state during an import and is no reason to stop taking screenshots.
+
+**Both drains stop starting work at 45 seconds, and the reason is the budget
+rather than tidiness.** The route dies at 60. Three site enrichments are three
+model calls of unknown latency, so the third was being started at second 50 and
+killed at second 60 -- the worst possible outcome, because the Gemini request
+had already been *spent* and the write recording it had not happened. The site
+stayed queued and spent another one on the next run: one a day became two a day
+for the same site, out of twenty. Stopping early costs a fifteen-minute delay
+and nothing else.
+
+**Importing a bookmarking app is a feature because a tool that replaces 70% of
+a workflow replaces none of it.** The same reasoning that made resources their
+own table: a hundred links sitting in Raindrop are a hundred reasons to keep
+opening Raindrop. `/import` reads Raindrop CSV, Netscape bookmark HTML and a
+plain list of URLs, because which of those you have depends on a menu you
+clicked a week ago, and asking someone to go back and re-export is asking them
+to do the computer's job.
+
+It parses in two places on purpose. `lib/importLinks.js` runs in the browser so
+the preview is instant, and `/api/import` runs the same function again on the
+same text, because a list of links posted from a page is a list of links from
+the outside world. The CSV reader is RFC 4180 rather than a split on commas:
+a bookmark's note is free text and routinely contains both commas and
+newlines, so splitting turns one row into four and loses the URL off the end of
+three of them.
+
+**Folders are what makes the websites/resources decision tractable.** Nothing
+guesses which pile a link belongs in, and no model is asked: an export already
+knows that one folder is inspiration and another is tools, so the preview lists
+the folders with counts and you bring them across a pile at a time. Raindrop's
+folders are *not* turned into `resource_type` tags -- the AI fills those, which
+is the premise, and seeding them from someone else's filing would put a hundred
+unapproved words in the vocabulary on day one.
+
+**Two progress bars, not one percentage, and that is the whole status design.**
+A hundred websites is two hundred model calls against a tier that allows sixty
+a day, so "how long until this is done" has no honest answer. What it does have
+is two answers: screenshots cost free runner minutes and finish in hours, tags
+cost the scarce thing and finish when the quota lets them. One bar averaging
+those is wrong about both. Keeping them apart is what lets the panel say "all
+your screenshots are in, tagging resumes at 12:05 AM" instead of "61%".
+
+The import bar does not pulse, unlike the capture bar it is otherwise a copy
+of. The capture bar animates because it is describing a minute you are
+watching; this one describes three days you are not, and a stripe sliding under
+an unmoving fill would be claiming activity it cannot vouch for.
+
+**`capture_state` is read in `attachCapturesAndTags`, not in the select above
+it.** One of the two list paths is an RPC -- `search_sites` returns a fixed
+column list defined in SQL -- so a column added to the plain query would be
+present on the dashboard and missing from search results, and a card would
+describe itself differently depending on how you arrived at it. One more query
+on the same id set, in parallel with two already running.
+
+It exists because a queued site has no captures, and "no captures" already
+meant "capturing right now". After importing a hundred bookmarks most of the
+grid is queued for a few hours, and ninety cards all claiming to be capturing
+*now* is a promise nothing is going to keep, at ninety times the volume. The
+label is "Waiting its turn" for those.
+
+**The import button is the solid dark one, not the orange one.** `--accent-solid`
+is rationed precisely so two of them never end up on one screen arguing over
+which one you came to press, and Add is in the bar two inches above it. Same
+recipe as the review queue's bulk bar, a size up, because there it is one
+control among several and here it is the only thing on the page you can press.
+Worth knowing: `.primary` is not a global class. Every place that uses it
+styles it through its own container, so a new button wearing it alone renders
+at the browser's default -- 2px outset, 21px tall, which is what this one did
+first.
+
+**A `<ul>` that is a flex column loses its bullets.** Flex items are blockified
+and the markers go with it, except the first one survived, which reads as a
+stray bullet rather than as a list. Use block flow and `li + li { margin-top }`
+for the gap.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

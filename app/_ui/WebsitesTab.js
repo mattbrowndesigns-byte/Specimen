@@ -12,14 +12,22 @@ const ADAPTER = {
   meta: (site) => site.domain,
   thumb: (site) => latestCapture(site.capture, "desktop")?.thumb_url || null,
   faviconUrl: (site) => site.favicon_url || null,
-  // Not a constant, because there are two reasons a site has no picture and
-  // only one of them is worth waiting for. No captures at all means the job is
-  // still running. Captures but no desktop one means the run delivered and the
-  // desktop shot failed -- the callback writes every viewport in a single
-  // insert, so any row from that run means the run is over. Saying "Capturing"
-  // to the second case is a promise nothing is going to keep.
-  pendingLabel: (site) =>
-    (site.capture || []).length > 0 ? "No desktop capture" : "Capturing…",
+  // Not a constant, because there are now three reasons a site has no picture
+  // and only one of them is worth waiting for. No captures at all means the
+  // job is still running. Captures but no desktop one means the run delivered
+  // and the desktop shot failed -- the callback writes every viewport in a
+  // single insert, so any row from that run means the run is over. Saying
+  // "Capturing" to the second case is a promise nothing is going to keep.
+  //
+  // And a bulk import adds a third: queued, which is a site nothing has
+  // started on yet. After importing a hundred bookmarks most of the grid is in
+  // that state for a few hours, and ninety cards all claiming to be capturing
+  // right now is the same false promise at ninety times the volume.
+  pendingLabel: (site) => {
+    if (site.capture_state === "queued") return "Waiting its turn…";
+    if (site.capture_state === "failed") return "Capture failed";
+    return (site.capture || []).length > 0 ? "No desktop capture" : "Capturing…";
+  },
 };
 
 export default function WebsitesTab({

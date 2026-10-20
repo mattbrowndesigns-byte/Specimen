@@ -1,4 +1,4 @@
-name: Drain enrichment queue
+name: Drain the queues
 
 # Gemini's free tier is one pool shared by everyone on the deployment, so a
 # busy minute can rate-limit a save's tagging pass. Those runs are queued
@@ -18,7 +18,7 @@ jobs:
   drain:
     runs-on: ubuntu-latest
     steps:
-      - name: Drain
+      - name: Drain enrichment
         env:
           CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
           CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET }}
@@ -26,5 +26,23 @@ jobs:
           # Same derivation analyze.js uses: the capture callback's URL with
           # its last segment swapped, so this needs no secret of its own.
           URL="${CALLBACK_URL%/*}/enrich-queue"
+          echo "Draining $URL"
+          curl -fsS -X POST "$URL" -H "x-callback-secret: $CALLBACK_SECRET"
+
+      # Its own request on purpose. A capture costs free runner minutes and a
+      # tag costs a slice of a 20-a-day model allowance, so these two queues
+      # have nothing in common but a clock -- sharing one 60-second budget
+      # would let eight cheap page fetches crowd out three expensive ones.
+      #
+      # `always()`, because a busy free tier failing the step above is the most
+      # likely state during a bulk import, and it is no reason at all to stop
+      # taking screenshots.
+      - name: Drain captures
+        if: always()
+        env:
+          CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
+          CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET }}
+        run: |
+          URL="${CALLBACK_URL%/*}/capture-queue"
           echo "Draining $URL"
           curl -fsS -X POST "$URL" -H "x-callback-secret: $CALLBACK_SECRET"

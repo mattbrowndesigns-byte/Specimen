@@ -9,6 +9,7 @@ import {
   Layers,
   Tag,
   ListChecks,
+  Import,
   UserPlus,
   Info,
   CircleQuestionMark,
@@ -33,6 +34,9 @@ const LINKS = [
   { href: "/collections", label: "Collections", Icon: Layers },
   { href: "/tags", label: "Manage Tags", Icon: Tag },
   { href: "/review", label: "Review Queue", Icon: ListChecks },
+  // Last in the group, and in the menu rather than the bar, because it is a
+  // thing you do once: on the day you stop using the other bookmarking app.
+  { href: "/import", label: "Import Links", Icon: Import },
 ];
 
 const SECONDARY = [

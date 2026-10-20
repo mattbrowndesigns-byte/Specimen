@@ -12,6 +12,7 @@ const PUBLIC_PATHS = [
   "/api/capture-callback",
   "/api/analyze-callback",
   "/api/enrich-queue",
+  "/api/capture-queue",
   // A share link is meant to be opened by someone without an account, so the
   // page and the read behind it are both public. The token is the whole of the
   // authorisation, and /api/share -- managing your own links -- is deliberately

@@ -1,6 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Heart, Layers, Tag, ListChecks, Sparkles, Info, CircleQuestionMark } from "lucide-react";
+import {
+  Heart,
+  Layers,
+  Tag,
+  ListChecks,
+  Import,
+  Sparkles,
+  Info,
+  CircleQuestionMark,
+} from "lucide-react";
 
 // The quiet end of the page.
 //
@@ -13,6 +22,7 @@ const LINKS = [
   { href: "/collections", label: "Collections", Icon: Layers },
   { href: "/tags", label: "Manage Tags", Icon: Tag },
   { href: "/review", label: "Review Queue", Icon: ListChecks, badge: true },
+  { href: "/import", label: "Import Links", Icon: Import },
   { href: "/features", label: "Features", Icon: Sparkles },
   { href: "/about", label: "About", Icon: Info },
   { href: "/faq", label: "FAQ", Icon: CircleQuestionMark },

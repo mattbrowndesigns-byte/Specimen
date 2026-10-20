@@ -14,6 +14,19 @@ export const maxDuration = 60;
 // the problem.
 const BATCH = 3;
 
+// Stop starting new work at 45 seconds, because the route dies at 60.
+//
+// Three site enrichments is three model calls of unknown latency, and three
+// slow ones do not fit. Before this, the third was started at second 50 and
+// killed at second 60 -- which is the worst possible outcome, because the
+// Gemini request had already been SPENT and the write recording it had not
+// happened, so the site stayed queued and spent another one on the next run.
+// One a day became two a day for the same site, out of a budget of twenty.
+//
+// Nothing is lost by stopping early. Whatever is left is still queued, still
+// due, and the next run is fifteen minutes away.
+const DEADLINE_MS = 45000;
+
 // Drained by enrich-queue.yml on a schedule. Authenticated with the same
 // shared secret the Actions callbacks use -- there's no session behind it.
 export async function POST(request) {
@@ -40,8 +53,12 @@ export async function POST(request) {
 
   // One at a time, not in parallel: these are queued precisely because too many
   // requests arrived at once.
+  const startedAt = Date.now();
+  const outOfTime = () => Date.now() - startedAt > DEADLINE_MS;
+
   const results = [];
   for (const site of due || []) {
+    if (outOfTime()) break;
     try {
       await runEnrichment(site.id);
       results.push({ domain: site.domain, ok: true });
@@ -57,11 +74,11 @@ export async function POST(request) {
   // rather than eating into the sites' — a resource call is text-only and
   // costs a couple of seconds against a site's forty, so making them compete
   // for three slots would let cheap work starve expensive work for no gain.
-  const resourceResults = await drainResources(supabase);
+  const resourceResults = await drainResources(supabase, outOfTime);
 
   // And typefaces get their own too, for a different reason: this one spends
   // no budget here at all. It hands the work to a GitHub runner and returns.
-  const namingResults = await drainNaming(supabase);
+  const namingResults = await drainNaming(supabase, outOfTime);
 
   return NextResponse.json({
     ok: true,
@@ -82,7 +99,7 @@ export async function POST(request) {
 //
 // It also means this loop costs no Gemini quota and no time in this request,
 // which is why it can run after the two drains that do.
-async function drainNaming(supabase) {
+async function drainNaming(supabase, outOfTime) {
   const { data: due, error } = await supabase
     .from("site")
     .select("id, url, domain")
@@ -98,6 +115,7 @@ async function drainNaming(supabase) {
 
   const results = [];
   for (const site of due || []) {
+    if (outOfTime()) break;
     try {
       await dispatchAnalyze({ targetId: site.id, url: site.url });
       results.push({ domain: site.domain, kind: "naming", ok: true });
@@ -111,7 +129,7 @@ async function drainNaming(supabase) {
   return results;
 }
 
-async function drainResources(supabase) {
+async function drainResources(supabase, outOfTime) {
   const { data: due, error } = await supabase
     .from("resource")
     .select("id, domain")
@@ -127,6 +145,7 @@ async function drainResources(supabase) {
 
   const results = [];
   for (const resource of due || []) {
+    if (outOfTime()) break;
     try {
       const { ok } = await runResourceEnrichment(resource.id);
       results.push({ domain: resource.domain, kind: "resource", ok });

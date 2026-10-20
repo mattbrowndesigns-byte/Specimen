@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { describeFonts } from "@/lib/fontMatch";
+import { quotaExhaustedUntil } from "@/lib/quotaState";
+import { scheduleRetry, deferForQuota } from "@/lib/retrySchedule";
 
 // Naming and link-checking a set of typefaces is a Gemini call plus a handful
 // of HTTP GETs, all inside this request -- the same shape as the capture
@@ -11,12 +13,9 @@ export const maxDuration = 60;
 // Enough to see a site's design move without carrying every reading forever.
 const HISTORY_LIMIT = 12;
 
-// The same ladder the enrichment queue climbs: 2, 4, 8, 16, 32, 64 minutes,
-// then hourly, and about four hours before it admits defeat. Deliberately
-// identical, because it is waiting on the same free tier for the same reason
-// and two different answers to one problem is how they drift apart.
-const MAX_NAMING_ATTEMPTS = 8;
-const backoffMs = (attempts) => Math.min(2 ** attempts, 60) * 60 * 1000;
+// The ladder lives in lib/retrySchedule.js now, shared with both enrichment
+// queues. It was three copies of the same numbers with a comment on each
+// saying the other two must match, which is exactly how copies drift.
 
 // The naming pass gets a hard ceiling, because it is the only part of this
 // route whose cost is set by other people's servers: a free-tier Gemini call
@@ -107,6 +106,20 @@ export async function POST(request) {
     return NextResponse.json({ error: writeError.message }, { status: 500 });
   }
 
+  // The measurement is already saved above, so deferring here costs the panel
+  // nothing -- it keeps its colours and comes back for the names. Calling into
+  // a spent quota would cost three refused requests and arrive at the same
+  // place.
+  if (await quotaExhaustedUntil()) {
+    const { state, attempts, nextAt } = deferForQuota(site.fonts_attempts);
+    console.error(`Naming: no Gemini budget until ${nextAt}, deferring ${site.domain}`);
+    await supabase
+      .from("site")
+      .update({ fonts_state: state, fonts_attempts: attempts, fonts_next_at: nextAt })
+      .eq("id", target_id);
+    return NextResponse.json({ ok: true, named: false, queued: true });
+  }
+
   let described = null;
   try {
     described = await withBudget(
@@ -117,14 +130,16 @@ export async function POST(request) {
         probes: specimen_probes || {},
       }),
       DESCRIBE_BUDGET_MS,
-      // A budget expiry is worth coming back for, same as a busy free tier.
-      { fonts: null, identified: false, retryable: true }
+      // A budget expiry is worth coming back for, same as a busy free tier --
+      // and it is a slow call rather than a refused one, so it is not the
+      // quota being gone.
+      { fonts: null, identified: false, retryable: true, quotaExhausted: false }
     );
   } catch (err) {
     // The measured families and their shares are worth showing on their own;
     // losing the naming pass shouldn't lose the panel.
     console.error("Font description failed:", err.message);
-    described = { fonts: null, identified: false, retryable: true };
+    described = { fonts: null, identified: false, retryable: true, quotaExhausted: Boolean(err.quotaExhausted) };
   }
 
   // Whatever the naming pass managed is still better than the raw measurement
@@ -156,18 +171,16 @@ export async function POST(request) {
   // deliberately never stored -- re-rendering them in the browser that is
   // already opening the page costs a free runner minute, and keeping throwaway
   // images in the database costs a decision nobody wants to revisit.
-  const attempts = (site.fonts_attempts || 0) + 1;
-  const canRetry = described.retryable && attempts <= MAX_NAMING_ATTEMPTS;
-  console.error(`Naming: failed for ${site.domain}, attempt ${attempts}, requeued=${canRetry}`);
+  const { state, attempts, nextAt } = scheduleRetry(
+    { retryable: described.retryable, quotaExhausted: described.quotaExhausted },
+    site.fonts_attempts
+  );
+  console.error(`Naming: failed for ${site.domain}, attempt ${attempts}, next ${nextAt || "never"}`);
 
   await supabase
     .from("site")
-    .update({
-      fonts_state: canRetry ? "queued" : "failed",
-      fonts_attempts: attempts,
-      fonts_next_at: canRetry ? new Date(Date.now() + backoffMs(attempts)).toISOString() : null,
-    })
+    .update({ fonts_state: state, fonts_attempts: attempts, fonts_next_at: nextAt })
     .eq("id", target_id);
 
-  return NextResponse.json({ ok: true, named: false, queued: canRetry });
+  return NextResponse.json({ ok: true, named: false, queued: state === "queued" });
 }

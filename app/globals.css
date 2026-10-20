@@ -6559,3 +6559,351 @@ a.card {
     bottom: 16px;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Import
+
+   Bringing a bookmarking app across in one paste. Everything here is built out
+   of shapes the app already has: the panel is a `.capture-panel`-weight
+   surface, the kind picker is the same `.view-switch` the desktop/mobile and
+   card-size switches use, the folder picker is the chip strip's own chips, and
+   the two progress tracks are the capture bar at the capture bar's thickness.
+   Nothing on this page is a new object, because it is a page you visit once
+   and should not have to learn.
+   --------------------------------------------------------------------------- */
+
+.import-panel {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.import-kind {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* The switch's buttons carry an icon here where the view switches carry a
+   glyph alone, so they need the gap the others set inline. */
+.import-kind .view-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.import-kind-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.import-drop-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: -10px;
+}
+
+/* The drop target is the whole field rather than a separate dashed rectangle
+   beside it. A second target is a second thing to aim at for the same result,
+   and a page with one input should have one place to put things. */
+.import-drop {
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--field-bg);
+  overflow: hidden;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.import-drop:focus-within {
+  border-color: rgba(var(--brand-ink-rgb), 0.5);
+  background: var(--surface);
+}
+
+.import-drop-over {
+  border-color: rgba(var(--brand-ink-rgb), 0.5);
+  background: var(--surface);
+}
+
+.import-textarea {
+  display: block;
+  width: 100%;
+  min-height: 190px;
+  resize: vertical;
+  border: 0;
+  background: none;
+  padding: 14px;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.import-textarea:focus {
+  outline: none;
+}
+
+.import-drop-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.import-drop-foot .link-btn.link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.import-drop-hint {
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.import-file-input {
+  display: none;
+}
+
+.import-folders {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.import-folders-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.import-folder-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* `.chip` sets 11px and `.chip-filter` resets the button with `font: inherit`,
+   which clears the size along with everything else -- so any place a chip is
+   also a button has to say its size out loud. 13px here, matching the
+   dashboard's strip, because these are targets rather than labels. */
+.import-folder-chips .chip-filter {
+  font-size: 13px;
+}
+
+.import-folders-hint,
+.import-preview-notes {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.import-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.import-preview-count {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text);
+  padding-top: 14px;
+}
+
+/* Block flow, not a flex column. A `<ul>` whose items are flex items has them
+   blockified, and the markers go with that -- the first one survived and the
+   rest did not, which reads as a stray bullet rather than as a list. The gap
+   a flex column would have given is a margin between siblings instead. */
+.import-preview-notes {
+  padding-left: 18px;
+}
+
+.import-preview-notes li + li {
+  margin-top: 4px;
+}
+
+.import-preview-warn {
+  color: var(--text);
+}
+
+.import-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* The solid dark button, not the orange one. The orange is Add, and Add is in
+   the bar two inches above this -- `--accent-solid` is rationed precisely so
+   that two of them never end up on one screen arguing over which one you came
+   to press. Same recipe as the review queue's bulk bar, a size up, because
+   there it is one of several controls in a row and here it is the only thing
+   on the page you can press. */
+.import-actions button {
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--invert-bg);
+  border-radius: 8px;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.import-actions button:hover:not(:disabled) {
+  background: var(--invert-bg-hover);
+  border-color: var(--invert-bg-hover);
+}
+
+.import-actions button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.import-result {
+  border-top: 1px solid var(--border-soft);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.import-result p {
+  margin: 0;
+}
+
+/* The status panel wears the call to action's band, because it is the same
+   idea: the ramp along the top edge at the progress bar's own thickness,
+   saying this object belongs to the loading bar family. */
+.import-status {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 22px 20px 20px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.import-status::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--ramp-h);
+  background: linear-gradient(
+    90deg,
+    var(--ramp-deep) 0%,
+    var(--ramp-mid) 26%,
+    var(--ramp-warm) 52%,
+    var(--ramp-lit) 68%,
+    var(--ramp-mid) 88%,
+    var(--ramp-deep) 100%
+  );
+}
+
+.import-status-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.import-status-head h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.import-status-live {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--chip-bg);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.import-track {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.import-track-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.import-track-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.import-track-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.import-track-rail {
+  height: var(--ramp-h);
+  background: var(--surface-sunken);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+/* No pulse on this one, and that is the difference between the two bars. The
+   capture bar animates because it is describing a minute you are watching;
+   this one describes three days you are not, and a stripe sliding under an
+   unmoving fill would be claiming activity it cannot vouch for. */
+.import-track-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--ramp-deep) 0%,
+    var(--ramp-mid) 45%,
+    var(--ramp-lit) 100%
+  );
+  transition: width 0.6s ease;
+}
+
+.import-track-detail {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.import-status-stuck,
+.import-status-done {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 700px) {
+  .import-panel {
+    padding: 16px;
+  }
+}

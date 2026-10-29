@@ -8,3 +8,8 @@ out/
 npm-debug.log*
 capture.log
 .DS_Store
+
+# The handover bundle. Built on demand, holds copies of things that already
+# live elsewhere, and sits inside a public repo -- so it stays out of git.
+_handoff/
+*-handoff-*.zip

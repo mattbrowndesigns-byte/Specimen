@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachCapturesAndTags } from "@/lib/siteQueries";
 import { attachTags } from "@/lib/tagAttach";
-import { displayNameFor, possessive } from "@/lib/displayName";
-import { SCOPE_NOUN } from "@/lib/shareKinds";
+import { resolveShare } from "@/lib/shareScope";
 
 // The public read. No session, because the point of a share link is that the
 // person opening it doesn't have an account.
@@ -69,23 +68,16 @@ const GONE = () =>
 
 export async function GET(request, { params }) {
   const { token } = await params;
-  if (!token) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const supabase = supabaseAdmin();
-  const { data: share } = await supabase
-    .from("share")
-    .select("kind, target_id, user_id, created_at")
-    .eq("token", token)
-    .maybeSingle();
 
-  // A revoked link and a link that never existed answer identically.
-  if (!share) return GONE();
+  // Token to row, and whose row it is. Shared with the single-site read below
+  // this one in the tree, so both pages agree about what a token may reach --
+  // a revoked link and a link that never existed answer identically from here.
+  const resolved = await resolveShare(supabase, token);
+  if (!resolved) return GONE();
 
-  // The owner's name comes off the auth record rather than out of the share
-  // row, so renaming yourself renames every link you've already sent.
-  const { data: owner } = await supabase.auth.admin.getUserById(share.user_id);
-  const ownerName = displayNameFor(owner?.user);
-  const mine = (noun) => `${possessive(ownerName)} ${noun}`;
+  const { share, ownerName, title } = resolved;
 
   if (share.kind === "collection") {
     const { data: collection } = await supabase
@@ -168,7 +160,7 @@ export async function GET(request, { params }) {
 
   return NextResponse.json({
     kind: share.kind,
-    title: mine(SCOPE_NOUN[share.kind] || "library"),
+    title,
     ownerName,
     sites,
     components,

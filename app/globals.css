@@ -2064,6 +2064,37 @@ h1 {
   border-bottom: 1px solid var(--text);
 }
 
+/* The read-only twin of `.name-input`, for the copy of this header a stranger
+   opens through a share link. Same size, weight and padding, so the two are
+   the same object rather than two that happen to resemble each other. An h1
+   carries its own margins, which is the only thing that has to be said out
+   loud here. */
+.shared-detail-title {
+  font-size: 22px;
+  font-weight: 600;
+  padding: 4px 0;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+/* The way back out of a shared save, and it sits above the header rather than
+   in the bar: the bar's two ends are the mark and the invitation, and a third
+   thing between them pulls both off the edges they belong on. */
+.shared-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.shared-back:hover {
+  color: var(--text);
+}
+
 /* align-items, or the anchor stretches to the height of the bordered buttons
    beside it and its label sits 8px from the top of a taller box -- which read
    as the arrow and text hanging high in the button. */

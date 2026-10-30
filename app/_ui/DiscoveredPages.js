@@ -183,7 +183,7 @@ export default function DiscoveredPages({
   );
 }
 
-function PageList({ pages, promoted, promoting, onPromote }) {
+function PageList({ pages, promoted = {}, promoting, onPromote }) {
   return (
     <ul className="page-list">
       {pages.map((page) => (
@@ -193,6 +193,11 @@ function PageList({ pages, promoted, promoting, onPromote }) {
           </a>
           {page.isHome ? (
             <span className="page-tier page-tier-secondary">This site</span>
+          ) : !onPromote ? (
+            // Read-only, which is a share link. Promoting spends a capture run
+            // and writes a component onto the owner's account, so a stranger
+            // gets the list and the tier and nothing to press.
+            page.tier && <span className={`page-tier page-tier-${page.tier}`}>{page.tier}</span>
           ) : promoted[page.id] ? (
             <a className="promote-link" href={`/sites/${promoted[page.id]}`}>
               View Full Capture →

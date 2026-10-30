@@ -57,19 +57,26 @@ and they should not be re-litigated without a reason.
 
 ## Known and deliberately unfixed
 
-- `/features`, `/about` and `/faq` are linked from the shared-library footer but
-  are not in `middleware.js`'s `PUBLIC_PATHS`, so a signed-out reader bounces to
-  `/login`. Not a one-line fix: those pages render `UtilityBar`, which assumes a
-  session.
 - Six block tags from the m15 rename have no honest successor. `Hero` and
   `Footer` are still live and still pickable by the AI; they are family-only
   names, which match everything and find nothing. Merge them on `/tags`.
-- The account display name has never been set, so every share link sent so far
-  reads "Mattbrowndesigns's Inspiration Library". Menu → Settings → Your Name.
-  It is read live on every public read, so setting it fixes links already sent.
 - A mobile capture that retries without device emulation overwrites the same
   file instead of keeping the taller result, which the spec wants. On the record
   since M0 and still true.
+
+## Shared links are the portfolio surface now
+
+A share link used to show a grid of screenshots that linked straight out to the
+live sites, so everything the app had actually worked out about a site was
+invisible to anyone without an account. A site card now opens
+`/share/[token]/site/[id]`: the capture timeline, the measured palette, the
+identified typefaces and the discovered pages, read-only, no session needed.
+
+`/features`, `/about` and `/faq` are public as well, which they had to be --
+they are what the shared footer and the invite panel point at.
+
+The display name is set ("Matt"), so shared pages are headed "Matt's
+Inspiration Library" and the old generic title is gone.
 
 ## Environment
 

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, use as usePromise } from "react";
 import { ArrowUpRight } from "lucide-react";
 import Favicon from "../../_ui/Favicon";
 import TagRow from "../../_ui/TagRow";
+import PublicBar from "../../_ui/PublicBar";
 import Wordmark from "../../_ui/Wordmark";
 import SharedFooter from "../../_ui/SharedFooter";
 import { KIND } from "../../_ui/kinds";
@@ -102,24 +103,10 @@ export default function SharedPage({ params }) {
 
   return (
     <>
-      {/* Not the utility bar: none of what's in it applies to someone without
-          an account, and offering Add to a reader who can't save is worse than
-          offering nothing. What does belong is a way in. */}
-      <header className="shared-bar">
-        <div className="shared-bar-inner">
-          <a className="shared-brand wordmark-link" href="/">
-            <Wordmark className="shared-mark" />
-          </a>
-          {/* No item count: the tabs carry their own, and "shared with you" is
-              a thing the reader already knows -- they followed a share link to
-              get here. "Get Kivli" was worse: a brand name means nothing to
-              someone who has never seen it, so the button says what pressing it
-              is for. */}
-          <a className="shared-cta-btn" href="/login">
-            Create Your Own
-          </a>
-        </div>
-      </header>
+      {/* No item count in the bar: the tabs carry their own, and "shared with
+          you" is a thing the reader already knows -- they followed a share
+          link to get here. */}
+      <PublicBar />
 
       <main className="page page-wide shared-page">
         <h1 className="page-hero shared-title">{state.title}</h1>
@@ -150,7 +137,9 @@ export default function SharedPage({ params }) {
             {page.map((site) => (
               <SharedCard
                 key={site.id}
-                href={site.url}
+                href={`/share/${token}/site/${site.id}`}
+                internal
+                visitHref={site.url}
                 thumb={latestCapture(site.capture, "desktop")?.thumb_url}
                 name={site.name || site.domain}
                 faviconUrl={site.favicon_url}
@@ -266,16 +255,19 @@ export default function SharedPage({ params }) {
   );
 }
 
-function SharedCard({ href, thumb, natural, name, faviconUrl, fills, tags }) {
+// `href` is where the card goes and `visitHref` is where the arrow goes, which
+// for a website are now two different places: the card opens this app's own
+// page for that save -- the palette, the typefaces, the captures it has kept
+// -- and the arrow still goes out to the live site, exactly as it does on the
+// owner's dashboard. A component and a resource have no such page, so for them
+// the two stay the same link.
+function SharedCard({ href, internal, visitHref, thumb, natural, name, faviconUrl, fills, tags }) {
+  const visit = visitHref || href;
+  const outward = internal ? {} : { target: "_blank", rel: "noopener noreferrer nofollow" };
   return (
     <div className="card">
       <div className="card-media">
-        <a
-          className={`thumb${natural ? " thumb-natural" : ""}`}
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-        >
+        <a className={`thumb${natural ? " thumb-natural" : ""}`} href={href} {...outward}>
           {thumb ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={thumb} alt={name} />
@@ -286,15 +278,15 @@ function SharedCard({ href, thumb, natural, name, faviconUrl, fills, tags }) {
       </div>
       <div className="card-footer">
         <span className="card-title">
-          <Favicon url={href} faviconUrl={faviconUrl} fills={fills} alt={name} />
+          <Favicon url={visit} faviconUrl={faviconUrl} fills={fills} alt={name} />
           <span className="name">{name}</span>
         </span>
         <a
           className="visit"
-          href={href}
+          href={visit}
           target="_blank"
           rel="noopener noreferrer nofollow"
-          title="Open it"
+          title="Open the live site"
         >
           <ArrowUpRight size={17} />
         </a>

@@ -1,8 +1,6 @@
 "use client";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import UtilityBar from "../_ui/UtilityBar";
-import SiteFooter from "../_ui/SiteFooter";
 
 // The questions that actually come up, grouped by when they come up.
 //
@@ -148,8 +146,6 @@ function Item({ q, a }) {
 export default function FaqPage() {
   return (
     <>
-      <UtilityBar />
-
       <main className="page prose-page">
         <header className="prose-head">
           <h1>Frequently Asked Questions</h1>
@@ -173,7 +169,6 @@ export default function FaqPage() {
           </section>
         ))}
       </main>
-      <SiteFooter />
     </>
   );
 }

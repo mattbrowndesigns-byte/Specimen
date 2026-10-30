@@ -1,6 +1,4 @@
 "use client";
-import UtilityBar from "../_ui/UtilityBar";
-import SiteFooter from "../_ui/SiteFooter";
 import { FEATURE_GROUPS } from "@/lib/features";
 
 // The whole list, in one place.
@@ -11,8 +9,6 @@ import { FEATURE_GROUPS } from "@/lib/features";
 export default function FeaturesPage() {
   return (
     <>
-      <UtilityBar />
-
       <main className="page prose-page">
         <header className="prose-head">
           <h1>Everything Kivli Does</h1>
@@ -54,7 +50,6 @@ export default function FeaturesPage() {
           </a>
         </section>
       </main>
-      <SiteFooter />
     </>
   );
 }

@@ -185,7 +185,12 @@ function StyleSkeleton({ kind, live, analyzed }) {
   );
 }
 
-export default function SiteStyle({ site, onRefresh }) {
+// `readOnly` is what a stranger gets through a share link: the reading, with
+// nothing that would spend the owner's Gemini budget or write to their row.
+// The route behind the button refuses a request with no session anyway, so
+// this is the second lock rather than the only one -- but a control that
+// cannot work has no business being on screen.
+export default function SiteStyle({ site, onRefresh, readOnly = false }) {
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(null);
@@ -482,15 +487,19 @@ export default function SiteStyle({ site, onRefresh }) {
         </section>
       )}
 
-      {/* One control for both sections, since one run produces both. */}
+      {/* One control for both sections, since one run produces both. The
+          date stays in the read-only view: when a reading was taken is part of
+          the reading, and a palette with no date on it could be from any year. */}
       <div className="style-actions">
         {!analyzed && !analyzing && palette.length === 0 && fonts.length === 0 && (
           <p className="style-empty">This site&rsquo;s colours and type haven&rsquo;t been read yet.</p>
         )}
-        {error && <p className="error">{error}</p>}
-        <button className="link-btn" onClick={analyze} disabled={analyzing}>
-          {analyzing ? "Reading the Page…" : analyzed ? "Re-read Colours & Type" : "Read Colours & Type"}
-        </button>
+        {error && !readOnly && <p className="error">{error}</p>}
+        {!readOnly && (
+          <button className="link-btn" onClick={analyze} disabled={analyzing}>
+            {analyzing ? "Reading the Page…" : analyzed ? "Re-read Colours & Type" : "Read Colours & Type"}
+          </button>
+        )}
         {analyzed && !analyzing && (
           <span className="style-read-at">Read {formatCaptureDate(site.analyzed_at)}</span>
         )}

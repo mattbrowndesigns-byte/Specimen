@@ -19,6 +19,13 @@ const PUBLIC_PATHS = [
   // a different path, since this list matches by prefix.
   "/share",
   "/api/shared",
+  // Linked from the shared footer and from the invite panel, so these are the
+  // three pages a stranger is actually sent to. They bounced to /login until
+  // their chrome learned to render without a session (app/_ui/ProseShell.js),
+  // which is why they were on the known-and-unfixed list rather than here.
+  "/features",
+  "/about",
+  "/faq",
 ];
 
 export async function middleware(request) {

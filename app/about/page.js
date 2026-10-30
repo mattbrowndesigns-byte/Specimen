@@ -1,14 +1,10 @@
 "use client";
-import UtilityBar from "../_ui/UtilityBar";
-import SiteFooter from "../_ui/SiteFooter";
 
 // What it is and why it works the way it does. The features have their own
 // page; this one is for the reasoning behind them.
 export default function AboutPage() {
   return (
     <>
-      <UtilityBar />
-
       <main className="page prose-page">
         <header className="prose-head">
           <h1>About Kivli</h1>
@@ -137,7 +133,6 @@ export default function AboutPage() {
           </a>
         </section>
       </main>
-      <SiteFooter />
     </>
   );
 }

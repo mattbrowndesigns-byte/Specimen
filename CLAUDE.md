@@ -1730,6 +1730,97 @@ distinguish for *half*-delivered captures and never for empty ones. The
 callback records the reason now, the card says "Capture failed", and the site's
 own page carries the sentence with Re-capture directly above it.
 
+**A share link showed the library and not the app, and the cards were the
+whole of it.** Every site card on a shared page pointed at `site.url`, so a
+stranger browsing someone's library went straight out to the live site and
+never saw a single thing this app had worked out: the palette weighted by
+painted area, the typefaces identified from their letterforms, the captures it
+has kept, the pages it found. All of it was already in the database and none of
+it was ever on screen. What a reader saw was a grid of screenshots, which reads
+as a mood board rather than as software.
+
+A site card now opens `/share/[token]/site/[id]` and the arrow beside it still
+goes out to the live site, which is exactly what the owner's own dashboard
+does. Components and resources keep both links pointing outward, because
+neither has a page of its own to open -- a resource IS a URL, and that decision
+stands.
+
+**That page is its own file rather than a `readOnly` flag on the owner's.** The
+owner's detail page is 654 lines holding nine pieces of mutable state, a name
+input, an inline summary editor, four tag comboboxes, Re-capture, Regenerate,
+Delete and a danger panel. Threading a flag through all of that leaves the
+controls one missed condition away from a stranger, and the condition that gets
+missed is never the one you thought about. The shared page has no mutating call
+in it at all, which is the same rule the shared list already followed and the
+only version of this that can be checked by reading rather than by testing.
+What is left are controls that act on what you are looking at instead of on the
+record: the viewport switch, the capture timeline, expanding the screenshot.
+
+Two shared components did need a read-only mode, and both got the narrow kind.
+`SiteStyle` takes `readOnly`, which drops the analyze button and its error line
+and keeps the date, because when a reading was taken is part of the reading.
+`DiscoveredPages` already guarded Re-read on `onRefresh` being passed; Promote
+now guards on `onPromote` the same way. Neither route would answer a stranger
+anyway -- both demand a session -- so this is the second lock, not the only
+one. A control that cannot work still has no business being on screen.
+
+**`lib/shareScope.js` exists because two pages now read through a token.** The
+token is the whole of the authorisation for a share link, so what it may reach
+is the only thing standing between a URL and someone's library, and two copies
+of that rule are two chances for one of them to end up looser. `resolveShare`
+turns a token into a row and an owner name; `shareReachesSite` answers whether
+a scope reaches one site. The list route was moved onto the first of those at
+the same time, so there is one answer rather than two that agree today.
+
+Three things in there are load-bearing. A components, resources or folder link
+reaches **no** sites at all, so those 404 before any row is read. A collection
+link is scoped twice over -- the collection has to be the owner's *and* the
+site has to actually be in it -- because checking only the first lets one
+collection link reach the whole library. And `is_hidden` is filtered on the
+single read as well as on the list, or a save hidden from the grid would be
+unreachable by scrolling and reachable by typing its id.
+
+Verified against the live database rather than reasoned about: a library and a
+sites token answer 200 for a site, components / resources / folder / a
+collection that does not contain it all answer 404, a bad token and a
+non-existent id answer 404, and a site flipped to hidden answers 404 and
+returns to 200 when it is flipped back. Out of scope and revoked are
+deliberately the same answer, or anyone holding one link could work out which
+ids exist behind it.
+
+**The public payload is narrower than the owner's, and the stripping is done in
+the route rather than left to a helper.** `attachCapturesAndTags` carries
+`capture_state` and `capture_error` onto every row for the owner's own grid,
+which is right there and wrong here, so both come off explicitly. Also absent,
+each for its own reason: notes are private by definition, `needs_review` says
+what the owner has not got round to, `is_favorite` is an opinion rather than a
+fact about the site, and `enrichment_state` is queue internals a reader cannot
+act on. Letting a shared helper decide what a stranger sees is how a column
+leaks the next time one is added.
+
+**The three written pages are public now, and the chrome was always the reason
+they were not.** `/features`, `/about` and `/faq` are linked from the shared
+footer and from the invite panel precisely so someone without an account has
+somewhere to go, and all three bounced them to `/login`. Adding them to
+`PUBLIC_PATHS` was never the fix on its own: they render `UtilityBar`, which
+carries the review bell, the Add menu and the account menu, and `SiteFooter`,
+which is four links that all bounce a stranger as well.
+
+`app/_ui/ProseShell.js` is a server component that reads the session and picks
+the chrome -- the utility bar and the site footer for an account holder, the
+public bar and the shared footer for everyone else. It is a server component
+because the alternative is asking the browser afterwards, which means a
+signed-in reader watches "Create Your Own" sit in their own bar for a moment
+before it is replaced. It is reached through a one-line `layout.js` in each of
+the three folders rather than imported by each page, so the pages stay what
+they are, which is prose.
+
+**`PublicBar` is one component because three surfaces now show it.** The shared
+list, a shared save and the written pages signed out. It was previously inline
+in the share page; a second and third copy is how the mark ends up at a
+different size on the one page most strangers see, which is the bug `Wordmark`
+was extracted to stop.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

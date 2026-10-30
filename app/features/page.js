@@ -42,7 +42,7 @@ export default function FeaturesPage() {
         <section className="prose-cta">
           <h2>That&rsquo;s the tour</h2>
           <p>
-            Nothing here needs setting up. Save something and the rest happens on its own — and
+            Nothing here needs setting up. Save something and the rest happens on its own, and
             everything written for you waits in the review queue until you&rsquo;ve had a look.
           </p>
           <a className="prose-cta-link" href="/">

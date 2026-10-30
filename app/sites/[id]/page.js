@@ -307,7 +307,7 @@ export default function SiteDetailPage({ params }) {
         return;
       }
       if (data.enrichmentError) {
-        setError("Pages refreshed, but the AI pass didn't finish — they're all showing for now.");
+        setError("Pages refreshed, but the AI pass didn't finish, so they're all showing for now.");
       }
       await load();
     } catch {
@@ -371,7 +371,7 @@ export default function SiteDetailPage({ params }) {
             than as something that quietly went wrong. */}
         {site.enrichment_state === "queued" && (
           <p className="queued-note">
-            Tags and summary are queued. The AI hit its rate limit while this was saving — they&rsquo;ll
+            Tags and summary are queued. The AI hit its rate limit while this was saving. They&rsquo;ll
             fill in within the hour without you doing anything.
           </p>
         )}
@@ -400,7 +400,7 @@ export default function SiteDetailPage({ params }) {
             </div>
             <div className="capture-status-row">
               <p>
-                Capturing this site —{" "}
+                Capturing this site:{" "}
                 {captureElapsed < CAPTURE_ESTIMATE_SECONDS
                   ? `about ${CAPTURE_ESTIMATE_SECONDS - captureElapsed}s remaining`
                   : "finishing up, any moment now"}
@@ -419,7 +419,7 @@ export default function SiteDetailPage({ params }) {
         {captureDone && (
           <div className="capture-status capture-status-done">
             <p>
-              ✓ New capture complete — added to the timeline below.
+              ✓ New capture complete. Added to the timeline below.
               <button onClick={() => setCaptureDone(false)}>Dismiss</button>
             </p>
           </div>

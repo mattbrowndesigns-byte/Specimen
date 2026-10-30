@@ -68,7 +68,7 @@ export default function InvitesPage() {
       setCopied(invite.id);
       setTimeout(() => setCopied(null), 1500);
     } catch {
-      setError("Couldn't reach the clipboard — select the code and copy it by hand.");
+      setError("Couldn't reach the clipboard. Select the code and copy it by hand.");
     }
   }
 
@@ -87,7 +87,7 @@ export default function InvitesPage() {
         {error && <p className="error">{error}</p>}
 
         <p className="placeholder-page">
-          Each code works once. Whoever redeems it gets their own private library — they can&rsquo;t
+          Each code works once. Whoever redeems it gets their own private library: they can&rsquo;t
           see yours, and you can&rsquo;t see theirs.
         </p>
 

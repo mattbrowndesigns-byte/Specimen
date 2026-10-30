@@ -73,7 +73,7 @@ export async function POST(request) {
     .maybeSingle();
   if (duplicate) {
     return NextResponse.json(
-      { error: `You've already saved that — it's in your resources as "${duplicate.title}".`, duplicateId: duplicate.id },
+      { error: `You've already saved that. It's in your resources as "${duplicate.title}".`, duplicateId: duplicate.id },
       { status: 409 }
     );
   }

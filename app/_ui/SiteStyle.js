@@ -217,7 +217,7 @@ export default function SiteStyle({ site, onRefresh, readOnly = false }) {
     const poll = setInterval(() => {
       if (Date.now() - startedAt.current.at > 4 * 60 * 1000) {
         setAnalyzing(false);
-        setError("That took longer than expected. The run may still finish — reload in a minute.");
+        setError("That took longer than expected. The run may still finish, so reload in a minute.");
         return;
       }
       refresh.current?.();
@@ -312,7 +312,7 @@ export default function SiteStyle({ site, onRefresh, readOnly = false }) {
                 key={color.hex}
                 className="palette-swatch"
                 style={{ flexGrow: weights[i] / weightTotal, background: color.hex }}
-                title={`${colorName(color.hex)} ${color.hex} — ${pct(color.share)} of the interface · ${
+                title={`${colorName(color.hex)} ${color.hex}, ${pct(color.share)} of the interface · ${
                   ROLE_LABEL[color.role] || color.role
                 }`}
                 onMouseEnter={() => setHovered(color.hex)}
@@ -480,7 +480,7 @@ export default function SiteStyle({ site, onRefresh, readOnly = false }) {
 
           {previousFonts && (
             <p className="style-changed">
-              Type changed since {formatCaptureDate(previousFonts.analyzed_at)} — was{" "}
+              Type changed since {formatCaptureDate(previousFonts.analyzed_at)}. Previously{" "}
               {nameFonts(previousFonts.fonts)}
             </p>
           )}

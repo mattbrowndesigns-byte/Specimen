@@ -27,7 +27,7 @@ export default function ResourceProgress({ label, done, queued }) {
         <p>
           {queued ? (
             <>
-              ✓ {label} saved — its summary and type are queued. The AI is at its limit right now;
+              ✓ {label} saved. Its summary and type are queued. The AI is at its limit right now;
               they&rsquo;ll fill in on their own.
             </>
           ) : (

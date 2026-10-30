@@ -10,6 +10,10 @@ const LINKS = [
   { href: "/features", label: "Features" },
   { href: "/about", label: "About" },
   { href: "/faq", label: "FAQ" },
+  // Labelled for the reader rather than for a portfolio: someone who followed
+  // a share link wants to know how the thing works, and "Case Study" is a word
+  // aimed at a different audience entirely.
+  { href: "/case-study", label: "How it was built" },
 ];
 
 export default function SharedFooter() {

@@ -26,6 +26,9 @@ const PUBLIC_PATHS = [
   "/features",
   "/about",
   "/faq",
+  // Written about the project rather than for the people using it, and the
+  // one page meant to be linked to from outside.
+  "/case-study",
 ];
 
 export async function middleware(request) {

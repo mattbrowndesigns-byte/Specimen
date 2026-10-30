@@ -1821,6 +1821,38 @@ in the share page; a second and third copy is how the mark ends up at a
 different size on the one page most strangers see, which is the bug `Wordmark`
 was extracted to stop.
 
+**The case study is a page in the app, not a document somewhere else.** It is
+the one page written *about* the project rather than for the people using it,
+and it lives at `/case-study` for the reasons everything else here does: the
+thing it describes is two clicks away, it deploys with the rest, and it costs
+nothing. It takes the prose layout whole -- the same 4+8 rows, the same sticky
+aside headings, the same closing panel wearing the capture bar's ramp -- and
+adds only three shapes a case study needs and the written pages do not: a line
+of facts under the title, figures given a shape of their own, and a
+before/after pair of tag chips. A first version was built as a standalone HTML
+page with the tokens copied into it, which is a worse idea the moment a token
+changes.
+
+`.case-chips .chip` restates its font size, for exactly the reason
+`.resource-tags .chip-filter` does: `.chip` sets 11px, which is right on a card
+and far too small beside 20px prose.
+
+**The share link on that page is an env var, and the reason is git history.**
+`NEXT_PUBLIC_SHOWCASE_SHARE` holds the token with no `/share/` prefix. A share
+token is the whole of a link's authorisation and this repo is public, so
+writing one into the source puts it in history permanently -- including after
+the link is revoked, which is the one state where you would want it gone. It
+also means the showcase link can be swapped from the Vercel dashboard without
+a deploy. With nothing set the closing panel does not render at all, which is
+why the page reads fine in a checkout that has never had the variable.
+
+**The shared footer carries a fourth link now, and it is labelled for the
+reader.** "How it was built" rather than "Case Study": someone who followed a
+share link wants to know how the thing works, and the other phrase is aimed at
+an audience of recruiters who are not the ones holding the link. Same rule as
+the rest of that footer -- nothing in a shared page's chrome may assume
+knowledge the reader does not have.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

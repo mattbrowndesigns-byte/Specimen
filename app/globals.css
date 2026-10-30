@@ -4145,6 +4145,135 @@ a.card {
   background: var(--invert-bg-hover);
 }
 
+/* ---- Case study --------------------------------------------------------- */
+
+/* The one page written about the project rather than for its users, so it
+   borrows the prose layout whole and adds only what a case study needs: a
+   line of facts under the title, figures given a shape of their own, and a
+   before/after pair of tag chips. */
+
+.case-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 32px;
+  margin: 28px 0 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.case-meta div {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  font-size: 15px;
+}
+
+.case-meta dt {
+  margin: 0;
+  color: var(--text-faint);
+}
+
+.case-meta dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Every number on this page was measured rather than estimated, which is most
+   of what the project is about, so the figures get a shape instead of sitting
+   inside a sentence where the eye runs past them. */
+.measure-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1px;
+  margin: 26px 0;
+  background: var(--border-soft);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.measure-grid > div {
+  background: var(--surface);
+  padding: 16px 18px;
+}
+
+.measure-grid dt {
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.measure-grid dd {
+  margin: 0;
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.measure-grid dd span {
+  display: block;
+  margin-top: 5px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+/* One sentence per section carries the argument, and at 20px body the rest of
+   the column is a wall. The rule is the accent rather than a border colour:
+   it is the only place on the page the brand tone appears as a mark. */
+.case-point {
+  margin: 26px 0;
+  padding-left: 20px;
+  border-left: 3px solid var(--accent);
+  max-width: 28em;
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.case-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 22px 0 0;
+}
+
+/* `.chip` sets 11px, which is right on a card and far too small beside 20px
+   prose. Said out loud here for the same reason `.resource-tags .chip-filter`
+   says it: a chip in a new context has to restate its size. */
+.case-chips .chip {
+  font-size: 13px;
+  padding: 6px 11px;
+}
+
+.case-chips .chip-was {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+.case-chips .chip-now {
+  border: 1px solid var(--accent);
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .case-point {
+    font-size: 21px;
+  }
+}
+
 /* ---- Features ----------------------------------------------------------- */
 
 .feature-group-head {

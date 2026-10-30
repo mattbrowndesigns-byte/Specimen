@@ -326,7 +326,7 @@ export default function ComponentDetailPage({ params }) {
                   <p className="summary-text">
                     {component.summary || (
                       <span className="summary-empty">
-                        No summary yet — use Regenerate to describe this crop.
+                        No summary yet. Use Regenerate to describe this crop.
                       </span>
                     )}
                   </p>

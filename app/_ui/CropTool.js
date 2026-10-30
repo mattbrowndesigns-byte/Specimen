@@ -218,7 +218,7 @@ export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRe
             <span>
               {saveElapsed < 15
                 ? "Cropping and describing it with AI…"
-                : "Still working — the AI service is busy, retrying…"}
+                : "Still working. The AI service is busy, retrying…"}
             </span>
           </div>
         ) : (

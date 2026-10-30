@@ -166,7 +166,7 @@ function LoginForm() {
         <p className="auth-footnote">
           {mode === "signin"
             ? "Kivli is invite-only. Ask Matt for a code if you don't have one."
-            : "Your code works once, and it's yours — it can't be shared on."}
+            : "Your code works once, and it's yours. It can't be shared on."}
         </p>
       </div>
     </main>

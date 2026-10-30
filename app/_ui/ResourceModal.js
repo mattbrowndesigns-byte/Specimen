@@ -77,7 +77,7 @@ export default function ResourceModal({ resource, allTags, onSaved, onDeleted, o
     if (!data.described) {
       setError(
         data.queued
-          ? "The AI was busy — it'll try again within the hour."
+          ? "The AI was busy. It'll try again within the hour."
           : "The AI couldn't describe this one."
       );
     }

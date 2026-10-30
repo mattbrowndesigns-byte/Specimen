@@ -460,7 +460,7 @@ export default function ResourcesTab({
             The tools, not the inspiration.
           </h2>
           <p className="empty-state-body">
-            An icon set, a stock library, an AI product — the links you save for
+            An icon set, a stock library, an AI product. The links you save for
             what they do rather than how they look. No screenshot, no detail
             page. Just a title, a sentence and a folder.
           </p>

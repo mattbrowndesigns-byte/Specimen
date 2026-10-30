@@ -140,7 +140,7 @@ export default function ComponentsTab({
         onQueryChange={setQuery}
         searchPlaceholder="Search components by name, summary, notes or tag…"
         emptyHeadline="Save the parts, not just the page."
-        emptyMessage="Capture any page, then crop out the one block worth keeping — a pricing table, a nav, a hero."
+        emptyMessage="Capture any page, then crop out the one block worth keeping: a pricing table, a nav, a hero."
         noun="component"
         adapter={ADAPTER}
         onAdd={onAdd}

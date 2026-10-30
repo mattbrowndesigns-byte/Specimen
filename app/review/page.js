@@ -469,7 +469,7 @@ function ReviewRow({
           {item.name || fallbackName}
         </span>
         <p className="review-summary">
-          {item.summary || <span className="summary-empty">No summary — the AI pass didn&apos;t complete.</span>}
+          {item.summary || <span className="summary-empty">No summary. The AI pass didn&apos;t complete.</span>}
         </p>
         <div className="card-tags">
           {(item.tags || []).map((tag, i) => (

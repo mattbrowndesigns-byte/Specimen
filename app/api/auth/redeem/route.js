@@ -49,7 +49,7 @@ export async function POST(request) {
   if (error) {
     const already = /already|registered|exists/i.test(error.message || "");
     return NextResponse.json(
-      { error: already ? "There's already an account with that email — sign in instead." : error.message },
+      { error: already ? "There's already an account with that email. Sign in instead." : error.message },
       { status: already ? 409 : 500 }
     );
   }

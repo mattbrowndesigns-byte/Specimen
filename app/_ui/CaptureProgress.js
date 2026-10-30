@@ -104,13 +104,13 @@ export default function CaptureProgress({ job, onDone }) {
         <p>
           {queued ? (
             <>
-              ✓ {job.label} captured — tags and summary are queued. The AI is at its limit right now;
+              ✓ {job.label} captured. Tags and summary are queued. The AI is at its limit right now;
               they&rsquo;ll fill in on their own, so feel free to carry on.
             </>
           ) : (
             <>
               ✓ {job.label} captured
-              {job.kind === "component" ? " — ready to crop." : " and tagged."}
+              {job.kind === "component" ? ". Ready to crop." : " and tagged."}
             </>
           )}
         </p>
@@ -128,7 +128,7 @@ export default function CaptureProgress({ job, onDone }) {
       </div>
       <div className="capture-status-row">
         <p>
-          Capturing {job.label} —{" "}
+          Capturing {job.label}:{" "}
           {elapsed < ESTIMATE_SECONDS ? `about ${ESTIMATE_SECONDS - elapsed}s remaining` : "finishing up"}
           . Safe to leave this page.
         </p>

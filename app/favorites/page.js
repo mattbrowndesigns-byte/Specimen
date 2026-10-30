@@ -64,7 +64,7 @@ export default function FavoritesPage() {
             </p>
             <RecordGrid
               entries={entries}
-              emptyMessage="Nothing favorited yet — tap the heart on any card or detail page."
+              emptyMessage="Nothing favorited yet. Tap the heart on any card or detail page."
             />
           </>
         )}

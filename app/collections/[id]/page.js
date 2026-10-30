@@ -144,7 +144,7 @@ export default function CollectionDetailPage({ params }) {
             </p>
             <RecordGrid
               entries={entries}
-              emptyMessage="Nothing in this collection yet — use the bookmark button on any card."
+              emptyMessage="Nothing in this collection yet. Use the bookmark button on any card."
               onRemove={removeItem}
               removeLabel="Remove From Collection"
             />

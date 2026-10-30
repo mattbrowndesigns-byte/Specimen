@@ -1,4 +1,4 @@
-# Handoff — 29 Oct 2026
+# Handoff — 30 Oct 2026
 
 Read `CLAUDE.md` for conventions and the reasoning behind every gotcha, and
 `02-project-spec.md` for the original requirements. This file is only about
@@ -7,15 +7,18 @@ Read `CLAUDE.md` for conventions and the reasoning behind every gotcha, and
 - **Repo:** https://github.com/mattbrowndesigns-byte/Specimen
 - **Local path:** `/Users/matthenriksen-brown/Documents/Specimen`
 - **Live app:** https://specimen-pied.vercel.app
-- **Local `main` is at `3cc40bf`.**
+- **Local `main` is at `43af8e1`.** GitHub has everything up to `559a8c9`.
 
 ## Outstanding, as of this writing
 
-1. **`3cc40bf` has not been pushed.** It is the fix that stops a page's
-   Content-Security-Policy from killing a capture, plus the work that makes a
-   failed capture say why. It exists on one laptop.
+1. **`43af8e1` has not been pushed.** The dash sweep over user-facing copy.
+   Everything before it is on GitHub.
 2. **`supabase/schema_m19.sql` has not been run.** Two `capture_error` columns.
-   Verified missing from the live database. The commit above needs them.
+   Verified missing from the live database on 30 Oct. Nothing breaks without
+   them; a failed capture just says nothing about why.
+3. **`NEXT_PUBLIC_SHOWCASE_SHARE` is not set on Vercel.** Until it is,
+   `/case-study` renders without its closing panel. Value is the share token
+   for the read-only library; it is in `.env.local` already.
 
 Everything up to and including `schema_m18.sql` is applied.
 
@@ -29,7 +32,8 @@ rebuilt around the Propel design system's families, an HTML-reading pass that
 catches what a frozen screenshot cannot, and a bulk importer for bringing a
 bookmarking app across in one paste.
 
-Live counts on 29 Oct: **54 websites, 55 resources, 3 components, 266 tags.**
+Live counts on 30 Oct: **54 websites, 55 resources, 3 components, 266 tags,
+8 share links.**
 
 ## Decisions that live only here
 
@@ -57,6 +61,14 @@ and they should not be re-litigated without a reason.
 
 ## Known and deliberately unfixed
 
+- Gemini's own summaries can contain dashes. The no-dashes rule is held by
+  editing source strings, and the model writes user-facing prose that nothing
+  checks. Raised during the 30 Oct sweep and deliberately not closed.
+- `.prose-lede` is capped in `ch`, the exact unit `CLAUDE.md` warns about. It
+  is a short intro rather than a body measure, so it does little harm, but it
+  is inconsistent.
+- A stale worktree sits at `.claude/worktrees/suspicious-hellman-91f394`. Its
+  branch is merged; the worktree and branch can both go.
 - Six block tags from the m15 rename have no honest successor. `Hero` and
   `Footer` are still live and still pickable by the AI; they are family-only
   names, which match everything and find nothing. Merge them on `/tags`.

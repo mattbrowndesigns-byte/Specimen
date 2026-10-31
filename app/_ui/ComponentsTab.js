@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import CropTool from "./CropTool";
 import LibraryBrowser from "./LibraryBrowser";
 import { explainCaptureFailure } from "@/lib/captureFailure";
+import { useDemoHold } from "./demoState";
 
 const ADAPTER = {
   kind: "component",
@@ -91,12 +92,19 @@ export default function ComponentsTab({
     }
   }
 
+  // In the demo, the Ramp block the staged Add replays arrives as a new card,
+  // with no image while it runs -- the card's "Processing…" state.
+  const held = useDemoHold("component", components, {
+    dateField: "created_at",
+    inFlight: (c) => ({ ...c, image_url: null, tags: [] }),
+  });
+
   // Components are few enough to filter in the browser; sites go through the
   // Postgres search function instead.
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return components;
-    return components.filter((c) =>
+    if (!q) return held;
+    return held.filter((c) =>
       [
         c.name,
         c.summary,
@@ -107,7 +115,7 @@ export default function ComponentsTab({
         .filter(Boolean)
         .some((field) => field.toLowerCase().includes(q)),
     );
-  }, [components, query]);
+  }, [held, query]);
 
   if (pendingCapture?.status === "ready") {
     return (

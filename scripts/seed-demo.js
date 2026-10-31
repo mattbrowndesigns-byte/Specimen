@@ -151,6 +151,13 @@ async function main() {
   if (!sites.some((site) => site.domain === DEMO_DOMAIN)) {
     console.warn(`Warning: no ${DEMO_DOMAIN} in the library, so the demo's Add will have nothing to replay.`);
   }
+  // The other two replays, matched the same way app/_ui/demoState.js does.
+  if (!components.some((c) => /^https?:\/\/(www\.)?ramp\.com\b/.test(c.source_url))) {
+    console.warn("Warning: no ramp.com component in the library, so the demo's component Add will have nothing to replay.");
+  }
+  if (!resources.some((r) => r.domain === "lucide.dev")) {
+    console.warn("Warning: no lucide.dev resource in the library, so the demo's resource Add will have nothing to replay.");
+  }
   if (!WRITE) {
     console.log("Dry run. Re-run with --write to replace the demo account's library.");
     return;

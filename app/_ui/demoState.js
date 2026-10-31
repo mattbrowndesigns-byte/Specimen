@@ -9,11 +9,42 @@ import { useSyncExternalStore } from "react";
 // banner. What can actually be read or written is the signed pass, checked in
 // middleware.js -- see lib/demo.js.
 
-// The one save the demo makes, by replaying the record the demo account
-// already holds. Held out of the grid until it is "saved".
-export const DEMO_DOMAIN = "ramp.com";
-export const DEMO_URL = "https://ramp.com";
-export const DEMO_LABEL = "Ramp";
+// The saves the demo makes, one per kind, each by replaying a record the demo
+// account already holds. Keyed by the Add menu's `add` id. `match` says which
+// rows in that tab are the replayed one, and those are held out of the grid
+// until the save lands. A kind with no entry here is shown in the menu as not
+// being in the demo.
+export const DEMO_SAVES = {
+  website: {
+    url: "https://ramp.com",
+    label: "Ramp",
+    note: "In the demo, every website save is ramp.com.",
+    seconds: 12,
+    match: (site) => site.domain === "ramp.com",
+  },
+  component: {
+    url: "https://ramp.com",
+    label: "Ramp",
+    note: "In the demo, every component save is a block from ramp.com.",
+    seconds: 12,
+    match: (component) => hostOf(component.source_url) === "ramp.com",
+  },
+  resource: {
+    url: "https://lucide.dev/icons/",
+    label: "Lucide Icons",
+    note: "In the demo, every resource save is Lucide.",
+    seconds: 6,
+    match: (resource) => resource.domain === "lucide.dev",
+  },
+};
+
+function hostOf(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
 
 // What middleware.js answers a demo write with; the body also carries
 // `demo: true`, so a 403 from anything else is never mistaken for one.
@@ -62,22 +93,24 @@ export function useDemoBannerClosed() {
   return useSyncExternalStore(subscribe, readBannerClosed, () => false);
 }
 
-// idle | capturing | saved, remembered per browser so the save survives
-// opening a site and coming back, and so it is one go rather than one per
-// page load.
+// idle | capturing | saved, per kind, remembered per browser so a save
+// survives opening a record and coming back, and so it is one go per kind
+// rather than one per page load. The website's key predates the other two.
 const listeners = new Set();
 
-function readPhase() {
+const phaseKey = (kind) => (kind === "website" ? PHASE_KEY : `${PHASE_KEY}.${kind}`);
+
+function readPhase(kind) {
   try {
-    return localStorage.getItem(PHASE_KEY) || "idle";
+    return localStorage.getItem(phaseKey(kind)) || "idle";
   } catch {
     return "idle";
   }
 }
 
-export function setDemoPhase(phase) {
+export function setDemoPhase(kind, phase) {
   try {
-    localStorage.setItem(PHASE_KEY, phase);
+    localStorage.setItem(phaseKey(kind), phase);
   } catch {
     // A blocked store means the demo can be run again, which costs nothing.
   }
@@ -89,6 +122,25 @@ function subscribe(notify) {
   return () => listeners.delete(notify);
 }
 
-export function useDemoPhase() {
-  return useSyncExternalStore(subscribe, readPhase, () => "idle");
+export function useDemoPhase(kind) {
+  return useSyncExternalStore(subscribe, () => readPhase(kind), () => "idle");
+}
+
+// What a tab shows of its list while the demo is on. The replayed record is
+// held out until its save lands, so it arrives as a new item rather than one
+// that was there all along. While the save runs it is shown as a real save in
+// flight looks -- `inFlight` strips what hasn't "arrived" yet -- and once
+// saved it takes the newest date, since it is the newest thing in the library.
+export function useDemoHold(kind, items, { inFlight, dateField }) {
+  const demo = useIsDemo();
+  const phase = useDemoPhase(kind);
+  const { match } = DEMO_SAVES[kind];
+  if (!demo) return items;
+  const now = new Date().toISOString();
+  return items.flatMap((item) => {
+    if (!match(item)) return [item];
+    if (phase === "idle") return [];
+    const landed = { ...item, [dateField]: now };
+    return [phase === "capturing" ? inFlight(landed) : landed];
+  });
 }

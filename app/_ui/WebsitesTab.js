@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { latestCapture } from "@/lib/captures";
 import LibraryBrowser from "./LibraryBrowser";
-import { DEMO_DOMAIN, useDemoPhase, useIsDemo } from "./demoState";
+import { useDemoHold } from "./demoState";
 
 const ADAPTER = {
   kind: "site",
@@ -45,8 +45,6 @@ export default function WebsitesTab({
 }) {
   const [sites, setSites] = useState([]);
   const [query, setQuery] = useState("");
-  const demo = useIsDemo();
-  const demoPhase = useDemoPhase();
 
   async function loadSites(q) {
     const res = await fetch(
@@ -78,19 +76,13 @@ export default function WebsitesTab({
     onIncomingUsed?.();
   }, [incomingQuery, onIncomingUsed]);
 
-  // In the demo, the one site the staged Add replays is held out of the grid
-  // until it is saved, so it arrives as a new card rather than as one that was
-  // there all along. While it runs it is shown with no captures, which is
-  // exactly what a real save in flight looks like to the card ("Capturing…").
-  const shown = !demo || demoPhase === "saved"
-    ? sites
-    : sites.flatMap((site) =>
-        site.domain !== DEMO_DOMAIN
-          ? [site]
-          : demoPhase === "capturing"
-            ? [{ ...site, capture: [], tags: [], capture_state: null, capture_error: null }]
-            : [],
-      );
+  // In the demo, the site the staged Add replays arrives as a new card. While
+  // it runs it has no captures, which is exactly what a real save in flight
+  // looks like to the card ("Capturing…").
+  const shown = useDemoHold("website", sites, {
+    dateField: "saved_at",
+    inFlight: (site) => ({ ...site, capture: [], tags: [], capture_state: null, capture_error: null }),
+  });
 
   return (
     <LibraryBrowser

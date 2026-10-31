@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { KINDS } from "./kinds";
 import { useAnnounceWork } from "./workInFlight";
 import FeatureRotator from "./FeatureRotator";
-import { DEMO_LABEL, DEMO_URL, setDemoPhase, useDemoPhase } from "./demoState";
+import { DEMO_SAVES, setDemoPhase, useDemoPhase } from "./demoState";
 
 // The demo's Add, and why it is staged rather than real.
 //
@@ -14,16 +14,46 @@ import { DEMO_LABEL, DEMO_URL, setDemoPhase, useDemoPhase } from "./demoState";
 // and the demo account refuses writes anyway. So the demo saves one thing,
 // ramp.com, by replaying the save the demo account already holds: every
 // screenshot, tag and colour on the page it opens is real output, and the
-// field says plainly that every save in the demo is that one.
+// field says plainly that every save in the demo is that one. The same goes
+// for a component (a block from ramp.com) and a resource (Lucide) -- one
+// replayed save per kind, listed in DEMO_SAVES.
 //
 // It stands in for AddMenu in the utility bar. From any page but the
 // dashboard it starts the save and goes there, the same way a real Add hands
 // its job to the dashboard to be watched.
 
+// The real AddMenu's labels, so the locked field reads like the real one.
+const URL_LABELS = {
+  website: "Website URL",
+  component: "Page to crop from",
+  resource: "Link to save",
+};
+
+const RUNNING_LINES = {
+  website: (label, left) =>
+    `Capturing ${label}: about ${left}s remaining. Sped up for the demo; a real save takes about a minute.`,
+  component: (label, left) =>
+    `Capturing ${label} and cropping a block: about ${left}s remaining. Sped up for the demo; in the real app you crop it yourself once the capture lands.`,
+  resource: (label, left) => `Saving ${label} and sorting it into a folder: about ${left}s remaining.`,
+};
+
+const DONE_LINES = {
+  website: (label) => `${label} captured and tagged. Open its card to see what Kivli read from it.`,
+  component: (label) => `A block from ${label} saved and described. Open its card to see it.`,
+  resource: (label) => `${label} saved, summarised and filed.`,
+};
+
 export default function DemoAdd() {
-  const used = useDemoPhase() !== "idle";
+  const phases = {
+    website: useDemoPhase("website"),
+    component: useDemoPhase("component"),
+    resource: useDemoPhase("resource"),
+  };
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState(false);
+  // The kind whose form is open, or null for the menu.
+  const [form, setForm] = useState(null);
+  const save = form && DEMO_SAVES[form];
+  const used = form && phases[form] !== "idle";
   const wrapRef = useRef(null);
   const submitRef = useRef(null);
 
@@ -49,13 +79,13 @@ export default function DemoAdd() {
 
   function close() {
     setOpen(false);
-    setForm(false);
+    setForm(null);
   }
 
   function submit(e) {
     e.preventDefault();
     close();
-    setDemoPhase("capturing");
+    setDemoPhase(form, "capturing");
     if (window.location.pathname !== "/") window.location.href = "/";
   }
 
@@ -66,9 +96,9 @@ export default function DemoAdd() {
         Add
       </button>
 
-      {open && used && (
+      {open && form && used && (
         <div className="add-pop add-pop-form demo-used">
-          <p>That was the demo&rsquo;s one save. In the real app, Add saves anything you paste.</p>
+          <p>That was the demo&rsquo;s one {form} save. In the real app, Add saves anything you paste.</p>
           <div className="add-pop-actions">
             <button type="button" onClick={close}>
               Close
@@ -77,18 +107,17 @@ export default function DemoAdd() {
         </div>
       )}
 
-      {/* The real menu's three kinds, so the demo still shows what the app
-          holds. Only a website can be replayed; the other two say so rather
-          than disappearing. */}
-      {open && !used && !form && (
+      {/* The real menu's three kinds. A kind with nothing to replay says so
+          rather than disappearing. */}
+      {open && !form && (
         <div className="add-pop">
           {KINDS.map(({ add, one, blurb, Icon }) => {
-            const live = add === "website";
+            const live = Boolean(DEMO_SAVES[add]);
             return (
               <button
                 className="add-option"
                 key={add}
-                onClick={() => live && setForm(true)}
+                onClick={() => live && setForm(add)}
                 disabled={!live}
               >
                 <span className="add-option-icon">
@@ -104,12 +133,12 @@ export default function DemoAdd() {
         </div>
       )}
 
-      {open && !used && form && (
+      {open && form && !used && (
         <form className="add-pop add-pop-form" onSubmit={submit}>
-          <label htmlFor="demo-url">Website URL</label>
-          <input id="demo-url" value={DEMO_URL} readOnly aria-describedby="demo-url-note" />
+          <label htmlFor="demo-url">{URL_LABELS[form]}</label>
+          <input id="demo-url" value={save.url} readOnly aria-describedby="demo-url-note" />
           <p className="add-pop-note" id="demo-url-note">
-            In the demo, every save is ramp.com.
+            {save.note}
           </p>
           <div className="add-pop-actions">
             <button type="button" onClick={close}>
@@ -126,14 +155,15 @@ export default function DemoAdd() {
 }
 
 // CaptureProgress without the polling: there is no job to wait for, so the
-// clock is the whole of it. Twelve seconds rather than the real seventy-five,
-// because the point is to see the shape of a save, not to sit through one --
-// and the line says so, so nobody leaves thinking a capture takes twelve.
-const DEMO_SECONDS = 12;
+// clock is the whole of it. Twelve seconds rather than the real seventy-five
+// for a capture, because the point is to see the shape of a save, not to sit
+// through one -- and the line says so, so nobody leaves thinking a capture
+// takes twelve. A resource has no capture and runs close to its real length.
 const DONE_HOLD = 3500;
 
-export function DemoProgress({ onHidden }) {
-  const onDone = () => setDemoPhase("saved");
+export function DemoProgress({ kind, onHidden }) {
+  const { label, seconds: DEMO_SECONDS } = DEMO_SAVES[kind];
+  const onDone = () => setDemoPhase(kind, "saved");
   const [elapsed, setElapsed] = useState(0);
   const done = elapsed >= DEMO_SECONDS;
   // Held in refs so a parent re-rendering mid-run can't restart the timers.
@@ -163,7 +193,7 @@ export function DemoProgress({ onHidden }) {
   if (done) {
     return (
       <div className="capture-status capture-status-done">
-        <p>✓ {DEMO_LABEL} captured and tagged. Open its card to see what Kivli read from it.</p>
+        <p>✓ {DONE_LINES[kind](label)}</p>
       </div>
     );
   }
@@ -177,10 +207,7 @@ export function DemoProgress({ onHidden }) {
         />
       </div>
       <div className="capture-status-row">
-        <p>
-          Capturing {DEMO_LABEL}: about {DEMO_SECONDS - elapsed}s remaining. Sped up for the demo;
-          a real save takes about a minute.
-        </p>
+        <p>{RUNNING_LINES[kind](label, DEMO_SECONDS - elapsed)}</p>
         <span className="capture-status-aside">
           <FeatureRotator className="capture-status-rotator" />
           <a className="feature-rotator-more" href="/features">

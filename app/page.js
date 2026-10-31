@@ -41,13 +41,19 @@ export default function Home() {
   // The demo's staged save, started from the utility bar here or on any other
   // page. The panel outlives the phase by a few seconds so the confirmation is
   // read after the card has landed, the same order a real save happens in.
-  const demoPhase = useDemoPhase();
-  const [demoPanel, setDemoPanel] = useState(false);
+  // One per kind, since each kind has its own replayed save.
+  const demoPhases = {
+    website: useDemoPhase("website"),
+    component: useDemoPhase("component"),
+    resource: useDemoPhase("resource"),
+  };
+  const [demoPanels, setDemoPanels] = useState([]);
+  const demoStarted = Object.keys(demoPhases).find((kind) => demoPhases[kind] === "capturing");
   useEffect(() => {
-    if (demoPhase !== "capturing") return;
-    setDemoPanel(true);
-    setTab("websites");
-  }, [demoPhase]);
+    if (!demoStarted) return;
+    setDemoPanels((prev) => (prev.includes(demoStarted) ? prev : [...prev, demoStarted]));
+    setTab(KINDS.find((k) => k.add === demoStarted).tab);
+  }, [demoStarted]);
 
   const loadTags = useCallback(async () => {
     const res = await fetch("/api/tags");
@@ -137,7 +143,13 @@ export default function Home() {
       <main className="page page-wide">
         {error && <p className="error">{error}</p>}
 
-        {demoPanel && <DemoProgress onHidden={() => setDemoPanel(false)} />}
+        {demoPanels.map((kind) => (
+          <DemoProgress
+            key={kind}
+            kind={kind}
+            onHidden={() => setDemoPanels((prev) => prev.filter((k) => k !== kind))}
+          />
+        ))}
 
         {jobs.map((job) => (
           <CaptureProgress key={job.key} job={job} onDone={(result) => finishJob(job, result)} />

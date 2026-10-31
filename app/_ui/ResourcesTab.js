@@ -23,6 +23,7 @@ import SearchElsewhere from "./SearchElsewhere";
 import ResultCount from "./ResultCount";
 import NoMatches from "./NoMatches";
 import useEdgeFade from "./useEdgeFade";
+import { useDemoHold } from "./demoState";
 
 // Two views, not the library's three. A card needs a picture and a resource
 // hasn't got one, so the choice here is how much of the record you want beside
@@ -60,7 +61,7 @@ export default function ResourcesTab({
   onIncomingUsed,
   onSearchElsewhere,
 }) {
-  const [resources, setResources] = useState([]);
+  const [loadedResources, setResources] = useState([]);
   const [query, setQuery] = useState("");
   const [folder, setFolder] = useState(null);
   const [sort, setSort] = useState("newest");
@@ -74,6 +75,14 @@ export default function ResourcesTab({
   const [error, setError] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const sortRef = useRef(null);
+
+  // In the demo, the Lucide row the staged Add replays arrives as a new row,
+  // undescribed while it runs, the way a real save looks before the model
+  // has answered.
+  const resources = useDemoHold("resource", loadedResources, {
+    dateField: "saved_at",
+    inFlight: (r) => ({ ...r, summary: null, tags: [], demoDescribing: true }),
+  });
 
   const load = useCallback(async () => {
     const res = await fetch("/api/resources");
@@ -510,7 +519,7 @@ export default function ResourcesTab({
                   <span className="resource-domain">{resource.domain}</span>
                 </span>
 
-                {describing.has(resource.id) ? (
+                {describing.has(resource.id) || resource.demoDescribing ? (
                   <span className="resource-summary resource-summary-pending">
                     Describing…
                   </span>

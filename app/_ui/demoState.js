@@ -34,6 +34,34 @@ export function useIsDemo() {
   );
 }
 
+// Whether the banner has been closed. Per browser, like the save: someone who
+// closed it once has read it, and a demo that puts it back on every page would
+// be nagging a person who is trying to look at the work.
+const BANNER_KEY = "specimen.demo.banner";
+
+function readBannerClosed() {
+  try {
+    return localStorage.getItem(BANNER_KEY) === "closed";
+  } catch {
+    return false;
+  }
+}
+
+export function closeDemoBanner() {
+  try {
+    localStorage.setItem(BANNER_KEY, "closed");
+  } catch {
+    // Blocked storage means it comes back next visit, which is harmless.
+  }
+  for (const notify of listeners) notify();
+}
+
+export function useDemoBannerClosed() {
+  // The server has no storage, so it renders the banner open and a closed one
+  // disappears after hydration -- the quiet direction to be wrong in.
+  return useSyncExternalStore(subscribe, readBannerClosed, () => false);
+}
+
 // idle | capturing | saved, remembered per browser so the save survives
 // opening a site and coming back, and so it is one go rather than one per
 // page load.

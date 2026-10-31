@@ -554,19 +554,25 @@ h1 {
   margin: 0;
 }
 
-.demo-banner-links {
-  display: flex;
-  gap: 16px;
-}
-
-.demo-banner-links a {
+/* A bare glyph in the banner's own ink. The padding is the hit area, and the
+   negative margin takes it back out of the band so closing it doesn't make the
+   banner taller than its sentence does. */
+.demo-banner-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: -6px calc(var(--grid-margin) * -0.25) -6px auto;
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
+  background: none;
   color: inherit;
-  font-weight: 500;
-  text-underline-offset: 3px;
+  cursor: pointer;
+  opacity: 0.75;
 }
 
-.demo-banner-links a:hover {
-  color: rgba(var(--invert-text-rgb), 0.75);
+.demo-banner-close:hover {
+  opacity: 1;
 }
 
 .utility-bar {

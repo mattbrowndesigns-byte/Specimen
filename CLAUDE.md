@@ -1885,7 +1885,11 @@ one opens is real output -- staged and saying so reads as a designed demo,
 staged and hiding it reads as a trick. `DemoNotice` wraps `fetch` and shows the
 refusal whenever a click is refused, because many controls answer a failed
 write by quietly reverting, which in a demo reads as broken. The menu drops
-Share and Your Name, and Sign Out becomes Exit Demo (`/demo/exit`).
+Share and Your Name and has no Sign Out, and the banner is a sentence with a
+close button -- no Create Your Own and no Exit. This is a portfolio link, not a
+funnel: the owner does not want strangers signing up, and nowhere to go from a
+demo but away is what a close tab is for. Closing is remembered per browser
+(`specimen.demo.banner`).
 
 ## Local environment
 

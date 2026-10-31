@@ -68,14 +68,11 @@ export default function DemoAdd() {
 
       {open && used && (
         <div className="add-pop add-pop-form demo-used">
-          <p>That was the demo&rsquo;s one save. A library of your own saves anything you paste.</p>
+          <p>That was the demo&rsquo;s one save. In the real app, Add saves anything you paste.</p>
           <div className="add-pop-actions">
             <button type="button" onClick={close}>
               Close
             </button>
-            <a className="primary" href="/login">
-              Create Your Own
-            </a>
           </div>
         </div>
       )}

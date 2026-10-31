@@ -1,11 +1,12 @@
 "use client";
 import AddMenu from "./AddMenu";
 import MoreMenu from "./MoreMenu";
+import { X } from "lucide-react";
 import Wordmark from "./Wordmark";
 import NotificationBell from "./NotificationBell";
 import DemoAdd from "./DemoAdd";
 import DemoNotice from "./DemoNotice";
-import { useIsDemo } from "./demoState";
+import { closeDemoBanner, useDemoBannerClosed, useIsDemo } from "./demoState";
 import { addItem, jobHandoffUrl, resourceHandoffUrl } from "@/lib/addItem";
 
 // The library's chrome, the same on every page: identity (which doubles as the
@@ -18,6 +19,7 @@ import { addItem, jobHandoffUrl, resourceHandoffUrl } from "@/lib/addItem";
 // string and navigates there, so you always end up watching the capture.
 export default function UtilityBar({ onAdd, onError }) {
   const demo = useIsDemo();
+  const bannerClosed = useDemoBannerClosed();
 
   async function handleAdd(kind, url) {
     if (onAdd) return onAdd(kind, url);
@@ -40,15 +42,19 @@ export default function UtilityBar({ onAdd, onError }) {
       {/* The one thing on screen that tells a visitor from a LinkedIn link
           where they are. Everything else is the app exactly as its owner sees
           it; this says that changes go nowhere before a refusal has to. */}
-      {demo && (
+      {demo && !bannerClosed && (
         <div className="demo-banner">
           <p>
             You&rsquo;re exploring a demo of Kivli. Look around; changes aren&rsquo;t saved.
           </p>
-          <span className="demo-banner-links">
-            <a href="/login">Create Your Own</a>
-            <a href="/demo/exit">Exit Demo</a>
-          </span>
+          <button
+            type="button"
+            className="demo-banner-close"
+            onClick={closeDemoBanner}
+            aria-label="Close this message"
+          >
+            <X size={16} />
+          </button>
         </div>
       )}
       {demo && <DemoNotice />}

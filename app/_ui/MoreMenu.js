@@ -90,12 +90,7 @@ export default function MoreMenu() {
     };
   }, []);
 
-  // The demo has no session to end; leaving it means handing the pass back.
   async function signOut() {
-    if (demo) {
-      window.location.href = "/demo/exit";
-      return;
-    }
     await supabaseBrowser().auth.signOut();
     window.location.href = "/login";
   }
@@ -185,16 +180,18 @@ export default function MoreMenu() {
             {theme === "dark" ? "Light Mode" : "Dark Mode"}
           </button>
 
-          <div className="more-divider" />
-          {demo ? (
-            <span className="more-account">Demo library</span>
-          ) : (
-            account && <span className="more-account">{account}</span>
+          {/* The demo has no account to show or leave: whoever is looking at it
+              came from a link and has nowhere to sign out to. */}
+          {!demo && (
+            <>
+              <div className="more-divider" />
+              {account && <span className="more-account">{account}</span>}
+              <button className="more-item more-item-button" onClick={signOut}>
+                <LogOut size={15} />
+                Sign Out
+              </button>
+            </>
           )}
-          <button className="more-item more-item-button" onClick={signOut}>
-            <LogOut size={15} />
-            {demo ? "Exit Demo" : "Sign Out"}
-          </button>
         </div>
       )}
 

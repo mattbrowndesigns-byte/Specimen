@@ -30,8 +30,8 @@ const PUBLIC_PATHS = [
   // Written about the project rather than for the people using it, and the
   // one page meant to be linked to from outside.
   "/case-study",
-  // Hands out the demo pass (and /demo/exit takes it back). Everything past
-  // it is the real app, let through below by the pass rather than by this list.
+  // Hands out the demo pass. Everything past it is the real app, let through
+  // below by the pass rather than by this list.
   "/demo",
 ];
 

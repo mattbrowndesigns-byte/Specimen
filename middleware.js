@@ -29,6 +29,9 @@ const PUBLIC_PATHS = [
   // Written about the project rather than for the people using it, and the
   // one page meant to be linked to from outside.
   "/case-study",
+  // The showcase library with a staged Add on top; reads through the same
+  // public share route, so it needs nothing else on this list.
+  "/demo",
 ];
 
 export async function middleware(request) {

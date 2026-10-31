@@ -1370,6 +1370,48 @@ h1 {
   background: var(--accent-hover);
 }
 
+/* The demo's Add (app/_ui/DemoAdd.js). A kind the demo can't replay stays in
+   the menu, so the menu still shows what the app holds, but reads as
+   unavailable rather than as broken. */
+.add-option:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.add-option:disabled:hover {
+  background: none;
+}
+
+.add-pop-form input[readonly] {
+  background: var(--surface-sunken);
+  border-color: var(--border-strong);
+  color: var(--text-muted);
+}
+
+.add-pop-note {
+  margin: -4px 0 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.demo-used p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* The used-up demo hands over to sign-up, which is a link, so the anchor takes
+   the buttons' shape beside it. */
+.add-pop-actions a.primary {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  text-decoration: none;
+}
+
 /* Scrolling tag strip */
 
 .chip-strip {
@@ -4579,6 +4621,18 @@ a.card {
   margin-bottom: 28px;
 }
 
+/* On /demo the title takes a line under it saying what the page is for, so
+   the gap moves below that line instead. */
+.shared-title.shared-title-demo {
+  margin-bottom: 8px;
+}
+
+.demo-intro {
+  margin: 0 0 28px;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
 .shared-page {
   padding-top: 28px;
 }
@@ -6143,6 +6197,26 @@ a.card {
    This is the only page most people will ever see of this app, so it stopped
    being a read-only dump of a grid and became a page that introduces itself:
    the real animated wordmark, whose library it is, and a way in at the end. */
+
+/* The invitation and whatever a page sets beside it -- the demo's Add. */
+.shared-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* On a phone Add sits left of the invitation, and a 300px menu hung from Add's
+   right edge ran 85px off the left of the screen. Anchoring it to the group
+   instead puts its right edge on the page margin, where the bar ends. */
+@media (max-width: 700px) {
+  .shared-bar-actions {
+    position: relative;
+  }
+
+  .shared-bar-actions .add-menu {
+    position: static;
+  }
+}
 
 .shared-bar-side {
   display: flex;

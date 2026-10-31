@@ -1853,6 +1853,22 @@ an audience of recruiters who are not the ones holding the link. Same rule as
 the rest of that footer -- nothing in a shared page's chrome may assume
 knowledge the reader does not have.
 
+**`/demo` stages its one save, and that is the design, not a shortcut.** It
+is the showcase library (`NEXT_PUBLIC_SHOWCASE_SHARE`) with an Add on top, and
+the link meant for LinkedIn. A real save from a stranger was considered and
+dropped: it spends two of the day's twenty Gemini requests from the pool the
+owner's own library uses, so thirty curious visitors would leave the real saves
+untagged by lunchtime. So the URL is locked to ramp.com, the field says every
+demo save is that one, and Save replays the record Kivli already made: Ramp is
+held out of the grid until then and lands at the top after a twelve-second bar.
+Every screenshot, tag and colour it opens is real output, which is the point
+for a portfolio piece -- staged and saying so reads as a designed demo, staged
+and hiding it reads as a trick. Nothing is written, one go per browser
+(`specimen.demo.saved`), and deleting Ramp from the showcase removes the Add
+rather than breaking it. The page is `app/_ui/SharedLibrary.js` with `demo`
+set, the same component the share link renders; cards carry `?from=demo` so a
+site's way back returns to the demo.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

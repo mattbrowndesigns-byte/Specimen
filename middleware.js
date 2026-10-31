@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { DEMO_PASS_COOKIE, DEMO_REFUSAL, isValidDemoPass } from "./lib/demo";
+import { DEMO_FLAG_COOKIE, DEMO_PASS_COOKIE, DEMO_REFUSAL, isValidDemoPass } from "./lib/demo";
 
 // Public: the login screen, the auth callback, and the two callbacks GitHub
 // Actions posts to (both authenticated by CALLBACK_SECRET, not a session --
@@ -86,14 +86,27 @@ export async function middleware(request) {
     return NextResponse.redirect(login);
   }
 
+  // A real session ends the demo. The pass already loses to a session on the
+  // server, but the browser's own flag cookie decides which Add, banner and
+  // menu it draws, so a signed-in owner whose browser once opened /demo saw
+  // the demo's interface over their own library. Signing in is the moment to
+  // hand both cookies back.
+  const clearDemo = (res) => {
+    if (user && (request.cookies.has(DEMO_FLAG_COOKIE) || request.cookies.has(DEMO_PASS_COOKIE))) {
+      res.cookies.delete(DEMO_FLAG_COOKIE);
+      res.cookies.delete(DEMO_PASS_COOKIE);
+    }
+    return res;
+  };
+
   if (user && pathname === "/login") {
     const home = request.nextUrl.clone();
     home.pathname = "/";
     home.search = "";
-    return NextResponse.redirect(home);
+    return clearDemo(NextResponse.redirect(home));
   }
 
-  return response;
+  return clearDemo(response);
 }
 
 export const config = {

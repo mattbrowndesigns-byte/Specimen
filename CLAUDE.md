@@ -1891,6 +1891,16 @@ funnel: the owner does not want strangers signing up, and nowhere to go from a
 demo but away is what a close tab is for. Closing is remembered per browser
 (`specimen.demo.banner`).
 
+**A real session ends the demo, in the browser as well as on the server.** The
+pass already lost to a session in `currentUser()`, but `kivli_demo` -- the flag
+cookie the browser reads to choose the Add, banner and menu -- did not, so an
+owner whose browser had once opened /demo saw the demo's interface over their
+own library, with no way out now that Exit Demo is gone. Middleware deletes
+both cookies on any request from a signed-in user (so signing in is the way
+out), and `/demo` itself redirects a signed-in visitor home without issuing a
+pass. The signed-in half is only verified by reading: it needs a real session
+and the demo has none to borrow.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

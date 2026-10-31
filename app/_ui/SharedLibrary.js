@@ -8,8 +8,6 @@ import Wordmark from "./Wordmark";
 import SharedFooter from "./SharedFooter";
 import { KIND } from "./kinds";
 import { latestCapture } from "@/lib/captures";
-import DemoAdd, { DemoProgress, DEMO_DOMAIN, readDemoSaved, writeDemoSaved } from "./DemoAdd";
-import Arcade from "./Arcade";
 
 // What someone without an account sees.
 //
@@ -36,19 +34,10 @@ function TabIcon({ id }) {
   return <Icon size={16} />;
 }
 
-// `demo` is the /demo page: the same library, plus an Add that saves exactly
-// one thing, ramp.com, by replaying the save Kivli already made of it. Nothing
-// is written anywhere -- see DemoAdd.js for why it is staged rather than real.
-export default function SharedLibrary({ token, demo = false }) {
+// The page itself is app/share/[token]/page.js; this is everything it renders,
+// kept as a component so the route stays a one-line wrapper.
+export default function SharedLibrary({ token }) {
   const [state, setState] = useState({ status: "loading" });
-  // idle | capturing | saved. Read from localStorage after mount rather than
-  // in the initialiser, so the server and the browser render the same thing.
-  const [demoPhase, setDemoPhase] = useState("idle");
-  const [demoProgress, setDemoProgress] = useState(false);
-
-  useEffect(() => {
-    if (demo && readDemoSaved()) setDemoPhase("saved");
-  }, [demo]);
   const [tab, setTab] = useState(null);
   const [shown, setShown] = useState(PAGE_SIZE);
 
@@ -62,16 +51,7 @@ export default function SharedLibrary({ token, demo = false }) {
       .catch(() => setState({ status: "gone" }));
   }, [token]);
 
-  // In the demo the sample save is held out of the grid until it is "saved",
-  // so it arrives as a new card rather than as a card that was already there.
-  // If the library doesn't hold it, there is nothing to replay and no Add.
-  const allSites = state.sites || [];
-  const demoSite = demo ? allSites.find((site) => site.domain === DEMO_DOMAIN) : null;
-  const sites = !demoSite
-    ? allSites
-    : demoPhase === "saved"
-      ? [demoSite, ...allSites.filter((site) => site !== demoSite)]
-      : allSites.filter((site) => site !== demoSite);
+  const sites = state.sites || [];
   const components = state.components || [];
   const resources = state.resources || [];
 
@@ -94,22 +74,6 @@ export default function SharedLibrary({ token, demo = false }) {
   const all = active === "sites" ? sites : active === "components" ? components : resources;
   const page = all.slice(0, shown);
   const remaining = all.length - page.length;
-
-  function startDemo() {
-    setDemoPhase("capturing");
-    setDemoProgress(true);
-    setTab("sites");
-    setShown(PAGE_SIZE);
-  }
-
-  function finishDemo() {
-    writeDemoSaved();
-    setDemoPhase("saved");
-  }
-
-  // Cards carry where they came from, so the site page's way back returns to
-  // the demo rather than to the plain share link underneath it.
-  const siteHref = (site) => `/share/${token}/site/${site.id}${demo ? "?from=demo" : ""}`;
 
   function choose(id) {
     setTab(id);
@@ -143,26 +107,10 @@ export default function SharedLibrary({ token, demo = false }) {
       {/* No item count in the bar: the tabs carry their own, and "shared with
           you" is a thing the reader already knows -- they followed a share
           link to get here. */}
-      <PublicBar>
-        {demoSite && (
-          <DemoAdd used={demoPhase !== "idle"} onSave={startDemo} />
-        )}
-      </PublicBar>
+      <PublicBar />
 
       <main className="page page-wide shared-page">
-        {demoProgress && (
-          <DemoProgress onDone={finishDemo} onHidden={() => setDemoProgress(false)} />
-        )}
-
-        <h1 className={`page-hero shared-title${demo ? " shared-title-demo" : ""}`}>
-          {state.title}
-        </h1>
-        {demo && (
-          <p className="demo-intro">
-            A working demo of Kivli. Open any site to see what it read from the page, or press Add
-            to save one.
-          </p>
-        )}
+        <h1 className="page-hero shared-title">{state.title}</h1>
         {named && state.ownerName && (
           <p className="shared-byline">Shared by {state.ownerName}</p>
         )}
@@ -187,20 +135,10 @@ export default function SharedLibrary({ token, demo = false }) {
 
         {active === "sites" && (
           <div className="grid grid-medium">
-            {demoPhase === "capturing" && (
-              <SharedCard
-                pending
-                href={demoSite.url}
-                visitHref={demoSite.url}
-                name={demoSite.domain}
-                faviconUrl={demoSite.favicon_url}
-                fills={demoSite.favicon_fills !== false}
-              />
-            )}
             {page.map((site) => (
               <SharedCard
                 key={site.id}
-                href={siteHref(site)}
+                href={`/share/${token}/site/${site.id}`}
                 internal
                 visitHref={site.url}
                 thumb={latestCapture(site.capture, "desktop")?.thumb_url}
@@ -314,7 +252,6 @@ export default function SharedLibrary({ token, demo = false }) {
         </section>
       </main>
       <SharedFooter />
-      {demo && <Arcade />}
     </>
   );
 }
@@ -325,18 +262,14 @@ export default function SharedLibrary({ token, demo = false }) {
 // -- and the arrow still goes out to the live site, exactly as it does on the
 // owner's dashboard. A component and a resource have no such page, so for them
 // the two stay the same link.
-// `pending` is the demo's card while its save runs, worded the way the
-// owner's own grid words a capture in flight.
-function SharedCard({ href, internal, visitHref, thumb, natural, name, faviconUrl, fills, tags, pending }) {
+function SharedCard({ href, internal, visitHref, thumb, natural, name, faviconUrl, fills, tags }) {
   const visit = visitHref || href;
   const outward = internal ? {} : { target: "_blank", rel: "noopener noreferrer nofollow" };
   return (
     <div className="card">
       <div className="card-media">
         <a className={`thumb${natural ? " thumb-natural" : ""}`} href={href} {...outward}>
-          {pending ? (
-            <div className="placeholder">Capturing…</div>
-          ) : thumb ? (
+          {thumb ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={thumb} alt={name} />
           ) : (

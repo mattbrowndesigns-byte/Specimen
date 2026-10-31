@@ -4,42 +4,24 @@ import { Plus } from "lucide-react";
 import { KINDS } from "./kinds";
 import { useAnnounceWork } from "./workInFlight";
 import FeatureRotator from "./FeatureRotator";
+import { DEMO_LABEL, DEMO_URL, setDemoPhase, useDemoPhase } from "./demoState";
 
 // The demo's Add, and why it is staged rather than real.
 //
 // A real save spends two of the day's twenty Gemini requests, and that pool is
 // the owner's as well. A link on LinkedIn that thirty people try would spend
-// the day's budget by lunchtime and leave the library's own saves untagged.
-// So the demo saves one thing, ramp.com, by replaying the save Kivli already
-// made of it: every screenshot, tag and colour on the page it opens is real
-// output, and the field says plainly that every save in the demo is that one.
-// Nothing is written anywhere, so any number of people can try it at once.
+// the day's budget by lunchtime and leave the library's own saves untagged --
+// and the demo account refuses writes anyway. So the demo saves one thing,
+// ramp.com, by replaying the save the demo account already holds: every
+// screenshot, tag and colour on the page it opens is real output, and the
+// field says plainly that every save in the demo is that one.
 //
-// One go per browser. After it, Add explains itself instead of saving again.
+// It stands in for AddMenu in the utility bar. From any page but the
+// dashboard it starts the save and goes there, the same way a real Add hands
+// its job to the dashboard to be watched.
 
-export const DEMO_DOMAIN = "ramp.com";
-const DEMO_URL = "https://ramp.com";
-const DEMO_LABEL = "Ramp";
-
-const SAVED_KEY = "specimen.demo.saved";
-
-export function readDemoSaved() {
-  try {
-    return localStorage.getItem(SAVED_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-export function writeDemoSaved() {
-  try {
-    localStorage.setItem(SAVED_KEY, "1");
-  } catch {
-    // A blocked store means the demo can be run again, which costs nothing.
-  }
-}
-
-export default function DemoAdd({ used, onSave }) {
+export default function DemoAdd() {
+  const used = useDemoPhase() !== "idle";
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(false);
   const wrapRef = useRef(null);
@@ -73,7 +55,8 @@ export default function DemoAdd({ used, onSave }) {
   function submit(e) {
     e.preventDefault();
     close();
-    onSave();
+    setDemoPhase("capturing");
+    if (window.location.pathname !== "/") window.location.href = "/";
   }
 
   return (
@@ -152,7 +135,8 @@ export default function DemoAdd({ used, onSave }) {
 const DEMO_SECONDS = 12;
 const DONE_HOLD = 3500;
 
-export function DemoProgress({ onDone, onHidden }) {
+export function DemoProgress({ onHidden }) {
+  const onDone = () => setDemoPhase("saved");
   const [elapsed, setElapsed] = useState(0);
   const done = elapsed >= DEMO_SECONDS;
   // Held in refs so a parent re-rendering mid-run can't restart the timers.

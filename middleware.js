@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { DEMO_PASS_COOKIE, DEMO_REFUSAL, isValidDemoPass } from "./lib/demo";
 
 // Public: the login screen, the auth callback, and the two callbacks GitHub
 // Actions posts to (both authenticated by CALLBACK_SECRET, not a session --
@@ -29,8 +30,8 @@ const PUBLIC_PATHS = [
   // Written about the project rather than for the people using it, and the
   // one page meant to be linked to from outside.
   "/case-study",
-  // The showcase library with a staged Add on top; reads through the same
-  // public share route, so it needs nothing else on this list.
+  // Hands out the demo pass (and /demo/exit takes it back). Everything past
+  // it is the real app, let through below by the pass rather than by this list.
   "/demo",
 ];
 
@@ -61,6 +62,17 @@ export async function middleware(request) {
 
   const { pathname } = request.nextUrl;
   const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+  // A stranger from the demo link: no session, a valid pass. They may read
+  // anything the demo account can, and change nothing -- one rule at the door
+  // rather than one per route, so a write route added later is covered too.
+  const demo = !user && !isPublic && (await isValidDemoPass(request.cookies.get(DEMO_PASS_COOKIE)?.value));
+  if (demo) {
+    if (pathname.startsWith("/api/") && request.method !== "GET" && request.method !== "HEAD") {
+      return NextResponse.json({ error: DEMO_REFUSAL, demo: true }, { status: 403 });
+    }
+    return response;
+  }
 
   if (!user && !isPublic) {
     // API routes answer 401 so the client can show an error; pages redirect,

@@ -7,6 +7,8 @@ import UtilityBar from "./_ui/UtilityBar";
 import { KINDS } from "./_ui/kinds";
 import CaptureProgress from "./_ui/CaptureProgress";
 import Arcade from "./_ui/Arcade";
+import { DemoProgress } from "./_ui/DemoAdd";
+import { useDemoPhase } from "./_ui/demoState";
 import SiteFooter from "./_ui/SiteFooter";
 import { addItem, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
 
@@ -35,6 +37,17 @@ export default function Home() {
 
   const incomingFor = (id) => (handoff?.tab === id ? handoff.query : null);
   const [error, setError] = useState(null);
+
+  // The demo's staged save, started from the utility bar here or on any other
+  // page. The panel outlives the phase by a few seconds so the confirmation is
+  // read after the card has landed, the same order a real save happens in.
+  const demoPhase = useDemoPhase();
+  const [demoPanel, setDemoPanel] = useState(false);
+  useEffect(() => {
+    if (demoPhase !== "capturing") return;
+    setDemoPanel(true);
+    setTab("websites");
+  }, [demoPhase]);
 
   const loadTags = useCallback(async () => {
     const res = await fetch("/api/tags");
@@ -123,6 +136,8 @@ export default function Home() {
 
       <main className="page page-wide">
         {error && <p className="error">{error}</p>}
+
+        {demoPanel && <DemoProgress onHidden={() => setDemoPanel(false)} />}
 
         {jobs.map((job) => (
           <CaptureProgress key={job.key} job={job} onDone={(result) => finishJob(job, result)} />

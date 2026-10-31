@@ -1853,21 +1853,39 @@ an audience of recruiters who are not the ones holding the link. Same rule as
 the rest of that footer -- nothing in a shared page's chrome may assume
 knowledge the reader does not have.
 
-**`/demo` stages its one save, and that is the design, not a shortcut.** It
-is the showcase library (`NEXT_PUBLIC_SHOWCASE_SHARE`) with an Add on top, and
-the link meant for LinkedIn. A real save from a stranger was considered and
-dropped: it spends two of the day's twenty Gemini requests from the pool the
-owner's own library uses, so thirty curious visitors would leave the real saves
-untagged by lunchtime. So the URL is locked to ramp.com, the field says every
-demo save is that one, and Save replays the record Kivli already made: Ramp is
-held out of the grid until then and lands at the top after a twelve-second bar.
-Every screenshot, tag and colour it opens is real output, which is the point
-for a portfolio piece -- staged and saying so reads as a designed demo, staged
-and hiding it reads as a trick. Nothing is written, one go per browser
-(`specimen.demo.saved`), and deleting Ramp from the showcase removes the Add
-rather than breaking it. The page is `app/_ui/SharedLibrary.js` with `demo`
-set, the same component the share link renders; cards carry `?from=demo` so a
-site's way back returns to the demo.
+**`/demo` is the real app on a read-only pass, and the first version was the
+share page.** A share link shows a grid; what makes this read as a product is
+the menu, the search, the filters, the view switches and a site's own page, and
+rebuilding those read-only would have meant threading a flag through all of it
+-- the thing the shared site page was written as its own file to avoid. So
+`/demo` hands out a signed, httpOnly pass (`lib/demo.js`) that `currentUser()`
+resolves to `DEMO_USER_ID` when there is no real session, and middleware.js
+refuses every non-GET API call from it with `{ error, demo: true }` and a 403.
+One rule at the door covers the thirty-nine routes that write, and the fortieth.
+
+It is deliberately not a Supabase login for the demo account. `resource` and
+`share` have owner policies under RLS, so a real session handed to strangers
+would let anyone with the anon key edit those rows through the REST API,
+around the app. A pass only this server can check has nothing to go around.
+Verified: a forged pass redirects to /login and 401s on the API.
+
+The demo account is a copy, filled by `node scripts/seed-demo.js --write`
+(dry run without the flag): the showcase owner's visible sites, captures,
+pages, components, resources, approved tags and collections, with notes,
+favourites, review flags and queue state stripped. Screenshots are shared by
+URL, not copied. It is a snapshot -- re-run it after a cleanup. It pages every
+read, because Supabase stops at 1,000 rows without saying so and the first dry
+run reported exactly 1,000 pages out of 1,272.
+
+Add is staged (`DemoAdd.js`): the URL is locked to ramp.com and the field says
+so, Ramp is held out of the grid until Submit, and the dashboard plays a
+twelve-second bar before the card lands. A real save from strangers would spend
+the owner's twenty-a-day Gemini budget, and every screenshot and tag the staged
+one opens is real output -- staged and saying so reads as a designed demo,
+staged and hiding it reads as a trick. `DemoNotice` wraps `fetch` and shows the
+refusal whenever a click is refused, because many controls answer a failed
+write by quietly reverting, which in a demo reads as broken. The menu drops
+Share and Your Name, and Sign Out becomes Exit Demo (`/demo/exit`).
 
 ## Local environment
 

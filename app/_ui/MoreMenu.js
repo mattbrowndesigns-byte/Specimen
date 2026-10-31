@@ -22,6 +22,7 @@ import ShareModal from "./ShareModal";
 import NameModal from "./NameModal";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { THEME_KEY } from "@/lib/theme";
+import { useIsDemo } from "./demoState";
 
 // Everything that isn't a primary action. Keeping Manage tags in here rather
 // than in the bar itself is the point: the bar is for what you reach for
@@ -46,6 +47,7 @@ const SECONDARY = [
 ];
 
 export default function MoreMenu() {
+  const demo = useIsDemo();
   const [open, setOpen] = useState(false);
   const [account, setAccount] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
@@ -88,7 +90,12 @@ export default function MoreMenu() {
     };
   }, []);
 
+  // The demo has no session to end; leaving it means handing the pass back.
   async function signOut() {
+    if (demo) {
+      window.location.href = "/demo/exit";
+      return;
+    }
     await supabaseBrowser().auth.signOut();
     window.location.href = "/login";
   }
@@ -143,40 +150,50 @@ export default function MoreMenu() {
           ))}
 
           {/* A preference, not an action -- and the section it opens is where
-              the next preference goes, rather than back out in the bar. */}
-          <button
-            className="more-item more-item-button"
-            onClick={() => {
-              setOpen(false);
-              setSharing(true);
-            }}
-          >
-            <Share2 size={15} />
-            Share Library
-          </button>
+              the next preference goes, rather than back out in the bar.
+              Neither this nor Your Name is offered in the demo: both open a
+              form whose only outcome there is a refusal. */}
+          {!demo && (
+            <button
+              className="more-item more-item-button"
+              onClick={() => {
+                setOpen(false);
+                setSharing(true);
+              }}
+            >
+              <Share2 size={15} />
+              Share Library
+            </button>
+          )}
 
           <div className="more-divider" />
           <span className="more-section-head">Settings</span>
-          <button
-            className="more-item more-item-button"
-            onClick={() => {
-              setOpen(false);
-              setNaming(true);
-            }}
-          >
-            <UserRound size={15} />
-            Your Name
-          </button>
+          {!demo && (
+            <button
+              className="more-item more-item-button"
+              onClick={() => {
+                setOpen(false);
+                setNaming(true);
+              }}
+            >
+              <UserRound size={15} />
+              Your Name
+            </button>
+          )}
           <button className="more-item more-item-button" onClick={toggleTheme}>
             {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
             {theme === "dark" ? "Light Mode" : "Dark Mode"}
           </button>
 
           <div className="more-divider" />
-          {account && <span className="more-account">{account}</span>}
+          {demo ? (
+            <span className="more-account">Demo library</span>
+          ) : (
+            account && <span className="more-account">{account}</span>
+          )}
           <button className="more-item more-item-button" onClick={signOut}>
             <LogOut size={15} />
-            Sign Out
+            {demo ? "Exit Demo" : "Sign Out"}
           </button>
         </div>
       )}

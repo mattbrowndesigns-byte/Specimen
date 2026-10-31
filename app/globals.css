@@ -516,6 +516,59 @@ h1 {
 /* Utility bar: the library's identity plus the actions that should be
    reachable from anywhere, on a white band so they read as chrome rather than
    as the first row of content. Sticky, so Add stays in reach down a long grid. */
+/* What a refused click in the demo says (app/_ui/DemoNotice.js). Fixed at the
+   foot of the window, centred, in the banner's inverted colours, because it
+   is the banner's sentence arriving at the moment it applies. */
+.demo-notice {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 60;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 2 * var(--grid-margin));
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font-size: 13px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+/* The demo's banner (app/_ui/UtilityBar.js). Inverted, because it is the one
+   line on screen that is about the app rather than part of it, and it scrolls
+   away while the bar under it stays: it needs reading once, not watching. The
+   chrome bands' own padding, so its text starts on the wordmark's line. */
+.demo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  padding: 8px var(--grid-margin);
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font-size: 13px;
+}
+
+.demo-banner p {
+  margin: 0;
+}
+
+.demo-banner-links {
+  display: flex;
+  gap: 16px;
+}
+
+.demo-banner-links a {
+  color: inherit;
+  font-weight: 500;
+  text-underline-offset: 3px;
+}
+
+.demo-banner-links a:hover {
+  color: rgba(var(--invert-text-rgb), 0.75);
+}
+
 .utility-bar {
   position: sticky;
   top: 0;
@@ -4621,18 +4674,6 @@ a.card {
   margin-bottom: 28px;
 }
 
-/* On /demo the title takes a line under it saying what the page is for, so
-   the gap moves below that line instead. */
-.shared-title.shared-title-demo {
-  margin-bottom: 8px;
-}
-
-.demo-intro {
-  margin: 0 0 28px;
-  font-size: 15px;
-  color: var(--text-muted);
-}
-
 .shared-page {
   padding-top: 28px;
 }
@@ -6197,26 +6238,6 @@ a.card {
    This is the only page most people will ever see of this app, so it stopped
    being a read-only dump of a grid and became a page that introduces itself:
    the real animated wordmark, whose library it is, and a way in at the end. */
-
-/* The invitation and whatever a page sets beside it -- the demo's Add. */
-.shared-bar-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* On a phone Add sits left of the invitation, and a 300px menu hung from Add's
-   right edge ran 85px off the left of the screen. Anchoring it to the group
-   instead puts its right edge on the page margin, where the bar ends. */
-@media (max-width: 700px) {
-  .shared-bar-actions {
-    position: relative;
-  }
-
-  .shared-bar-actions .add-menu {
-    position: static;
-  }
-}
 
 .shared-bar-side {
   display: flex;

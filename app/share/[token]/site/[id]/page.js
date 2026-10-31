@@ -32,12 +32,8 @@ const FACET_LABELS = {
 };
 const FACETS = Object.keys(FACET_LABELS);
 
-export default function SharedSitePage({ params, searchParams }) {
+export default function SharedSitePage({ params }) {
   const { token, id } = usePromise(params);
-  // Opened from /demo, the way back goes to the demo, not to the plain share
-  // link underneath it -- that page has no Add and would read as a different
-  // place.
-  const fromDemo = usePromise(searchParams)?.from === "demo";
   const [state, setState] = useState({ status: "loading" });
   const [viewport, setViewport] = useState("desktop");
   const [selectedRun, setSelectedRun] = useState(null);
@@ -97,9 +93,9 @@ export default function SharedSitePage({ params, searchParams }) {
         {/* The way back, and it has to be here rather than in the bar: the
             bar's two ends are the mark and the invitation, and a third thing
             between them pulls both off the edges they belong on. */}
-        <a className="shared-back" href={fromDemo ? "/demo" : `/share/${token}`}>
+        <a className="shared-back" href={`/share/${token}`}>
           <ArrowLeft size={15} />
-          {fromDemo ? "Back to the demo" : state.backTitle || "Back to the library"}
+          {state.backTitle || "Back to the library"}
         </a>
 
         <div className="detail-header">

@@ -12,8 +12,8 @@ vocabulary I already design in.
 | **Running cost** | $0 a month, permanently |
 | **Status** | In daily use |
 | **Built with** | Next.js, Supabase, Playwright, Gemini |
-| **Live** | https://specimen-pied.vercel.app/case-study |
-| **Try it** | https://specimen-pied.vercel.app/share/QZNxODnUGm24y2kwUr8t81qFdNo0f6CO |
+| **Live** | https://specimen-gamma-six.vercel.app/case-study |
+| **Try it** | https://specimen-gamma-six.vercel.app/share/QZNxODnUGm24y2kwUr8t81qFdNo0f6CO |
 | **Source** | https://github.com/mattbrowndesigns-byte/Specimen |
 
 ---

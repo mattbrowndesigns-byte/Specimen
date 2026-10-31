@@ -6,7 +6,7 @@ Read `CLAUDE.md` for conventions and the reasoning behind every gotcha, and
 
 - **Repo:** https://github.com/mattbrowndesigns-byte/Specimen
 - **Local path:** `/Users/matthenriksen-brown/Documents/Specimen`
-- **Live app:** https://specimen-pied.vercel.app
+- **Live app:** https://specimen-gamma-six.vercel.app
 - **Local `main` is at `43af8e1`.** GitHub has everything up to `559a8c9`.
 
 ## Outstanding, as of this writing

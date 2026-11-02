@@ -138,7 +138,7 @@ export default function MoreMenu() {
           )}
           <div className="more-divider" />
           {SECONDARY.map(({ href, label, Icon }) => (
-            <a className="more-item more-item-quiet" key={href} href={href}>
+            <a className="more-item" key={href} href={href}>
               <Icon size={15} />
               {label}
             </a>

@@ -5683,6 +5683,90 @@ a.card {
   margin-top: 6px;
 }
 
+/* A tab between opening and its first answer. The real containers, filled
+   and pulsing, because unlike an empty library this is a state and not a
+   result. Not clickable: a card that lifts on hover is promising a page
+   behind it.
+   
+   The marks and lines take `--field-bg`, not `--surface-sunken`: resource rows
+   sit on bare page, and in dark mode the sunken tone is 13 against an 18 page,
+   which drew six invisible rows. `--field-bg` is the fill that steps away from
+   the page in both themes. Inside a card or a list row it is the other way
+   round -- `--field-bg` is a near match for a dark card's surface -- so there
+   they take the sunken tone the thumbs already have. */
+.library-loading {
+  pointer-events: none;
+}
+
+.skeleton-disc {
+  flex-shrink: 0;
+  width: var(--favicon-size);
+  height: var(--favicon-size);
+  border-radius: 50%;
+  background: var(--field-bg);
+}
+
+.skeleton-line {
+  display: block;
+  width: 45%;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--field-bg);
+}
+
+.library-loading .card .skeleton-disc,
+.library-loading .card .skeleton-line,
+.library-loading .row-item .skeleton-line {
+  background: var(--surface-sunken);
+}
+
+/* Footers and headline rows carry one line beside the mark; it takes the room
+   a name would and no more. */
+.card-footer .skeleton-line,
+.headline-item .skeleton-line {
+  flex: 0 1 40%;
+  margin-right: auto;
+}
+
+/* Stepped like the rows they stand in for: a title, then a summary that runs
+   longer, then a shorter last line. */
+.skeleton-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 6px;
+}
+
+.skeleton-lines .skeleton-line:nth-child(2) {
+  width: 80%;
+  height: 8px;
+}
+
+.skeleton-lines .skeleton-line:nth-child(3) {
+  width: 55%;
+  height: 8px;
+}
+
+.library-loading .thumb,
+.library-loading .row-thumb,
+.library-loading .skeleton-disc,
+.library-loading .skeleton-line {
+  animation: style-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.result-count-loading {
+  color: var(--text-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-loading .thumb,
+  .library-loading .row-thumb,
+  .library-loading .skeleton-disc,
+  .library-loading .skeleton-line {
+    animation: none;
+  }
+}
+
 /* Bigger trigger for the first-run call to action, and the popover centred
    under it -- the header one hugs the right edge because that's where it sits. */
 .add-menu-hero .add-btn {

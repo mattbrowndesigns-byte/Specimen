@@ -22,6 +22,7 @@ import Favicon from "./Favicon";
 import AddMenu from "./AddMenu";
 import FeatureRotator from "./FeatureRotator";
 import TagRow from "./TagRow";
+import LibrarySkeleton from "./LibrarySkeleton";
 
 const VIEWS = [
   { id: "cards", label: "Cards", Icon: LayoutGrid },
@@ -87,6 +88,10 @@ export default function LibraryBrowser({
   onAdd,
   storageKey,
   onSearchElsewhere,
+  // False until the tab's first fetch has answered. An empty `items` before
+  // then means "not asked yet", not "has nothing", and the two must not share
+  // a screen: see the empty-state comment below.
+  loaded = true,
 }) {
   // The recents list is per tab, and the tab already has a storage key, so it
   // derives from that rather than adding a prop every caller has to remember
@@ -285,12 +290,16 @@ export default function LibraryBrowser({
       )}
 
       <div className="results-bar">
-        <ResultCount
-          count={visible.length}
-          noun={noun}
-          query={query}
-          onClear={() => onQueryChange("")}
-        />
+        {loaded ? (
+          <ResultCount
+            count={visible.length}
+            noun={noun}
+            query={query}
+            onClear={() => onQueryChange("")}
+          />
+        ) : (
+          <span className="result-count result-count-loading">Loading {noun}s…</span>
+        )}
         <div className="results-controls">
           {view === "cards" && (
             <div className="size-switch">
@@ -358,8 +367,16 @@ export default function LibraryBrowser({
           told you to start your library -- the one message guaranteed to be
           wrong, since you were looking for something you knew was in there.
           Components never hit it because they filter in the browser and keep
-          the full list in `items`. */}
-      {visible.length === 0 &&
+          the full list in `items`.
+          
+          And neither appears before the first answer. Each tab mounts fresh
+          when you switch to it, so `items` starts as [] every time -- and that
+          empty array was rendered as an empty library for however long the
+          fetch took, "0 sites" and all. A library of 150 saves told itself to
+          start, every time you came back to it. */}
+      {!loaded && <LibrarySkeleton view={view} size={size} noun={noun} />}
+
+      {loaded && visible.length === 0 &&
         (searching ? (
           <NoMatches noun={noun} query={query}>
             {onSearchElsewhere && query.trim() && (

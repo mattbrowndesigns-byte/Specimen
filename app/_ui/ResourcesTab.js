@@ -22,6 +22,7 @@ import SearchField from "./SearchField";
 import SearchElsewhere from "./SearchElsewhere";
 import ResultCount from "./ResultCount";
 import NoMatches from "./NoMatches";
+import LibrarySkeleton from "./LibrarySkeleton";
 import useEdgeFade from "./useEdgeFade";
 import { useDemoHold } from "./demoState";
 
@@ -455,13 +456,23 @@ export default function ResourcesTab({
       </div>
 
       <div className="results-bar">
-        <ResultCount
-          count={filtered.length}
-          noun="resource"
-          query={query}
-          onClear={() => setQuery("")}
-        />
+        {loaded ? (
+          <ResultCount
+            count={filtered.length}
+            noun="resource"
+            query={query}
+            onClear={() => setQuery("")}
+          />
+        ) : (
+          <span className="result-count result-count-loading">Loading resources…</span>
+        )}
       </div>
+
+      {/* Same rule as LibraryBrowser: nothing is "empty" before the first
+          answer, so the wait gets rows in the shape of the view you are in. */}
+      {!loaded && (
+        <LibrarySkeleton view={view === "list" ? "resources" : "headlines"} noun="resource" />
+      )}
 
       {loaded && resources.length === 0 && (
         <div className="empty-state">

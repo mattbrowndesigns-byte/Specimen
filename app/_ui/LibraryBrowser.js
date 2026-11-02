@@ -316,6 +316,7 @@ export default function LibraryBrowser({
                 className={view === id ? "active" : ""}
                 onClick={() => chooseView(id)}
                 title={label}
+                aria-label={label}
               >
                 <Icon size={15} />
                 <span>{label}</span>

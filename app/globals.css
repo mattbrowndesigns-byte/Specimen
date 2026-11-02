@@ -847,28 +847,127 @@ h1 {
   white-space: nowrap;
 }
 
-/* Phone: the bar is four things in a row, so buy space by tightening rather
-   than letting the title and the badge wrap to two lines each. */
+/* Phone: one row, wordmark left and the three controls right. This used to
+   wrap the controls onto a second line under the wordmark, from when the bar
+   carried text links that were wider than a phone. It carries a bell, Add and
+   a menu now -- about 170px beside a 110px wordmark, which fits at 320 -- and
+   the wrap left a stack whose two rows lined up with nothing. */
 @media (max-width: 560px) {
   .utility-bar-inner {
     padding: 10px var(--grid-margin);
     gap: 10px;
+  }
+
+  .nav-links {
+    gap: 8px;
+  }
+
+  /* The menu becomes a sheet hung from the bar, edge to edge, rather than a
+     260px card pinned to one corner of a 390px screen. The bar is its
+     containing block, so it lands under the bar's border at any bar height. */
+  .utility-bar-inner {
+    position: relative;
+  }
+
+  .utility-bar .more-menu {
+    position: static;
+  }
+
+  .utility-bar .more-pop {
+    top: calc(100% + 1px);
+    left: 0;
+    right: 0;
+    min-width: 0;
+    max-height: calc(100dvh - 100% - 1px);
+    overflow-y: auto;
+    /* Items carry 10px of their own padding, so this lands their text on the
+       grid margin -- the wordmark's line. */
+    padding: 8px calc(var(--grid-margin) - 10px) 12px;
+    border-width: 0 0 1px;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 24px 40px rgba(0, 0, 0, 0.25);
+  }
+
+  /* A finger, not a pointer: 44px rows, a size up in type. */
+  .utility-bar .more-item.more-item {
+    min-height: 44px;
+    font-size: 15px;
+  }
+
+  .utility-bar .more-section-head,
+  .utility-bar .more-account {
+    font-size: 13px;
+  }
+
+  /* The results row on one line: the count, the view switch and the sort.
+     The view switch drops its words (each button keeps them as its name), and
+     the card-size switch goes entirely -- every size is one column on a
+     phone, so it would be three buttons that do nothing. */
+  /* Doubled, like the utility classes: this block sits above the switch's own
+     rules in the file, and at equal specificity the later rule wins. */
+  .view-switch.view-switch button {
+    padding: 0 10px;
+  }
+
+  .view-switch button span {
+    display: none;
+  }
+
+  .results-bar .size-switch {
+    display: none;
+  }
+
+  .results-bar {
+    gap: 12px;
+  }
+
+  /* The three tabs came to 377px with their desktop padding, so Resources ran
+     22px off a 375 screen -- the one tab the page exists to point at. Tighter
+     pills and a size down in type bring them to about 330. */
+  .tab-switcher.tab-switcher {
+    gap: 2px;
+  }
+
+  .tab-switcher.tab-switcher button {
+    gap: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  /* Sharing a row with the controls left the folder strip one folder wide.
+     It gets the whole width, and the controls sit right-aligned under it. */
+  .folder-bar.folder-bar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .folder-bar .folder-strip {
+    flex: 1 0 100%;
+  }
+}
+
+/* The smallest phones (320, the first SE) can't hold either row at any size
+   that is still legible: the tabs lose their icons, and the results controls
+   drop under the count, still right-aligned, rather than off the edge. */
+@media (max-width: 359px) {
+  .tab-switcher button svg {
+    display: none;
+  }
+
+  .results-bar {
     flex-wrap: wrap;
   }
 
-  /* Title on its own line, actions right-aligned below it: at 375px the three
-     actions alone are wider than the viewport, so a single row would push Add
-     off the edge. */
-  .nav-links {
-    gap: 10px;
-    width: 100%;
-    justify-content: flex-end;
+  .results-bar .results-controls {
+    margin-left: auto;
   }
+}
 
-  .page {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
+/* The count and the sort never break inside themselves: "45 / sites" and
+   "Newest / First" on two lines each was what a narrow row did to them. */
+.result-count,
+.sort-btn {
+  white-space: nowrap;
 }
 
 .top-nav {

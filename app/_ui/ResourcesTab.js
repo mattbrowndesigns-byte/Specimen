@@ -416,6 +416,7 @@ export default function ResourcesTab({
                 className={view === id ? "active" : ""}
                 onClick={() => chooseView(id)}
                 title={label}
+                aria-label={label}
                 aria-pressed={view === id}
               >
                 <Icon size={15} />

@@ -2,7 +2,7 @@ import { AbsoluteFill, Audio, Img, Easing, interpolate, staticFile, useCurrentFr
 import { loadFont as loadLalezar } from "@remotion/google-fonts/Lalezar";
 import { loadFont as loadFigtree } from "@remotion/google-fonts/Figtree";
 import timeline from "../public/rec/timeline.json";
-import { FPS, INTRO, LOGO, SHOTS, TAGLINE, TOTAL_FRAMES, VIEW, unsqueeze } from "./shots";
+import { FPS, HIDDEN, INTRO, LOGO, SHOTS, TAGLINE, TOTAL_FRAMES, VIEW, unsqueeze } from "./shots";
 
 // The wordmark's own face, and the headline face, as the app loads them.
 const { fontFamily: lalezar } = loadLalezar();
@@ -32,6 +32,8 @@ const clicks = pointer.filter((p) => p.click);
 // The last painted frame at or before a moment. Screencast frames only arrive
 // when something changes, so a still page is one frame held.
 function frameAt(t) {
+  const hide = HIDDEN.find(([a, b]) => t > a && t < b);
+  if (hide) t = hide[0];
   let lo = 0;
   let hi = frames.length - 1;
   while (lo < hi) {
@@ -199,16 +201,6 @@ function Rise({ children, at, frame, style }) {
   );
 }
 
-const gradientText = {
-  background: `linear-gradient(90deg, ${C.rampMid}, ${C.rampWarm} 70%, ${C.rampLit})`,
-  WebkitBackgroundClip: "text",
-  backgroundClip: "text",
-  color: "transparent",
-  // The clip is cut from the glyphs; a descender needs room or it is sliced.
-  paddingBottom: "0.12em",
-  marginBottom: "-0.12em",
-};
-
 function IntroCard({ frame }) {
   const words = ["Your", "visual", "inspiration", "library"];
   const leave = clamp01((frame - (INTRO_F - 18)) / 16);
@@ -228,7 +220,7 @@ function IntroCard({ frame }) {
         }}
       >
         {words.map((word, i) => (
-          <Rise key={word} at={10 + i * 6} frame={frame} style={{ marginRight: i < words.length - 1 ? "0.24em" : 0, ...(word === "inspiration" ? gradientText : {}) }}>
+          <Rise key={word} at={10 + i * 6} frame={frame} style={{ marginRight: i < words.length - 1 ? "0.24em" : 0 }}>
             {word}
           </Rise>
         ))}
@@ -239,10 +231,9 @@ function IntroCard({ frame }) {
 
 function TaglineCard({ frame }) {
   const leave = clamp01((frame - (TAGLINE_F - 14)) / 14);
-  // `last` is false when another word follows on the same line outside the list.
-  const line = (words, at, last = true) =>
+  const line = (words, at) =>
     words.map((word, i) => (
-      <Rise key={word + i} at={at + i * 3} frame={frame} style={{ marginRight: i < words.length - 1 || !last ? "0.24em" : 0 }}>
+      <Rise key={word + i} at={at + i * 3} frame={frame} style={{ marginRight: i < words.length - 1 ? "0.24em" : 0 }}>
         {word}
       </Rise>
     ));
@@ -264,10 +255,7 @@ function TaglineCard({ frame }) {
       >
         <div>{line(["Save", "what", "inspires", "you."], 8)}</div>
         <div>
-          {line(["Find", "it", "when", "you", "need"], 8 + sec(1.0), false)}
-          <Rise at={8 + sec(1.0) + 15} frame={frame} style={gradientText}>
-            it.
-          </Rise>
+          {line(["Find", "it", "when", "you", "need", "it."], 8 + sec(1.0))}
         </div>
       </div>
     </AbsoluteFill>
@@ -280,12 +268,15 @@ function TaglineCard({ frame }) {
 // cut is the app's measured 18.45% (see CLAUDE.md), which only holds on a
 // line box of exactly 1em.
 const LETTERS = ["K", "i", "v", "l", "i"];
-// The app's own hover, slowed by half again: 55ms steps and a 0.5s sweep read
-// as a flicker at video distance.
-const STEP = 0.085;
-const SWEEP = 0.75;
-const HOP = 0.62;
-const HOP_LAG = 0.06;
+// The nav's hover exactly (globals.css, wordmark-warm and wordmark-hop):
+// 55ms between letters, a 0.5s sweep, a 0.42s hop starting 40ms behind its
+// letter. CSS applies `ease-out` to each keyframe segment separately, so both
+// halves of each move ease out -- up and down alike.
+const STEP = 0.055;
+const SWEEP = 0.5;
+const HOP = 0.42;
+const HOP_LAG = 0.04;
+const easeOut = Easing.bezier(0, 0, 0.58, 1);
 
 function hexToRgb(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -297,18 +288,17 @@ function mix(a, b, k) {
   return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * k)).join(",")})`;
 }
 
+// A two-segment keyframe: 0 -> 1 by `peak`, back to 0 by the end, each
+// segment eased out on its own.
+function keyframe(t, length, peak) {
+  if (t <= 0 || t >= length) return 0;
+  const p = t / length;
+  return p < peak ? easeOut(p / peak) : 1 - easeOut((p - peak) / (1 - peak));
+}
 // wordmark-warm: ink, accent at 40%, ink.
-function warmth(t) {
-  if (t <= 0 || t >= SWEEP) return 0;
-  const p = t / SWEEP;
-  return p < 0.4 ? Easing.out(Easing.quad)(p / 0.4) : 1 - Easing.inOut(Easing.quad)((p - 0.4) / 0.6);
-}
+const warmth = (t) => keyframe(t, SWEEP, 0.4);
 // wordmark-hop: up 0.11em at 45%, back down.
-function hop(t) {
-  if (t <= 0 || t >= HOP) return 0;
-  const p = t / HOP;
-  return p < 0.45 ? Easing.out(Easing.quad)(p / 0.45) : 1 - Easing.in(Easing.quad)((p - 0.45) / 0.55);
-}
+const hop = (t) => keyframe(t, HOP, 0.45);
 
 function LogoCard({ frame }) {
   const k = out(clamp01(frame / 14));
@@ -322,6 +312,7 @@ function LogoCard({ frame }) {
           fontFamily: lalezar,
           fontSize: 300,
           lineHeight: 1,
+          letterSpacing: "0.005em",
           color: C.ink,
           opacity: k,
           transform: `translateY(${(1 - k) * 30}px) scale(${0.94 + k * 0.06})`,

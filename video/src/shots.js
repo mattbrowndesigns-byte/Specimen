@@ -45,7 +45,15 @@ const t = (name, offset = 0) => beat(name).t + offset;
 // lets a shot run near real speed instead of at 4x to get through the waiting.
 // A held frame is a held frame, so cutting the middle out of one is invisible.
 const HOLD = 0.8;
-const events = [...timeline.frames.map((f) => f.t), ...timeline.pointer.map((p) => p.t)].sort((a, b) => a - b);
+
+// Stretches of the take that must never be seen: each shows the last frame
+// painted before it instead, and is squeezed like any other wait.
+export const HIDDEN = [[t("click-websites", -0.01), t("websites-loaded", 0.05)]];
+const hidden = (s) => HIDDEN.some(([a, b]) => s > a && s < b);
+
+const events = [...timeline.frames.map((f) => f.t), ...timeline.pointer.map((p) => p.t)]
+  .filter((s) => !hidden(s))
+  .sort((a, b) => a - b);
 const KNOTS = (() => {
   const k = [{ s: events[0], c: events[0] }];
   for (let i = 1; i < events.length; i++) {
@@ -222,7 +230,7 @@ const RAW = [
   {
     name: "chips",
     from: t("click-websites", -0.6),
-    to: t("click-chip-2-off", 0.9),
+    to: t("chips-done", 0.1),
     dur: 3.5,
     cam: [fit({ x: 12, y: 190, w: 900, h: 420 }, { minW: 1000, pad: 0 }), fit({ x: 12, y: 290, w: 1100, h: 520 }, { minW: 1150, pad: 0 })],
   },

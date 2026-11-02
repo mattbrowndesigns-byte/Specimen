@@ -273,18 +273,26 @@ await sleep(600);
 
 // 8. Websites again, a couple of tags as filters, then the whole library.
 await click(page.locator(".tab-switcher button", { hasText: "Websites" }), "click-websites", { ms: 550 });
-await page.waitForSelector(".card img");
+// Not `.card img`: that is in the DOM seconds before the grid replaces the
+// empty state on screen, so the beat landed in the middle of it.
+await page.waitForFunction(() => !document.querySelector(".empty-state") && document.querySelector(".card img"), null, { timeout: 30000 });
+await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+// Until the grid arrives the tab paints its empty state ("Start your
+// library"), which in a reel reads as a library that lost everything. The
+// edit hides the stretch between the click and this beat.
+beat("websites-loaded");
 await settle(900);
-const chips = page.locator(".chip-strip .chip-filter:not(.chip-clear)");
+// By name, not position: selecting a tag puts Clear at the front of the
+// strip and moves every chip along, so the second nth() lands on a different
+// word than it did a moment ago. Two tags stacked, not one swapped for
+// another, so the grid narrows twice.
+const chip = (label) => page.locator(".chip-strip .chip-filter:not(.chip-clear)", { hasText: new RegExp(`^${label}`) });
 await region("chip-strip", page.locator(".chip-strip"), 8);
-await click(chips.nth(0), "click-chip-1", { ms: 500 });
-await settle(1100);
-await click(chips.nth(0), "click-chip-1-off", { ms: 300 });
-await sleep(150);
-await click(chips.nth(2), "click-chip-2", { ms: 450 });
-await settle(1100);
-await click(chips.nth(2), "click-chip-2-off", { ms: 300 });
-await settle(700);
+await click(chip("SaaS"), "click-chip-1", { ms: 500 });
+await settle(1600);
+await click(chip("Minimal"), "click-chip-2", { ms: 500 });
+await settle(1600);
+beat("chips-done");
 await moveTo(VIEW.width * 0.55, VIEW.height * 0.6, 600);
 beat("outro");
 await sleep(1800);

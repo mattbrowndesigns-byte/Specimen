@@ -121,6 +121,13 @@ function measure() {
     CONTROL_TAGS.has(el.tagName) ||
     el.getAttribute("role") === "button" ||
     (el.tagName === "INPUT" && /^(submit|button)$/i.test(el.type || ""));
+  // Inside one counts too. A modern button is rarely painted on the <button>
+  // itself: airbnb.com's pink and asana.com's coral are on a div inside the
+  // control, so neither was ever rescued and both brands read as greyscale.
+  // Backgrounds only -- an SVG icon inside a link is how every footer's social
+  // icons arrive, and those blues are exactly what the chroma rule is for.
+  const CONTROL_SELECTOR = 'button, a[href], summary, select, [role="button"], input[type="submit"], input[type="button"]';
+  const inControl = (el) => isControl(el) || Boolean(el.parentElement && el.parentElement.closest(CONTROL_SELECTOR));
 
   function add(color, area, source) {
     if (!color || !(area > 0)) return;
@@ -390,7 +397,7 @@ function measure() {
         const own = ownArea(el, rect);
         const bg = parseColor(style.backgroundColor);
         add(bg, own, "background");
-        if (bg && bg.a > 0.05 && isControl(el)) onControl.add(toHex(bg));
+        if (bg && bg.a > 0.05 && inControl(el)) onControl.add(toHex(bg));
         const stops = gradientStops(style.backgroundImage);
         for (const stop of stops) add(stop, own / stops.length, "background");
       }

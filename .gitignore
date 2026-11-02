@@ -13,3 +13,9 @@ capture.log
 # live elsewhere, and sits inside a public repo -- so it stays out of git.
 _handoff/
 *-handoff-*.zip
+
+# The sizzle reel's raw recording and renders: hundreds of MB, rebuilt by
+# `npm run record`, `npm run music` and `npm run render` in video/.
+video/public/rec/
+video/public/music.wav
+video/out/

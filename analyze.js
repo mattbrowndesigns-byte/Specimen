@@ -58,16 +58,53 @@ function measure() {
   // state left in the DOM -- not part of the palette.
   const MIN_SHARE = 0.002;
 
+  // A computed colour is not always rgb(). A stylesheet that declares lab(),
+  // oklch() or color() gets that same syntax back from getComputedStyle, and
+  // this used to return null for anything that wasn't rgb -- so every colour
+  // written that way was silently dropped. ramp.com declares its palette in
+  // lab: its lime CTA, its warm greys and its off-white panels all vanished,
+  // and the reading came back as black and white.
+  //
+  // Those go through a canvas instead, which converts any colour the browser
+  // understands to sRGB. The alpha is lifted off and the colour drawn opaque,
+  // because a canvas pixel stores premultiplied colour and a faint fill would
+  // come back with its channels rounded to mush.
+  const colorProbe = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+  colorProbe.canvas.width = colorProbe.canvas.height = 1;
+  const converted = new Map();
+  const ALPHA = /\s*\/\s*([\d.]+)(%?)\s*\)$/;
+
+  function toSrgb(str) {
+    if (converted.has(str)) return converted.get(str);
+    let out = null;
+    if (CSS.supports("color", str)) {
+      const am = str.match(ALPHA);
+      const a = am ? parseFloat(am[1]) / (am[2] ? 100 : 1) : 1;
+      colorProbe.clearRect(0, 0, 1, 1);
+      colorProbe.fillStyle = am ? str.replace(ALPHA, ")") : str;
+      colorProbe.fillRect(0, 0, 1, 1);
+      const [r, g, b] = colorProbe.getImageData(0, 0, 1, 1).data;
+      out = { r, g, b, a };
+    }
+    converted.set(str, out);
+    return out;
+  }
+
   function parseColor(str) {
     if (!str || str === "none" || str === "transparent") return null;
     const m = String(str).match(/^rgba?\(([^)]+)\)/);
-    if (!m) return null;
-    const n = m[1].split(/[\s,\/]+/).filter(Boolean).map(parseFloat);
-    if (n.length < 3 || !isFinite(n[0])) return null;
-    const a = n.length > 3 ? n[3] : 1;
+    let c;
+    if (m) {
+      const n = m[1].split(/[\s,\/]+/).filter(Boolean).map(parseFloat);
+      if (n.length < 3 || !isFinite(n[0])) return null;
+      c = { r: n[0], g: n[1], b: n[2], a: n.length > 3 ? n[3] : 1 };
+    } else {
+      c = toSrgb(String(str));
+      if (!c) return null;
+    }
     // Fully and near-fully transparent paint isn't a colour anyone sees.
-    if (!(a > 0.04)) return null;
-    return { r: n[0], g: n[1], b: n[2], a };
+    if (!(c.a > 0.04)) return null;
+    return c;
   }
 
   const toHex = (c) =>
@@ -102,7 +139,7 @@ function measure() {
   // claiming all of it.
   function gradientStops(bgImage) {
     if (!bgImage || bgImage === "none" || !/gradient\(/.test(bgImage)) return [];
-    const stops = (bgImage.match(/rgba?\([^)]+\)/g) || []).map(parseColor).filter(Boolean);
+    const stops = (bgImage.match(/(?:rgba?|lab|lch|oklab|oklch|color)\([^)]+\)/g) || []).map(parseColor).filter(Boolean);
     const unique = [];
     for (const s of stops) {
       if (!unique.some((u) => u.r === s.r && u.g === s.g && u.b === s.b)) unique.push(s);
@@ -327,6 +364,10 @@ function measure() {
 
   const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE", "HEAD", "META", "LINK", "TITLE"]);
   const PHOTO_TAGS = new Set(["IMG", "VIDEO", "CANVAS", "PICTURE", "IFRAME", "OBJECT", "EMBED"]);
+  // SVG tag names are lowercase, unlike HTML's. `use` paints whatever it
+  // points at, in its own fill, which is what makes icon sprites count.
+  const SVG_SHAPES = new Set(["path", "rect", "circle", "ellipse", "polygon", "polyline", "line", "text", "use"]);
+  const SVG_UNPAINTED = "defs, clipPath, mask, symbol, pattern, marker, linearGradient, radialGradient, filter";
 
   const doc = document.documentElement;
   const pageArea =
@@ -364,20 +405,34 @@ function measure() {
       }
     }
 
+    // Only shapes paint. This used to weigh every element under an <svg> by
+    // getBBox, which was wrong three ways at once, and ramp.com's hero hit all
+    // three: a `g` counted the paint of every shape inside it again; a shape
+    // inside a clipPath, mask or defs counted though it is never drawn (its
+    // fill is the default black, so it all landed on black); and getBBox is in
+    // viewBox units, so a 2880-wide viewBox drawn 1119px wide weighed 6.6
+    // times its real area. Ramp came back 70% black on a white page. Shapes
+    // are now weighed by the area they cover on screen, and an svg <image> is
+    // a photograph like any other.
     if (el.ownerSVGElement) {
-      let box = area;
-      try {
-        const b = el.getBBox();
-        if (b.width && b.height) box = b.width * b.height;
-      } catch {
-        // Shapes with no geometry (defs, gradients) throw; the box stays as-is.
-      }
-      if (box > 0) {
-        add(parseColor(style.fill), box, "graphic");
+      if (!SVG_SHAPES.has(el.tagName) || el.closest(SVG_UNPAINTED)) continue;
+      if (area > 0) {
+        add(parseColor(style.fill), area, "graphic");
         const sw = parseFloat(style.strokeWidth) || 0;
-        // Stroke area as perimeter x width, with the bbox treated as square:
-        // exact enough for weighting, and getBBox gives no path length.
-        if (sw > 0) add(parseColor(style.stroke), 4 * Math.sqrt(box) * sw, "graphic");
+        if (sw > 0) {
+          // The stroke width is in user units too; scale it by how far the
+          // shape was scaled to reach the screen.
+          let k = 1;
+          try {
+            const b = el.getBBox();
+            if (b.width && b.height) k = Math.sqrt(area / (b.width * b.height));
+          } catch {
+            // No geometry to compare against; leave the width as declared.
+          }
+          // Stroke area as perimeter x width, with the box treated as square:
+          // exact enough for weighting, and there's no cheap path length.
+          add(parseColor(style.stroke), 4 * Math.sqrt(area) * sw * k, "graphic");
+        }
       }
       continue;
     }

@@ -640,6 +640,25 @@ the synthetic canvas entry in `analyze.js`, the colour covering 70% of the page
 was missing from its palette entirely. Body wins over html, white is the
 fallback.
 
+**A computed colour is not always `rgb()`, and assuming it was cost ramp.com
+its whole palette.** A stylesheet that declares `lab()`, `oklch()` or
+`color()` gets that syntax back from `getComputedStyle`, and `parseColor`
+returned null for anything else -- so Ramp's lime CTA (`#e4f222`), its warm
+off-white and its near-blacks were silently dropped and the panel said black
+and white. Non-rgb colours now go through a 1px canvas, drawn opaque with the
+alpha lifted off first, since a canvas pixel is premultiplied and a faint fill
+comes back with its channels rounded away.
+
+**Only SVG shapes paint, and they are weighed by screen area.** The same
+reading said Ramp was 70% black on a white page. Every element under an
+`<svg>` was weighed by `getBBox`: a `g` re-counted every shape inside it,
+shapes in a `clipPath`, `mask` or `defs` counted though never drawn (default
+fill: black), and `getBBox` is in viewBox units, so a 2880-wide viewBox drawn
+at 1119px weighed 6.6 times its real area. Now only path / rect / circle /
+ellipse / polygon / polyline / line / text / use count, outside those
+containers, by their on-screen box. x-energy.com reads the same before and
+after, teal accent included.
+
 **Area is the wrong question to ask about an accent, so one is rescued from
 under the floor.** A call to action is deliberately small and deliberately the
 most saturated thing on the page, and those two properties are linked --

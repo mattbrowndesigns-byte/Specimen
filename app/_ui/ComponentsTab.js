@@ -36,6 +36,7 @@ export default function ComponentsTab({
   onSearchElsewhere,
 }) {
   const [components, setComponents] = useState([]);
+  const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -45,6 +46,7 @@ export default function ComponentsTab({
     if (res.ok) {
       const data = await res.json();
       setComponents(data.components || []);
+      setLoaded(true);
     }
   }
 
@@ -154,6 +156,7 @@ export default function ComponentsTab({
         onAdd={onAdd}
         storageKey="specimen.view.components"
         onSearchElsewhere={onSearchElsewhere}
+        loaded={loaded}
       />
     </>
   );

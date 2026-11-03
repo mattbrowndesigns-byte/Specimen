@@ -1410,6 +1410,24 @@ guaranteed to be wrong, since you were looking for something you knew was in
 there. It keys on a `searching` flag now (a query or a tag filter), not on how
 many rows came back.
 
+**And neither answer exists before the first fetch returns.** The dashboard
+mounts a tab fresh every time you switch to it, so its list starts as `[]`
+every time, and that empty array was rendered as an empty library: switch
+from Resources back to Websites and a library of 44 saves said "Start your
+library" and "0 sites" until the fetch landed, half a second to several. On
+the demo that reads as a product that lost everything. Each tab now holds a
+`loaded` flag that only a successful response sets -- a failed fetch leaves it
+loading and the poll asks again, rather than reporting a library it never
+read -- and LibraryBrowser shows `LibrarySkeleton` and "Loading sites…" until
+then. The skeleton is built from the real containers (`.card`, `.row-item`,
+`.headline-item`, `.resource-row`) for whichever view you are in, so nothing
+moves when the rows arrive. Its marks take `--field-bg` on bare page and
+`--surface-sunken` inside a card: either one alone vanished in dark mode in
+the other place. The Websites tab's first load also skips the 300ms search
+debounce, which was being added to every switch. Verified on /demo across six
+switches with a DOM observer: the skeleton every time, the empty panel and
+"0 sites" never.
+
 **A handoff between tabs lives in the parent, because the receiving tab hasn't
 mounted.** The dashboard renders one tab at a time, so "search resources for
 this instead" has nowhere to put the query except `page.js`. It's cleared the

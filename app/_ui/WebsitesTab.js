@@ -45,6 +45,7 @@ export default function WebsitesTab({
 }) {
   const [sites, setSites] = useState([]);
   const [query, setQuery] = useState("");
+  const [loaded, setLoaded] = useState(false);
 
   async function loadSites(q) {
     const res = await fetch(
@@ -53,12 +54,18 @@ export default function WebsitesTab({
     if (res.ok) {
       const data = await res.json();
       setSites(data.sites || []);
+      // Only a real answer counts. A failed fetch leaves the tab loading and
+      // the five-second poll asks again, rather than reporting an empty
+      // library it never actually read.
+      setLoaded(true);
     }
   }
 
-  // Debounced so typing doesn't fire a search per keystroke.
+  // Debounced so typing doesn't fire a search per keystroke. The first load
+  // isn't typing, so it goes straight out: the 300ms was being added to the
+  // wait every time you switched back to this tab.
   useEffect(() => {
-    const timeout = setTimeout(() => loadSites(query), 300);
+    const timeout = setTimeout(() => loadSites(query), loaded ? 300 : 0);
     return () => clearTimeout(timeout);
   }, [query, refreshKey]);
 
@@ -98,6 +105,7 @@ export default function WebsitesTab({
       onAdd={onAdd}
       storageKey="specimen.view.websites"
       onSearchElsewhere={onSearchElsewhere}
+      loaded={loaded}
     />
   );
 }

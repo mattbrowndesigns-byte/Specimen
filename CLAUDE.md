@@ -1938,6 +1938,18 @@ out), and `/demo` itself redirects a signed-in visitor home without issuing a
 pass. The signed-in half is only verified by reading: it needs a real session
 and the demo has none to borrow.
 
+**Demo page views are filed under `/demo`, because otherwise they are the
+owner's.** A demo visitor and the owner both browse `/`, so Vercel Web Analytics
+alone could not answer "has anyone used the demo link". `app/_ui/SiteAnalytics.js`
+rewrites the path in `beforeSend` when the browser carries the `kivli_demo` flag:
+`/` becomes `/demo`, `/sites/abc` becomes `/demo/sites/abc`. Filter on paths
+starting `/demo`. `/demo` itself is a redirect route and renders nothing, so it
+never records a view of its own; the landing on `/` is what gets counted, with
+the original referrer intact. Middleware's matcher excludes `_vercel`, or a
+signed-out visitor's beacon is redirected to /login and never counted. The
+dashboard toggle (Analytics -> Enable) has to be on as well, and nothing is
+recorded before it was: there is no way to see visits from before 2026-11-03.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

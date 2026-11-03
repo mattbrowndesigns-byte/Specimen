@@ -55,14 +55,16 @@ const PHASE_KEY = "specimen.demo.phase";
 
 const noSubscribe = () => () => {};
 
+// Browser only. Outside React for the one caller that isn't a component:
+// SiteAnalytics, which asks per page view.
+export function isDemoBrowser() {
+  return document.cookie.split("; ").includes(FLAG);
+}
+
 // Read once per render from the cookie; a server has no cookie jar to read,
 // and saying "not a demo" there is what keeps hydration quiet.
 export function useIsDemo() {
-  return useSyncExternalStore(
-    noSubscribe,
-    () => document.cookie.split("; ").includes(FLAG),
-    () => false,
-  );
+  return useSyncExternalStore(noSubscribe, isDemoBrowser, () => false);
 }
 
 // Whether the banner has been closed. Per browser, like the save: someone who

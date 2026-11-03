@@ -1,6 +1,7 @@
 import { Figtree, Lalezar } from "next/font/google";
 import "./globals.css";
 import { themeBootScript } from "@/lib/theme";
+import SiteAnalytics from "./_ui/SiteAnalytics";
 
 // The wordmark face, self-hosted by next/font rather than fetched from Google
 // at runtime: no third-party request on every page load, and no flash of a
@@ -40,7 +41,10 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <SiteAnalytics />
+      </body>
     </html>
   );
 }

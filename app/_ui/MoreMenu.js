@@ -17,12 +17,13 @@ import {
   Sun,
   LogOut,
   UserRound,
+  Compass,
 } from "lucide-react";
 import ShareModal from "./ShareModal";
 import NameModal from "./NameModal";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { THEME_KEY } from "@/lib/theme";
-import { useIsDemo } from "./demoState";
+import { startDemoTour, useIsDemo } from "./demoState";
 
 // Everything that isn't a primary action. Keeping Manage tags in here rather
 // than in the bar itself is the point: the bar is for what you reach for
@@ -114,6 +115,7 @@ export default function MoreMenu() {
     <div className="more-menu" ref={wrapRef}>
       <button
         className="icon-btn"
+        data-tour="menu"
         onClick={() => setOpen((v) => !v)}
         title={open ? "Close" : "More"}
         aria-label={open ? "Close menu" : "More"}
@@ -137,6 +139,20 @@ export default function MoreMenu() {
             </a>
           )}
           <div className="more-divider" />
+          {/* First in the group about the app, for the visitor who skipped the
+              tour and then wondered what they were looking at. */}
+          {demo && (
+            <button
+              className="more-item more-item-button"
+              onClick={() => {
+                setOpen(false);
+                startDemoTour();
+              }}
+            >
+              <Compass size={15} />
+              Take the Tour
+            </button>
+          )}
           {SECONDARY.map(({ href, label, Icon }) => (
             <a className="more-item" key={href} href={href}>
               <Icon size={15} />

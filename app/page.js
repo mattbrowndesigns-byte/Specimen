@@ -8,6 +8,7 @@ import { KINDS } from "./_ui/kinds";
 import CaptureProgress from "./_ui/CaptureProgress";
 import Arcade from "./_ui/Arcade";
 import { DemoProgress } from "./_ui/DemoAdd";
+import DemoTour from "./_ui/DemoTour";
 import { useDemoPhase } from "./_ui/demoState";
 import SiteFooter from "./_ui/SiteFooter";
 import { addItem, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
@@ -164,7 +165,7 @@ export default function Home() {
         {/* Icons from the shared kind list -- the same three the Add menu
             shows, so the thing you pressed to save it is the thing you press
             to find it again. */}
-        <div className="tab-switcher">
+        <div className="tab-switcher" data-tour="tabs">
           {KINDS.map(({ tab: id, label, Icon }) => (
             <button
               key={id}
@@ -217,6 +218,8 @@ export default function Home() {
       {/* Mounted here rather than inside a progress panel, so a capture
           landing mid-round can't take the round with it. */}
       <Arcade />
+      {/* Renders nothing outside the demo, and once a visitor has seen it. */}
+      <DemoTour />
       <SiteFooter />
     </>
   );

@@ -91,7 +91,7 @@ export default function DemoAdd() {
 
   return (
     <div className="add-menu" ref={wrapRef}>
-      <button className="add-btn" onClick={() => (open ? close() : setOpen(true))}>
+      <button className="add-btn" data-tour="add" onClick={() => (open ? close() : setOpen(true))}>
         <Plus size={16} />
         Add
       </button>

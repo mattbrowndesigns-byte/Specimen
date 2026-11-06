@@ -1950,6 +1950,27 @@ signed-out visitor's beacon is redirected to /login and never counted. The
 dashboard toggle (Analytics -> Enable) has to be on as well, and nothing is
 recorded before it was: there is no way to see visits from before 2026-11-03.
 
+**The demo opens with a tour, hand-built like everything else.**
+`app/_ui/DemoTour.js` walks a first-time visitor through seven stops on the
+dashboard (welcome, tabs, search, tags, a save, the menu, Add) and ends by
+opening Add, the one thing the demo stages for real. It shows once per browser
+(`specimen.demo.tour`, set on finish *and* skip), and "Take the Tour" in the
+menu replays it, going home first since every stop is on the dashboard. Stops
+find their element by a `data-tour` hook; one that never appears within four
+seconds is passed over, so an empty strip or a failed load can't leave the
+spotlight pointing at nothing. The Add stop drops out once Ramp is saved.
+
+Three things in it were wrong first. The spotlight is one box with a
+`200vmax` spread shadow, and **a box with no area paints no shadow**, so the
+resting spot behind the centred welcome card is 4px, not 0: at zero the whole
+dim vanished. Its box is a plain `{top, left, width, height}`, not a DOMRect,
+so anything reading `.bottom` gets undefined and every comparison goes false;
+`placeCard` derives the bottom itself. And the viewport size has to be state
+read in the frame loop, or resizing the window leaves the card where the old
+centre was. Verifying any of this needs the Browser pane *shown*: a hidden
+pane hands back stale frames, and the dim looked absent for three rounds of
+screenshots that were simply old.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

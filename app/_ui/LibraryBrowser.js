@@ -252,7 +252,7 @@ export default function LibraryBrowser({
 
   return (
     <>
-      <div className="toolbar">
+      <div className="toolbar" data-tour="search">
         <SearchField
           placeholder={searchPlaceholder}
           value={query}
@@ -270,6 +270,7 @@ export default function LibraryBrowser({
         <div
           className={`chip-strip${stripFade}`}
           ref={stripRef}
+          data-tour="tags"
         >
           {selectedTagIds.size > 0 && (
             <button className="chip chip-filter chip-clear" onClick={() => setSelectedTagIds(new Set())}>
@@ -394,7 +395,7 @@ export default function LibraryBrowser({
         ))}
 
       {view === "cards" && (
-        <div className={`grid grid-${size}`}>
+        <div className={`grid grid-${size}`} data-tour="records">
           {page.map((item) => (
             <div className="card" key={item.id}>
               <div className="card-media">
@@ -443,7 +444,7 @@ export default function LibraryBrowser({
       )}
 
       {view === "list" && (
-        <div className="row-list">
+        <div className="row-list" data-tour="records">
           {page.map((item) => (
             <div className="row-item" key={item.id}>
               <a className="row-thumb" href={adapter.href(item)}>
@@ -497,7 +498,7 @@ export default function LibraryBrowser({
       )}
 
       {view === "headlines" && (
-        <div className="headline-list">
+        <div className="headline-list" data-tour="records">
           {page.map((item) => (
             <div className="headline-item" key={item.id}>
               <Favicon

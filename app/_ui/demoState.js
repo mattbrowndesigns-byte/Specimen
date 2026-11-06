@@ -95,6 +95,44 @@ export function useDemoBannerClosed() {
   return useSyncExternalStore(subscribe, readBannerClosed, () => false);
 }
 
+// Whether this browser has been shown the tour (DemoTour.js). Finishing and
+// skipping both count: someone who said no once was answered. A blocked store
+// reads as "not seen", so the tour offers itself again, which is harmless.
+const TOUR_KEY = "specimen.demo.tour";
+export const TOUR_EVENT = "kivli:demo-tour";
+
+export function readTourSeen() {
+  try {
+    return localStorage.getItem(TOUR_KEY) === "seen";
+  } catch {
+    return false;
+  }
+}
+
+export function markTourSeen() {
+  try {
+    localStorage.setItem(TOUR_KEY, "seen");
+  } catch {
+    // Comes back next visit, which is the quiet direction to be wrong in.
+  }
+}
+
+// The menu's "Take the Tour". The stops are all on the dashboard, so from any
+// other page this clears the flag and goes home, where the tour starts itself
+// the way it does on a first visit.
+export function startDemoTour() {
+  if (window.location.pathname === "/") {
+    window.dispatchEvent(new Event(TOUR_EVENT));
+    return;
+  }
+  try {
+    localStorage.removeItem(TOUR_KEY);
+  } catch {
+    // Nothing to clear means nothing in the way.
+  }
+  window.location.href = "/";
+}
+
 // idle | capturing | saved, per kind, remembered per browser so a save
 // survives opening a record and coming back, and so it is one go per kind
 // rather than one per page load. The website's key predates the other two.

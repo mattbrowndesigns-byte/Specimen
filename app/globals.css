@@ -575,6 +575,140 @@ h1 {
   opacity: 1;
 }
 
+/* The demo's first-visit tour (app/_ui/DemoTour.js). Above everything else in
+   the app, the refusal notice included, because while it is open it is the
+   only thing on screen that can be pressed. The layer is transparent and
+   swallows clicks; the dim is the spotlight's own spread shadow, so the hole
+   in it is exactly the element being described. */
+.tour-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+}
+
+/* The orange ring is --accent doing its job as the mark colour: the one thing
+   on screen being pointed at. Gliding between stops is what makes seven of
+   them read as one walk rather than seven jumps. */
+.tour-spot {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 0 200vmax var(--overlay);
+  pointer-events: none;
+  transition:
+    top 0.32s ease,
+    left 0.32s ease,
+    width 0.32s ease,
+    height 0.32s ease;
+}
+
+/* Wears the ramp along its top edge like every other place the app speaks
+   about itself (.prose-cta, .shared-invite): a card from the app rather than
+   a card in it. */
+.tour-card {
+  position: fixed;
+  width: min(360px, calc(100vw - 32px));
+  padding: calc(var(--ramp-h) + 16px) 20px 16px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  transition:
+    top 0.32s ease,
+    left 0.32s ease;
+}
+
+.tour-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--ramp-h);
+  background: linear-gradient(
+    90deg,
+    var(--ramp-deep) 0%,
+    var(--ramp-mid) 26%,
+    var(--ramp-warm) 52%,
+    var(--ramp-lit) 68%,
+    var(--ramp-mid) 88%,
+    var(--ramp-deep) 100%
+  );
+}
+
+.tour-count {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tour-title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  color: var(--brand-ink);
+}
+
+.tour-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tour-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.tour-actions-end {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* The solid dark pair, not the orange: Add is on screen behind the dim, and
+   the last stop points straight at it. Two oranges would argue. */
+.tour-next,
+.tour-back {
+  height: var(--control-h);
+  padding: 0 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tour-next {
+  border: none;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+}
+
+.tour-next:hover {
+  background: var(--invert-bg-hover);
+}
+
+.tour-back {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.tour-back:hover {
+  background: var(--chip-bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot,
+  .tour-card {
+    transition: none;
+  }
+}
+
 .utility-bar {
   position: sticky;
   top: 0;

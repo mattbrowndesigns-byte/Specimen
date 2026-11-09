@@ -1,7 +1,15 @@
 import { Figtree, Lalezar } from "next/font/google";
 import "./globals.css";
+// The two design variants and the switcher between them. Every rule in the
+// first two is scoped under :root[data-variant=…], so with no variant chosen
+// none of them can match anything -- see lib/variant.js.
+import "./variants/refined.css";
+import "./variants/elevated.css";
+import "./variants/switcher.css";
 import { themeBootScript } from "@/lib/theme";
+import { variantBootScript } from "@/lib/variant";
 import SiteAnalytics from "./_ui/SiteAnalytics";
+import VariantSwitcher from "./_ui/VariantSwitcher";
 
 // The wordmark face, self-hosted by next/font rather than fetched from Google
 // at runtime: no third-party request on every page load, and no flash of a
@@ -40,10 +48,12 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${lalezar.variable} ${figtree.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        <script dangerouslySetInnerHTML={{ __html: variantBootScript }} />
       </head>
       <body>
         {children}
         <SiteAnalytics />
+        <VariantSwitcher />
       </body>
     </html>
   );

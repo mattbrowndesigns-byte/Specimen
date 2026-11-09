@@ -1,0 +1,1612 @@
+/* Elevated
+   ===========================================================================
+   The same app, recomposed. Every control, every word and every record the
+   original has is here; what moves is where things sit and how much of the
+   screen each one is given.
+
+   Four decisions carry it, each one a reading of the Apple design skill rather
+   than a copy of an Apple screen:
+
+   1. Content first, chrome recedes. The bar stops being a band and takes the
+      page's own colour; a card stops being a box and becomes its screenshot
+      with a caption under it. The thing you saved is the brightest object on
+      the screen, which in a library of design work is the only correct answer.
+
+   2. Finding is the job, so finding stays in reach. The three tabs and the
+      search field are one command bar that sticks under the wordmark. The
+      original asked you to scroll back up past forty screenshots to change a
+      search; the brief says "find it in under five seconds".
+
+   3. A site's page is a viewer and an inspector. The screenshot is the
+      content, so it gets the width; everything you would read or edit about
+      the record sits in a panel beside it that stays put while the screenshot
+      scrolls, sorted into Overview, Style and Pages (app/_ui/InspectorPanes.js).
+      The original ran a second page down the right of a 960px picture.
+
+   4. Typography carries the hierarchy. Figtree, already the brand's display
+      voice on the dashboard headline, becomes the voice of every page title;
+      the interface stays in the system face. Sections are announced by size
+      and weight, not by more borders.
+
+   Deliberately not done: glass. The skill's signature material is a floating
+   translucent bar, and the brief asks not to imitate macOS -- a dark library of
+   screenshots under frosted chrome is also exactly the "AI dashboard" look it
+   warns about. The bar here is opaque and the separation comes from a fade.
+
+   Every rule is under :root[data-variant="elevated"], so with no variant set
+   none of this can match. See lib/variant.js. */
+
+/* Tokens
+   ---------------------------------------------------------------------------
+   Dark goes nearly black at the page -- not #000, which turns screenshots of
+   white websites into lightboxes -- so a raised surface has room to read as
+   raised. `--stage` is new: the ground a screenshot sits on, a step off the
+   page in both themes, because a capture's own white or black edge otherwise
+   vanishes into whichever page shares its colour. */
+:root[data-variant="elevated"] {
+  --bg: #fbfbfd;
+  --surface: #fff;
+  --surface-rgb: 255, 255, 255;
+  --surface-soft: #f7f7f9;
+  --surface-sunken: #efeff3;
+  --surface-sunken-rgb: 239, 239, 243;
+  --surface-hover: #f2f2f5;
+
+  --chip-bg: #efeff2;
+  --chip-strong-bg: #e5e5e9;
+  --field-bg: #eeeef2;
+
+  --border-soft: #ececf0;
+  --border: #e2e2e7;
+  --border-strong: #d2d2d7;
+  --border-strong-hover: #bcbcc2;
+
+  --text: #1d1d1f;
+  --text-body: #2b2b2e;
+  --text-secondary: #46464b;
+  --text-muted: #5b5b61;
+  --text-faint: #6e6e73;
+
+  --invert-bg: #1d1d1f;
+  --invert-bg-hover: #36363a;
+
+  --overlay: rgba(12, 12, 14, 0.4);
+
+  --stage: #f1f1f4;
+  --stage-rgb: 241, 241, 244;
+  --hairline: rgba(0, 0, 0, 0.07);
+  --seg-active: #fff;
+  --seg-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 0.5px rgba(0, 0, 0, 0.05);
+  --pop-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.07), 0 18px 44px rgba(0, 0, 0, 0.14);
+  --ring: rgba(var(--accent-rgb), 0.55);
+  --ease: cubic-bezier(0.28, 0.11, 0.32, 1);
+  --spring: cubic-bezier(0.2, 0.9, 0.25, 1.05);
+
+  /* The bar's height, fixed rather than falling out of its padding, because
+     the command bar has to stick exactly underneath it. */
+  --bar-h: 56px;
+  --display: var(--font-display), -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+
+  --r-control: 10px;
+  --r-card: 14px;
+  --r-panel: 20px;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+:root[data-variant="elevated"][data-theme="dark"] {
+  --bg: #0a0a0b;
+  --surface: #161618;
+  --surface-rgb: 22, 22, 24;
+  --surface-soft: #1c1c1f;
+  --surface-sunken: #060607;
+  --surface-sunken-rgb: 6, 6, 7;
+  --surface-hover: #222225;
+
+  --chip-bg: #1f1f22;
+  --chip-strong-bg: #2a2a2e;
+  --field-bg: #1c1c1f;
+
+  --border-soft: #1e1e21;
+  --border: #28282c;
+  --border-strong: #37373c;
+  --border-strong-hover: #4a4a51;
+
+  --text: #f5f5f7;
+  --text-body: #e2e2e6;
+  --text-secondary: #babac1;
+  --text-muted: #9e9ea6;
+  --text-faint: #8c8c94;
+
+  --invert-bg: #f5f5f7;
+  --invert-bg-hover: #e0e0e4;
+  --invert-text: #111113;
+  --invert-text-rgb: 17, 17, 19;
+
+  --overlay: rgba(0, 0, 0, 0.64);
+
+  --stage: #121214;
+  --stage-rgb: 18, 18, 20;
+  --hairline: rgba(255, 255, 255, 0.07);
+  --seg-active: #3a3a3f;
+  --seg-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --pop-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.07), 0 24px 56px rgba(0, 0, 0, 0.6);
+}
+
+/* Motion. Popovers grow from the control that opened them and settle; sheets
+   rise a few pixels and fade. Nothing bounces past its mark by more than a
+   hair, and all of it is gone under Reduce Motion. */
+@keyframes ev-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+}
+
+@keyframes ev-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+
+@keyframes ev-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ev-edge {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+:root[data-variant="elevated"] {
+  & body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Helvetica Neue", sans-serif;
+  }
+
+  & :is(button, a, summary, [role="button"], [role="tab"]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  & :is(
+      .add-btn,
+      .filters-btn,
+      .sort-btn,
+      .visit-btn,
+      .detail-actions button:not(.icon-btn),
+      .capture-expand,
+      .tab-switcher button,
+      .inspector-tabs button,
+      .chip-filter,
+      .load-more,
+      .view-switch button,
+      .size-switch button,
+      .hide-btn,
+      .danger-btn,
+      .detail-section button:not(.icon-btn),
+      .capture-timeline button,
+      .folder,
+      .modal-apply,
+      .tour-next,
+      .tour-back
+    ) {
+    transition:
+      background-color 0.2s var(--ease),
+      border-color 0.2s var(--ease),
+      color 0.2s var(--ease),
+      box-shadow 0.2s var(--ease),
+      opacity 0.2s var(--ease),
+      transform 0.2s var(--ease);
+  }
+
+  & :is(
+      .add-btn,
+      .filters-btn,
+      .sort-btn,
+      .visit-btn,
+      .detail-actions button:not(.icon-btn),
+      .capture-expand,
+      .tab-switcher button,
+      .inspector-tabs button,
+      .chip-filter,
+      .load-more,
+      .hide-btn,
+      .danger-btn,
+      .detail-section button:not(.icon-btn),
+      .capture-timeline button,
+      .folder,
+      .modal-apply
+    ):active:not(:disabled) {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
+
+  & .icon-btn.icon-btn:active,
+  & .visit:active {
+    transform: scale(0.92);
+  }
+
+  /* Chrome
+     -------------------------------------------------------------------------
+     The bar wears the page's colour, so it and the command bar under it read
+     as one piece of chrome rather than two stacked bands. What separates it
+     from the content scrolling beneath is a fade that only exists once
+     something is underneath -- tied to scroll position where the browser can,
+     always on where it can't. */
+  & .utility-bar {
+    background: var(--bg);
+    border-bottom: none;
+  }
+
+  & .utility-bar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 20px;
+    background: linear-gradient(to bottom, var(--bg), rgba(var(--surface-sunken-rgb), 0));
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  & .utility-bar-inner {
+    height: var(--bar-h);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  & .brand-tagline {
+    font-size: 13px;
+    color: var(--text-faint);
+    letter-spacing: -0.003em;
+  }
+
+  & .icon-btn.icon-btn {
+    border-radius: 999px;
+    transition: background-color 0.2s var(--ease), color 0.2s var(--ease), transform 0.2s var(--ease);
+  }
+
+  & .icon-btn.icon-btn:hover,
+  & .visit:hover {
+    border-color: transparent;
+  }
+
+  & .visit {
+    border-radius: 999px;
+  }
+
+  /* The one tinted fill on any screen, as a capsule. */
+  & .add-btn {
+    height: 34px;
+    padding: 0 16px 0 14px;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+
+  & :is(.bell-pop, .more-pop, .add-pop, .sort-pop) {
+    border-color: var(--border-soft);
+    border-radius: 16px;
+    box-shadow: var(--pop-shadow);
+    transform-origin: top right;
+    animation: ev-pop 0.22s var(--spring);
+  }
+
+  & .search-pop {
+    border-color: var(--border-soft);
+    border-radius: 18px;
+    box-shadow: var(--pop-shadow);
+    transform-origin: top center;
+    animation: ev-pop 0.22s var(--spring);
+  }
+
+  & :is(.more-item, .bell-item, .add-option, .sort-option) {
+    border-radius: 10px;
+  }
+
+  & .demo-banner {
+    letter-spacing: -0.005em;
+  }
+
+  & .site-footer {
+    border-top-color: var(--border-soft);
+  }
+
+  /* Dashboard
+     -------------------------------------------------------------------------
+     Recognised by its tab switcher rather than by a class, so the page's
+     markup is the original's: main.page holds the headline, the tabs and then
+     whichever tab is open, all as siblings, because every tab renders a
+     fragment. That flatness is what lets a grid put the tabs and the search
+     field side by side without either knowing about the other. */
+  & main.page:has(> .tab-switcher) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: start;
+    padding-top: 0;
+  }
+
+  & main.page:has(> .tab-switcher) > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  & .page-hero {
+    margin: 36px 0 30px;
+    font-size: clamp(30px, 4.2vw, 60px);
+    line-height: 1.02;
+    letter-spacing: -0.036em;
+    text-wrap: balance;
+  }
+
+  /* The command bar. Two grid items that stick at the same height and paint
+     one band between them: each carries the page colour behind it and reaches
+     out through the page margin on its outer side, so nothing scrolls through
+     a gap at either end. The tab track is drawn by a pseudo-element because
+     the element itself has to be that band. */
+  & main.page:has(> .tab-switcher):has(> .toolbar) > :is(.tab-switcher, .toolbar) {
+    position: sticky;
+    top: var(--bar-h);
+    z-index: 20;
+    align-self: start;
+    margin: 0;
+    background: var(--bg);
+  }
+
+  /* The band reaches the window edge through a shadow offset by one margin,
+     not by stretching the element: the boxes stay exactly where the controls
+     are, so the tour's spotlight and anything else that measures them still
+     lands on the tabs and the field rather than on the page margin. */
+  & main.page:has(> .tab-switcher):has(> .toolbar) > .tab-switcher {
+    grid-column: 1;
+    isolation: isolate;
+    padding: 14px 4px;
+    box-shadow: calc(-1 * var(--grid-margin)) 0 0 var(--bg);
+  }
+
+  & main.page:has(> .tab-switcher):has(> .toolbar) > .tab-switcher::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 10px 0;
+    border-radius: 999px;
+    background: var(--field-bg);
+  }
+
+  & main.page:has(> .tab-switcher):has(> .toolbar) > .toolbar {
+    grid-column: 2;
+    padding: 10px 0 10px 12px;
+    box-shadow: var(--grid-margin) 0 0 var(--bg);
+  }
+
+  & main.page:has(> .tab-switcher):has(> .toolbar) > :is(.tab-switcher, .toolbar)::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 20px;
+    background: linear-gradient(to bottom, var(--bg), rgba(var(--surface-sunken-rgb), 0));
+    pointer-events: none;
+  }
+
+  /* The fade runs under the margin too, like the band above it. */
+  & main.page:has(> .tab-switcher):has(> .toolbar) > .tab-switcher::after {
+    left: calc(-1 * var(--grid-margin));
+  }
+
+  & main.page:has(> .tab-switcher):has(> .toolbar) > .toolbar::after {
+    right: calc(-1 * var(--grid-margin));
+  }
+
+  /* No toolbar on screen -- the crop tool has the Components tab -- so the
+     tabs are simply a row. */
+  & main.page:has(> .tab-switcher):not(:has(> .toolbar)) > .tab-switcher {
+    justify-self: start;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--field-bg);
+    margin-bottom: 18px;
+  }
+
+  & .tab-switcher {
+    gap: 2px;
+  }
+
+  & .tab-switcher button {
+    height: 36px;
+    padding: 0 18px;
+    border-radius: 999px;
+    color: var(--text-muted);
+    letter-spacing: -0.005em;
+  }
+
+  & .tab-switcher button:hover:not(.active) {
+    color: var(--text);
+  }
+
+  & .tab-switcher button.active {
+    background: var(--seg-active);
+    box-shadow: var(--seg-shadow);
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  & .search-input {
+    font-size: 15px;
+    letter-spacing: -0.005em;
+    transition: background-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  }
+
+  /* A gray capsule beside the field rather than an outlined one: the field and
+     the button share a shape and a fill, and the field is told apart by the
+     circle at its end and by the caret, not by the button wearing a border. */
+  & .filters-btn {
+    border-color: transparent;
+    background: var(--field-bg);
+    font-weight: 500;
+  }
+
+  & .filters-btn:hover {
+    background: var(--chip-strong-bg);
+  }
+
+  & .chip-strip {
+    margin: 10px 0 6px;
+    gap: 6px;
+  }
+
+  & .chip-strip .chip-filter {
+    height: 32px;
+    padding: 0 13px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+
+  & .chip-filter:hover:not(.chip-selected):not(.chip-clear) {
+    background: var(--chip-strong-bg);
+  }
+
+  & .chip-count {
+    font-variant-numeric: tabular-nums;
+    background: none;
+    padding: 0;
+  }
+
+  & .chip-selected .chip-count {
+    background: none;
+    color: rgba(var(--invert-text-rgb), 0.65);
+  }
+
+  & .results-bar {
+    margin: 10px 0 22px;
+  }
+
+  & .result-count {
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+
+  & :is(.view-switch, .size-switch) {
+    background: var(--field-bg);
+    border-radius: 999px;
+  }
+
+  & :is(.view-switch, .size-switch) button {
+    border-radius: 999px;
+  }
+
+  & :is(.view-switch, .size-switch) button.active {
+    background: var(--seg-active);
+    box-shadow: var(--seg-shadow);
+    font-weight: 500;
+  }
+
+  & .view-switch button:hover:not(.active) {
+    background: none;
+  }
+
+  & .sort-btn {
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--field-bg);
+  }
+
+  & .sort-btn:hover {
+    background: var(--chip-strong-bg);
+  }
+
+  /* Cards
+     -------------------------------------------------------------------------
+     A card is its screenshot and a caption. The box, the border and the
+     background all go; the picture gets the radius and a hairline drawn on
+     top of it (so a white site still has an edge on a white page), and the
+     caption sits on the page itself. Rows are further apart than columns so
+     each caption reads as belonging to the picture above it, not below. */
+  & .grid {
+    row-gap: 34px;
+    column-gap: max(var(--grid-gutter), 22px);
+    margin-top: 6px;
+  }
+
+  & .card {
+    border: none;
+    border-radius: 0;
+    background: none;
+    overflow: visible;
+  }
+
+  & .card-media {
+    border-radius: var(--r-card);
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--stage);
+    transition: box-shadow 0.3s var(--ease);
+  }
+
+  & .card-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px var(--hairline);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  & .card .thumb {
+    background: var(--stage);
+  }
+
+  & .card .thumb img {
+    transition: transform 0.7s var(--ease);
+  }
+
+  & .card:hover .thumb img {
+    transform: scale(1.025);
+  }
+
+  & .card:hover .card-media {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  }
+
+  & .card-actions {
+    z-index: 2;
+    border-radius: 999px;
+  }
+
+  & .card-actions .icon-btn {
+    border-radius: 999px;
+  }
+
+  & .card-footer {
+    padding: 12px 2px 4px;
+  }
+
+  & .card-title {
+    gap: 9px;
+  }
+
+  & .card .favicon-badge {
+    width: 22px;
+    height: 22px;
+  }
+
+  & .card .name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+  }
+
+  & .card .name:hover {
+    text-decoration: none;
+    color: var(--text-secondary);
+  }
+
+  /* The arrow out is a second action on a caption that already links, so it
+     waits for the pointer. A device that can't hover always shows it. */
+  & .card .visit {
+    opacity: 0;
+  }
+
+  & .card:hover .visit,
+  & .card .visit:focus-visible {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    & .card .visit {
+      opacity: 1;
+    }
+  }
+
+  /* Tags become a line of metadata rather than a row of pills: the same words,
+     in the same order, measured by the same TagRow, set as quiet text with a
+     separator. A grid of forty cards each carrying four pills was most of the
+     visual noise on the dashboard. */
+  & .card .card-tags {
+    --chip-gap: 0px;
+    padding: 0 2px 0 33px;
+    margin: 0;
+  }
+
+  & .card .card-tags .chip {
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--text-faint);
+    font-size: 12.5px;
+    font-weight: 400;
+  }
+
+  & .card .card-tags .chip + .chip::before {
+    content: "·";
+    padding: 0 6px;
+    color: var(--text-faint);
+    opacity: 0.7;
+  }
+
+  & .card .card-tags .chip-pending {
+    color: var(--warn-text);
+  }
+
+  & .card .card-tags .chip-more {
+    color: var(--text-faint);
+  }
+
+  & .card .card-tags .chip-more:hover {
+    color: var(--text);
+  }
+
+  /* List and headline views: grouped lists, a rounded group on the page with
+     separators inset to the text -- the list form this design language uses
+     for rows of things. */
+  & .row-list {
+    gap: 0;
+    padding: 6px;
+    border-radius: var(--r-panel);
+    background: var(--surface);
+  }
+
+  & .row-item {
+    position: relative;
+    border: none;
+    border-radius: var(--r-card);
+    background: none;
+    padding: 12px;
+    transition: background-color 0.2s var(--ease);
+  }
+
+  & .row-item:hover {
+    background: var(--surface-hover);
+  }
+
+  & .row-item + .row-item::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: calc(var(--row-thumb-w) + 26px);
+    right: 12px;
+    height: 1px;
+    background: var(--border);
+  }
+
+  & .row-item:hover::before,
+  & .row-item:hover + .row-item::before {
+    opacity: 0;
+  }
+
+  & .row-thumb {
+    border-radius: 10px;
+    background: var(--stage);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  & .row-name {
+    font-weight: 600;
+    letter-spacing: -0.012em;
+  }
+
+  & :is(.headline-list, .resource-list) {
+    padding: 6px;
+    border-radius: var(--r-panel);
+    background: var(--surface);
+  }
+
+  & :is(.headline-item, .resource-row) {
+    border-radius: 12px;
+    transition: background-color 0.2s var(--ease);
+  }
+
+  & .headline-item {
+    padding: 11px 12px;
+  }
+
+  & .headline-item:hover,
+  & .resource-row:hover {
+    background: var(--surface-hover);
+  }
+
+  & :is(.headline-item, .resource-row)::after {
+    left: 46px;
+    right: 12px;
+    background: var(--border);
+  }
+
+  & .resource-title {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  & .folder {
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--field-bg);
+  }
+
+  & .folder:hover {
+    border-color: transparent;
+    background: var(--chip-strong-bg);
+  }
+
+  & .folder-on,
+  & .folder-on:hover {
+    background: var(--invert-bg);
+  }
+
+  & .load-more {
+    border-color: transparent;
+    background: var(--field-bg);
+  }
+
+  & .load-more:hover {
+    border-color: transparent;
+    background: var(--chip-strong-bg);
+  }
+
+  & .empty-state {
+    border-radius: var(--r-panel);
+    background: var(--surface);
+  }
+
+  & .empty-state-headline {
+    font-family: var(--display);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  /* Modals
+     ------------------------------------------------------------------------- */
+  & .modal-backdrop {
+    animation: ev-fade 0.2s var(--ease);
+  }
+
+  & .modal {
+    border-radius: 22px;
+    box-shadow: var(--pop-shadow);
+    animation: ev-sheet 0.28s var(--spring);
+  }
+
+  & .modal-head {
+    border-bottom-color: transparent;
+    padding-bottom: 10px;
+  }
+
+  & .modal-head h2 {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  & .modal-foot {
+    border-top-color: var(--border-soft);
+  }
+
+  & .modal-foot button {
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--field-bg);
+    font-weight: 500;
+  }
+
+  & .modal-apply {
+    border-radius: 999px;
+  }
+
+  /* Page titles
+     -------------------------------------------------------------------------
+     Every page's own name in the display face, so the dashboard headline is
+     the loudest instance of a system rather than the only thing set in it. */
+  & .page > h1,
+  & .top-nav h1,
+  & .collection-title {
+    font-family: var(--display);
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+  }
+
+  /* Site page
+     -------------------------------------------------------------------------
+     A header with the name as a large title and the meta line hung under it,
+     then the viewer and the inspector. */
+  & .detail-page {
+    padding-top: 28px;
+  }
+
+  & .detail-header {
+    gap: 20px;
+    margin-bottom: 2px;
+  }
+
+  & .detail-header .favicon-badge {
+    width: 44px;
+    height: 44px;
+    border-color: var(--hairline);
+  }
+
+  & .name-input,
+  & .shared-detail-title {
+    min-width: 0;
+    font-family: var(--display);
+    font-size: clamp(28px, 3vw, 40px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.032em;
+    color: var(--text);
+  }
+
+  & .name-input {
+    border-radius: 8px;
+    padding: 2px 8px;
+    margin-left: -8px;
+    transition: background-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  }
+
+  & .name-input:hover {
+    background: var(--surface-hover);
+  }
+
+  & .name-input:focus {
+    border-bottom: none;
+    background: var(--surface);
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  /* Hung under the title's text rather than under the badge: 44 of badge and
+     20 of gap. */
+  & .detail-page > .meta-line {
+    margin: 0 0 26px 64px;
+    color: var(--text-faint);
+  }
+
+  & .detail-actions {
+    gap: 6px;
+  }
+
+  & .detail-actions button:not(.icon-btn),
+  & .visit-btn {
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 999px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+
+  & .detail-actions button:not(.icon-btn) {
+    border-color: transparent;
+    background: var(--field-bg);
+    color: var(--text);
+  }
+
+  & .detail-actions button:not(.icon-btn):hover:not(:disabled) {
+    background: var(--chip-strong-bg);
+  }
+
+  & .visit-btn {
+    font-weight: 600;
+  }
+
+  & .visit-btn:hover {
+    background: var(--invert-bg-hover);
+  }
+
+  /* The heart and bookmark as one gray capsule, the shape every other button
+     in this header has, rather than a bordered box among capsules. */
+  & .detail-save-actions.detail-save-actions {
+    gap: 0;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: var(--field-bg);
+  }
+
+  & .detail-save-actions.detail-save-actions .icon-btn.icon-btn {
+    width: 38px;
+    height: 36px;
+  }
+
+  & .detail-save-actions.detail-save-actions .icon-btn.icon-btn:hover {
+    background: var(--chip-strong-bg);
+  }
+
+  & .queued-note,
+  & .capture-status {
+    border-radius: var(--r-card);
+  }
+
+  /* The two columns: the viewer takes what's left, the inspector a fixed
+     width -- it holds text, and text has a measure, not a share of a monitor. */
+  & .detail-columns {
+    grid-template-columns: minmax(0, 1fr) 400px;
+    column-gap: 28px;
+    margin-bottom: 48px;
+  }
+
+  & .detail-main,
+  & .detail-side {
+    grid-column: auto;
+  }
+
+  @media (min-width: 1700px) {
+    & .detail-columns {
+      grid-template-columns: minmax(0, 1fr) 440px;
+    }
+  }
+
+  /* The viewer: a stage with its controls on one row above the picture --
+     history on the left, desktop/mobile on the right -- and the line about
+     the selected capture under it, where it describes what you just looked
+     at. Without a history the meta line takes the top-left instead. */
+  & .capture-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "timeline switch"
+      "capture capture"
+      "expand expand"
+      "meta meta";
+    align-items: center;
+    column-gap: 16px;
+    padding: 14px 20px 18px;
+    border-radius: 22px;
+    background: var(--stage);
+  }
+
+  & .capture-panel:not(:has(.capture-timeline)) {
+    grid-template-areas:
+      "meta switch"
+      "capture capture"
+      "expand expand";
+  }
+
+  & .capture-timeline {
+    grid-area: timeline;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+    scrollbar-width: none;
+  }
+
+  & .capture-timeline::-webkit-scrollbar {
+    display: none;
+  }
+
+  & .capture-timeline button {
+    height: 30px;
+    padding: 0 13px;
+    border-color: transparent;
+    background: none;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  & .capture-timeline button:hover:not(.active) {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  & .capture-timeline button.active {
+    background: var(--invert-bg);
+    border-color: transparent;
+    color: var(--invert-text);
+  }
+
+  & .viewport-toggle {
+    grid-area: switch;
+    justify-self: end;
+    margin: 0;
+    background: var(--field-bg);
+  }
+
+  & .capture-panel:not(:has(.capture-timeline)):not(:has(.viewport-toggle)) .capture-meta {
+    grid-column: 1 / -1;
+  }
+
+  & .capture-meta {
+    grid-area: meta;
+    justify-self: start;
+    margin: 0;
+    text-align: left;
+    color: var(--text-faint);
+  }
+
+  & .capture-panel:has(.capture-timeline) .capture-meta {
+    justify-self: center;
+    margin-top: 14px;
+  }
+
+  & .detail-capture {
+    grid-area: capture;
+    justify-self: center;
+    margin-top: 14px;
+    border-color: transparent;
+    border-radius: var(--r-card);
+    box-shadow: 0 0 0 1px var(--hairline), 0 18px 50px rgba(0, 0, 0, 0.22);
+  }
+
+  & .detail-capture img {
+    border-radius: var(--r-card);
+  }
+
+  & .detail-capture.detail-capture-collapsed {
+    border-bottom-left-radius: var(--r-card);
+    border-bottom-right-radius: var(--r-card);
+    overflow: hidden;
+  }
+
+  & .capture-fade {
+    background: linear-gradient(
+      to bottom,
+      rgba(var(--stage-rgb), 0) 0%,
+      rgba(var(--stage-rgb), 0.55) 45%,
+      rgba(var(--stage-rgb), 0.92) 78%,
+      var(--stage) 100%
+    );
+  }
+
+  /* Expand sits on the fade it lifts, rather than in a row of its own below. */
+  & .capture-expand {
+    grid-area: expand;
+    justify-self: center;
+    position: relative;
+    z-index: 1;
+    height: 36px;
+    margin-top: -58px;
+    padding: 0 18px;
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--invert-bg);
+    color: var(--invert-text);
+    font-weight: 600;
+  }
+
+  & .detail-capture:not(.detail-capture-collapsed) ~ .capture-expand {
+    margin-top: 16px;
+    background: var(--field-bg);
+    color: var(--text);
+  }
+
+  & .capture-expand:hover {
+    background: var(--invert-bg-hover);
+  }
+
+  /* The inspector. Sticks beside the screenshot and scrolls on its own, so
+     you can read the tags of the part of the page you're looking at. Its
+     segmented control sticks to the top of it. */
+  & .detail-side {
+    position: sticky;
+    top: calc(var(--bar-h) + 12px);
+    max-height: calc(100dvh - var(--bar-h) - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+    padding: 0 18px 18px;
+    border-radius: 22px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  /* The shared page renders the same panel without the panes, so it starts
+     with a section and needs the top padding the tabs would have given it. */
+  & .detail-side:not(:has(> .inspector-tabs)) {
+    padding-top: 18px;
+  }
+
+  & .inspector-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    gap: 2px;
+    margin: 0 -18px 4px;
+    padding: 14px 14px 12px;
+    background: var(--surface);
+  }
+
+  & .inspector-tabs::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 10px 10px 8px;
+    border-radius: 999px;
+    background: var(--field-bg);
+  }
+
+  & .inspector-tabs button {
+    flex: 1;
+    height: 32px;
+    border: none;
+    border-radius: 999px;
+    background: none;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  & .inspector-tabs button:hover:not(.active) {
+    color: var(--text);
+  }
+
+  & .inspector-tabs button.active {
+    background: var(--seg-active);
+    box-shadow: var(--seg-shadow);
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  & .inspector-pane:not([hidden]) {
+    animation: ev-fade 0.2s var(--ease);
+  }
+
+  & .detail-section {
+    margin: 0;
+    padding: 18px 0;
+  }
+
+  & .inspector-pane > .detail-section:first-child,
+  & .detail-side > .detail-section:first-child {
+    padding-top: 10px;
+  }
+
+  & .detail-side .detail-section + .detail-section,
+  & .detail-side .detail-section + .detail-danger {
+    border-top: 1px solid var(--border-soft);
+  }
+
+  & .detail-section h2 {
+    margin-bottom: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--text-secondary);
+  }
+
+  & .section-count {
+    font-weight: 500;
+  }
+
+  & .summary-text {
+    font-size: 15px;
+    line-height: 1.6;
+    letter-spacing: -0.006em;
+    color: var(--text-body);
+  }
+
+  & .detail-section textarea {
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: var(--field-bg);
+    color: var(--text);
+    line-height: 1.5;
+    transition: background-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  }
+
+  & .detail-section textarea:focus {
+    outline: none;
+    background: var(--surface);
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  & .detail-section button:not(.icon-btn) {
+    min-height: 30px;
+    padding: 0 14px;
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--field-bg);
+    font-weight: 500;
+  }
+
+  & .detail-section button:not(.icon-btn):hover:not(:disabled) {
+    background: var(--chip-strong-bg);
+  }
+
+  & .detail-section .link-btn.link-btn {
+    min-height: 0;
+    padding: 0;
+    background: none;
+  }
+
+  & .detail-section .section-head-actions button.primary {
+    background: var(--invert-bg);
+    color: var(--invert-text);
+  }
+
+  & .facet-row {
+    gap: 7px;
+    padding-bottom: 16px;
+  }
+
+  & .facet-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-faint);
+  }
+
+  & .combobox-field {
+    border-color: transparent;
+    border-radius: 12px;
+    background: var(--field-bg);
+    transition: background-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  }
+
+  & .combobox-field:hover {
+    background: var(--chip-strong-bg);
+  }
+
+  & .combobox-field:focus-within {
+    background: var(--surface);
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  & .combobox-chip {
+    background: var(--surface);
+    box-shadow: 0 0 0 0.5px var(--hairline);
+  }
+
+  & .combobox-dropdown {
+    border-radius: 14px;
+    box-shadow: var(--pop-shadow);
+    animation: ev-pop 0.2s var(--spring);
+  }
+
+  & .palette-bar {
+    border-color: var(--hairline);
+    border-radius: 12px;
+  }
+
+  & .font-card {
+    border-color: transparent;
+    border-radius: 14px;
+    background: var(--surface-soft);
+  }
+
+  & .page-list li {
+    border-radius: 8px;
+  }
+
+  & .detail-danger {
+    gap: 8px;
+    padding-top: 18px;
+  }
+
+  & .detail-danger .hide-btn.hide-btn,
+  & .detail-danger .danger-btn.danger-btn {
+    height: 38px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  & .detail-danger .hide-btn.hide-btn {
+    border-color: transparent;
+    background: var(--field-bg);
+  }
+
+  /* Components from this site, and Related: bands under the fold, each named
+     at the size of a section rather than of a sidebar heading. */
+  & .detail-page > .page-band {
+    padding-top: 8px;
+  }
+
+  & .detail-page > .page-band > h2,
+  & .related-section h2 {
+    margin-bottom: 6px;
+    font-family: var(--display);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--text);
+  }
+
+  /* Everywhere else
+     ------------------------------------------------------------------------- */
+  & .collection-cover {
+    border-radius: var(--r-card);
+    background: var(--stage);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  & .collection-card {
+    border: none;
+    background: none;
+  }
+
+  & .collection-card-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+  }
+
+  /* Manage Tags: each facet a grouped list, its rows separated by hairlines
+     inset to the label, and every action the same gray capsule as the rest of
+     the app -- Delete keeps its red, which is the one colour that has to
+     survive the recomposition. */
+  & .tag-list {
+    gap: 0;
+    padding: 6px;
+    border-radius: var(--r-panel);
+    background: var(--surface);
+  }
+
+  & .tag-row {
+    position: relative;
+    border: none;
+    border-radius: 12px;
+    background: none;
+  }
+
+  & .tag-row:hover {
+    background: var(--surface-hover);
+  }
+
+  & .tag-row + .tag-row::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 12px;
+    right: 12px;
+    height: 1px;
+    background: var(--border);
+  }
+
+  & .tag-row:hover::before,
+  & .tag-row:hover + .tag-row::before {
+    opacity: 0;
+  }
+
+  & .tag-section h2 {
+    font-size: 13px;
+  }
+
+  & .tag-actions button:not(.danger-btn) {
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--field-bg);
+  }
+
+  & .tag-actions button:not(.danger-btn):hover {
+    background: var(--chip-strong-bg);
+  }
+
+  & .tag-actions .danger-btn.danger-btn,
+  & .bulk-actions .danger-btn.danger-btn {
+    border-radius: 999px;
+  }
+
+  & :is(.tag-edit-input, .tag-merge-select) {
+    border-radius: 8px;
+  }
+
+  & .tag-undo {
+    border-color: transparent;
+    border-radius: var(--r-card);
+  }
+
+  /* Collections' create row, and the other inline save forms. */
+  & .save-form input {
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--field-bg);
+    color: var(--text);
+  }
+
+  & .save-form input:focus {
+    background: var(--surface);
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  & .save-form button {
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  & .field input,
+  & .field textarea,
+  & .field select {
+    border-radius: 12px;
+  }
+
+  & .row-selected {
+    background: var(--surface-hover);
+  }
+
+  /* Narrower windows
+     ------------------------------------------------------------------------- */
+  @media (max-width: 1080px) {
+    & .detail-columns {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 24px;
+    }
+
+    & .detail-side {
+      position: static;
+      max-height: none;
+      overflow: visible;
+    }
+
+    /* The panel no longer scrolls on its own, so its tabs stick to the window,
+       under the bar. */
+    & .inspector-tabs {
+      top: var(--bar-h);
+    }
+  }
+
+  @media (max-width: 900px) {
+    & main.page:has(> .tab-switcher):has(> .toolbar) > .tab-switcher {
+      grid-column: 1 / -1;
+      position: static;
+      justify-self: start;
+      margin: 0 0 4px;
+      padding: 4px;
+      border-radius: 999px;
+      background: var(--field-bg);
+      box-shadow: none;
+    }
+
+    & main.page:has(> .tab-switcher):has(> .toolbar) > .tab-switcher::before,
+    & main.page:has(> .tab-switcher):has(> .toolbar) > .tab-switcher::after {
+      display: none;
+    }
+
+    /* Alone on its row now, so the band reaches both edges. */
+    & main.page:has(> .tab-switcher):has(> .toolbar) > .toolbar {
+      grid-column: 1 / -1;
+      padding-left: 0;
+      box-shadow:
+        var(--grid-margin) 0 0 var(--bg),
+        calc(-1 * var(--grid-margin)) 0 0 var(--bg);
+    }
+
+    & main.page:has(> .tab-switcher):has(> .toolbar) > .toolbar::after {
+      left: calc(-1 * var(--grid-margin));
+    }
+
+    & .page-hero {
+      margin: 24px 0 22px;
+    }
+  }
+
+  @media (max-width: 700px) {
+    & .detail-header {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    & .detail-page > .meta-line {
+      margin-left: 0;
+    }
+
+    & .detail-actions {
+      flex-wrap: wrap;
+    }
+
+    & .capture-panel {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "timeline"
+        "switch"
+        "capture"
+        "expand"
+        "meta";
+      row-gap: 10px;
+      padding: 12px 12px 16px;
+      border-radius: 18px;
+    }
+
+    & .capture-panel:not(:has(.capture-timeline)) {
+      grid-template-areas:
+        "switch"
+        "meta"
+        "capture"
+        "expand";
+    }
+
+    & .viewport-toggle {
+      justify-self: center;
+    }
+
+    & .capture-meta,
+    & .capture-panel:has(.capture-timeline) .capture-meta {
+      justify-self: center;
+      margin: 0;
+      text-align: center;
+    }
+
+    & .detail-capture {
+      margin-top: 4px;
+    }
+
+    & .card .card-tags {
+      padding-left: 2px;
+    }
+  }
+
+  @media (max-width: 560px) {
+    & main.page:has(> .tab-switcher) > .tab-switcher.tab-switcher {
+      justify-self: stretch;
+    }
+
+    & .tab-switcher.tab-switcher button {
+      flex: 1;
+      justify-content: center;
+      height: 34px;
+      padding: 0 8px;
+    }
+
+    & .grid {
+      row-gap: 28px;
+    }
+  }
+
+  /* Scroll-linked edges, where the browser supports them: the fades under the
+     bar and the command bar come in over the first stretch of scrolling
+     instead of sitting over the headline at rest. */
+  @supports (animation-timeline: scroll()) {
+    & .utility-bar::after {
+      animation: ev-edge linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 80px;
+    }
+
+    & main.page:has(> .tab-switcher):has(> .toolbar) > :is(.tab-switcher, .toolbar)::after {
+      animation: ev-edge linear both;
+      animation-timeline: scroll(root);
+      animation-range: 180px 300px;
+    }
+  }
+
+  /* On the dashboard the command bar is what sits under the bar, and it has
+     its own fade; the bar's would lie across the top of the tabs. */
+  & body:has(main.page > .tab-switcher + .toolbar) .utility-bar::after {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    & *,
+    & *::before,
+    & *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    & .card:hover .thumb img {
+      transform: none;
+    }
+  }
+}

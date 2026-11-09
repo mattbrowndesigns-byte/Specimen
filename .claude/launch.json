@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "kivli-dev-local",
+      "runtimeExecutable": "/Users/matthew/.local/node/bin/node",
+      "runtimeArgs": ["node_modules/next/dist/bin/next", "dev", "--webpack"],
+      "port": 3000
     }
   ]
 }

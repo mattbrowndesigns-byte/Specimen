@@ -1,0 +1,729 @@
+/* Refined
+   ===========================================================================
+   The original, finished more carefully. Same layout, same information
+   architecture, same brand: the wordmark, the orange, the deep purple, the dark
+   theme the demo opens in. What changes is the craft the original's own notes
+   keep reaching for -- one grey ladder instead of three near-misses, hairlines
+   that read as edges rather than as boxes, controls that agree on a height and
+   a radius, states for press and focus that every control has rather than
+   some.
+
+   Read against the Apple design skill's quality bar, conservatively: the
+   semantic-colour discipline, the 4/8 spacing, the type scale with real steps,
+   press-to-dim, focus you can see. Deliberately not taken: floating glass bars
+   (the skill's own signature, and the brief asks not to imitate macOS), the
+   system blue (the brand is orange), and any change to where things are.
+
+   Every rule is under :root[data-variant="refined"], so with no variant set
+   none of this can match. See lib/variant.js. */
+
+/* Tokens
+   ---------------------------------------------------------------------------
+   Light mode moves onto Apple's own neutral pair -- #f5f5f7 page, #1d1d1f ink,
+   #6e6e73 secondary -- which keeps every contrast the original measured while
+   taking the faint blue-grey cast out of the surfaces. Dark goes one step
+   deeper at the page and one step lighter at the card, so the two layers stop
+   sitting 12 luminance points apart and start reading as two layers. */
+:root[data-variant="refined"] {
+  --bg: #f5f5f7;
+  --surface: #fff;
+  --surface-rgb: 255, 255, 255;
+  --surface-soft: #fbfbfd;
+  --surface-sunken: #ebebef;
+  --surface-sunken-rgb: 235, 235, 239;
+  --surface-hover: #f1f1f4;
+
+  --chip-bg: #ededf0;
+  --chip-strong-bg: #e3e3e7;
+  --field-bg: #e8e8ed;
+
+  --border-soft: #e8e8ec;
+  --border: #dfdfe4;
+  --border-strong: #d2d2d7;
+  --border-strong-hover: #bcbcc2;
+
+  --text: #1d1d1f;
+  --text-body: #2b2b2e;
+  --text-secondary: #46464b;
+  --text-muted: #5b5b61;
+  --text-faint: #6e6e73;
+
+  --invert-bg: #1d1d1f;
+  --invert-bg-hover: #36363a;
+
+  --overlay: rgba(12, 12, 14, 0.42);
+
+  /* New to this variant. The selected segment of every segmented control --
+     view, size, desktop/mobile -- which in the original took --surface and so
+     in dark mode sat *darker* than its own track, reading as pressed in. */
+  --seg-active: #fff;
+  --seg-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  --pop-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 14px 36px rgba(0, 0, 0, 0.12);
+  --ring: rgba(var(--accent-rgb), 0.55);
+  --ease: cubic-bezier(0.28, 0.11, 0.32, 1);
+
+  --r-control: 10px;
+  --r-card: 14px;
+  --r-panel: 18px;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+:root[data-variant="refined"][data-theme="dark"] {
+  --bg: #0f0f11;
+  --surface: #1b1b1e;
+  --surface-rgb: 27, 27, 30;
+  --surface-soft: #212124;
+  --surface-sunken: #09090a;
+  --surface-sunken-rgb: 9, 9, 10;
+  --surface-hover: #26262a;
+
+  --chip-bg: #242428;
+  --chip-strong-bg: #2e2e33;
+  --field-bg: #212125;
+
+  --border-soft: #232327;
+  --border: #2c2c31;
+  --border-strong: #3a3a40;
+  --border-strong-hover: #4c4c54;
+
+  --text: #f5f5f7;
+  --text-body: #e2e2e6;
+  --text-secondary: #babac1;
+  --text-muted: #9e9ea6;
+  --text-faint: #8c8c94;
+
+  --invert-bg: #f5f5f7;
+  --invert-bg-hover: #e0e0e4;
+  --invert-text: #111113;
+  --invert-text-rgb: 17, 17, 19;
+
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  --seg-active: #3a3a3f;
+  --seg-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --pop-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.06), 0 20px 48px rgba(0, 0, 0, 0.55);
+}
+
+:root[data-variant="refined"] {
+  & body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Helvetica Neue", sans-serif;
+  }
+
+  /* Focus you can see, on every control, in one colour. The original had a
+     considered ring on the search field and the browser default everywhere
+     else. Inputs keep their own treatments below. */
+  & :is(button, a, summary, [role="button"]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* Press dims and settles, never ripples -- and only on things that are
+     plainly buttons. The arcade launcher is left alone: its idle animation owns
+     `transform`, and a pressed state there is a filter for that reason. */
+  & :is(
+      .add-btn,
+      .filters-btn,
+      .sort-btn,
+      .visit-btn,
+      .detail-actions button:not(.icon-btn),
+      .capture-expand,
+      .tab-switcher button,
+      .chip-filter,
+      .load-more,
+      .view-switch button,
+      .size-switch button,
+      .hide-btn,
+      .danger-btn,
+      .detail-section button:not(.icon-btn),
+      .capture-timeline button,
+      .folder,
+      .modal-apply,
+      .tour-next,
+      .tour-back
+    ) {
+    transition:
+      background-color 0.18s var(--ease),
+      border-color 0.18s var(--ease),
+      color 0.18s var(--ease),
+      box-shadow 0.18s var(--ease),
+      transform 0.18s var(--ease);
+  }
+
+  & :is(
+      .add-btn,
+      .filters-btn,
+      .sort-btn,
+      .visit-btn,
+      .detail-actions button:not(.icon-btn),
+      .capture-expand,
+      .tab-switcher button,
+      .chip-filter,
+      .load-more,
+      .hide-btn,
+      .danger-btn,
+      .detail-section button:not(.icon-btn),
+      .capture-timeline button,
+      .folder,
+      .modal-apply
+    ):active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  & .icon-btn.icon-btn:active,
+  & .visit:active {
+    transform: scale(0.92);
+  }
+
+  /* Chrome
+     ------------------------------------------------------------------------- */
+  & .utility-bar {
+    border-bottom-color: var(--border-soft);
+  }
+
+  & .utility-bar-inner {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  & .brand-tagline {
+    font-size: 14px;
+    letter-spacing: -0.005em;
+  }
+
+  /* No outline on a bar button, hovered or not: the bar is the container. A
+     border that appears on hover is a second shape arriving under the pointer. */
+  & .icon-btn.icon-btn {
+    border-radius: var(--r-control);
+    transition: background-color 0.18s var(--ease), color 0.18s var(--ease), transform 0.18s var(--ease);
+  }
+
+  & .icon-btn.icon-btn:hover,
+  & .visit:hover {
+    border-color: transparent;
+  }
+
+  & .visit {
+    border-radius: var(--r-control);
+  }
+
+  & .add-btn {
+    height: 34px;
+    padding: 0 16px;
+    border-radius: var(--r-control);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+
+  & :is(.bell-pop, .more-pop, .add-pop, .sort-pop, .search-pop) {
+    border-color: var(--border-soft);
+    border-radius: 14px;
+    box-shadow: var(--pop-shadow);
+  }
+
+  & :is(.more-item, .bell-item, .add-option, .sort-option) {
+    border-radius: 8px;
+  }
+
+  & .demo-banner {
+    letter-spacing: -0.005em;
+  }
+
+  /* Dashboard
+     ------------------------------------------------------------------------- */
+  & .page-hero {
+    margin: 10px 0 26px;
+    line-height: 1.06;
+    letter-spacing: -0.028em;
+  }
+
+  & .tab-switcher {
+    gap: 2px;
+    margin-bottom: 18px;
+  }
+
+  & .tab-switcher button {
+    height: 36px;
+    padding: 0 16px;
+    letter-spacing: -0.005em;
+  }
+
+  & .tab-switcher button:hover:not(.active) {
+    color: var(--text);
+  }
+
+  & .tab-switcher button.active {
+    font-weight: 600;
+  }
+
+  & .search-input {
+    font-size: 15px;
+    letter-spacing: -0.005em;
+    transition: background-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+  }
+
+  & .filters-btn {
+    border-color: var(--border);
+    font-weight: 500;
+  }
+
+  & .filters-btn:hover {
+    border-color: var(--border-strong);
+  }
+
+  & .chip-strip {
+    gap: 6px;
+  }
+
+  & .chip-strip .chip-filter {
+    height: 30px;
+    padding: 0 12px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+
+  & .chip-filter:hover:not(.chip-selected):not(.chip-clear) {
+    background: var(--chip-strong-bg);
+  }
+
+  & .chip-count {
+    font-variant-numeric: tabular-nums;
+  }
+
+  & .results-bar {
+    margin: 6px 0 18px;
+  }
+
+  & :is(.view-switch, .size-switch) {
+    background: var(--field-bg);
+    border-radius: 9px;
+  }
+
+  & :is(.view-switch, .size-switch) button {
+    border-radius: 7px;
+  }
+
+  & :is(.view-switch, .size-switch) button.active {
+    background: var(--seg-active);
+    box-shadow: var(--seg-shadow);
+    font-weight: 500;
+  }
+
+  & .view-switch button:hover:not(.active) {
+    background: none;
+  }
+
+  & .sort-btn {
+    border-radius: var(--r-control);
+  }
+
+  /* Cards: one radius for the card, a hairline for its edge, and a hover that
+     changes the edge rather than the card's position -- a grid that jumps
+     under the pointer is a grid you can't scan. The picture breathes instead. */
+  & .grid {
+    row-gap: 24px;
+  }
+
+  & .card {
+    border-radius: var(--r-card);
+    border-color: var(--border-soft);
+    transition: border-color 0.2s var(--ease);
+  }
+
+  & .card:hover {
+    border-color: var(--border-strong);
+  }
+
+  & .card .thumb img {
+    transition: transform 0.6s var(--ease);
+  }
+
+  & .card:hover .thumb img {
+    transform: scale(1.015);
+  }
+
+  & .card-footer {
+    padding: 12px 14px 10px;
+  }
+
+  & .name {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  & .card-tags {
+    padding: 0 14px;
+    margin-bottom: 14px;
+  }
+
+  & .chip {
+    font-weight: 500;
+  }
+
+  & .card-actions {
+    border-radius: 12px;
+  }
+
+  & .row-item,
+  & .headline-item,
+  & .resource-row {
+    transition: background-color 0.18s var(--ease);
+  }
+
+  & .row-thumb,
+  & .row-thumb img {
+    border-radius: 10px;
+  }
+
+  & .row-name {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  & .load-more {
+    border-color: var(--border);
+  }
+
+  & .empty-state {
+    border-radius: var(--r-panel);
+  }
+
+  & .empty-state-headline {
+    letter-spacing: -0.025em;
+  }
+
+  /* Modals
+     ------------------------------------------------------------------------- */
+  & .modal {
+    border-radius: var(--r-panel);
+    box-shadow: var(--pop-shadow);
+  }
+
+  & .modal-head {
+    border-bottom-color: var(--border-soft);
+  }
+
+  & .modal-head h2 {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  & .modal-foot {
+    border-top-color: var(--border-soft);
+  }
+
+  /* Detail page
+     ------------------------------------------------------------------------- */
+  & .detail-header {
+    margin-bottom: 4px;
+  }
+
+  & .detail-header .favicon-badge {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Title 1, emphasised. The focus underline is a shadow rather than a border,
+     because the original's 1px border pushed the header a pixel taller the
+     moment you clicked into the name. */
+  & .name-input {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    color: var(--text);
+  }
+
+  & .name-input:focus {
+    border-bottom: none;
+    box-shadow: inset 0 -2px 0 var(--ring);
+  }
+
+  & .meta-line {
+    margin-bottom: 20px;
+    color: var(--text-faint);
+  }
+
+  & .detail-actions {
+    gap: 8px;
+  }
+
+  & .detail-actions button:not(.icon-btn),
+  & .visit-btn {
+    height: 34px;
+    padding: 0 14px;
+    border-radius: var(--r-control);
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+
+  & .detail-actions button:not(.icon-btn) {
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  & .detail-actions button:not(.icon-btn):hover:not(:disabled) {
+    background: var(--surface-hover);
+    border-color: var(--border-strong);
+  }
+
+  & .visit-btn {
+    font-weight: 600;
+  }
+
+  /* 30 + 1 + 1 of padding + 1 + 1 of border: the 34 every button beside it
+     is, so the row's tops and bottoms finally agree. */
+  & .detail-save-actions.detail-save-actions {
+    padding: 1px;
+    border-color: var(--border);
+    border-radius: var(--r-control);
+  }
+
+  & .detail-save-actions.detail-save-actions .icon-btn.icon-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  & .visit-btn:hover {
+    background: var(--invert-bg-hover);
+  }
+
+  & .capture-panel {
+    border-radius: var(--r-panel);
+  }
+
+  & .capture-timeline {
+    border-bottom-color: var(--border-soft);
+  }
+
+  & .capture-timeline button {
+    height: 28px;
+    padding: 0 12px;
+    border-color: var(--border);
+    font-weight: 500;
+  }
+
+  & .capture-timeline button:hover:not(.active) {
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+
+  & .capture-meta {
+    color: var(--text-faint);
+  }
+
+  & .viewport-toggle {
+    background: var(--field-bg);
+  }
+
+  & .detail-capture {
+    border-color: var(--border-soft);
+    border-radius: 12px;
+  }
+
+  & .detail-capture img {
+    border-radius: 12px;
+  }
+
+  & .capture-expand {
+    height: 34px;
+    padding: 0 18px;
+    border-color: var(--border);
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  & .capture-expand:hover {
+    background: var(--surface-hover);
+  }
+
+  /* The side panel's sections are separated by space and a hairline, in that
+     order -- the original had space alone, and at 28px between seven sections
+     of different lengths the eye couldn't tell where Tags ended and Colours
+     began. */
+  & .detail-section {
+    margin-bottom: 24px;
+  }
+
+  & .detail-side .detail-section + .detail-section,
+  & .detail-side .detail-section + .detail-danger {
+    padding-top: 22px;
+    border-top: 1px solid var(--border-soft);
+  }
+
+  & .detail-section h2 {
+    margin-bottom: 12px;
+    font-size: 15px;
+    letter-spacing: -0.012em;
+  }
+
+  & .summary-text {
+    font-size: 14.5px;
+    line-height: 1.6;
+    letter-spacing: -0.003em;
+  }
+
+  & .detail-section textarea {
+    border: 1px solid transparent;
+    border-radius: var(--r-control);
+    background: var(--field-bg);
+    color: var(--text);
+    line-height: 1.5;
+    transition: background-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+  }
+
+  & .detail-section textarea:focus {
+    outline: none;
+    background: var(--surface);
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  & .detail-section button:not(.icon-btn) {
+    min-height: 30px;
+    border-color: var(--border);
+    border-radius: 8px;
+    font-weight: 500;
+  }
+
+  & .detail-section button:not(.icon-btn):hover:not(:disabled) {
+    background: var(--surface-hover);
+  }
+
+  & .detail-section .link-btn.link-btn {
+    min-height: 0;
+  }
+
+  & .facet-row {
+    gap: 7px;
+  }
+
+  & .facet-name {
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  & .combobox-field {
+    border-color: var(--border);
+    border-radius: var(--r-control);
+    transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+  }
+
+  & .combobox-field:hover {
+    border-color: var(--border-strong);
+  }
+
+  & .combobox-field:focus-within {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  & .combobox-dropdown {
+    border-radius: 12px;
+    box-shadow: var(--pop-shadow);
+  }
+
+  & .palette-bar,
+  & .font-card {
+    border-radius: 12px;
+  }
+
+  & :is(.hide-btn, .danger-btn).hide-btn,
+  & :is(.hide-btn, .danger-btn).danger-btn {
+    border-radius: var(--r-control);
+  }
+
+  & .detail-danger .hide-btn.hide-btn,
+  & .detail-danger .danger-btn.danger-btn {
+    height: 36px;
+    font-weight: 500;
+  }
+
+  & .page-band > h2,
+  & .related-section h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  /* Everywhere else
+     ------------------------------------------------------------------------- */
+  & h1 {
+    letter-spacing: -0.02em;
+  }
+
+  & .collection-card,
+  & .collection-cover {
+    border-radius: var(--r-card);
+  }
+
+  & .tag-row {
+    border-radius: var(--r-control);
+  }
+
+  & .tag-actions button:not(.danger-btn) {
+    border-color: var(--border);
+    border-radius: 8px;
+    font-weight: 500;
+  }
+
+  & .tag-actions button:not(.danger-btn):hover {
+    border-color: var(--border-strong);
+  }
+
+  & .tag-actions .danger-btn.danger-btn {
+    border-radius: 8px;
+  }
+
+  & .save-form input,
+  & .save-form button {
+    border-radius: var(--r-control);
+  }
+
+  & .save-form input:focus {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  & .field input,
+  & .field textarea,
+  & .field select {
+    border-radius: var(--r-control);
+  }
+
+  & .site-footer {
+    border-top-color: var(--border-soft);
+  }
+
+  /* On a phone the original's header holds its buttons on the title's line
+     with flex-shrink: 0, so they run off the right edge and the whole page
+     scrolls sideways -- 631px of document in a 390px window. Here they wrap
+     under the name instead. */
+  @media (max-width: 700px) {
+    & .detail-header {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    & .name-input {
+      flex: 1 1 200px;
+      min-width: 0;
+    }
+
+    & .detail-actions {
+      flex-wrap: wrap;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    & * {
+      transition-duration: 0.01ms !important;
+    }
+
+    & .card:hover .thumb img {
+      transform: none;
+    }
+  }
+}

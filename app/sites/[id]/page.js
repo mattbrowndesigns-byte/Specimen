@@ -10,6 +10,8 @@ import DiscoveredPages from "../../_ui/DiscoveredPages";
 import SiteStyle from "../../_ui/SiteStyle";
 import FeatureRotator from "../../_ui/FeatureRotator";
 import SiteFooter from "../../_ui/SiteFooter";
+import InspectorPanes, { Pane } from "../../_ui/InspectorPanes";
+import useVariant from "../../_ui/useVariant";
 import { archiveUrl, captureTimeline, formatCaptureDate } from "@/lib/captures";
 import { explainCaptureFailure } from "@/lib/captureFailure";
 
@@ -52,6 +54,7 @@ export default function SiteDetailPage({ params }) {
   const [expandedCapture, setExpandedCapture] = useState(false);
   const timelineRef = useRef(null);
   const captureBaseline = useRef(0);
+  const variant = useVariant();
 
   async function load() {
     const res = await fetch(`/api/sites/${id}`);
@@ -509,7 +512,12 @@ export default function SiteDetailPage({ params }) {
             </div>
           </div>
 
+          {/* Each block names the pane the Elevated inspector files it under.
+              Everywhere else Pane and InspectorPanes render nothing of their
+              own, so this is the same panel in the same order it always was. */}
           <aside className="detail-side">
+            <InspectorPanes enabled={variant === "elevated"}>
+            <Pane id="overview">
             <section className="detail-section">
               {/* The sparkle marks the copy below as the model's rather than
                   yours -- the same mark the review queue uses for AI tags. */}
@@ -580,9 +588,13 @@ export default function SiteDetailPage({ params }) {
                 </div>
               ))}
             </section>
+            </Pane>
 
+            <Pane id="style">
             <SiteStyle site={site} onRefresh={load} />
+            </Pane>
 
+            <Pane id="overview">
             <section className="detail-section">
               <h2>Notes</h2>
               <textarea value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} rows={4} />
@@ -590,7 +602,9 @@ export default function SiteDetailPage({ params }) {
                 {savingField === "notes" ? "Saving…" : "Save Notes"}
               </button>
             </section>
+            </Pane>
 
+            <Pane id="pages">
             <DiscoveredPages
               pages={site.pages || []}
               siteUrl={site.url}
@@ -601,7 +615,9 @@ export default function SiteDetailPage({ params }) {
               refreshing={rediscovering}
               readAt={site.pages_read_at}
             />
+            </Pane>
 
+            <Pane id="overview">
             {/* Bottom of the panel, on its own: deleting the record isn't a
                 sibling of Re-capture, and putting it last means you scroll past
                 everything you'd lose before you reach it. */}
@@ -620,6 +636,8 @@ export default function SiteDetailPage({ params }) {
                 Delete Site
               </button>
             </div>
+            </Pane>
+            </InspectorPanes>
           </aside>
         </div>
 

@@ -1971,6 +1971,44 @@ centre was. Verifying any of this needs the Browser pane *shown*: a hidden
 pane hands back stale frames, and the dim looked absent for three rounds of
 screenshots that were simply old.
 
+**There are three designs, and two of them are one attribute.** `/demo` is the
+original, `/demo-refined` and `/demo-elevated` are the same demo door
+(`lib/demoEntry.js`) that also sets the `kivli_variant` cookie. An inline boot
+script stamps `<html data-variant>` before paint, like the theme, rather than
+the root layout reading `cookies()` -- that would have made every page in the
+app dynamic, original included. Every rule in `app/variants/refined.css` and
+`elevated.css` sits under `:root[data-variant=…]`, so with no variant set none
+of it can match; that, not care, is what keeps the original untouched. `/demo`
+clears the cookie, so the LinkedIn link is always the original.
+
+Verified by fingerprint rather than by eye: the computed style and box of every
+element on the dashboard, a site page, Collections and Manage Tags, hashed
+before any variant existed and again after. Identical, except the Wayback link,
+which is archive.org answering differently between loads.
+
+**Elevated changes markup in exactly one place, and it renders nothing in the
+other two.** The site page's side panel is wrapped in `InspectorPanes` /
+`Pane`; off, each is a fragment and the DOM is what it was. On, the sections are
+grouped into Overview / Style / Pages with inactive panes `hidden` rather than
+unmounted (SiteStyle polls; a half-written note would vanish). Everything else
+Elevated does is CSS: the dashboard's command bar is the tab switcher and the
+toolbar placed side by side by a grid on `main.page:has(> .tab-switcher)`, which
+works only because every tab renders a fragment -- wrap a tab's output in a div
+and the command bar comes apart. Its page-colour band reaches the window edge
+by a shadow offset one margin, not by stretching the elements, so the tour's
+spotlight still lands on the controls.
+
+**The switcher is a ruler, not part of any design.** `VariantSwitcher` shows in
+development always, and in production only after a variant route has set
+`kivli_compare`, so a stranger on `/demo` never sees it. It takes literal greys
+on purpose: tokens would change colour as you switched. Switching rewrites the
+cookie and reloads the same URL.
+
+**`useVariant()` is "original" on the server and the real answer after
+hydration.** Fine for anything that renders after a fetch (the site page's
+panel does); anything in the first paint that differs by variant would visibly
+swap. Styling never needs the hook.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then
@@ -1978,4 +2016,9 @@ screenshots that were simply old.
 - Claude.app needs **Full Disk Access** (macOS System Settings → Privacy &
   Security) to read this folder. Without it every file operation returns
   "Operation not permitted".
-- Node came from `nvm`; shell profile is `~/.zshrc`.
+- Node is the official 22 LTS build unpacked into `~/.local/node` (no nvm, no
+  `~/.zshrc` on this machine). Put `~/.local/node/bin` on PATH for npm.
+- `kivli-dev-local` in `.claude/launch.json` runs `next dev --webpack` with
+  that Node. Turbopack's dev server can't fetch the Google fonts from the
+  preview sandbox (`Can't resolve '@vercel/turbopack-next/internal/font/google/font'`);
+  webpack can. A production `next build` (Turbopack) works fine from a shell.

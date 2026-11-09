@@ -33,6 +33,11 @@ const PUBLIC_PATHS = [
   // Hands out the demo pass. Everything past it is the real app, let through
   // below by the pass rather than by this list.
   "/demo",
+  // The same door with a design variant chosen on the way in (lib/variant.js).
+  // Listed separately because this list matches "/demo" exactly or as a
+  // prefix followed by a slash, so "/demo-refined" is not covered by it.
+  "/demo-refined",
+  "/demo-elevated",
 ];
 
 export async function middleware(request) {

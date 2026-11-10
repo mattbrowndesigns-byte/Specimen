@@ -1986,7 +1986,7 @@ Original is the *absence* of the attribute -- "original" is stamped as nothing
 -- so no variant rule can match it and `globals.css` renders alone; that, not
 care, is what keeps it untouched. `/demo` clears the cookie, so the LinkedIn
 link is always the current design. All three comparison routes go through
-`lib/demoEntry.js` and set `kivli_compare`.
+`lib/demoEntry.js`.
 
 Verified by fingerprint rather than by eye, twice: the computed style and box
 of every element on the dashboard, a site page, a collection and Manage Tags,
@@ -2036,12 +2036,12 @@ and the command bar comes apart. Its page-colour band reaches the window edge
 by a shadow offset one margin, not by stretching the elements, so the tour's
 spotlight still lands on the controls.
 
-**The switcher is a ruler, not part of any design.** `VariantSwitcher` shows in
-development always, and in production only after a comparison route has set
-`kivli_compare`, so a stranger on `/demo` never sees it. It takes literal greys
-on purpose: tokens would change colour as you switched. Switching writes the
-cookie -- "original" included, since no cookie now means Refined -- and reloads
-the same URL.
+**There is no switcher any more, and the links are the way between designs.**
+A floating Original / Refined / Elevated control sat in the bottom-right corner
+while the three were being compared; it was removed once Refined was chosen.
+To look at another design, open `/demo-original` or `/demo-elevated`; `/demo`
+comes back. Browsers that visited during the comparison may still carry a
+`kivli_compare` cookie -- nothing reads it now.
 
 **`useVariant()` is "original" on the server and the real answer after
 hydration.** Fine for anything that renders after a fetch (the site page's

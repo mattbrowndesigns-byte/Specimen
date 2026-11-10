@@ -1,29 +1,46 @@
-/* Refined
+/* Refined -- the app's design
    ===========================================================================
-   The original, finished more carefully. Same layout, same information
-   architecture, same brand: the wordmark, the orange, the deep purple, the dark
-   theme the demo opens in. What changes is the craft the original's own notes
-   keep reaching for -- one grey ladder instead of three near-misses, hairlines
-   that read as edges rather than as boxes, controls that agree on a height and
-   a radius, states for press and focus that every control has rather than
-   some.
+   What the live site, the demo and every signed-in library show (no cookie
+   means this; see lib/variant.js). It began as the conservative half of a
+   comparison: the original's layout, information architecture and brand --
+   the wordmark, the orange, the deep purple, the dark theme the demo opens in
+   -- finished more carefully. One grey ladder instead of three near-misses,
+   controls that agree on a height, press and focus states on every control.
 
-   Read against the Apple design skill's quality bar, conservatively: the
-   semantic-colour discipline, the 4/8 spacing, the type scale with real steps,
-   press-to-dim, focus you can see. Deliberately not taken: floating glass bars
-   (the skill's own signature, and the brief asks not to imitate macOS), the
-   system blue (the brand is orange), and any change to where things are.
+   Then it took four things from Elevated, the ambitious half, after both had
+   been used side by side:
 
-   Every rule is under :root[data-variant="refined"], so with no variant set
-   none of this can match. See lib/variant.js. */
+   - Rounded controls. Every button is a capsule and every icon button a
+     circle, which reads as more considered than the original's 8px boxes.
+     Secondary actions are filled grey rather than outlined. Destructive ones
+     keep their red tint and red hairline -- in Elevated, Delete Collection
+     turned grey with everything else and stopped looking like the one thing
+     on the screen that can't be undone.
+   - The site page's side panel: a shaded panel with filled fields instead of
+     outlined boxes, tags whose remove control is a real target, a narrower
+     column. It scrolls with the page; Elevated's tabbed, sticky inspector felt
+     like a frame inside a frame.
+   - The viewer's controls on one row: Desktop / Mobile beside the capture's
+     date and Wayback link rather than on a line of their own.
+   - A search field that stays in reach. Elevated stuck the tabs and the search
+     together under the bar; here the three tabs keep their own row, because
+     they are the app's top level and look like it only standing alone, and
+     only the search field and Filters stick as you scroll.
+
+   Deliberately left behind: Elevated's borderless cards (a card is a box with
+   pills, because the box is what makes a grid of screenshots scannable), its
+   bar without a band (the logo floated), its tabs, and its heavier shadows.
+
+   Every rule is under :root[data-variant="refined"]. The Original is the
+   absence of that attribute, so it renders from globals.css alone. */
 
 /* Tokens
    ---------------------------------------------------------------------------
    Light mode moves onto Apple's own neutral pair -- #f5f5f7 page, #1d1d1f ink,
    #6e6e73 secondary -- which keeps every contrast the original measured while
    taking the faint blue-grey cast out of the surfaces. Dark goes one step
-   deeper at the page and one step lighter at the card, so the two layers stop
-   sitting 12 luminance points apart and start reading as two layers. */
+   deeper at the page and one step lighter at the card, so the two layers read
+   as two layers. */
 :root[data-variant="refined"] {
   --bg: #f5f5f7;
   --surface: #fff;
@@ -53,18 +70,29 @@
 
   --overlay: rgba(12, 12, 14, 0.42);
 
-  /* New to this variant. The selected segment of every segmented control --
+  /* New to this design. The selected segment of every segmented control --
      view, size, desktop/mobile -- which in the original took --surface and so
      in dark mode sat *darker* than its own track, reading as pressed in. */
   --seg-active: #fff;
   --seg-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
-  --pop-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 14px 36px rgba(0, 0, 0, 0.12);
+  --hairline: rgba(0, 0, 0, 0.07);
   --ring: rgba(var(--accent-rgb), 0.55);
   --ease: cubic-bezier(0.28, 0.11, 0.32, 1);
 
-  --r-control: 10px;
+  /* Shadows are for things that genuinely float -- a menu, a dialog, the
+     screenshot on its stage -- and stay quiet even there. Elevated's were
+     twice this and read as dramatic rather than as depth. */
+  --pop-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.1);
+  --lift-shadow: 0 0 0 1px var(--hairline), 0 4px 14px rgba(0, 0, 0, 0.06);
+  --edge-shadow: rgba(0, 0, 0, 0.06);
+
+  /* Fixed rather than falling out of the bar's padding, because the search
+     field has to stick exactly underneath it. */
+  --bar-h: 56px;
+
   --r-card: 14px;
-  --r-panel: 18px;
+  --r-field: 12px;
+  --r-panel: 20px;
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -104,7 +132,10 @@
 
   --seg-active: #3a3a3f;
   --seg-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --pop-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.06), 0 20px 48px rgba(0, 0, 0, 0.55);
+  --hairline: rgba(255, 255, 255, 0.07);
+  --pop-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.06), 0 10px 28px rgba(0, 0, 0, 0.4);
+  --lift-shadow: 0 0 0 1px var(--hairline), 0 6px 18px rgba(0, 0, 0, 0.25);
+  --edge-shadow: rgba(0, 0, 0, 0.35);
 }
 
 :root[data-variant="refined"] {
@@ -128,7 +159,7 @@
       .filters-btn,
       .sort-btn,
       .visit-btn,
-      .detail-actions button:not(.icon-btn),
+      .detail-actions button,
       .capture-expand,
       .tab-switcher button,
       .chip-filter,
@@ -137,10 +168,12 @@
       .size-switch button,
       .hide-btn,
       .danger-btn,
-      .detail-section button:not(.icon-btn),
       .capture-timeline button,
       .folder,
-      .modal-apply,
+      .modal-foot button,
+      .tag-actions button,
+      .save-form button,
+      .page-list-open,
       .tour-next,
       .tour-back
     ) {
@@ -157,17 +190,19 @@
       .filters-btn,
       .sort-btn,
       .visit-btn,
-      .detail-actions button:not(.icon-btn),
+      .detail-actions button,
       .capture-expand,
       .tab-switcher button,
       .chip-filter,
       .load-more,
       .hide-btn,
       .danger-btn,
-      .detail-section button:not(.icon-btn),
       .capture-timeline button,
       .folder,
-      .modal-apply
+      .modal-foot button,
+      .tag-actions button,
+      .save-form button,
+      .page-list-open
     ):active:not(:disabled) {
     transform: scale(0.97);
   }
@@ -177,15 +212,59 @@
     transform: scale(0.92);
   }
 
+  /* Buttons
+     -------------------------------------------------------------------------
+     Capsules, filled grey for the ordinary action, red-tinted for the one that
+     destroys something. Each container below opts its buttons in; nothing here
+     restyles a bare <button> globally, because the app has buttons -- a palette
+     swatch, a tag's remove control -- that are not meant to look like one. */
+  & .icon-btn.icon-btn {
+    border-radius: 999px;
+    transition: background-color 0.18s var(--ease), color 0.18s var(--ease), transform 0.18s var(--ease);
+  }
+
+  /* No outline on an icon button, hovered or not. A border that appears on
+     hover is a second shape arriving under the pointer. */
+  & .icon-btn.icon-btn:hover,
+  & .visit:hover {
+    border-color: transparent;
+  }
+
+  & .visit {
+    border-radius: 999px;
+  }
+
+  & .danger-btn.danger-btn,
+  & .hide-btn.hide-btn {
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  & .hide-btn.hide-btn {
+    border-color: transparent;
+    background: var(--field-bg);
+    color: var(--text);
+  }
+
+  & .hide-btn.hide-btn:hover:not(:disabled) {
+    border-color: transparent;
+    background: var(--chip-strong-bg);
+  }
+
   /* Chrome
      ------------------------------------------------------------------------- */
+  /* The band stays -- without it the wordmark and the buttons float -- but its
+     edge is drawn inside the 56px rather than added to it, so the bar is
+     exactly --bar-h and the search field can stick flush beneath it. */
   & .utility-bar {
-    border-bottom-color: var(--border-soft);
+    border-bottom: none;
+    box-shadow: inset 0 -1px 0 var(--border-soft);
   }
 
   & .utility-bar-inner {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    height: var(--bar-h);
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   & .brand-tagline {
@@ -193,42 +272,30 @@
     letter-spacing: -0.005em;
   }
 
-  /* No outline on a bar button, hovered or not: the bar is the container. A
-     border that appears on hover is a second shape arriving under the pointer. */
-  & .icon-btn.icon-btn {
-    border-radius: var(--r-control);
-    transition: background-color 0.18s var(--ease), color 0.18s var(--ease), transform 0.18s var(--ease);
-  }
-
-  & .icon-btn.icon-btn:hover,
-  & .visit:hover {
-    border-color: transparent;
-  }
-
-  & .visit {
-    border-radius: var(--r-control);
-  }
-
   & .add-btn {
     height: 34px;
-    padding: 0 16px;
-    border-radius: var(--r-control);
+    padding: 0 16px 0 14px;
+    border-radius: 999px;
     font-weight: 600;
     letter-spacing: -0.005em;
   }
 
   & :is(.bell-pop, .more-pop, .add-pop, .sort-pop, .search-pop) {
     border-color: var(--border-soft);
-    border-radius: 14px;
+    border-radius: 16px;
     box-shadow: var(--pop-shadow);
   }
 
   & :is(.more-item, .bell-item, .add-option, .sort-option) {
-    border-radius: 8px;
+    border-radius: 10px;
   }
 
   & .demo-banner {
     letter-spacing: -0.005em;
+  }
+
+  & .site-footer {
+    border-top-color: var(--border-soft);
   }
 
   /* Dashboard
@@ -262,6 +329,46 @@
     font-size: 15px;
     letter-spacing: -0.005em;
     transition: background-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+  }
+
+  /* The search row sticks under the bar on the dashboard, and nothing else
+     does: not the tabs above it, not the chips below. It's the control you
+     reach for forty screenshots down; the chips are one tap away in Filters.
+     The page-colour band behind it reaches the window edges by shadows offset
+     one margin each way, so the element's own box stays where the field is --
+     the demo tour measures it. Only the dashboard has tabs over a toolbar. */
+  & main.page:has(> .tab-switcher) > .toolbar {
+    position: sticky;
+    top: var(--bar-h);
+    z-index: 20;
+    margin: -8px 0 4px;
+    padding: 8px 0;
+    background: var(--bg);
+    box-shadow:
+      var(--grid-margin) 0 0 var(--bg),
+      calc(-1 * var(--grid-margin)) 0 0 var(--bg);
+  }
+
+  /* A soft edge under it, only once something is scrolling beneath -- a
+     hairline's worth of shade, not a drop shadow. */
+  & main.page:has(> .tab-switcher) > .toolbar::after {
+    content: "";
+    position: absolute;
+    left: calc(-1 * var(--grid-margin));
+    right: calc(-1 * var(--grid-margin));
+    top: 100%;
+    height: 8px;
+    background: linear-gradient(to bottom, var(--edge-shadow), transparent);
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    & main.page:has(> .tab-switcher) > .toolbar::after {
+      animation: refined-edge linear both;
+      animation-timeline: scroll(root);
+      animation-range: 220px 300px;
+    }
   }
 
   & .filters-btn {
@@ -298,11 +405,11 @@
 
   & :is(.view-switch, .size-switch) {
     background: var(--field-bg);
-    border-radius: 9px;
+    border-radius: 999px;
   }
 
   & :is(.view-switch, .size-switch) button {
-    border-radius: 7px;
+    border-radius: 999px;
   }
 
   & :is(.view-switch, .size-switch) button.active {
@@ -316,7 +423,11 @@
   }
 
   & .sort-btn {
-    border-radius: var(--r-control);
+    border-radius: 999px;
+  }
+
+  & .folder {
+    border-radius: 999px;
   }
 
   /* Cards: one radius for the card, a hairline for its edge, and a hover that
@@ -363,13 +474,21 @@
   }
 
   & .card-actions {
-    border-radius: 12px;
+    border-radius: 999px;
+  }
+
+  & .card-actions .icon-btn {
+    border-radius: 999px;
   }
 
   & .row-item,
   & .headline-item,
   & .resource-row {
     transition: background-color 0.18s var(--ease);
+  }
+
+  & .row-item {
+    border-radius: var(--r-card);
   }
 
   & .row-thumb,
@@ -380,6 +499,11 @@
   & .row-name {
     font-weight: 600;
     letter-spacing: -0.01em;
+  }
+
+  & .headline-item,
+  & .resource-row {
+    border-radius: 12px;
   }
 
   & .load-more {
@@ -397,7 +521,7 @@
   /* Modals
      ------------------------------------------------------------------------- */
   & .modal {
-    border-radius: var(--r-panel);
+    border-radius: 22px;
     box-shadow: var(--pop-shadow);
   }
 
@@ -415,7 +539,28 @@
     border-top-color: var(--border-soft);
   }
 
-  /* Detail page
+  & .modal-foot button {
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--field-bg);
+    font-weight: 500;
+  }
+
+  & .modal-foot button:hover:not(:disabled) {
+    background: var(--chip-strong-bg);
+  }
+
+  & .modal-foot .modal-apply {
+    font-weight: 600;
+  }
+
+  & .field input,
+  & .field textarea,
+  & .field select {
+    border-radius: var(--r-field);
+  }
+
+  /* Site page
      ------------------------------------------------------------------------- */
   & .detail-header {
     margin-bottom: 4px;
@@ -447,111 +592,224 @@
   }
 
   & .detail-actions {
-    gap: 8px;
+    gap: 6px;
   }
 
-  & .detail-actions button:not(.icon-btn),
+  /* Every button in a header row, Re-capture and Edit Collection alike -- but
+     not Delete Collection, which lives in the same row and must stay red. */
+  & .detail-actions button:not(.icon-btn):not(.danger-btn),
   & .visit-btn {
-    height: 34px;
-    padding: 0 14px;
-    border-radius: var(--r-control);
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 999px;
     font-weight: 500;
     letter-spacing: -0.005em;
   }
 
-  & .detail-actions button:not(.icon-btn) {
-    border-color: var(--border);
+  & .detail-actions button:not(.icon-btn):not(.danger-btn) {
+    border-color: transparent;
+    background: var(--field-bg);
     color: var(--text);
   }
 
-  & .detail-actions button:not(.icon-btn):hover:not(:disabled) {
-    background: var(--surface-hover);
-    border-color: var(--border-strong);
+  & .detail-actions button:not(.icon-btn):not(.danger-btn):hover:not(:disabled) {
+    background: var(--chip-strong-bg);
+  }
+
+  & .detail-actions .danger-btn.danger-btn {
+    height: 36px;
+    padding: 0 16px;
   }
 
   & .visit-btn {
     font-weight: 600;
   }
 
-  /* 30 + 1 + 1 of padding + 1 + 1 of border: the 34 every button beside it
-     is, so the row's tops and bottoms finally agree. */
-  & .detail-save-actions.detail-save-actions {
-    padding: 1px;
-    border-color: var(--border);
-    border-radius: var(--r-control);
-  }
-
-  & .detail-save-actions.detail-save-actions .icon-btn.icon-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-  }
-
   & .visit-btn:hover {
     background: var(--invert-bg-hover);
   }
 
+  /* The heart and bookmark as one grey capsule, the shape every button beside
+     them has, rather than a bordered box among capsules. */
+  & .detail-save-actions.detail-save-actions {
+    gap: 0;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: var(--field-bg);
+  }
+
+  & .detail-save-actions.detail-save-actions .icon-btn.icon-btn {
+    width: 38px;
+    height: 36px;
+  }
+
+  & .detail-save-actions.detail-save-actions .icon-btn.icon-btn:hover {
+    background: var(--chip-strong-bg);
+  }
+
+  & .queued-note,
+  & .capture-status {
+    border-radius: var(--r-card);
+  }
+
+  /* The side column is a fixed measure rather than a third of the window --
+     it holds text, and text has a measure. Narrower than the original's
+     four-twelfths at 1440 (403 against 451), wider than Elevated's 400 on a
+     big monitor. */
+  & .detail-columns {
+    grid-template-columns: minmax(0, 1fr) clamp(380px, 28vw, 440px);
+    column-gap: 24px;
+  }
+
+  & .detail-main,
+  & .detail-side {
+    grid-column: auto;
+  }
+
+  /* The viewer: history on its own row when there is one, then the capture's
+     date, Wayback link and delete on the left with Desktop / Mobile on the
+     right of the same line -- one row of controls instead of two stacked and
+     centred. */
   & .capture-panel {
-    border-radius: var(--r-panel);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "timeline timeline"
+      "meta switch"
+      "capture capture"
+      "expand expand";
+    align-items: center;
+    column-gap: 16px;
+    padding: 16px 20px 20px;
+    border-radius: 22px;
+  }
+
+  /* A component's page puts the crop tool in this panel, and while it's open
+     the page drops to one column so there's room to draw. */
+  & .capture-panel > .crop-tool {
+    grid-column: 1 / -1;
+    margin-top: 16px;
+  }
+
+  & .detail-columns.detail-columns-single {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   & .capture-timeline {
+    grid-area: timeline;
+    width: auto;
+    min-width: 0;
     border-bottom-color: var(--border-soft);
   }
 
   & .capture-timeline button {
-    height: 28px;
-    padding: 0 12px;
-    border-color: var(--border);
+    height: 30px;
+    padding: 0 13px;
+    border-color: transparent;
+    background: var(--field-bg);
     font-weight: 500;
   }
 
   & .capture-timeline button:hover:not(.active) {
-    border-color: var(--border-strong);
+    background: var(--chip-strong-bg);
     color: var(--text);
   }
 
+  & .capture-timeline button.active {
+    border-color: transparent;
+  }
+
   & .capture-meta {
+    grid-area: meta;
+    justify-self: start;
+    margin: 0;
+    text-align: left;
     color: var(--text-faint);
   }
 
+  & .capture-panel:not(:has(.viewport-toggle)) .capture-meta {
+    grid-column: 1 / -1;
+  }
+
+  & .capture-delete.danger-btn.danger-btn {
+    border-radius: 999px;
+    padding: 3px 10px;
+  }
+
   & .viewport-toggle {
+    grid-area: switch;
+    justify-self: end;
+    margin: 0;
+    border-radius: 999px;
     background: var(--field-bg);
   }
 
+  & .viewport-toggle button {
+    border-radius: 999px;
+  }
+
+  & .viewport-toggle button.active {
+    background: var(--seg-active);
+    box-shadow: var(--seg-shadow);
+  }
+
   & .detail-capture {
-    border-color: var(--border-soft);
-    border-radius: 12px;
+    grid-area: capture;
+    justify-self: center;
+    margin-top: 16px;
+    border-color: transparent;
+    border-radius: var(--r-card);
+    box-shadow: var(--lift-shadow);
   }
 
   & .detail-capture img {
-    border-radius: 12px;
+    border-radius: var(--r-card);
+  }
+
+  & .detail-capture.detail-capture-collapsed {
+    border-bottom-left-radius: var(--r-card);
+    border-bottom-right-radius: var(--r-card);
+    overflow: hidden;
   }
 
   & .capture-expand {
-    height: 34px;
+    grid-area: expand;
+    justify-self: center;
+    height: 36px;
+    margin-top: 14px;
     padding: 0 18px;
-    border-color: var(--border);
+    border-color: transparent;
     border-radius: 999px;
+    background: var(--field-bg);
     font-weight: 500;
   }
 
   & .capture-expand:hover {
-    background: var(--surface-hover);
+    background: var(--chip-strong-bg);
   }
 
-  /* The side panel's sections are separated by space and a hairline, in that
-     order -- the original had space alone, and at 28px between seven sections
-     of different lengths the eye couldn't tell where Tags ended and Colours
-     began. */
-  & .detail-section {
-    margin-bottom: 24px;
+  /* The side panel: one shaded panel that scrolls with the page, its sections
+     separated by hairlines and filled with filled fields. */
+  & .detail-side {
+    padding: 2px 20px 20px;
+    border-radius: 22px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  & .detail-side .detail-section {
+    margin: 0;
+    padding: 20px 0;
   }
 
   & .detail-side .detail-section + .detail-section,
   & .detail-side .detail-section + .detail-danger {
-    padding-top: 22px;
     border-top: 1px solid var(--border-soft);
+  }
+
+  & .detail-section {
+    margin-bottom: 24px;
   }
 
   & .detail-section h2 {
@@ -568,11 +826,15 @@
 
   & .detail-section textarea {
     border: 1px solid transparent;
-    border-radius: var(--r-control);
+    border-radius: var(--r-field);
     background: var(--field-bg);
     color: var(--text);
     line-height: 1.5;
     transition: background-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+  }
+
+  & .detail-section textarea:hover:not(:focus) {
+    background: var(--chip-strong-bg);
   }
 
   & .detail-section textarea:focus {
@@ -581,23 +843,37 @@
     box-shadow: 0 0 0 2px var(--ring);
   }
 
-  & .detail-section button:not(.icon-btn) {
+  /* The panel's own action buttons -- Edit, Save, Save Notes, Expand, Show All
+     Pages -- and nothing else in it. The exclusions are the reason this rule
+     is long: a palette swatch, a link-styled action, a tag's remove control and
+     a dropdown option are all <button>s, and the original's catch-all
+     `.detail-section button` would otherwise make every one of them a pill. */
+  & .detail-section button:not(.icon-btn):not(.link-btn):not(.palette-swatch):not(.combobox-option):not(.promote-btn):not(.combobox-chip > button) {
     min-height: 30px;
-    border-color: var(--border);
-    border-radius: 8px;
+    padding: 0 14px;
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--field-bg);
     font-weight: 500;
+    transition: background-color 0.18s var(--ease), transform 0.18s var(--ease);
   }
 
-  & .detail-section button:not(.icon-btn):hover:not(:disabled) {
-    background: var(--surface-hover);
+  & .detail-section button:not(.icon-btn):not(.link-btn):not(.palette-swatch):not(.combobox-option):not(.promote-btn):not(.combobox-chip > button):hover:not(:disabled) {
+    background: var(--chip-strong-bg);
   }
 
-  & .detail-section .link-btn.link-btn {
-    min-height: 0;
+  & .detail-section button:not(.icon-btn):not(.link-btn):not(.palette-swatch):not(.combobox-option):not(.promote-btn):not(.combobox-chip > button):active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  & .detail-section .section-head-actions button.primary {
+    background: var(--invert-bg);
+    color: var(--invert-text);
   }
 
   & .facet-row {
     gap: 7px;
+    padding-bottom: 16px;
   }
 
   & .facet-name {
@@ -605,40 +881,95 @@
     color: var(--text-muted);
   }
 
+  /* A tag field is a filled well; the tags in it sit on the surface colour,
+     so in dark mode they read as set into it rather than floating over it. */
   & .combobox-field {
-    border-color: var(--border);
-    border-radius: var(--r-control);
-    transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+    min-height: 44px;
+    padding: 6px;
+    border-color: transparent;
+    border-radius: var(--r-field);
+    background: var(--field-bg);
+    transition: background-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
   }
 
-  & .combobox-field:hover {
-    border-color: var(--border-strong);
+  & .combobox-field:hover:not(:focus-within) {
+    background: var(--chip-strong-bg);
   }
 
   & .combobox-field:focus-within {
     border-color: transparent;
+    background: var(--surface);
     box-shadow: 0 0 0 2px var(--ring);
   }
 
+  & .combobox-chip {
+    gap: 2px;
+    min-height: 30px;
+    padding: 3px 4px 3px 12px;
+    font-size: 13px;
+    background: var(--surface);
+    box-shadow: 0 0 0 0.5px var(--hairline);
+  }
+
+  & .combobox-field:focus-within .combobox-chip {
+    background: var(--chip-bg);
+  }
+
+  & .combobox-chip.chip-pending {
+    background: var(--warn-bg);
+  }
+
+  /* The remove control is a 24px circle, not a 13px glyph: something you can
+     hit without aiming, faintly visible at rest so it reads as a control, and
+     red on hover because removing is what it does. Elevated got here by
+     accident -- the panel's button style landed on it -- and was liked for it;
+     this is the same idea made on purpose and a size quieter. */
+  & .combobox-chip > button {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border-radius: 999px;
+    background: var(--chip-bg);
+    color: var(--text-muted);
+    font-size: 14px;
+    transition: background-color 0.18s var(--ease), color 0.18s var(--ease);
+  }
+
+  & .combobox-chip > button:hover {
+    background: var(--danger-bg-hover);
+    color: var(--danger);
+  }
+
   & .combobox-dropdown {
-    border-radius: 12px;
+    border-radius: 14px;
     box-shadow: var(--pop-shadow);
   }
 
-  & .palette-bar,
-  & .font-card {
+  & .palette-bar {
+    border-color: var(--hairline);
     border-radius: 12px;
   }
 
-  & :is(.hide-btn, .danger-btn).hide-btn,
-  & :is(.hide-btn, .danger-btn).danger-btn {
-    border-radius: var(--r-control);
+  & .font-card {
+    border-color: transparent;
+    border-radius: 14px;
+    background: var(--surface-soft);
+  }
+
+  & .page-list-open {
+    border-radius: 999px;
+  }
+
+  & .detail-danger {
+    gap: 8px;
+    padding-top: 20px;
   }
 
   & .detail-danger .hide-btn.hide-btn,
   & .detail-danger .danger-btn.danger-btn {
-    height: 36px;
-    font-weight: 500;
+    height: 38px;
   }
 
   & .page-band > h2,
@@ -660,47 +991,63 @@
   }
 
   & .tag-row {
-    border-radius: var(--r-control);
+    border-radius: 12px;
   }
 
   & .tag-actions button:not(.danger-btn) {
-    border-color: var(--border);
-    border-radius: 8px;
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--field-bg);
     font-weight: 500;
   }
 
   & .tag-actions button:not(.danger-btn):hover {
-    border-color: var(--border-strong);
+    background: var(--chip-strong-bg);
   }
 
-  & .tag-actions .danger-btn.danger-btn {
+  & :is(.tag-edit-input, .tag-merge-select) {
     border-radius: 8px;
   }
 
-  & .save-form input,
-  & .save-form button {
-    border-radius: var(--r-control);
+  & .tag-undo {
+    border-radius: var(--r-card);
+  }
+
+  & .save-form input {
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--field-bg);
+    color: var(--text);
   }
 
   & .save-form input:focus {
     border-color: transparent;
+    background: var(--surface);
     box-shadow: 0 0 0 2px var(--ring);
   }
 
-  & .field input,
-  & .field textarea,
-  & .field select {
-    border-radius: var(--r-control);
+  & .save-form button {
+    border-radius: 999px;
+    font-weight: 600;
   }
 
-  & .site-footer {
-    border-top-color: var(--border-soft);
+  & .bulk-actions button:not(.danger-btn) {
+    border-radius: 999px;
+  }
+
+  /* Narrower windows
+     ------------------------------------------------------------------------- */
+  @media (max-width: 1080px) {
+    & .detail-columns {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 8px;
+    }
   }
 
   /* On a phone the original's header holds its buttons on the title's line
      with flex-shrink: 0, so they run off the right edge and the whole page
      scrolls sideways -- 631px of document in a 390px window. Here they wrap
-     under the name instead. */
+     under the name instead. The viewer's row stacks for the same reason. */
   @media (max-width: 700px) {
     & .detail-header {
       flex-wrap: wrap;
@@ -715,6 +1062,33 @@
     & .detail-actions {
       flex-wrap: wrap;
     }
+
+    & .capture-panel {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "timeline"
+        "switch"
+        "meta"
+        "capture"
+        "expand";
+      row-gap: 10px;
+      padding: 12px 12px 16px;
+      border-radius: 18px;
+    }
+
+    & .viewport-toggle,
+    & .capture-meta {
+      justify-self: center;
+      text-align: center;
+    }
+
+    & .detail-capture {
+      margin-top: 4px;
+    }
+
+    & .detail-side {
+      padding: 2px 16px 16px;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -725,5 +1099,14 @@
     & .card:hover .thumb img {
       transform: none;
     }
+  }
+}
+
+@keyframes refined-edge {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

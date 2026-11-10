@@ -1971,23 +1971,56 @@ centre was. Verifying any of this needs the Browser pane *shown*: a hidden
 pane hands back stale frames, and the dim looked absent for three rounds of
 screenshots that were simply old.
 
-**There are three designs, and two of them are one attribute.** `/demo` is the
-original, `/demo-refined` and `/demo-elevated` are the same demo door
-(`lib/demoEntry.js`) that also sets the `kivli_variant` cookie. An inline boot
-script stamps `<html data-variant>` before paint, like the theme, rather than
-the root layout reading `cookies()` -- that would have made every page in the
-app dynamic, original included. Every rule in `app/variants/refined.css` and
-`elevated.css` sits under `:root[data-variant=…]`, so with no variant set none
-of it can match; that, not care, is what keeps the original untouched. `/demo`
-clears the cookie, so the LinkedIn link is always the original.
+**The app's design is `app/variants/refined.css`, not `globals.css` alone.**
+No `kivli_variant` cookie means Refined: the boot script stamps
+`<html data-variant="refined">` before paint, like the theme, rather than the
+root layout reading `cookies()`, which would have made every page dynamic. So a
+style change to the live app usually belongs in `refined.css`, under
+`:root[data-variant="refined"]` -- an edit to `globals.css` alone may be
+overridden there, and also changes the Original, which is meant to stay frozen.
 
-Verified by fingerprint rather than by eye: the computed style and box of every
-element on the dashboard, a site page, Collections and Manage Tags, hashed
-before any variant existed and again after. Identical, except the Wayback link,
-which is archive.org answering differently between loads.
+Two earlier designs stay reachable for documentation and the case study:
+`/demo-original` (the app as it shipped before the redesign) and
+`/demo-elevated` (the ambitious exploration Refined borrowed from). The
+Original is the *absence* of the attribute -- "original" is stamped as nothing
+-- so no variant rule can match it and `globals.css` renders alone; that, not
+care, is what keeps it untouched. `/demo` clears the cookie, so the LinkedIn
+link is always the current design. All three comparison routes go through
+`lib/demoEntry.js` and set `kivli_compare`.
 
-**Elevated changes markup in exactly one place, and it renders nothing in the
-other two.** The site page's side panel is wrapped in `InspectorPanes` /
+Verified by fingerprint rather than by eye, twice: the computed style and box
+of every element on the dashboard, a site page, a collection and Manage Tags,
+hashed before any variant existed, after Elevated and Refined were added, and
+again after Refined became the default. Identical every time (the Wayback link
+is excluded, because archive.org answers differently between loads).
+
+**Refined took four things from Elevated after both were used side by side,
+and left the rest.** Capsule buttons with filled-grey secondaries; the site
+page's shaded side panel with filled fields and a 24px tag-remove target, in a
+narrower `clamp(380px, 28vw, 440px)` column that scrolls with the page; the
+viewer's Desktop / Mobile on the same row as the capture's date and Wayback
+link; and a sticky search row -- the search field and Filters only, under the
+bar, with the tabs keeping their own row above because they are the app's top
+level. Rejected: borderless cards, the bar without a band, the tabbed sticky
+inspector, the heavier shadows. Destructive buttons keep their red tint in
+every container; Elevated's Delete Collection went grey because
+`.detail-actions button` caught it, which is why the Refined rule says
+`:not(.danger-btn)`.
+
+**The side panel's button rule is long on purpose.** A palette swatch, a
+link-styled action, a tag's remove control, a dropdown option and a promote
+button are all `<button>`s inside `.detail-section`, and the original's
+catch-all `.detail-section button` would make every one of them a pill. Elevated
+didn't exclude the tag's remove control, and the accidentally large × it got is
+the one users liked -- Refined has it deliberately instead.
+
+**The sticky search row needs the bar to be exactly `--bar-h`.** The bar's edge
+is an inset shadow rather than a border, so it adds nothing to the 56px, and
+the toolbar sticks at `top: var(--bar-h)`. Give the bar padding or a border and
+the search row starts sliding under it.
+
+**Elevated is frozen for documentation, and changes markup in exactly one
+place, which renders nothing in the other two.** The site page's side panel is wrapped in `InspectorPanes` /
 `Pane`; off, each is a fragment and the DOM is what it was. On, the sections are
 grouped into Overview / Style / Pages with inactive panes `hidden` rather than
 unmounted (SiteStyle polls; a half-written note would vanish). Everything else
@@ -1999,10 +2032,11 @@ by a shadow offset one margin, not by stretching the elements, so the tour's
 spotlight still lands on the controls.
 
 **The switcher is a ruler, not part of any design.** `VariantSwitcher` shows in
-development always, and in production only after a variant route has set
+development always, and in production only after a comparison route has set
 `kivli_compare`, so a stranger on `/demo` never sees it. It takes literal greys
-on purpose: tokens would change colour as you switched. Switching rewrites the
-cookie and reloads the same URL.
+on purpose: tokens would change colour as you switched. Switching writes the
+cookie -- "original" included, since no cookie now means Refined -- and reloads
+the same URL.
 
 **`useVariant()` is "original" on the server and the real answer after
 hydration.** Fine for anything that renders after a fetch (the site page's

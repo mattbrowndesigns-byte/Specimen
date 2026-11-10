@@ -6,9 +6,10 @@ import { COMPARE_COOKIE, VARIANT_COOKIE, VARIANT_MAX_AGE, VARIANTS } from "@/lib
 const MIN_KEY = "specimen.vswitch.min";
 
 // A tool for comparing the three designs, not part of any of them. It shows in
-// development always, and in production only once a browser has opened
-// /demo-refined or /demo-elevated -- so a stranger following the LinkedIn link
-// to /demo never sees it, and someone comparing never loses the way back.
+// development always, and in production only once a browser has opened one of
+// the comparison links (/demo-original, /demo-refined, /demo-elevated) -- so a
+// stranger following the LinkedIn link to /demo never sees it, and someone
+// comparing never loses the way back.
 //
 // Switching rewrites the cookie and reloads the page you are on, so the same
 // site, the same tab of the same URL, comes back in the other design. The tab
@@ -38,8 +39,9 @@ export default function VariantSwitcher() {
     if (id === state.current) return;
     const secure = location.protocol === "https:" ? "; secure" : "";
     const common = `; path=/; max-age=${VARIANT_MAX_AGE}; samesite=lax${secure}`;
-    document.cookie =
-      id === "original" ? `${VARIANT_COOKIE}=; path=/; max-age=0` : `${VARIANT_COOKIE}=${id}${common}`;
+    // Written for every choice, Original included: with no cookie the app
+    // shows its default design, so "original" has to be said out loud.
+    document.cookie = `${VARIANT_COOKIE}=${id}${common}`;
     document.cookie = `${COMPARE_COOKIE}=1${common}`;
     location.reload();
   }

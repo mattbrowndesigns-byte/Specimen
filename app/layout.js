@@ -1,15 +1,13 @@
 import { Figtree, Lalezar } from "next/font/google";
 import "./globals.css";
-// The two design variants and the switcher between them. Every rule in the
-// first two is scoped under :root[data-variant=…], so with no variant chosen
-// none of them can match anything -- see lib/variant.js.
+// The app's design (Refined) and the Elevated exploration kept for the case
+// study. Every rule in both is scoped under :root[data-variant=…], so the
+// Original -- no attribute -- renders from globals.css alone. See lib/variant.js.
 import "./variants/refined.css";
 import "./variants/elevated.css";
-import "./variants/switcher.css";
 import { themeBootScript } from "@/lib/theme";
 import { variantBootScript } from "@/lib/variant";
 import SiteAnalytics from "./_ui/SiteAnalytics";
-import VariantSwitcher from "./_ui/VariantSwitcher";
 
 // The wordmark face, self-hosted by next/font rather than fetched from Google
 // at runtime: no third-party request on every page load, and no flash of a
@@ -53,7 +51,6 @@ export default function RootLayout({ children }) {
       <body>
         {children}
         <SiteAnalytics />
-        <VariantSwitcher />
       </body>
     </html>
   );

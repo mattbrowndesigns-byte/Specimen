@@ -2001,8 +2001,13 @@ narrower `clamp(380px, 28vw, 440px)` column that scrolls with the page; the
 viewer's Desktop / Mobile on the same row as the capture's date and Wayback
 link; and a sticky search row -- the search field and Filters only, under the
 bar, with the tabs keeping their own row above because they are the app's top
-level. Rejected: borderless cards, the bar without a band, the tabbed sticky
-inspector, the heavier shadows. Destructive buttons keep their red tint in
+level. A second pass took Elevated's palette (near-black page, small even
+steps above it, `--stage` under every screenshot), its type hierarchy (Figtree
+800 on every page title and on the site's name, quiet 13px panel labels, 24px
+band headings), its filter modal (no rule under the title) and plain counts in
+the chip and folder strips -- which overrides "every count wears the same pill"
+below for Refined; the Original keeps the pills. Rejected: borderless cards,
+the bar without a band, the tabbed sticky inspector, the heavier shadows. Destructive buttons keep their red tint in
 every container; Elevated's Delete Collection went grey because
 `.detail-actions button` caught it, which is why the Refined rule says
 `:not(.danger-btn)`.

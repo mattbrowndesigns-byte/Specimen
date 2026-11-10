@@ -7,8 +7,9 @@
    -- finished more carefully. One grey ladder instead of three near-misses,
    controls that agree on a height, press and focus states on every control.
 
-   Then it took four things from Elevated, the ambitious half, after both had
-   been used side by side:
+   Then it took Elevated's palette, type hierarchy, filter modal and plain
+   counts -- which simply looked crisper in use -- and four things more, after
+   both had been used side by side:
 
    - Rounded controls. Every button is a capsule and every icon button a
      circle, which reads as more considered than the original's 8px boxes.
@@ -36,26 +37,31 @@
 
 /* Tokens
    ---------------------------------------------------------------------------
-   Light mode moves onto Apple's own neutral pair -- #f5f5f7 page, #1d1d1f ink,
-   #6e6e73 secondary -- which keeps every contrast the original measured while
-   taking the faint blue-grey cast out of the surfaces. Dark goes one step
-   deeper at the page and one step lighter at the card, so the two layers read
-   as two layers. */
+   Elevated's palette, which read crisper than the first Refined one in use. Dark
+   goes nearly black at the page -- not #000, which turns screenshots of white
+   websites into lightboxes -- so a card or a panel has room to read as raised,
+   and every step above it is small and even. Light moves onto Apple's own
+   neutrals: #fbfbfd page, #1d1d1f ink, #6e6e73 secondary, every contrast the
+   original measured kept.
+
+   `--stage` is the ground a screenshot sits on, a step off the page in both
+   themes, because a capture's own white or black edge otherwise vanishes into
+   whichever page shares its colour. */
 :root[data-variant="refined"] {
-  --bg: #f5f5f7;
+  --bg: #fbfbfd;
   --surface: #fff;
   --surface-rgb: 255, 255, 255;
-  --surface-soft: #fbfbfd;
-  --surface-sunken: #ebebef;
-  --surface-sunken-rgb: 235, 235, 239;
-  --surface-hover: #f1f1f4;
+  --surface-soft: #f7f7f9;
+  --surface-sunken: #efeff3;
+  --surface-sunken-rgb: 239, 239, 243;
+  --surface-hover: #f2f2f5;
 
-  --chip-bg: #ededf0;
-  --chip-strong-bg: #e3e3e7;
-  --field-bg: #e8e8ed;
+  --chip-bg: #efeff2;
+  --chip-strong-bg: #e5e5e9;
+  --field-bg: #eeeef2;
 
-  --border-soft: #e8e8ec;
-  --border: #dfdfe4;
+  --border-soft: #ececf0;
+  --border: #e2e2e7;
   --border-strong: #d2d2d7;
   --border-strong-hover: #bcbcc2;
 
@@ -68,23 +74,32 @@
   --invert-bg: #1d1d1f;
   --invert-bg-hover: #36363a;
 
-  --overlay: rgba(12, 12, 14, 0.42);
+  --overlay: rgba(12, 12, 14, 0.4);
 
-  /* New to this design. The selected segment of every segmented control --
-     view, size, desktop/mobile -- which in the original took --surface and so
-     in dark mode sat *darker* than its own track, reading as pressed in. */
+  --stage: #f1f1f4;
+  --stage-rgb: 241, 241, 244;
+
+  /* The selected segment of every segmented control -- view, size,
+     desktop/mobile -- which in the original took --surface and so in dark mode
+     sat *darker* than its own track, reading as pressed in. */
   --seg-active: #fff;
-  --seg-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  --seg-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 0.5px rgba(0, 0, 0, 0.05);
   --hairline: rgba(0, 0, 0, 0.07);
   --ring: rgba(var(--accent-rgb), 0.55);
   --ease: cubic-bezier(0.28, 0.11, 0.32, 1);
 
   /* Shadows are for things that genuinely float -- a menu, a dialog, the
      screenshot on its stage -- and stay quiet even there. Elevated's were
-     twice this and read as dramatic rather than as depth. */
+     twice this and read as dramatic rather than as depth; its colours came
+     over, its shadows did not. */
   --pop-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.1);
   --lift-shadow: 0 0 0 1px var(--hairline), 0 4px 14px rgba(0, 0, 0, 0.06);
   --edge-shadow: rgba(0, 0, 0, 0.06);
+
+  /* Figtree, already the dashboard headline's face, set on every page title so
+     the headline is the loudest instance of a system rather than the only
+     thing set in it. The interface stays in the system face. */
+  --display: var(--font-display), -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
 
   /* Fixed rather than falling out of the bar's padding, because the search
      field has to stick exactly underneath it. */
@@ -100,22 +115,22 @@
 }
 
 :root[data-variant="refined"][data-theme="dark"] {
-  --bg: #0f0f11;
-  --surface: #1b1b1e;
-  --surface-rgb: 27, 27, 30;
-  --surface-soft: #212124;
-  --surface-sunken: #09090a;
-  --surface-sunken-rgb: 9, 9, 10;
-  --surface-hover: #26262a;
+  --bg: #0a0a0b;
+  --surface: #161618;
+  --surface-rgb: 22, 22, 24;
+  --surface-soft: #1c1c1f;
+  --surface-sunken: #060607;
+  --surface-sunken-rgb: 6, 6, 7;
+  --surface-hover: #222225;
 
-  --chip-bg: #242428;
-  --chip-strong-bg: #2e2e33;
-  --field-bg: #212125;
+  --chip-bg: #1f1f22;
+  --chip-strong-bg: #2a2a2e;
+  --field-bg: #1c1c1f;
 
-  --border-soft: #232327;
-  --border: #2c2c31;
-  --border-strong: #3a3a40;
-  --border-strong-hover: #4c4c54;
+  --border-soft: #1e1e21;
+  --border: #28282c;
+  --border-strong: #37373c;
+  --border-strong-hover: #4a4a51;
 
   --text: #f5f5f7;
   --text-body: #e2e2e6;
@@ -128,14 +143,17 @@
   --invert-text: #111113;
   --invert-text-rgb: 17, 17, 19;
 
-  --overlay: rgba(0, 0, 0, 0.6);
+  --overlay: rgba(0, 0, 0, 0.64);
+
+  --stage: #121214;
+  --stage-rgb: 18, 18, 20;
 
   --seg-active: #3a3a3f;
-  --seg-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --seg-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   --hairline: rgba(255, 255, 255, 0.07);
-  --pop-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.06), 0 10px 28px rgba(0, 0, 0, 0.4);
+  --pop-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.07), 0 10px 28px rgba(0, 0, 0, 0.45);
   --lift-shadow: 0 0 0 1px var(--hairline), 0 6px 18px rgba(0, 0, 0, 0.25);
-  --edge-shadow: rgba(0, 0, 0, 0.35);
+  --edge-shadow: rgba(0, 0, 0, 0.4);
 }
 
 :root[data-variant="refined"] {
@@ -301,9 +319,11 @@
   /* Dashboard
      ------------------------------------------------------------------------- */
   & .page-hero {
-    margin: 10px 0 26px;
-    line-height: 1.06;
-    letter-spacing: -0.028em;
+    margin: 28px 0 28px;
+    font-size: clamp(30px, 4.2vw, 60px);
+    line-height: 1.02;
+    letter-spacing: -0.036em;
+    text-wrap: balance;
   }
 
   & .tab-switcher {
@@ -367,7 +387,7 @@
     & main.page:has(> .tab-switcher) > .toolbar::after {
       animation: refined-edge linear both;
       animation-timeline: scroll(root);
-      animation-range: 220px 300px;
+      animation-range: 250px 320px;
     }
   }
 
@@ -395,12 +415,28 @@
     background: var(--chip-strong-bg);
   }
 
-  & .chip-count {
+  /* A count is a plain number beside its label, not a second pill inside the
+     first. Two nested holding shapes in every chip was most of the strip's
+     visual noise, and the count reads as belonging to its word without one.
+     The folder strip is the same kind of control, so it follows. */
+  & :is(.chip-count, .folder-count) {
+    padding: 0;
+    background: none;
+    color: var(--text-faint);
     font-variant-numeric: tabular-nums;
+  }
+
+  & :is(.chip-selected .chip-count, .folder-on .folder-count) {
+    background: none;
+    color: rgba(var(--invert-text-rgb), 0.65);
   }
 
   & .results-bar {
     margin: 6px 0 18px;
+  }
+
+  & .result-count {
+    color: var(--text-faint);
   }
 
   & :is(.view-switch, .size-switch) {
@@ -464,6 +500,11 @@
     letter-spacing: -0.01em;
   }
 
+  & .card .name {
+    font-size: 15px;
+    letter-spacing: -0.012em;
+  }
+
   & .card-tags {
     padding: 0 14px;
     margin-bottom: 14px;
@@ -512,27 +553,43 @@
 
   & .empty-state {
     border-radius: var(--r-panel);
+    background: var(--surface);
   }
 
   & .empty-state-headline {
-    letter-spacing: -0.025em;
+    font-family: var(--display);
+    font-weight: 800;
+    letter-spacing: -0.03em;
   }
 
   /* Modals
-     ------------------------------------------------------------------------- */
+     -------------------------------------------------------------------------
+     Elevated's: no rule under the title -- the title's size and weight already
+     separate it from the list -- and a sheet that rises a few pixels as it
+     fades in rather than appearing. */
+  & .modal-backdrop {
+    animation: refined-fade 0.2s var(--ease);
+  }
+
   & .modal {
     border-radius: 22px;
     box-shadow: var(--pop-shadow);
+    animation: refined-sheet 0.24s var(--ease);
   }
 
   & .modal-head {
-    border-bottom-color: var(--border-soft);
+    padding-bottom: 10px;
+    border-bottom-color: transparent;
   }
 
   & .modal-head h2 {
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: -0.015em;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  & .modal-body h3 {
+    color: var(--text-muted);
   }
 
   & .modal-foot {
@@ -563,32 +620,59 @@
   /* Site page
      ------------------------------------------------------------------------- */
   & .detail-header {
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
-  & .detail-header .favicon-badge {
-    width: 36px;
-    height: 36px;
-  }
-
-  /* Title 1, emphasised. The focus underline is a shadow rather than a border,
-     because the original's 1px border pushed the header a pixel taller the
-     moment you clicked into the name. */
-  & .name-input {
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -0.022em;
+  /* The record's name as a large title in the display face. Editable, so it
+     shows a field on hover and a ring on focus -- the original's focus state was
+     a 1px border that pushed the header a pixel taller the moment you clicked. */
+  & .name-input,
+  & .shared-detail-title {
+    min-width: 0;
+    font-family: var(--display);
+    font-size: clamp(28px, 3vw, 40px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.032em;
     color: var(--text);
+  }
+
+  & .name-input {
+    margin-left: -8px;
+    padding: 2px 8px;
+    border-radius: 8px;
+    transition: background-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+  }
+
+  & .name-input:hover {
+    background: var(--surface-hover);
   }
 
   & .name-input:focus {
     border-bottom: none;
-    box-shadow: inset 0 -2px 0 var(--ring);
+    background: var(--surface);
+    box-shadow: 0 0 0 2px var(--ring);
   }
 
+  & .detail-header {
+    gap: 16px;
+  }
+
+  & .detail-header .favicon-badge {
+    width: 44px;
+    height: 44px;
+    border-color: var(--hairline);
+  }
+
+  /* Hung under the title's text rather than under the badge: 44 of badge and
+     16 of gap. */
   & .meta-line {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     color: var(--text-faint);
+  }
+
+  & .detail-page > .meta-line {
+    margin-left: 60px;
   }
 
   & .detail-actions {
@@ -683,6 +767,19 @@
     column-gap: 16px;
     padding: 16px 20px 20px;
     border-radius: 22px;
+    background: var(--stage);
+  }
+
+  /* The fade at the foot of a collapsed screenshot dissolves into the stage
+     it sits on, not into the old sunken colour. */
+  & .capture-fade {
+    background: linear-gradient(
+      to bottom,
+      rgba(var(--stage-rgb), 0) 0%,
+      rgba(var(--stage-rgb), 0.55) 45%,
+      rgba(var(--stage-rgb), 0.92) 78%,
+      var(--stage) 100%
+    );
   }
 
   /* A component's page puts the crop tool in this panel, and while it's open
@@ -812,16 +909,26 @@
     margin-bottom: 24px;
   }
 
+  /* Section labels in the panel are quiet -- small, semibold, secondary -- so
+     the content under them is what you read first. The title above the columns
+     and the band headings below carry the loud end of the scale. */
   & .detail-section h2 {
     margin-bottom: 12px;
-    font-size: 15px;
-    letter-spacing: -0.012em;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--text-secondary);
+  }
+
+  & .section-count {
+    font-weight: 500;
   }
 
   & .summary-text {
-    font-size: 14.5px;
+    font-size: 15px;
     line-height: 1.6;
-    letter-spacing: -0.003em;
+    letter-spacing: -0.006em;
+    color: var(--text-body);
   }
 
   & .detail-section textarea {
@@ -972,17 +1079,38 @@
     height: 38px;
   }
 
-  & .page-band > h2,
+  /* Components from this site, and Related: bands under the fold, named at the
+     size of a section rather than of a panel label. */
+  & .detail-page > .page-band > h2,
   & .related-section h2 {
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    font-family: var(--display);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--text);
   }
 
   /* Everywhere else
      ------------------------------------------------------------------------- */
   & h1 {
     letter-spacing: -0.02em;
+  }
+
+  /* Every page's own name in the display face -- Collections, Favorites,
+     Manage Tags, a collection -- at one size. */
+  & .page > h1,
+  & .top-nav h1,
+  & .collection-title {
+    font-family: var(--display);
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+  }
+
+  & .tag-section h2 {
+    font-size: 13px;
   }
 
   & .collection-card,
@@ -1054,6 +1182,10 @@
       gap: 12px;
     }
 
+    & .detail-page > .meta-line {
+      margin-left: 0;
+    }
+
     & .name-input {
       flex: 1 1 200px;
       min-width: 0;
@@ -1096,9 +1228,26 @@
       transition-duration: 0.01ms !important;
     }
 
+    & :is(.modal, .modal-backdrop) {
+      animation: none;
+    }
+
     & .card:hover .thumb img {
       transform: none;
     }
+  }
+}
+
+@keyframes refined-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes refined-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
   }
 }
 

@@ -59,15 +59,23 @@ const SORTS = [
   { id: "za", label: "Name Z–A" },
 ];
 
+// Ties are broken by id, so two saves with the same timestamp (or the same
+// name) always come out in the same order. Without it the order of a tie was
+// whatever the server returned, and Postgres promises none: an import or a
+// seeded library stamps a dozen rows with one saved_at, and the five-second
+// poll would re-shuffle them under you -- a card swapping places with its
+// neighbour while you looked at it.
 function sortItems(items, sortId, adapter) {
+  const byId = (a, b) => String(a.id).localeCompare(String(b.id));
   const byName = (a, b) =>
-    adapter.name(a).localeCompare(adapter.name(b), undefined, { sensitivity: "base" });
-  const byDate = (a, b) => new Date(adapter.date?.(b) || 0) - new Date(adapter.date?.(a) || 0);
+    adapter.name(a).localeCompare(adapter.name(b), undefined, { sensitivity: "base" }) || byId(a, b);
+  const dateOf = (item) => new Date(adapter.date?.(item) || 0).getTime();
+  const byDate = (a, b) => dateOf(b) - dateOf(a) || byId(a, b);
 
   const sorted = [...items];
   if (sortId === "az") return sorted.sort(byName);
   if (sortId === "za") return sorted.sort((a, b) => byName(b, a));
-  if (sortId === "oldest") return sorted.sort((a, b) => byDate(b, a));
+  if (sortId === "oldest") return sorted.sort((a, b) => dateOf(a) - dateOf(b) || byId(a, b));
   return sorted.sort(byDate);
 }
 

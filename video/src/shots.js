@@ -46,9 +46,20 @@ const t = (name, offset = 0) => beat(name).t + offset;
 // A held frame is a held frame, so cutting the middle out of one is invisible.
 const HOLD = 0.8;
 
-// Stretches of the take that must never be seen: each shows the last frame
-// painted before it instead, and is squeezed like any other wait.
-export const HIDDEN = [[t("click-websites", -0.01), t("websites-loaded", 0.05)]];
+// Swaps (record.mjs): stretches between a click and the page settling, which
+// must never be seen -- an empty list, thumbnails still decoding, a screenshot
+// half replaced. Each shows the last frame painted before the click instead,
+// is squeezed like any other wait, and Sizzle.jsx dissolves from that frame to
+// the settled one, so the change reads as deliberate rather than as a stutter.
+export const SWAPS = timeline.beats
+  .filter((b) => b.name.startsWith("swap-start:"))
+  .map((start) => {
+    const name = start.name.slice("swap-start:".length);
+    const end = timeline.beats.find((b) => b.name === `swap-end:${name}` && b.t >= start.t);
+    if (!end) throw new Error(`Swap "${name}" never ended in the recording`);
+    return { name, a: start.t, b: end.t + 0.03 };
+  });
+export const HIDDEN = SWAPS.map(({ a, b }) => [a, b]);
 const hidden = (s) => HIDDEN.some(([a, b]) => s > a && s < b);
 
 const events = [...timeline.frames.map((f) => f.t), ...timeline.pointer.map((p) => p.t)]
@@ -138,6 +149,15 @@ function fillEdge(s) {
   return use.reduce((sum, f) => sum + f.x + f.w, 0) / use.length;
 }
 const BAR = beat("bar").box;
+
+// Hand-placed frames were measured against the first take's layout, where the
+// tab row's region started at y 196 and the capture panel at (24, 159). The
+// redesign moved both -- a taller headline, a narrower side panel -- so those
+// frames are expressed relative to where this take recorded them.
+const TABS = beat("tab-switcher").box;
+const dy = TABS.y - 196;
+const lib = (x, y, w, h) => ({ x, y: y + dy, w, h });
+const CP = beat("capture-panel").box;
 const TRACK_W = 640;
 function followFill(s) {
   const edge = fillEdge(s);
@@ -190,7 +210,7 @@ const RAW = [
     from: t("viewport-toggle", -0.4),
     to: t("click-desktop", 1.0),
     dur: 3.5,
-    cam: [fit({ x: 24, y: 150, w: 1028, h: 520 }, { pad: 10, minW: 1000 }), fit({ x: 24, y: 120, w: 1028, h: 620 }, { pad: 20 })],
+    cam: [fit({ x: CP.x, y: CP.y - 9, w: CP.w, h: 520 }, { pad: 10, minW: 1000 }), fit({ x: CP.x, y: CP.y - 39, w: CP.w, h: 620 }, { pad: 20 })],
   },
   // The sidebar: what the AI wrote, then the tags it chose.
   {
@@ -216,7 +236,7 @@ const RAW = [
     from: t("tab-switcher", -0.2),
     to: t("click-resources", 1.4),
     dur: 2.0,
-    cam: [fit({ x: 12, y: 196, w: 420, h: 58 }, { minW: 760, pad: 40 }), fit({ x: 12, y: 190, w: 900, h: 420 }, { minW: 1000, pad: 0 })],
+    cam: [fit(lib(12, 196, 420, 58), { minW: 760, pad: 40 }), fit(lib(12, 190, 900, 420), { minW: 1000, pad: 0 })],
   },
   // Tabbing through the folders.
   {
@@ -224,7 +244,7 @@ const RAW = [
     from: t("click-folder-1", -0.6),
     to: t("click-folder-3", 1.2),
     dur: 2.5,
-    cam: [fit({ x: 12, y: 190, w: 900, h: 420 }, { minW: 1000, pad: 0 }), fit({ x: 12, y: 290, w: 760, h: 380 }, { minW: 940, pad: 0 })],
+    cam: [fit(lib(12, 190, 900, 420), { minW: 1000, pad: 0 }), fit(lib(12, 290, 760, 380), { minW: 940, pad: 0 })],
   },
   // Websites again, and a couple of tags used as filters.
   {
@@ -232,7 +252,7 @@ const RAW = [
     from: t("click-websites", -0.6),
     to: t("chips-done", 0.1),
     dur: 3.5,
-    cam: [fit({ x: 12, y: 190, w: 900, h: 420 }, { minW: 1000, pad: 0 }), fit({ x: 12, y: 290, w: 1100, h: 520 }, { minW: 1150, pad: 0 })],
+    cam: [fit(lib(12, 190, 900, 420), { minW: 1000, pad: 0 }), fit(lib(12, 290, 1100, 520), { minW: 1150, pad: 0 })],
   },
   // And all the way back out to the whole library, the way it opened.
   {
@@ -240,7 +260,7 @@ const RAW = [
     from: t("outro", -0.6),
     to: t("end"),
     dur: 2.0,
-    cam: [fit({ x: 12, y: 290, w: 1100, h: 520 }, { minW: 1150, pad: 0 }), REST],
+    cam: [fit(lib(12, 290, 1100, 520), { minW: 1150, pad: 0 }), REST],
   },
 ];
 

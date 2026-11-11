@@ -37,12 +37,15 @@ const context = await browser.newContext({
   colorScheme: "dark",
   permissions: ["clipboard-read", "clipboard-write"],
 });
-// Dark theme, banner already closed, a fresh demo save. All per-browser
-// state the app keeps in localStorage.
+// Dark theme, banner already closed, the first-visit tour already seen, a
+// fresh demo save. All per-browser state the app keeps in localStorage. The
+// tour arrived after the first reel was cut; without this its welcome card
+// sits over the whole first shot.
 await context.addInitScript(() => {
   try {
     localStorage.setItem("specimen-theme", "dark");
     localStorage.setItem("specimen.demo.banner", "closed");
+    localStorage.setItem("specimen.demo.tour", "seen");
   } catch {}
 });
 const page = await context.newPage();
@@ -102,7 +105,9 @@ async function moveTo(x, y, ms = 450) {
   pointerAt = { x, y };
 }
 
-async function click(locator, name, { ms = 450, hold = 250 } = {}) {
+// `swap` opens a swap (see swap() below) at the instant of the press -- after
+// the pointer has travelled, so the edit still shows it arriving.
+async function click(locator, name, { ms = 450, hold = 250, swap: swapName } = {}) {
   await locator.scrollIntoViewIfNeeded();
   const b = await box(locator);
   const x = b.x + b.w / 2;
@@ -111,6 +116,7 @@ async function click(locator, name, { ms = 450, hold = 250 } = {}) {
   await sleep(hold);
   beat(name, { click: { x, y }, box: b });
   pointer.push({ t: now(), x, y, click: true });
+  if (swapName) beat(`swap-start:${swapName}`);
   await page.mouse.click(x, y);
 }
 
@@ -135,6 +141,40 @@ async function headToTop(locator, top = 96, ms = 500) {
 async function settle(ms = 600) {
   await page.waitForLoadState("networkidle", { timeout: 2500 }).catch(() => {});
   await sleep(ms);
+}
+
+// Every image of `selector` that is on screen has finished loading -- decoded,
+// or failed (a favicon the service has no copy of finishes broken). A grid that has
+// re-rendered is not a grid that has painted: the first reel's tag filter
+// showed a row of blank dark cards for a beat because the swap was timed to
+// the DOM and not to the pictures.
+async function imagesReady(selector, timeout = 15000) {
+  await page
+    .waitForFunction(
+      (sel) =>
+        [...document.querySelectorAll(sel)]
+          .filter((img) => {
+            const r = img.getBoundingClientRect();
+            return r.bottom > 0 && r.top < innerHeight && r.width > 0;
+          })
+          .every((img) => img.complete),
+      selector,
+      { timeout },
+    )
+    .catch(() => console.warn(`images under ${selector} still loading`));
+  // Two frames, so what decoded has also been painted and screencast.
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+}
+
+// A swap is a stretch where the page goes from one finished state to another
+// through ones nobody should see -- an empty list, half-loaded thumbnails, a
+// screenshot replaced mid-decode. The edit holds the last frame before the
+// click and dissolves straight to the first frame after the swap ends, so the
+// change reads as a cut the app made on purpose rather than a stutter.
+async function swapClick(locator, name, ready, opts = {}) {
+  await click(locator, name, { ...opts, swap: name });
+  await ready();
+  beat(`swap-end:${name}`);
 }
 
 // --- the run --------------------------------------------------------------
@@ -186,8 +226,13 @@ await sleep(1200);
 await page.waitForFunction(() => document.querySelector(".card .placeholder") === null);
 await region("ramp-card", page.locator(".card").first(), 10);
 await sleep(600);
-await click(page.locator(".card .thumb").first(), "click-ramp");
-await page.waitForSelector(".detail-capture img");
+// A swap, because clicking navigates: for a few frames the window is the
+// blank document between two pages, and the card shot runs just past the
+// click. The edit holds the card instead.
+await swapClick(page.locator(".card .thumb").first(), "click-ramp", async () => {
+  await page.waitForSelector(".detail-capture img");
+  await imagesReady(".detail-capture img");
+});
 await page.waitForSelector(".palette-bar", { timeout: 15000 }).catch(() => console.warn("no palette on Ramp"));
 await settle(1200);
 
@@ -197,13 +242,13 @@ await region("capture-panel", page.locator(".capture-panel"), 0);
 await moveTo(VIEW.width * 0.35, VIEW.height * 0.55, 500);
 await sleep(500);
 await region("viewport-toggle", page.locator(".viewport-toggle"), 0);
-await click(page.locator(".viewport-toggle button").nth(1), "click-mobile", { ms: 500 });
-await settle(900);
+await swapClick(page.locator(".viewport-toggle button").nth(1), "click-mobile", () => imagesReady(".detail-capture img"), { ms: 500 });
+await settle(600);
 await region("mobile-capture", page.locator(".capture-panel"), 0);
 await moveTo(VIEW.width * 0.38, VIEW.height * 0.6, 500);
 await sleep(700);
-await click(page.locator(".viewport-toggle button").nth(0), "click-desktop", { ms: 450 });
-await settle(900);
+await swapClick(page.locator(".viewport-toggle button").nth(0), "click-desktop", () => imagesReady(".detail-capture img"), { ms: 450 });
+await settle(600);
 await moveTo(VIEW.width * 0.45, VIEW.height * 0.55, 500);
 await sleep(500);
 
@@ -258,40 +303,54 @@ await moveTo(VIEW.width * 0.5, VIEW.height * 0.5, 300);
 beat("tabs");
 await region("tab-switcher", page.locator(".tab-switcher").first(), 12);
 await sleep(500);
-await click(page.locator(".tab-switcher button", { hasText: "Resources" }), "click-resources", { ms: 550 });
-await page.waitForSelector(".resource-row");
-await settle(900);
+// The Resources tab mounts empty and fills once its fetch answers; the first
+// reel showed "0 resources" for a beat in between.
+await swapClick(
+  page.locator(".tab-switcher button", { hasText: "Resources" }),
+  "click-resources",
+  async () => {
+    await page.waitForSelector(".resource-row");
+    await page.waitForSelector(".folder-strip .folder");
+    await imagesReady(".resource-row img");
+  },
+  { ms: 550 },
+);
+await settle(600);
 await region("resource-list", page.locator(".resource-list"), 0);
 const folders = page.locator(".folder-strip .folder");
 await region("folder-strip", page.locator(".folder-strip"), 8);
 for (let i = 1; i <= 3; i++) {
-  await click(folders.nth(i), `click-folder-${i}`, { ms: 420 });
-  await settle(700);
+  await swapClick(folders.nth(i), `click-folder-${i}`, () => imagesReady(".resource-row img"), { ms: 420 });
+  await settle(500);
 }
 await moveTo(VIEW.width * 0.5, VIEW.height * 0.62, 500);
 await sleep(600);
 
 // 8. Websites again, a couple of tags as filters, then the whole library.
-await click(page.locator(".tab-switcher button", { hasText: "Websites" }), "click-websites", { ms: 550 });
-// Not `.card img`: that is in the DOM seconds before the grid replaces the
-// empty state on screen, so the beat landed in the middle of it.
-await page.waitForFunction(() => !document.querySelector(".empty-state") && document.querySelector(".card img"), null, { timeout: 30000 });
-await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
-// Until the grid arrives the tab paints its empty state ("Start your
-// library"), which in a reel reads as a library that lost everything. The
-// edit hides the stretch between the click and this beat.
-beat("websites-loaded");
-await settle(900);
+// Until the grid arrives the tab paints a loading skeleton, and before that
+// fix it painted "Start your library", which in a reel reads as a library that
+// lost everything. A swap: the edit holds the Resources list and dissolves
+// straight to the finished grid.
+await swapClick(
+  page.locator(".tab-switcher button", { hasText: "Websites" }),
+  "click-websites",
+  async () => {
+    await page.waitForFunction(() => !document.querySelector(".empty-state, .library-loading") && document.querySelector(".card img"), null, { timeout: 30000 });
+    await imagesReady(".card img");
+  },
+  { ms: 550 },
+);
+await settle(700);
 // By name, not position: selecting a tag puts Clear at the front of the
 // strip and moves every chip along, so the second nth() lands on a different
 // word than it did a moment ago. Two tags stacked, not one swapped for
 // another, so the grid narrows twice.
 const chip = (label) => page.locator(".chip-strip .chip-filter:not(.chip-clear)", { hasText: new RegExp(`^${label}`) });
 await region("chip-strip", page.locator(".chip-strip"), 8);
-await click(chip("SaaS"), "click-chip-1", { ms: 500 });
-await settle(1600);
-await click(chip("Minimal"), "click-chip-2", { ms: 500 });
-await settle(1600);
+await swapClick(chip("SaaS"), "click-chip-1", () => imagesReady(".card img"), { ms: 500 });
+await settle(1100);
+await swapClick(chip("Minimal"), "click-chip-2", () => imagesReady(".card img"), { ms: 500 });
+await settle(1100);
 beat("chips-done");
 await moveTo(VIEW.width * 0.55, VIEW.height * 0.6, 600);
 beat("outro");

@@ -2,17 +2,19 @@ import { AbsoluteFill, Audio, Img, Easing, interpolate, staticFile, useCurrentFr
 import { loadFont as loadLalezar } from "@remotion/google-fonts/Lalezar";
 import { loadFont as loadFigtree } from "@remotion/google-fonts/Figtree";
 import timeline from "../public/rec/timeline.json";
-import { FPS, HIDDEN, INTRO, LOGO, SHOTS, TAGLINE, TOTAL_FRAMES, VIEW, unsqueeze } from "./shots";
+import { FPS, HIDDEN, INTRO, LOGO, SHOTS, SWAPS, TAGLINE, TOTAL_FRAMES, VIEW, unsqueeze } from "./shots";
 
 // The wordmark's own face, and the headline face, as the app loads them.
 const { fontFamily: lalezar } = loadLalezar();
 const { fontFamily: figtree } = loadFigtree("normal", { weights: ["600", "800"] });
 
-// Kivli's dark palette (app/globals.css, :root[data-theme="dark"]), so the
-// reel is the same object as the app rather than a trailer for it.
+// Kivli's dark palette -- the app's current design, app/variants/refined.css
+// in dark mode -- so the reel is the same object as the app rather than a
+// trailer for it. The backdrop sits a step under the app's near-black page so
+// the window still reads as a window.
 const C = {
-  bg: "#0c0c0f",
-  page: "#121215",
+  bg: "#060607",
+  page: "#0a0a0b",
   ink: "#f0eaf7",
   muted: "#9a9aa2",
   accent: "#f0603c",
@@ -44,14 +46,30 @@ function frameAt(t) {
   return frames[lo];
 }
 
+// Where the pointer was, blended between the two samples either side. The
+// recorder logs a sample every ~16ms while it moves, and the edit plays shots
+// faster or slower than real time, so showing the last sample alone drew the
+// cursor in visible steps -- the "jumpy" cursor in the first reel. Samples
+// more than 0.12s apart are a pause, not a movement, and are not blended.
 function pointerAt(t) {
-  let last = null;
-  for (const p of pointer) {
-    if (p.t > t) break;
-    last = p;
+  let lo = 0;
+  let hi = pointer.length - 1;
+  if (!pointer.length || pointer[0].t > t) return null;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (pointer[mid].t <= t) lo = mid;
+    else hi = mid - 1;
   }
-  return last;
+  const a = pointer[lo];
+  const b = pointer[lo + 1];
+  if (!b || b.t - a.t > 0.12) return a;
+  const k = (t - a.t) / (b.t - a.t);
+  return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k, t };
 }
+
+// A swap dissolves over this many output frames, from the held pre-click
+// frame to the settled one.
+const DISSOLVE = 8;
 
 const sec = (s) => Math.round(s * FPS);
 const INTRO_F = sec(INTRO);
@@ -98,6 +116,22 @@ function Shot({ shot, local, punchIn = true, style }) {
   const scale = W / r.w;
   const img = frameAt(srcT);
 
+  // The first output frames after a swap ends: lay the held pre-click frame
+  // over the settled one and fade it out. Found by walking back through this
+  // shot's own output frames to the last one still inside (or before) the swap.
+  let under = null;
+  for (const sw of SWAPS) {
+    if (srcT < sw.b) continue;
+    for (let j = 1; j <= DISSOLVE; j++) {
+      const before = unsqueeze(lerp(shot.cFrom, shot.cTo, (local - j) / length));
+      if (before < sw.b) {
+        if (before >= sw.a - 0.05) under = { file: frameAt(sw.a).file, opacity: 1 - j / (DISSOLVE + 1) };
+        break;
+      }
+    }
+    if (under) break;
+  }
+
   // The pointer, drawn where the real one was, scaled with the page.
   const p = pointerAt(srcT);
   const click = clicks.findLast((c) => c.t <= srcT && srcT - c.t < 0.5);
@@ -127,6 +161,12 @@ function Shot({ shot, local, punchIn = true, style }) {
           }}
         >
           <Img src={staticFile(`rec/${img.file}`)} style={{ width: VIEW.width, height: VIEW.height, display: "block" }} />
+          {under && (
+            <Img
+              src={staticFile(`rec/${under.file}`)}
+              style={{ position: "absolute", inset: 0, width: VIEW.width, height: VIEW.height, display: "block", opacity: under.opacity }}
+            />
+          )}
         </div>
 
         {click && (

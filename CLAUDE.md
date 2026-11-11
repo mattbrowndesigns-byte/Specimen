@@ -2048,6 +2048,29 @@ hydration.** Fine for anything that renders after a fetch (the site page's
 panel does); anything in the first paint that differs by variant would visibly
 swap. Styling never needs the hook.
 
+**The reel's jumps were measured, not spotted, and each had a cause.** The
+first cut had ten visible jumps that weren't cuts, found by diffing every frame
+of the render against its neighbours (`video/`, a 192x108 grey diff through
+Remotion's bundled ffmpeg). Four causes: a tab painting its empty or loading
+state for a beat; thumbnails not yet decoded when a filter re-rendered the
+grid; the screenshot swapping instantly on Desktop / Mobile; and a click that
+navigates showing the blank document between pages. `record.mjs` now wraps
+each of those clicks in a *swap* (`swapClick`) that ends only when every
+on-screen image has finished loading, and the edit holds the pre-click frame
+and dissolves to the settled one over eight frames. A dissolve must survive
+the squeeze: the idle seconds after a swap collapse into one output frame, so
+anything keyed to source time rather than to output frames gets cut short.
+The cursor is blended between samples too -- showing the last one alone drew
+it in steps at any playback speed but 1x.
+
+**Two saves with the same timestamp used to swap places on every poll.** The
+demo's seeded library stamps thirteen sites with one `saved_at`, Postgres
+promises no order for a tie, and the dashboard re-sorted each five-second poll
+by date alone -- so a card could trade places with its neighbour while you
+looked at it, which is what the reel caught after a tag filter.
+`LibraryBrowser`'s `sortItems` breaks every tie by id now. Real libraries hit
+it too: an import stamps a whole batch at once.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

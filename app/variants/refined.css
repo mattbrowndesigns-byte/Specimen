@@ -109,6 +109,12 @@
   --r-field: 12px;
   --r-panel: 20px;
 
+  /* A select's chevron, drawn by us rather than by the browser so it can be
+     inset like every other icon in a field. A data URI can't read a custom
+     property, so the stroke is --text-muted written out, and the dark block
+     has its own copy. */
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b5b61' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -154,6 +160,7 @@
   --pop-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.07), 0 10px 28px rgba(0, 0, 0, 0.45);
   --lift-shadow: 0 0 0 1px var(--hairline), 0 6px 18px rgba(0, 0, 0, 0.25);
   --edge-shadow: rgba(0, 0, 0, 0.4);
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239e9ea6' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 :root[data-variant="refined"] {
@@ -1009,8 +1016,11 @@
     box-shadow: 0 0 0 2px var(--ring);
   }
 
+  /* 6px between the word and the remove circle. At 2px the circle's edge
+     touched the last letter, so the label read as running into the control
+     rather than sitting beside it. */
   & .combobox-chip {
-    gap: 2px;
+    gap: 6px;
     min-height: 30px;
     padding: 3px 4px 3px 12px;
     font-size: 13px;
@@ -1235,6 +1245,56 @@
     & .card:hover .thumb img {
       transform: none;
     }
+  }
+
+  /* Every select draws its own chevron. The browser's sat almost on the right
+     edge -- 5px from it on the invite form -- because a native select ignores
+     padding when it places the arrow, so no amount of padding moved it. In em,
+     so a 13px select on Manage Tags and a 14px one on Invites both get an
+     inset and a gap in proportion to their text. */
+  & select:not([multiple]) {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 2.4em;
+    background-image: var(--select-chevron);
+    background-repeat: no-repeat;
+    background-position: right 0.85em center;
+    background-size: 1em 1em;
+  }
+
+  /* The wordmark's sweep runs through the tab icon's colours -- violet, then
+     orange, then the lit orange -- instead of one flash of the accent. Each
+     letter passes through the whole ramp, a beat behind the one before it, so
+     at any instant the five letters are showing five different points on it:
+     the gradient moves across the word without a background-clip to fight
+     over (see the note on .wordmark-letter in globals.css). Longer than the
+     original's half second, because four colours in 0.5s is a flicker. The
+     dot still hops as the warm end reaches it. */
+  @media (prefers-reduced-motion: no-preference) {
+    & .wordmark-link.wordmark-link:hover .wordmark-letter {
+      animation: refined-wordmark 0.9s ease-out;
+      animation-delay: calc(var(--step) * 70ms);
+    }
+
+    & .wordmark-link.wordmark-link:hover .wordmark-i-dot {
+      animation-delay: calc(var(--step) * 70ms + 260ms);
+    }
+  }
+}
+
+@keyframes refined-wordmark {
+  0%,
+  100% {
+    color: var(--brand-ink);
+  }
+  22% {
+    color: var(--ramp-mid);
+  }
+  48% {
+    color: var(--ramp-warm);
+  }
+  66% {
+    color: var(--ramp-lit);
   }
 }
 

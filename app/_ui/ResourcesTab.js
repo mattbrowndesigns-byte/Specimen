@@ -10,11 +10,13 @@ import {
   List,
   AlignJustify,
   Share2,
+  SlidersHorizontal,
 } from "lucide-react";
 import Favicon from "./Favicon";
 import SaveActions from "./SaveActions";
 import AddMenu from "./AddMenu";
 import ResourceModal from "./ResourceModal";
+import FilterModal from "./FilterModal";
 import ResourceProgress from "./ResourceProgress";
 import ShareModal from "./ShareModal";
 import FeatureRotator from "./FeatureRotator";
@@ -64,7 +66,11 @@ export default function ResourcesTab({
 }) {
   const [loadedResources, setResources] = useState([]);
   const [query, setQuery] = useState("");
-  const [folder, setFolder] = useState(null);
+  // A set rather than one id: the strip opens one folder at a time, the
+  // Filters modal can tick several. Several are an OR -- "Icons or
+  // Illustration" -- because a folder is one answer to one question.
+  const [selected, setSelected] = useState(() => new Set());
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [sort, setSort] = useState("newest");
   const [view, setView] = useState("list");
   const [progress, setProgress] = useState(null);
@@ -247,22 +253,54 @@ export default function ResourcesTab({
     folders.unsorted,
   ]);
 
-  const openFolder = useMemo(
-    () =>
-      folder && folder !== UNSORTED
-        ? folders.used.find((t) => t.id === folder) || null
-        : null,
-    [folder, folders],
-  );
+  // Only one real folder can be shared at a time, so the share control appears
+  // only while exactly one is open.
+  const openFolder = useMemo(() => {
+    if (selected.size !== 1) return null;
+    const [only] = selected;
+    return only === UNSORTED ? null : folders.used.find((t) => t.id === only) || null;
+  }, [selected, folders]);
+
+  // The strip switches folders: pressing one opens it alone, pressing an open
+  // one closes it. After the modal has ticked three, pressing one of them
+  // takes just that one away rather than throwing the other two out with it.
+  function pressFolder(id) {
+    setSelected((prev) => {
+      if (prev.has(id)) {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      }
+      return new Set([id]);
+    });
+  }
+
+  // The modal is a picture of the same strip: every folder that has anything
+  // in it, Unsorted last, counts from this library rather than from the tag
+  // table, which can't see an edit made a moment ago.
+  const filterOptions = useMemo(() => {
+    const options = folders.used.map((tag) => ({
+      id: tag.id,
+      label: tag.label,
+      facet: "resource_type",
+      usage_count: tag.count,
+    }));
+    if (folders.unsorted > 0) {
+      options.push({ id: UNSORTED, label: "Unsorted", facet: "resource_type", usage_count: folders.unsorted });
+    }
+    return options;
+  }, [folders]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = resources;
 
-    if (folder === UNSORTED) {
-      list = list.filter((r) => !(r.tags || []).length);
-    } else if (folder) {
-      list = list.filter((r) => (r.tags || []).some((t) => t.id === folder));
+    if (selected.size > 0) {
+      list = list.filter((r) => {
+        const tags = r.tags || [];
+        if (!tags.length) return selected.has(UNSORTED);
+        return tags.some((t) => selected.has(t.id));
+      });
     }
 
     if (q) {
@@ -287,11 +325,11 @@ export default function ResourcesTab({
     if (sort === "za") return sorted.sort((a, b) => byName(b, a));
     if (sort === "oldest") return sorted.sort((a, b) => byDate(b, a));
     return sorted.sort(byDate);
-  }, [resources, query, folder, sort]);
+  }, [resources, query, selected, sort]);
 
   useEffect(() => {
     setShown(PAGE_SIZE);
-  }, [query, folder, sort]);
+  }, [query, selected, sort]);
 
   function remember(key, value) {
     try {
@@ -350,6 +388,15 @@ export default function ResourcesTab({
           historyKey="specimen.recent.resources"
           terms={searchTerms}
         />
+        {/* The strip is a quick way in; this is the whole list at once, so a
+            library with more folders than fit on one line doesn't make you
+            scroll sideways to find out what's there. */}
+        {filterOptions.length > 0 && (
+          <button className="filters-btn" onClick={() => setFiltersOpen(true)}>
+            <SlidersHorizontal size={15} />
+            Filters{selected.size > 0 ? ` (${selected.size})` : ""}
+          </button>
+        )}
       </div>
 
       {/* Folders and the controls that act on them share a line. Stacked, the
@@ -361,12 +408,12 @@ export default function ResourcesTab({
         {(folders.used.length > 0 || folders.unsorted > 0) && (
           <div className={`folder-strip${folderFade}`} ref={folderRef}>
             {folders.used.map((tag) => {
-              const on = folder === tag.id;
+              const on = selected.has(tag.id);
               return (
                 <button
                   key={tag.id}
                   className={`folder${on ? " folder-on" : ""}`}
-                  onClick={() => setFolder(on ? null : tag.id)}
+                  onClick={() => pressFolder(tag.id)}
                   aria-pressed={on}
                 >
                   {on ? <FolderOpen size={17} /> : <Folder size={17} />}
@@ -377,9 +424,9 @@ export default function ResourcesTab({
             })}
             {folders.unsorted > 0 && (
               <button
-                className={`folder folder-unsorted${folder === UNSORTED ? " folder-on" : ""}`}
-                onClick={() => setFolder(folder === UNSORTED ? null : UNSORTED)}
-                aria-pressed={folder === UNSORTED}
+                className={`folder folder-unsorted${selected.has(UNSORTED) ? " folder-on" : ""}`}
+                onClick={() => pressFolder(UNSORTED)}
+                aria-pressed={selected.has(UNSORTED)}
               >
                 <Inbox size={17} />
                 <span className="folder-name">Unsorted</span>
@@ -547,7 +594,7 @@ export default function ResourcesTab({
                       <button
                         key={tag.id}
                         className={`chip chip-filter${tag.is_approved ? "" : " chip-pending"}`}
-                        onClick={() => setFolder(tag.id)}
+                        onClick={() => setSelected(new Set([tag.id]))}
                       >
                         {tag.label}
                       </button>
@@ -640,6 +687,19 @@ export default function ResourcesTab({
           targetId={sharingFolder.id}
           title={`the ${sharingFolder.label} folder`}
           onClose={() => setSharingFolder(null)}
+        />
+      )}
+
+      {filtersOpen && (
+        <FilterModal
+          allTags={filterOptions}
+          facets={[{ id: "resource_type", label: "Folders" }]}
+          selectedTagIds={selected}
+          onClose={() => setFiltersOpen(false)}
+          onApply={(next) => {
+            setSelected(next);
+            setFiltersOpen(false);
+          }}
         />
       )}
 

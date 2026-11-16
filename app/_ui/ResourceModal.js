@@ -29,6 +29,17 @@ export default function ResourceModal({ resource, allTags, onSaved, onDeleted, o
   }
 
   async function addTag(tagId) {
+    // Choosing a pending proposal by hand is the review it was waiting for, the
+    // same rule as typing a tag in: once you have filed a second resource under
+    // the AI's "Job Board", it is your word, not a suggestion.
+    const picked = allTags.find((t) => t.id === tagId);
+    if (picked && !picked.is_approved) {
+      await fetch(`/api/tags/${tagId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_approved: true }),
+      });
+    }
     await fetch(`/api/resources/${resource.id}/tags`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -114,8 +125,10 @@ export default function ResourceModal({ resource, allTags, onSaved, onDeleted, o
     onDeleted(resource.id);
   }
 
+  // Pending proposals are offered too. Leaving them out is what made an
+  // existing Job Board invisible to someone typing "Job".
   const available = allTags.filter(
-    (t) => t.facet === FACET && t.is_approved && !tags.some((at) => at.id === t.id)
+    (t) => t.facet === FACET && !tags.some((at) => at.id === t.id)
   );
 
   return (

@@ -74,8 +74,25 @@ export async function POST(request) {
     .eq("facet", facet)
     .eq("slug", slug)
     .maybeSingle();
+  // Typing the label of a pending AI proposal is the same review as typing a
+  // new one, so it approves the tag rather than handing the pending row back
+  // unchanged -- which left a word the owner had just chosen still amber, and
+  // still out of the vocabulary the AI may pick from.
   if (existing) {
-    return NextResponse.json({ tag: { ...existing, usage_count: 0 } });
+    if (existing.is_approved) {
+      return NextResponse.json({ tag: { ...existing, usage_count: 0 } });
+    }
+    const { data: approved, error: approveError } = await supabase
+      .from("tag")
+      .update({ is_approved: true })
+      .eq("id", existing.id)
+      .eq("user_id", user.id)
+      .select()
+      .single();
+    if (approveError) {
+      return NextResponse.json({ error: approveError.message }, { status: 500 });
+    }
+    return NextResponse.json({ tag: { ...approved, usage_count: 0 } });
   }
 
   const { data: created, error } = await supabase

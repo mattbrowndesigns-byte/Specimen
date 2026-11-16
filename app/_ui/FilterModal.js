@@ -3,16 +3,18 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import ModalShell from "./ModalShell";
 
-const FACET_LABELS = {
-  vertical: "Vertical",
-  page_type: "Page Type",
-  block_pattern: "Block / Pattern",
-  aesthetic: "Aesthetic",
-};
-const FACETS = Object.keys(FACET_LABELS);
+// The website filters. A caller with a different vocabulary passes its own
+// list -- the Resources tab passes one section, its folders -- so the fifth
+// facet stays out of here by not being listed, as it always has.
+const DESIGN_FACETS = [
+  { id: "vertical", label: "Vertical" },
+  { id: "page_type", label: "Page Type" },
+  { id: "block_pattern", label: "Block / Pattern" },
+  { id: "aesthetic", label: "Aesthetic" },
+];
 
 // Edits a draft copy so closing without applying leaves the grid untouched.
-export default function FilterModal({ allTags, selectedTagIds, onApply, onClose }) {
+export default function FilterModal({ allTags, selectedTagIds, onApply, onClose, facets = DESIGN_FACETS }) {
   const [draft, setDraft] = useState(new Set(selectedTagIds));
 
   function toggle(id) {
@@ -34,12 +36,12 @@ export default function FilterModal({ allTags, selectedTagIds, onApply, onClose 
       </div>
 
       <div className="modal-body">
-        {FACETS.map((facet) => {
-          const tags = allTags.filter((t) => t.facet === facet);
+        {facets.map((facet) => {
+          const tags = allTags.filter((t) => t.facet === facet.id);
           if (!tags.length) return null;
           return (
-            <section key={facet}>
-              <h3>{FACET_LABELS[facet]}</h3>
+            <section key={facet.id}>
+              <h3>{facet.label}</h3>
               <div className="modal-options">
                 {tags.map((tag) => (
                   <label key={tag.id}>

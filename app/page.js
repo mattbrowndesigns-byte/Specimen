@@ -60,7 +60,7 @@ export default function Home() {
     const res = await fetch("/api/tags");
     if (res.ok) {
       const data = await res.json();
-      setAllTags((data.tags || []).filter((t) => t.is_approved));
+      setAllTags(data.tags || []);
     }
   }, []);
 
@@ -73,7 +73,18 @@ export default function Home() {
   // describe how a page is DESIGNED, and neither set can ever match the other's
   // records. Handing every tab the whole list put "Icons" in the websites chip
   // strip, where clicking it could only ever return nothing.
-  const designTags = useMemo(() => allTags.filter((t) => t.facet !== "resource_type"), [allTags]);
+  //
+  // The two lists also treat a pending proposal differently. The design chip
+  // strip is a filter over a reviewed vocabulary, so it stays approved-only. A
+  // folder is where a resource LIVES: a resource whose only type is a pending
+  // proposal had tags, so it wasn't Unsorted, and its folder wasn't in the
+  // strip either -- it was nowhere. And the type picker has to offer the
+  // proposal, or typing "Job Board" beside an existing Job Board offers to
+  // create a second one.
+  const designTags = useMemo(
+    () => allTags.filter((t) => t.facet !== "resource_type" && t.is_approved),
+    [allTags]
+  );
   const resourceTags = useMemo(() => allTags.filter((t) => t.facet === "resource_type"), [allTags]);
 
   // An Add from another page arrives as ?job=… (a capture to watch) or

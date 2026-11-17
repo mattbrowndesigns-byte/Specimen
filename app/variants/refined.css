@@ -618,6 +618,78 @@
     font-weight: 600;
   }
 
+  /* Filter options are pills, the same control as the chip strip they stand
+     in for. Two columns of checkbox / name / far-right count read across the
+     gutter: "Landing ... 31" sat nearer Homepage's box than its own word.
+     A pill holds its count inside it, so a number can only belong to one
+     name, and the whole pill is the target rather than a 13px box. The
+     checkbox stays in the markup, hidden but focusable, so it is still a
+     checkbox to a keyboard and a screen reader. The fill is
+     --chip-strong-bg, not --field-bg: the modal is a step above the page in
+     dark, and --field-bg on it measured 28 against 22 -- a pill you could
+     not see. */
+  & .modal:has(.modal-options) {
+    max-width: 640px;
+  }
+
+  & .modal-body h3 {
+    font-size: 14px;
+    margin: 20px 0 10px;
+  }
+
+  & .modal-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  & .modal-options label {
+    position: relative;
+    height: 36px;
+    padding: 0 14px;
+    gap: 8px;
+    border-radius: 999px;
+    background: var(--chip-strong-bg);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    user-select: none;
+    transition: background-color 0.12s var(--ease), color 0.12s var(--ease);
+  }
+
+  & .modal-options label:hover {
+    background: color-mix(in srgb, var(--chip-strong-bg), var(--text) 8%);
+  }
+
+  & .modal-options input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  & .modal-options label:has(input:focus-visible) {
+    outline: 2px solid rgba(var(--brand-ink-rgb), 0.5);
+    outline-offset: 2px;
+  }
+
+  & .modal-options label:has(input:checked) {
+    background: var(--invert-bg);
+    color: var(--invert-text);
+  }
+
+  & .modal-options .modal-count {
+    margin-left: 0;
+    font-size: 13px;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  & .modal-options label:has(input:checked) .modal-count {
+    color: rgba(var(--invert-text-rgb), 0.65);
+  }
+
   & .field input,
   & .field textarea,
   & .field select {

@@ -37,7 +37,13 @@ export default function FilterModal({ allTags, selectedTagIds, onApply, onClose,
 
       <div className="modal-body">
         {facets.map((facet) => {
-          const tags = allTags.filter((t) => t.facet === facet.id);
+          // A word nothing is filed under can only filter the grid down to
+          // nothing, so it isn't offered. It stays in the vocabulary -- the AI
+          // still picks from it -- it just has no business in a filter yet.
+          // One that is already applied stays, or there'd be no way to lift it.
+          const tags = allTags.filter(
+            (t) => t.facet === facet.id && ((t.usage_count || 0) > 0 || selectedTagIds.has(t.id))
+          );
           if (!tags.length) return null;
           return (
             <section key={facet.id}>

@@ -1874,14 +1874,15 @@ changes.
 `.resource-tags .chip-filter` does: `.chip` sets 11px, which is right on a card
 and far too small beside 20px prose.
 
-**The share link on that page is an env var, and the reason is git history.**
-`NEXT_PUBLIC_SHOWCASE_SHARE` holds the token with no `/share/` prefix. A share
-token is the whole of a link's authorisation and this repo is public, so
-writing one into the source puts it in history permanently -- including after
-the link is revoked, which is the one state where you would want it gone. It
-also means the showcase link can be swapped from the Vercel dashboard without
-a deploy. With nothing set the closing panel does not render at all, which is
-why the page reads fine in a checkout that has never had the variable.
+**The case study closes on /demo, and it used to close on a share link.**
+The share token lived in `NEXT_PUBLIC_SHOWCASE_SHARE` so it would stay out of a
+public repo's history, which was right -- but the variable was never set on
+Vercel, so the panel never rendered in production, and a share page shows the
+library without the product. /demo is the real app, needs no token, and is the
+link the portfolio uses everywhere else, so the panel now always renders and
+the variable is gone. `portfolio/case-study.md` used to carry the raw share
+URL; it points at /demo too. That token is still in git history, so if it ever
+needs to stop working, revoke the link from the share modal.
 
 **The shared footer carries a fourth link now, and it is labelled for the
 reader.** "How it was built" rather than "Case Study": someone who followed a

@@ -13,7 +13,7 @@ vocabulary I already design in.
 | **Status** | In daily use |
 | **Built with** | Next.js, Supabase, Playwright, Gemini |
 | **Live** | https://specimen-gamma-six.vercel.app/case-study |
-| **Try it** | https://specimen-gamma-six.vercel.app/share/QZNxODnUGm24y2kwUr8t81qFdNo0f6CO |
+| **Try it** | https://specimen-gamma-six.vercel.app/demo |
 | **Source** | https://github.com/mattbrowndesigns-byte/Specimen |
 
 ---
@@ -158,6 +158,91 @@ The measure is `34em` now, about 75 characters, arrived at by setting a long
 paragraph and dividing its width by the width of 100 characters of actual text.
 Measured, not calculated. It is the small version of the lesson the whole
 project kept teaching me.
+
+## The interface kept saying things that were not true
+
+Switch from Resources back to Websites and, for half a second, a library of 44
+saves said "Start your library" and "0 sites". Each tab loads fresh when you
+open it, its list starts empty, and an empty list was being drawn as an empty
+library.
+
+Half a second sounds harmless. On the demo, in front of someone deciding
+whether to keep reading, it looks like a product that has just lost everything.
+
+> Nothing on screen yet is a different answer from nothing there.
+
+Each tab now waits for a real response before it says anything about what you
+have. Until then it shows a skeleton built from the real cards and rows, so
+nothing moves when they arrive, and a failed request stays loading rather than
+describing a library it never read.
+
+The filters had a quieter version of the same fault. Two columns put each count
+at the far edge, so Landing's 31 sat nearer Homepage's checkbox than its own
+word, and the list offered tags with nothing filed under them, each one a
+promise of results that did not exist. They are pills now, each holding its own
+count, and a tag is not offered until something carries it.
+
+## Two redesigns, used side by side
+
+Once the product worked I wanted it to look like it did. Rather than redesign
+in place, I built two alternatives next to the version that shipped: Elevated,
+an ambitious exploration, and Refined, a quieter one. All three ran on the same
+data, and I switched between them while actually using the app, not while
+looking at screenshots.
+
+Refined won, and then it took four things from Elevated that only showed their
+worth in use: capsule buttons, a shaded side panel on a site's page, the
+viewer's controls on one row, and a search bar that stays put while you scroll.
+A second pass took Elevated's near-black palette and its type hierarchy. The
+borderless cards, the heavier shadows and the tabbed inspector stayed behind.
+
+My favourite detail came from a bug. Elevated forgot to exclude the remove
+button on a tag from a rule that turned every button into a pill, so each tag
+got an accidentally generous ×. It was the easiest target in the panel. Refined
+has it on purpose.
+
+The original is kept, reachable, for exactly this page. The new design is a
+layer that applies only where a page is marked for it, and the original is the
+absence of that mark, so no new rule can reach it. Then I checked rather than
+trusted.
+
+| Pages fingerprinted | Differences in the original |
+|---|---|
+| **4**, every element's style and box, hashed | **0**, before, during and after the redesign |
+
+The original design: https://specimen-gamma-six.vercel.app/demo-original
+The exploration it borrowed from: https://specimen-gamma-six.vercel.app/demo-elevated
+
+## The portfolio link is the real app
+
+The first public demo was the share page, a read-only grid of screenshots. It
+showed the library and none of the product. What makes Kivli read as software
+is the search, the filters, the view switches and a site's own page, and
+rebuilding all of that read-only would have meant a second copy of the app that
+slowly stops matching the first.
+
+So the demo link hands a visitor a signed pass that the server reads as a demo
+account, and one rule at the door refuses every change it tries to make.
+
+| Routes that can change data | Rules guarding them |
+|---|---|
+| **39**, saving, tagging, sharing, deleting | **1**, at the door, not one per route |
+
+It is deliberately not a real login. A real session handed to strangers could
+be pointed at the database directly, around the app. A pass only this server
+can check leaves nothing to go around.
+
+Saving is the one thing a demo has to show and the one thing it cannot do for
+real, because every save spends my own twenty-a-day AI budget. So Add is
+staged: the address is locked to ramp.com, the field says so, and a twelve
+second bar plays before the card lands. Every screenshot and tag it reveals is
+real output from a real save.
+
+> Staged and saying so reads as a designed demo. Staged and hiding it reads as
+> a trick.
+
+First-time visitors get a seven-stop tour that ends by opening Add, and their
+visits are counted under their own path, so I can tell a stranger from myself.
 
 ## What I deliberately did not build
 

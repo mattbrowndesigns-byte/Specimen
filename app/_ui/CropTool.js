@@ -68,13 +68,6 @@ export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRe
     return () => clearInterval(tick);
   }, [saving]);
 
-  // Displayed pixels -> source pixels, for the size readout.
-  function scaleToNatural() {
-    const img = imgRef.current;
-    if (!img || !img.clientWidth) return 1;
-    return img.naturalWidth / img.clientWidth;
-  }
-
   function handleImageLoad() {
     const img = imgRef.current;
     if (!img) return;
@@ -223,11 +216,11 @@ export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRe
           </div>
         ) : (
           <>
-            {rect && (
-              <span className="crop-size">
-                {Math.round(rect.width * scaleToNatural())} × {Math.round(rect.height * scaleToNatural())} px
-              </span>
-            )}
+            {/* Redraw sits alone at the left, the two ways out at the right:
+                one acts on the box you drew, the others on the whole crop.
+                There used to be a pixel readout here as well, and it also
+                pushed itself left, so the two split the free space and Redraw
+                floated in the middle of the bar belonging to neither side. */}
             {rect && (
               <button className="crop-reset" onClick={() => setRect(null)}>
                 Redraw

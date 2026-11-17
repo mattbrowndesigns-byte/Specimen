@@ -8,15 +8,11 @@
 // takes the prose layout whole -- same 4+8 rows, same sticky headings, same
 // closing panel wearing the capture bar's ramp -- and adds only the three
 // shapes a case study needs, which live under "Case study" in globals.css.
-// The library this page points at, as an env var rather than a literal.
 //
-// A share token is the whole of a link's authorisation and this repo is
-// public, so writing one into the source would put it in git history
-// permanently -- including after the link is revoked. It also means the
-// showcase link can be swapped or pulled from the Vercel dashboard without a
-// deploy. With nothing set the closing panel simply does not render; the page
-// reads fine without it.
-const SHOWCASE = process.env.NEXT_PUBLIC_SHOWCASE_SHARE;
+// The closing panel points at /demo, the real app on a read-only pass. It used
+// to point at a share link held in NEXT_PUBLIC_SHOWCASE_SHARE, which was never
+// set on Vercel, so the panel never rendered in production -- and a share page
+// shows the library without the product, which /demo was built to fix.
 
 export default function CaseStudyPage() {
   return (
@@ -294,6 +290,148 @@ export default function CaseStudyPage() {
 
         <section className="prose-row">
           <div className="prose-section prose-row-aside">
+            <h2>The interface kept saying things that were not true</h2>
+          </div>
+          <div className="prose-section">
+            <p>
+              Switch from Resources back to Websites and, for half a second, a library of 44 saves
+              said &ldquo;Start your library&rdquo; and &ldquo;0 sites&rdquo;. Each tab loads
+              fresh when you open it, its list starts empty, and an empty list was being drawn as
+              an empty library.
+            </p>
+            <p>
+              Half a second sounds harmless. On the demo, in front of someone deciding whether to
+              keep reading, it looks like a product that has just lost everything.
+            </p>
+            <p className="case-point">
+              Nothing on screen yet is a different answer from nothing there.
+            </p>
+            <p>
+              Each tab now waits for a real response before it says anything about what you have.
+              Until then it shows a skeleton built from the real cards and rows, so nothing moves
+              when they arrive, and a failed request stays loading rather than describing a
+              library it never read.
+            </p>
+            <p>
+              The filters had a quieter version of the same fault. Two columns put each count at
+              the far edge, so Landing&rsquo;s 31 sat nearer Homepage&rsquo;s checkbox than its
+              own word, and the list offered tags with nothing filed under them, each one a
+              promise of results that did not exist. They are pills now, each holding its own
+              count, and a tag is not offered until something carries it.
+            </p>
+          </div>
+        </section>
+
+        <section className="prose-row">
+          <div className="prose-section prose-row-aside">
+            <h2>Two redesigns, used side by side</h2>
+          </div>
+          <div className="prose-section">
+            <p>
+              Once the product worked I wanted it to look like it did. Rather than redesign in
+              place, I built two alternatives next to the version that shipped: Elevated, an
+              ambitious exploration, and Refined, a quieter one. All three ran on the same data,
+              and I switched between them while actually using the app, not while looking at
+              screenshots.
+            </p>
+            <p>
+              Refined won, and then it took four things from Elevated that only showed their worth
+              in use: capsule buttons, a shaded side panel on a site&rsquo;s page, the viewer&rsquo;s
+              controls on one row, and a search bar that stays put while you scroll. A second pass
+              took Elevated&rsquo;s near-black palette and its type hierarchy. The borderless
+              cards, the heavier shadows and the tabbed inspector stayed behind.
+            </p>
+            <p>
+              My favourite detail came from a bug. Elevated forgot to exclude the remove button on
+              a tag from a rule that turned every button into a pill, so each tag got an
+              accidentally generous &times;. It was the easiest target in the panel. Refined has it
+              on purpose.
+            </p>
+            <p>
+              The original is kept, reachable, for exactly this page. The new design is a layer
+              that applies only where a page is marked for it, and the original is the absence of
+              that mark, so no new rule can reach it. Then I checked rather than trusted.
+            </p>
+            <dl className="measure-grid">
+              <div>
+                <dt>Pages fingerprinted</dt>
+                <dd>
+                  4<span>every element&rsquo;s style and box, hashed</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Differences in the original</dt>
+                <dd>
+                  0<span>before, during and after the redesign</span>
+                </dd>
+              </div>
+            </dl>
+            <p>
+              <a className="prose-link" href="/demo-original">
+                The original design &rarr;
+              </a>
+              <br />
+              <a className="prose-link" href="/demo-elevated">
+                The exploration it borrowed from &rarr;
+              </a>
+            </p>
+          </div>
+        </section>
+
+        <section className="prose-row">
+          <div className="prose-section prose-row-aside">
+            <h2>The portfolio link is the real app</h2>
+          </div>
+          <div className="prose-section">
+            <p>
+              The first public demo was the share page, a read-only grid of screenshots. It showed
+              the library and none of the product. What makes Kivli read as software is the
+              search, the filters, the view switches and a site&rsquo;s own page, and rebuilding
+              all of that read-only would have meant a second copy of the app that slowly stops
+              matching the first.
+            </p>
+            <p>
+              So the demo link hands a visitor a signed pass that the server reads as a demo
+              account, and one rule at the door refuses every change it tries to make.
+            </p>
+            <dl className="measure-grid">
+              <div>
+                <dt>Routes that can change data</dt>
+                <dd>
+                  39<span>saving, tagging, sharing, deleting</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Rules guarding them</dt>
+                <dd>
+                  1<span>at the door, not one per route</span>
+                </dd>
+              </div>
+            </dl>
+            <p>
+              It is deliberately not a real login. A real session handed to strangers could be
+              pointed at the database directly, around the app. A pass only this server can check
+              leaves nothing to go around.
+            </p>
+            <p>
+              Saving is the one thing a demo has to show and the one thing it cannot do for real,
+              because every save spends my own twenty-a-day AI budget. So Add is staged: the
+              address is locked to ramp.com, the field says so, and a twelve second bar plays
+              before the card lands. Every screenshot and tag it reveals is real output from a real
+              save.
+            </p>
+            <p className="case-point">
+              Staged and saying so reads as a designed demo. Staged and hiding it reads as a trick.
+            </p>
+            <p>
+              First-time visitors get a seven-stop tour that ends by opening Add, and their visits
+              are counted under their own path, so I can tell a stranger from myself.
+            </p>
+          </div>
+        </section>
+
+        <section className="prose-row">
+          <div className="prose-section prose-row-aside">
             <h2>What I deliberately did not build</h2>
           </div>
           <div className="prose-section">
@@ -334,18 +472,17 @@ export default function CaseStudyPage() {
           </div>
         </section>
 
-        {SHOWCASE && (
-          <section className="prose-cta">
-            <h2>See it with real saves in it</h2>
-            <p>
-              A read-only view of the actual library. No account, nothing to sign up for. Open any
-              site to see its captures, its measured palette and its typefaces.
-            </p>
-            <a className="prose-cta-link" href={`/share/${SHOWCASE}`}>
-              Open the library
-            </a>
-          </section>
-        )}
+        <section className="prose-cta">
+          <h2>Try it with real saves in it</h2>
+          <p>
+            The actual app, filled with a copy of my library. No account, nothing to sign up for.
+            Search it, filter it, open any site to see its captures, palette and typefaces, and
+            watch a save happen.
+          </p>
+          <a className="prose-cta-link" href="/demo">
+            Open the demo
+          </a>
+        </section>
       </main>
     </>
   );

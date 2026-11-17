@@ -232,7 +232,10 @@ export default function ComponentDetailPage({ params }) {
         <div className={`detail-columns${recropping ? " detail-columns-single" : ""}`}>
           <div className="detail-main">
             <div className="capture-panel">
-              <div className="viewport-toggle">
+              {/* `view-switch` is what gives the site page's switch its track
+                  and its held pill. Without it this rendered as two separate
+                  outlined buttons. */}
+              <div className="view-switch viewport-toggle">
                 <button
                   className={viewport === "desktop" ? "active" : ""}
                   onClick={() => {

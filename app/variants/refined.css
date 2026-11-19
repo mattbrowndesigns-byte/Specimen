@@ -333,6 +333,72 @@
     text-wrap: balance;
   }
 
+  /* The hero is two weights of one colour rather than purple over ink: the
+     line that changes is the hero's full-strength ink (near-white on the dark
+     page, near-black on the light one) and the line that holds steps back to
+     muted grey. Solid brand purple across 60px was the heaviest thing on the
+     screen, and contrast alone is enough to say which half is moving. */
+  /* Clipped to its own row, so a line rolls up out of the row's bottom edge
+     and away over its top. Unclipped, the arriving line swung down through
+     the grey line beneath it mid-turn -- measured in a paused frame, the two
+     were drawn over each other. Figtree's descenders already sit inside a
+     1.02 line box, so the clip needs only a hair of room; a 0.16em allowance
+     tried first left a strip between the two lines where the arriving one
+     showed through. The negative margins keep it out of the layout. */
+  & .hero-rotator {
+    color: var(--brand-ink);
+    perspective: 900px;
+    overflow: hidden;
+    padding: 0.04em 0.05em 0.03em;
+    margin: -0.04em -0.05em -0.03em;
+  }
+
+  & .page-hero-rest {
+    color: var(--text-muted);
+  }
+
+  /* The lines roll on a drum rather than fading in place. The line leaving
+     turns up and away while the next turns up into place from below, both at
+     once, on the same symmetric curve over the same 0.9s, so the two move as
+     one surface. The drum's axis sits behind the text (transform-origin's
+     -0.6em), which is what makes it a roll and not a squash. No blur and no
+     stagger: both read as busier, not smoother.
+
+     Opacity follows the turn rather than racing it, so the two lines cross at
+     the midpoint at about half strength each, tipped equal and opposite --
+     which is what a drum looks like. A first pass faded the new line in
+     fast, and it was at 81% while still tilted 68 degrees, sitting under a
+     leaving line that was also still at 77%: two lines on top of each other,
+     which is the flash this was meant to get rid of. */
+  & .hero-rotator-line {
+    transform-origin: 50% 50% -0.6em;
+    transform: translateY(0.35em) rotateX(-80deg);
+    transition:
+      opacity 0.6s cubic-bezier(0.25, 0.1, 0.25, 1),
+      transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  & .hero-rotator-line.is-active {
+    transform: none;
+    transition-duration: 0.7s, 0.9s;
+    transition-delay: 0.1s, 0s;
+    transition-timing-function: cubic-bezier(0.35, 0, 0.3, 1), cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  & .hero-rotator-line.is-leaving {
+    transform: translateY(-0.35em) rotateX(80deg);
+    transition-duration: 0.6s, 0.9s;
+    transition-timing-function: cubic-bezier(0.5, 0, 0.75, 0.6), cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    & .hero-rotator-line,
+    & .hero-rotator-line.is-leaving {
+      transform: none;
+      transition: none;
+    }
+  }
+
   & .tab-switcher {
     gap: 2px;
     margin-bottom: 18px;

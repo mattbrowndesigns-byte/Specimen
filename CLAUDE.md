@@ -2044,6 +2044,20 @@ To look at another design, open `/demo-original` or `/demo-elevated`; `/demo`
 comes back. Browsers that visited during the comparison may still carry a
 `kivli_compare` cookie -- nothing reads it now.
 
+**The hero's top line rolls on a drum, clipped to its own row.** In Refined
+the rotating line is `--brand-ink` and the fixed one (`.page-hero-rest`) is
+`--text-muted`; solid purple across 60px was the heaviest thing on screen. Each
+line turns on `rotateX` about an axis behind the text (`transform-origin: 50%
+50% -0.6em`, `perspective` on the rotator), the leaving one up and away, the
+arriving one up from below, both at once on one 0.9s curve. Two things were
+wrong first, both caught in paused frames: fading the new line in fast put it
+at 81% while still tilted 68 degrees, under a leaving line still at 77% -- two
+lines stacked, which is the flash this replaced -- so opacity now follows the
+turn and they cross at the midpoint; and unclipped, the arriving line swung
+down through the grey line beneath it, so the rotator is `overflow: hidden`
+with only a hair of padding (Figtree's descenders already fit a 1.02 line box;
+0.16em of room let it show in the gap). The Original keeps its fade.
+
 **`useVariant()` is "original" on the server and the real answer after
 hydration.** Fine for anything that renders after a fetch (the site page's
 panel does); anything in the first paint that differs by variant would visibly

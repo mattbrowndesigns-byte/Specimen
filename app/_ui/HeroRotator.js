@@ -23,8 +23,9 @@ import { useIsDemo } from "./demoState";
 // time describes the product instead.
 //
 // Calm on purpose -- it's the first thing on the page you come back to every
-// day. A line holds for five seconds, then fades out drifting up a few
-// pixels while the next fades in beneath it. Every line sits in the same
+// day. A line holds for five seconds, then rolls up and away while the next
+// rolls up into place (refined.css; the Original keeps a plain fade and
+// drift, in purple). Every line sits in the same
 // grid cell, so the hero is as wide and as tall as its longest line from the
 // first paint and nothing below it moves when the words change.
 //

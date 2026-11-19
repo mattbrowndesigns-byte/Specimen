@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND } from "@/lib/ownership";
-import { PROJECT_COLUMNS, deleteProject } from "@/lib/visuals";
+import { PROJECT_COLUMNS, cancelPick } from "@/lib/visuals";
 
 export async function GET(request, { params }) {
   const user = await currentUser();
@@ -20,11 +20,13 @@ export async function GET(request, { params }) {
   return NextResponse.json({ project: data });
 }
 
+// Leaving the picker. Deletes a project that has nothing saved yet; one that
+// already has visuals in the library keeps them (see cancelPick).
 export async function DELETE(request, { params }) {
   const user = await currentUser();
   if (!user) return UNAUTHORIZED();
   const { id } = await params;
-  const result = await deleteProject(id, user.id);
+  const result = await cancelPick(id, user.id);
   if (result.notFound) return NOT_FOUND();
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, kept: result.kept || 0 });
 }

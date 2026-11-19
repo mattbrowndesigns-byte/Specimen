@@ -12,6 +12,7 @@ const URL_LABELS = {
   website: "Website URL",
   component: "Page to crop from",
   resource: "Link to save",
+  visual: "Case study page",
 };
 
 export default function AddMenu({ onSubmit, variant }) {

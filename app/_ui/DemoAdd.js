@@ -111,7 +111,7 @@ export default function DemoAdd() {
           rather than disappearing. */}
       {open && !form && (
         <div className="add-pop">
-          {KINDS.map(({ add, one, blurb, Icon }) => {
+          {KINDS.filter((k) => k.demo !== false).map(({ add, one, blurb, Icon }) => {
             const live = Boolean(DEMO_SAVES[add]);
             return (
               <button

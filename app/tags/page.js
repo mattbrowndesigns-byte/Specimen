@@ -20,6 +20,9 @@ const FACET_LABELS = {
   block_pattern: "Block / Pattern",
   aesthetic: "Aesthetic",
   resource_type: "Folders",
+  // What kind of artifact a visual is. The sixth facet, and the second one
+  // added here by hand -- grep the facet lists before adding a seventh.
+  medium: "Medium",
 };
 const FACETS = Object.keys(FACET_LABELS);
 

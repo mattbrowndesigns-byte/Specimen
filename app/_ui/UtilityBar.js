@@ -28,6 +28,10 @@ export default function UtilityBar({ onAdd, onError }) {
       onError?.(result.error);
       return false;
     }
+    if (result.redirect) {
+      window.location.href = result.redirect;
+      return true;
+    }
     // A resource comes back with a row and no job, since there's no capture to
     // watch -- so it hands over an id instead and the dashboard takes it from
     // there. Reading result.job blindly here threw on the third kind of save.

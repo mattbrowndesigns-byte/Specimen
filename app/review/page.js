@@ -13,6 +13,7 @@ const FACET_LABELS = {
   block_pattern: "Block / Pattern",
   aesthetic: "Aesthetic",
   resource_type: "Type",
+  medium: "Medium",
 };
 
 // Selection state is per section rather than one shared set: the three

@@ -3,13 +3,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import WebsitesTab from "./_ui/WebsitesTab";
 import ComponentsTab from "./_ui/ComponentsTab";
 import ResourcesTab from "./_ui/ResourcesTab";
+import VisualsTab from "./_ui/VisualsTab";
 import UtilityBar from "./_ui/UtilityBar";
 import { KINDS } from "./_ui/kinds";
 import CaptureProgress from "./_ui/CaptureProgress";
 import Arcade from "./_ui/Arcade";
 import { DemoProgress } from "./_ui/DemoAdd";
 import DemoTour from "./_ui/DemoTour";
-import { useDemoPhase } from "./_ui/demoState";
+import { useDemoPhase, useIsDemo } from "./_ui/demoState";
 import SiteFooter from "./_ui/SiteFooter";
 import { addItem, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
 
@@ -38,6 +39,8 @@ export default function Home() {
 
   const incomingFor = (id) => (handoff?.tab === id ? handoff.query : null);
   const [error, setError] = useState(null);
+  const demo = useIsDemo();
+  const tabs = demo ? KINDS.filter((k) => k.demo !== false) : KINDS;
 
   // The demo's staged save, started from the utility bar here or on any other
   // page. The panel outlives the phase by a few seconds so the confirmation is
@@ -82,15 +85,29 @@ export default function Home() {
   // proposal, or typing "Job Board" beside an existing Job Board offers to
   // create a second one.
   const designTags = useMemo(
-    () => allTags.filter((t) => t.facet !== "resource_type" && t.is_approved),
+    // medium is a visual's own facet, like resource_type is a resource's.
+    () => allTags.filter((t) => t.facet !== "resource_type" && t.facet !== "medium" && t.is_approved),
     [allTags]
   );
   const resourceTags = useMemo(() => allTags.filter((t) => t.facet === "resource_type"), [allTags]);
+  const visualTags = useMemo(
+    () => allTags.filter((t) => ["medium", "aesthetic", "vertical"].includes(t.facet) && t.is_approved),
+    [allTags]
+  );
 
   // An Add from another page arrives as ?job=… (a capture to watch) or
   // ?resource=… (a row that exists and just needs describing); pick it up, then
   // clean the URL so a refresh doesn't re-run it.
   useEffect(() => {
+    // The visuals picker sends you back here with ?tab=visuals once you've
+    // saved, so you land on the board your picks just joined.
+    const requestedTab = new URLSearchParams(window.location.search).get("tab");
+    if (requestedTab && KINDS.some((k) => k.tab === requestedTab)) {
+      setTab(requestedTab);
+      window.history.replaceState({}, "", "/");
+      return;
+    }
+
     const resourceId = resourceFromSearch(window.location.search);
     if (resourceId) {
       setTab("resources");
@@ -116,6 +133,10 @@ export default function Home() {
       if (result.error) {
         setError(result.error);
         return false;
+      }
+      if (result.redirect) {
+        window.location.href = result.redirect;
+        return true;
       }
       if (kind === "resource") {
         setTab("resources");
@@ -177,7 +198,7 @@ export default function Home() {
             shows, so the thing you pressed to save it is the thing you press
             to find it again. */}
         <div className="tab-switcher" data-tour="tabs">
-          {KINDS.map(({ tab: id, label, Icon }) => (
+          {tabs.map(({ tab: id, label, Icon }) => (
             <button
               key={id}
               className={tab === id ? "active" : ""}
@@ -225,6 +246,7 @@ export default function Home() {
             onSearchElsewhere={searchElsewhere}
           />
         )}
+        {tab === "visuals" && <VisualsTab allTags={visualTags} />}
       </main>
       {/* Mounted here rather than inside a progress panel, so a capture
           landing mid-round can't take the round with it. */}

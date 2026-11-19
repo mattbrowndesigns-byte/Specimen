@@ -7846,8 +7846,52 @@ a.card {
   backdrop-filter: blur(8px);
 }
 
-.pick-bar .danger-btn.danger-btn {
+.pick-bar .danger-btn.danger-btn,
+.pick-bar .pick-cancel {
   margin-right: auto;
+}
+
+/* Cancel on a page pulled again: leaving loses nothing you've saved, so it
+   isn't dressed as a destructive control. */
+.pick-cancel {
+  padding: 9px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.pick-cancel:hover {
+  background: var(--surface-hover);
+}
+
+/* Already in your library from an earlier pull: present so you can see what
+   you have, quiet so it doesn't read as a choice. */
+.pick-tile-saved {
+  cursor: default;
+}
+
+/* Doubled to outrank the unselected-tile dimming and its hover, which
+   would otherwise brighten a tile you can't choose. */
+.pick-tile.pick-tile-saved img,
+.pick-tile.pick-tile-saved:hover img {
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
+.pick-saved-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* The solid dark button, not the orange one: Add is already orange in the

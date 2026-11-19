@@ -59,6 +59,24 @@ function Loading({ phase }) {
 }
 
 function Tile({ candidate, selected, onToggle }) {
+  // Already in the library from an earlier pull of this page: shown so you
+  // can see what you have, but it can't be chosen again.
+  if (candidate.saved) {
+    return (
+      <div className="pick-tile pick-tile-saved" aria-label={`Already saved: ${candidate.title || "image"}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={candidate.thumb_url}
+          alt=""
+          width={candidate.width || undefined}
+          height={candidate.height || undefined}
+          loading="lazy"
+        />
+        <span className="pick-saved-badge">In your library</span>
+      </div>
+    );
+  }
+
   return (
     <button
       type="button"
@@ -114,7 +132,7 @@ export default function PickProjectPage({ params }) {
   // nothing that arrives later can overwrite a choice you've made.
   const show = useCallback((p) => {
     setProject(p);
-    setSelected(new Set((p.candidates || []).filter((c) => c.keep).map((c) => c.key)));
+    setSelected(new Set((p.candidates || []).filter((c) => c.keep && !c.saved).map((c) => c.key)));
     setPhase(p.state === "failed" ? "failed" : "ready");
   }, []);
 
@@ -188,13 +206,18 @@ export default function PickProjectPage({ params }) {
     window.location.href = "/?tab=visuals";
   }
 
-  async function discard() {
-    if (!window.confirm("Discard this project? Every image found on the page will be deleted.")) return;
+  // Leaving without saving. On a first pull that deletes what was found; on a
+  // page pulled again, the images already in your library stay where they
+  // are and only the new finds are thrown away -- the server decides which.
+  async function cancel({ confirm = true } = {}) {
+    if (confirm && !hasSaved && !window.confirm("Leave without saving? The images found on this page will be deleted.")) return;
     const res = await fetch(`/api/visuals/projects/${id}`, { method: "DELETE" });
     if (res.ok) window.location.href = "/?tab=visuals";
   }
 
   const candidates = useMemo(() => project?.candidates || [], [project]);
+  const fresh = useMemo(() => candidates.filter((c) => !c.saved), [candidates]);
+  const hasSaved = fresh.length < candidates.length;
   const laidOut = useMemo(() => layout(candidates, columns), [candidates, columns]);
   const loading = phase === "loading" || phase === "extracting" || phase === "sorting";
   const count = selected.size;
@@ -215,8 +238,10 @@ export default function PickProjectPage({ params }) {
               <button className="primary" onClick={() => run(project)}>
                 Try Again
               </button>
-              <button className="danger-btn" onClick={discard}>
-                Discard
+              {/* Nothing was found, so there's nothing to lose by leaving --
+                  and on a page pulled again, your saved images stay put. */}
+              <button className="pick-cancel" onClick={() => cancel({ confirm: false })}>
+                Cancel
               </button>
             </div>
           </div>
@@ -256,20 +281,21 @@ export default function PickProjectPage({ params }) {
             </div>
 
             <div className="pick-bar">
-              <button className="danger-btn" onClick={discard} disabled={saving}>
-                Discard
+              <button className={hasSaved ? "pick-cancel" : "danger-btn"} onClick={() => cancel()} disabled={saving}>
+                {hasSaved ? "Cancel" : "Discard"}
               </button>
               <span className="pick-bar-count">
-                {count} of {candidates.length} selected
+                {count} of {fresh.length} {hasSaved ? "new " : ""}selected
+                {hasSaved && ` · ${candidates.length - fresh.length} already in your library`}
               </span>
-              <button
-                className="link-btn"
-                onClick={() =>
-                  setSelected(count === candidates.length ? new Set() : new Set(candidates.map((c) => c.key)))
-                }
-              >
-                {count === candidates.length ? "Select none" : "Select all"}
-              </button>
+              {fresh.length > 0 && (
+                <button
+                  className="link-btn"
+                  onClick={() => setSelected(count === fresh.length ? new Set() : new Set(fresh.map((c) => c.key)))}
+                >
+                  {count === fresh.length ? "Select none" : "Select all"}
+                </button>
+              )}
               <button className="primary" onClick={save} disabled={saving || count === 0}>
                 {saving ? "Saving…" : `Save ${count} Visual${count === 1 ? "" : "s"}`}
               </button>

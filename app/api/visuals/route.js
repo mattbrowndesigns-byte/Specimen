@@ -64,16 +64,20 @@ export async function POST(request) {
     .eq("user_id", user.id)
     .eq("url", url)
     .maybeSingle();
+  // The same page again reopens it rather than refusing it: the picker pulls
+  // the page afresh and shows what's already in the library greyed out, so a
+  // missed image can be added without starting over. Anything mid-pick or
+  // failed just picks up where it was.
   if (existing) {
-    // A failed attempt is worth retrying from the same row; anything else is
-    // a second save of the same case study.
-    if (existing.state === "failed" || existing.state === "extracting" || existing.state === "picking") {
-      return NextResponse.json({ project: existing });
+    if (existing.state === "saved") {
+      const { error } = await supabase
+        .from("visual_project")
+        .update({ state: "extracting", ai_state: "pending", error: null, candidates: [], updated_at: new Date().toISOString() })
+        .eq("id", existing.id)
+        .eq("user_id", user.id);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json(
-      { error: `You've already saved the images from that page${existing.title ? ` ("${existing.title}")` : ""}.` },
-      { status: 409 }
-    );
+    return NextResponse.json({ project: existing });
   }
 
   const { data: project, error } = await supabase

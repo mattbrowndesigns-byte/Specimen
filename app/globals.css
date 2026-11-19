@@ -7772,7 +7772,7 @@ a.card {
 }
 
 .pick-tile-selected::after {
-  box-shadow: inset 0 0 0 3px var(--accent);
+  box-shadow: inset 0 0 0 3px var(--invert-bg);
 }
 
 /* Unticked images step back, so what you're keeping is what you see. */
@@ -7784,8 +7784,10 @@ a.card {
   opacity: 0.8;
 }
 
-/* The tick. An empty ring until chosen, then a filled disc with a check --
-   in the app's orange, the colour every mark of "this one" already wears.
+/* The tick. An empty ring until chosen, then a filled disc with a check.
+   Neutral, not the brand orange: on a grid of other people's work the
+   accent fought every image it sat on. --invert-bg is the solid-button
+   pair, so it's near-black in light mode and near-white in dark.
    The white ring and dark wash are literal on purpose, like the crop
    handles: they sit on a picture, not on the app's surfaces, and have to
    read against whatever that picture is. */
@@ -7803,13 +7805,13 @@ a.card {
   border: 2px solid #fff;
   background: rgba(0, 0, 0, 0.28);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-  color: var(--accent-solid-text);
+  color: var(--invert-text);
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .pick-tile-selected .pick-check {
-  border-color: var(--accent-solid);
-  background: var(--accent-solid);
+  border-color: var(--invert-bg);
+  background: var(--invert-bg);
 }
 
 .pick-tile:focus-visible {

@@ -297,7 +297,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
           <div className="lightbox-top-actions">
             <button
               type="button"
-              className={`lightbox-icon${detailsOpen ? " active" : ""}`}
+              className="lightbox-icon"
               onClick={toggleDetails}
               aria-pressed={detailsOpen}
               aria-label={detailsOpen ? "Hide details" : "Details"}
@@ -314,7 +314,8 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
             >
               {fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
             </button>
-            <button type="button" className="lightbox-icon" onClick={onClose} aria-label="Close" data-tip="Close">
+            {/* No tooltip: an X says what it does. */}
+            <button type="button" className="lightbox-icon" onClick={onClose} aria-label="Close">
               <X size={18} />
             </button>
           </div>
@@ -371,18 +372,17 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
 
       {detailsOpen && (
         <aside className="lightbox-panel" aria-label="Details">
+          {/* Its own row above the title, in a holding shape like the
+              lightbox's buttons, rather than floating beside the heading. */}
+          <div className="lightbox-panel-bar">
+            <button type="button" className="lightbox-panel-close" onClick={toggleDetails} aria-label="Hide details">
+              <X size={17} />
+            </button>
+          </div>
+
           {error && <p className="error">{error}</p>}
 
           <section className="lightbox-panel-section lightbox-panel-head">
-            <button
-              type="button"
-              className="lightbox-panel-close"
-              onClick={toggleDetails}
-              aria-label="Hide details"
-              data-tip="Hide details"
-            >
-              <X size={18} />
-            </button>
             <input
               className="lightbox-title"
               value={titleDraft}

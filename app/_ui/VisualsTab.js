@@ -1,14 +1,23 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Grid3x3, LayoutGrid, Square } from "lucide-react";
 import SearchField from "./SearchField";
 import ResultCount from "./ResultCount";
 import NoMatches from "./NoMatches";
 import Favicon from "./Favicon";
 import useEdgeFade from "./useEdgeFade";
-import { GAP, layout, useColumns } from "./masonry";
+import { GAP, SEQUENCE_KEY, SIZES, MasonrySkeleton, layout, useColumns } from "./masonry";
 
-// The fourth library: every image kept from a case study, each its own card,
+// Same three sizes and icons as the other tabs' card grids.
+const SIZE_OPTIONS = [
+  { id: "small", label: "Small", Icon: Grid3x3 },
+  { id: "medium", label: "Medium", Icon: LayoutGrid },
+  { id: "large", label: "Large", Icon: Square },
+];
+const SIZE_KEY = "specimen.visuals.size";
+
+
+// The fourth library: every image kept from a page, each its own card,
 // at its own shape. A board rather than a grid of projects, because seeing
 // everything is the point -- a logo and that logo on a bus are two findings,
 // and grouping happens on a visual's own page instead.
@@ -38,8 +47,36 @@ export default function VisualsTab({ allTags }) {
   const [error, setError] = useState(null);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(new Set());
-  const boardRef = useRef(null);
-  const columns = useColumns(boardRef);
+  const [size, setSize] = useState("medium");
+  const [boardEl, setBoardEl] = useState(null);
+  const columns = useColumns(boardEl, SIZES[size]);
+
+  // A per-browser preference, like the other tabs' view switches.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SIZE_KEY);
+      if (saved && SIZES[saved]) setSize(saved);
+    } catch {
+      // No storage means the default size, not a broken board.
+    }
+  }, []);
+
+  function chooseSize(next) {
+    setSize(next);
+    try {
+      localStorage.setItem(SIZE_KEY, next);
+    } catch {
+      // Not remembering a size is not worth an error.
+    }
+  }
+
+  function rememberSequence() {
+    try {
+      sessionStorage.setItem(SEQUENCE_KEY, JSON.stringify(visible.map((v) => v.id)));
+    } catch {
+      // The lightbox falls back to the whole library's order.
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -172,7 +209,25 @@ export default function VisualsTab({ allTags }) {
         ) : (
           <span className="result-count result-count-loading">Loading visuals…</span>
         )}
+        <div className="results-controls">
+          <div className="size-switch">
+            {SIZE_OPTIONS.map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                className={size === id ? "active" : ""}
+                onClick={() => chooseSize(id)}
+                title={label}
+                aria-label={`${label} tiles`}
+                aria-pressed={size === id}
+              >
+                <Icon size={15} />
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
+
+      {!loaded && !error && <MasonrySkeleton minColumn={SIZES[size]} label="Loading visuals" />}
 
       {loaded && visuals.length === 0 && !pending.length && (
         <div className="empty-state">
@@ -186,11 +241,11 @@ export default function VisualsTab({ allTags }) {
 
       {loaded && searching && visible.length === 0 && <NoMatches noun="visual" query={query} />}
 
-      <div className="visual-board" ref={boardRef} style={{ "--board-gap": `${GAP}px` }}>
+      <div className="visual-board" ref={setBoardEl} style={{ "--board-gap": `${GAP}px` }}>
         {laidOut.map((column, i) => (
           <div className="visual-column" key={i}>
             {column.map((v) => (
-              <a key={v.id} className="visual-card" href={`/visuals/${v.id}`}>
+              <a key={v.id} className="visual-card" href={`/visuals/${v.id}`} onClick={rememberSequence}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={v.thumb_url}

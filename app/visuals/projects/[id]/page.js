@@ -6,9 +6,14 @@ import SiteFooter from "../../../_ui/SiteFooter";
 import Favicon from "../../../_ui/Favicon";
 import { useAnnounceWork } from "../../../_ui/workInFlight";
 import FeatureRotator from "../../../_ui/FeatureRotator";
-import { GAP, layout, useColumns } from "../../../_ui/masonry";
+import { GAP, MasonrySkeleton, layout, useColumns } from "../../../_ui/masonry";
 
 // Where a case study's images are chosen before anything is saved.
+//
+// If the AI can't answer -- the free allowance spent, a slow afternoon -- the
+// ticks come from size and position instead, with no banner about it: you
+// choose either way, and a saved image without tags can be described later
+// from its own page.
 //
 // Two states and nothing in between. While the page is being read and the AI
 // is sorting, there is only the loading bar every other save uses -- no
@@ -114,8 +119,8 @@ export default function PickProjectPage({ params }) {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const started = useRef(false);
-  const gridRef = useRef(null);
-  const columns = useColumns(gridRef);
+  const [gridEl, setGridEl] = useState(null);
+  const columns = useColumns(gridEl);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/visuals/projects/${id}`);
@@ -173,13 +178,6 @@ export default function PickProjectPage({ params }) {
     })();
   }, [load, run, show]);
 
-  async function retryAi() {
-    setPhase("sorting");
-    await fetch(`/api/visuals/projects/${id}/select`, { method: "POST" });
-    const p = await load();
-    if (p) show(p);
-  }
-
   function toggle(key) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -228,7 +226,12 @@ export default function PickProjectPage({ params }) {
       <main className="page pick-page">
         {error && <p className="error">{error}</p>}
 
-        {loading && <Loading phase={phase} />}
+        {loading && (
+          <>
+            <Loading phase={phase} />
+            <MasonrySkeleton label="Finding images" />
+          </>
+        )}
 
         {phase === "failed" && project && (
           <div className="empty-state empty-state-search">
@@ -261,16 +264,7 @@ export default function PickProjectPage({ params }) {
               </div>
             </div>
 
-            {project.ai_state === "failed" && (
-              <p className="pick-note">
-                {project.error || "The AI didn't pick these."}{" "}
-                <button className="link-btn" onClick={retryAi}>
-                  Try the AI again
-                </button>
-              </p>
-            )}
-
-            <div className="visual-board" ref={gridRef} style={{ "--board-gap": `${GAP}px` }}>
+            <div className="visual-board" ref={setGridEl} style={{ "--board-gap": `${GAP}px` }}>
               {laidOut.map((column, i) => (
                 <div className="visual-column" key={i}>
                   {column.map((c) => (

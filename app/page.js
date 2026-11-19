@@ -189,10 +189,12 @@ export default function Home() {
           <CaptureProgress key={job.key} job={job} onDone={(result) => finishJob(job, result)} />
         ))}
 
+        {/* One sentence, Dribbble-style: the purple top line changes, the
+            bottom line holds. */}
         <h2 className="page-hero">
-          Save what inspires you.
-          <br />
           <HeroRotator />
+          <br />
+          and let AI tag and sort it all.
         </h2>
 
         {/* Icons from the shared kind list -- the same three the Add menu

@@ -9,7 +9,7 @@
 // .resource-row) and only filled, the same rule the style panels' placeholders
 // follow, so the shape before the answer is the shape after it and nothing
 // jumps when the rows land.
-const COUNT = { cards: 8, list: 4, headlines: 8, resources: 6 };
+const COUNT = { cards: 8, list: 4, headlines: 8, resources: 6, resourceCards: 8 };
 
 export default function LibrarySkeleton({ view, size = "medium", noun }) {
   const slots = Array.from({ length: COUNT[view] || 6 }, (_, i) => i);
@@ -36,6 +36,21 @@ export default function LibrarySkeleton({ view, size = "medium", noun }) {
             <div className="row-item" key={i}>
               <div className="row-thumb" />
               <div className="row-body skeleton-lines">
+                <span className="skeleton-line" />
+                <span className="skeleton-line" />
+                <span className="skeleton-line" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {view === "resourceCards" && (
+        <div className="grid grid-medium resource-grid">
+          {slots.map((i) => (
+            <div className="card resource-card" key={i}>
+              <span className="skeleton-disc" />
+              <div className="skeleton-lines">
                 <span className="skeleton-line" />
                 <span className="skeleton-line" />
                 <span className="skeleton-line" />

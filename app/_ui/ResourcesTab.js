@@ -11,6 +11,7 @@ import {
   AlignJustify,
   Share2,
   SlidersHorizontal,
+  LayoutGrid,
 } from "lucide-react";
 import Favicon from "./Favicon";
 import SaveActions from "./SaveActions";
@@ -28,10 +29,12 @@ import LibrarySkeleton from "./LibrarySkeleton";
 import useEdgeFade from "./useEdgeFade";
 import { useDemoHold } from "./demoState";
 
-// Two views, not the library's three. A card needs a picture and a resource
-// hasn't got one, so the choice here is how much of the record you want beside
-// the title: the summary and tags, or nothing at all.
+// The library's three views, in the same order. A resource card has no
+// picture and doesn't pretend to: it is the brand mark, the name, where it
+// lives, a short description and its folders, laid out as a tile so a
+// screenful of tools reads as a set rather than as a list.
 const VIEWS = [
+  { id: "cards", label: "Cards", Icon: LayoutGrid },
   { id: "list", label: "List", Icon: List },
   { id: "headlines", label: "Headlines", Icon: AlignJustify },
 ];
@@ -519,7 +522,10 @@ export default function ResourcesTab({
       {/* Same rule as LibraryBrowser: nothing is "empty" before the first
           answer, so the wait gets rows in the shape of the view you are in. */}
       {!loaded && (
-        <LibrarySkeleton view={view === "list" ? "resources" : "headlines"} noun="resource" />
+        <LibrarySkeleton
+          view={view === "list" ? "resources" : view === "cards" ? "resourceCards" : "headlines"}
+          noun="resource"
+        />
       )}
 
       {loaded && resources.length === 0 && (
@@ -546,6 +552,71 @@ export default function ResourcesTab({
             />
           )}
         </NoMatches>
+      )}
+
+      {view === "cards" && page.length > 0 && (
+        <div className="grid grid-medium resource-grid">
+          {page.map((resource) => (
+            <div className="card resource-card" key={resource.id}>
+              <div className="resource-card-top">
+                <Favicon
+                  url={resource.url}
+                  faviconUrl={resource.favicon_url}
+                  fills={resource.favicon_fills !== false}
+                  alt={resource.title}
+                />
+                <span className="resource-actions">
+                  <button
+                    className="icon-btn"
+                    onClick={() => setEditing(resource)}
+                    title="Edit"
+                    aria-label={`Edit ${resource.title}`}
+                  >
+                    <Pencil size={15} />
+                  </button>
+                  <SaveActions
+                    kind="resource"
+                    id={resource.id}
+                    name={resource.title}
+                    isFavorite={resource.is_favorite}
+                  />
+                </span>
+              </div>
+
+              {/* The whole card opens the site, like a row does; the
+                  controls and chips sit above the overlay. */}
+              <a
+                className="resource-card-title stretch-link"
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {resource.title}
+              </a>
+              <span className="resource-domain">{resource.domain}</span>
+
+              {describing.has(resource.id) || resource.demoDescribing ? (
+                <span className="resource-card-summary resource-summary-pending">Describing…</span>
+              ) : (
+                resource.summary && <span className="resource-card-summary">{resource.summary}</span>
+              )}
+
+              {(resource.tags || []).length > 0 && (
+                <span className="resource-tags">
+                  {resource.tags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      className={`chip chip-filter${tag.is_approved ? "" : " chip-pending"}`}
+                      onClick={() => setSelected(new Set([tag.id]))}
+                    >
+                      {tag.label}
+                    </button>
+                  ))}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
       )}
 
       {view === "list" && page.length > 0 && (

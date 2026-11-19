@@ -6,48 +6,12 @@ import ResultCount from "./ResultCount";
 import NoMatches from "./NoMatches";
 import Favicon from "./Favicon";
 import useEdgeFade from "./useEdgeFade";
+import { GAP, layout, useColumns } from "./masonry";
 
 // The fourth library: every image kept from a case study, each its own card,
 // at its own shape. A board rather than a grid of projects, because seeing
 // everything is the point -- a logo and that logo on a bus are two findings,
 // and grouping happens on a visual's own page instead.
-
-// The narrowest a column may get. Pinterest's own is about 236; 240 gives
-// five across at 1440 inside the page margins, and two on a phone.
-const MIN_COLUMN = 240;
-const GAP = 16;
-
-// Shortest-column-first, so the newest saves read across the top the way a
-// list reads, not down the first column the way CSS columns would put them.
-// Every visual knows its own width and height, so this needs no image to
-// load before it can place one.
-function layout(items, columns) {
-  const cols = Array.from({ length: columns }, () => ({ height: 0, items: [] }));
-  for (const item of items) {
-    const ratio = item.width && item.height ? item.height / item.width : 1;
-    const shortest = cols.reduce((a, b) => (b.height < a.height ? b : a));
-    shortest.items.push(item);
-    shortest.height += ratio;
-  }
-  return cols.map((c) => c.items);
-}
-
-function useColumns(ref) {
-  const [columns, setColumns] = useState(4);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return undefined;
-    const measure = () => {
-      const width = el.clientWidth;
-      setColumns(Math.max(1, Math.floor((width + GAP) / (MIN_COLUMN + GAP))));
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [ref]);
-  return columns;
-}
 
 function matches(visual, term) {
   if (!term) return true;

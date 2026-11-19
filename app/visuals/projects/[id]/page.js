@@ -1,40 +1,79 @@
 "use client";
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight, Check, Sparkles } from "lucide-react";
 import UtilityBar from "../../../_ui/UtilityBar";
 import SiteFooter from "../../../_ui/SiteFooter";
 import Favicon from "../../../_ui/Favicon";
+import { useAnnounceWork } from "../../../_ui/workInFlight";
+import { GAP, layout, useColumns } from "../../../_ui/masonry";
 
-// Where a case study's images are sorted before anything is saved.
+// Where a case study's images are chosen before anything is saved.
 //
-// The machine makes the first pass -- which images are the work and which are
-// the agency's own furniture -- and the owner makes the decision. Two piles,
-// one click to move an image between them, and Save keeps one pile and
-// deletes the other. Nothing reaches the board until this page says so.
+// Two states and nothing in between. While the page is being read and the AI
+// is sorting, there is only the loading bar every other save uses -- no
+// title, no images. The first version showed the images under a "sorting"
+// line, so you could start choosing, and then the AI's answer landed and
+// reset every choice you'd made. Nothing is shown until it can't change.
 //
-// The page also drives the work: it calls extraction, then sorting, and shows
-// which of the two it is waiting on. Each is its own request so neither gets
-// near a route's 60 seconds, and reopening a half-finished project picks up
-// where it stopped.
+// Then one grid, the same masonry as the board, with every image the page
+// had. The AI's picks arrive ticked; a click ticks or unticks. Save keeps the
+// ticked ones and deletes the rest from storage.
 
-function Tile({ candidate, kept, onToggle }) {
+// Finding the images is ~4s and the AI sort ~12s on a real case study.
+const ESTIMATE_SECONDS = 18;
+
+function Loading({ phase }) {
+  const [elapsed, setElapsed] = useState(0);
+  useAnnounceWork(true);
+  useEffect(() => {
+    const tick = setInterval(() => setElapsed((s) => s + 0.25), 250);
+    return () => clearInterval(tick);
+  }, []);
+
+  return (
+    <div className="capture-status capture-status-quick pick-loading">
+      <div className="capture-status-bar">
+        <div
+          className="capture-status-fill"
+          style={{ width: `${Math.min(95, (elapsed / ESTIMATE_SECONDS) * 100)}%` }}
+        />
+      </div>
+      <div className="capture-status-row">
+        <p>
+          {phase === "sorting" ? "Picking out the work from the rest of the page" : "Finding the images on the page"}
+          {elapsed < ESTIMATE_SECONDS ? `: about ${Math.ceil(ESTIMATE_SECONDS - elapsed)}s remaining.` : ": finishing up."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Tile({ candidate, selected, onToggle }) {
   return (
     <button
       type="button"
-      className={`pick-tile${kept ? " pick-tile-kept" : ""}`}
+      className={`pick-tile${selected ? " pick-tile-selected" : ""}`}
       onClick={() => onToggle(candidate.key)}
-      aria-pressed={kept}
-      title={candidate.reason || undefined}
+      aria-pressed={selected}
+      aria-label={`${selected ? "Selected" : "Not selected"}: ${candidate.title || candidate.alt || "image"}`}
     >
-      <span className="pick-tile-frame">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={candidate.thumb_url} alt={candidate.title || candidate.alt || "Candidate image"} loading="lazy" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={candidate.thumb_url}
+        alt=""
+        width={candidate.width || undefined}
+        height={candidate.height || undefined}
+        loading="lazy"
+      />
+      <span className="pick-check" aria-hidden="true">
+        {selected && <Check size={14} strokeWidth={3} />}
       </span>
-      <span className="pick-tile-caption">
-        <span className="pick-tile-title">{candidate.title || `${candidate.width} × ${candidate.height}`}</span>
-        {candidate.reason && <span className="pick-tile-reason">{candidate.reason}</span>}
-      </span>
-      <span className="pick-tile-action">{kept ? "Move to floor" : "Keep"}</span>
+      {(candidate.title || candidate.reason) && (
+        <span className="visual-card-caption pick-caption">
+          {candidate.title && <span className="visual-card-title">{candidate.title}</span>}
+          {candidate.reason && <span className="visual-card-credit">{candidate.reason}</span>}
+        </span>
+      )}
     </button>
   );
 }
@@ -42,11 +81,13 @@ function Tile({ candidate, kept, onToggle }) {
 export default function PickProjectPage({ params }) {
   const { id } = use(params);
   const [project, setProject] = useState(null);
-  const [keep, setKeep] = useState(new Set());
+  const [selected, setSelected] = useState(new Set());
   const [phase, setPhase] = useState("loading");
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const started = useRef(false);
+  const gridRef = useRef(null);
+  const columns = useColumns(gridRef);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/visuals/projects/${id}`);
@@ -56,54 +97,63 @@ export default function PickProjectPage({ params }) {
       setPhase("error");
       return null;
     }
-    setProject(data.project);
-    setKeep(new Set((data.project.candidates || []).filter((c) => c.keep).map((c) => c.key)));
     return data.project;
   }, [id]);
 
-  const extract = useCallback(async () => {
-    setPhase("extracting");
-    setError(null);
-    await fetch(`/api/visuals/projects/${id}/extract`, { method: "POST" });
-    return load();
-  }, [id, load]);
+  // Picks come from the row only once, when everything is finished, so
+  // nothing that arrives later can overwrite a choice you've made.
+  const show = useCallback((p) => {
+    setProject(p);
+    setSelected(new Set((p.candidates || []).filter((c) => c.keep).map((c) => c.key)));
+    setPhase(p.state === "failed" ? "failed" : "ready");
+  }, []);
 
-  const sort = useCallback(async () => {
-    setPhase("sorting");
-    await fetch(`/api/visuals/projects/${id}/select`, { method: "POST" });
-    return load();
-  }, [id, load]);
+  const run = useCallback(
+    async (p) => {
+      if (p.state === "extracting" || p.state === "failed") {
+        setPhase("extracting");
+        await fetch(`/api/visuals/projects/${id}/extract`, { method: "POST" });
+        p = await load();
+        if (!p) return;
+      }
+      if (p.state === "picking" && p.ai_state === "pending") {
+        setPhase("sorting");
+        await fetch(`/api/visuals/projects/${id}/select`, { method: "POST" });
+        p = await load();
+        if (!p) return;
+      }
+      show(p);
+    },
+    [id, load, show]
+  );
 
-  // Drive whatever is left to do, once.
   useEffect(() => {
     if (started.current) return;
     started.current = true;
     (async () => {
-      let p = await load();
+      const p = await load();
       if (!p) return;
       if (p.state === "saved") {
         window.location.href = "/?tab=visuals";
         return;
       }
-      if (p.state === "extracting") p = await extract();
-      if (p?.state === "picking" && p.ai_state === "pending") p = await sort();
-      setPhase(p?.state === "failed" ? "failed" : "picking");
+      if (p.state === "failed") {
+        show(p);
+        return;
+      }
+      run(p);
     })();
-  }, [load, extract, sort]);
+  }, [load, run, show]);
 
   async function retryAi() {
-    const p = await sort();
-    setPhase(p?.state === "failed" ? "failed" : "picking");
-  }
-
-  async function retryExtract() {
-    let p = await extract();
-    if (p?.state === "picking") p = await sort();
-    setPhase(p?.state === "failed" ? "failed" : "picking");
+    setPhase("sorting");
+    await fetch(`/api/visuals/projects/${id}/select`, { method: "POST" });
+    const p = await load();
+    if (p) show(p);
   }
 
   function toggle(key) {
-    setKeep((prev) => {
+    setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -117,7 +167,7 @@ export default function PickProjectPage({ params }) {
     const res = await fetch(`/api/visuals/projects/${id}/save`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ keep: [...keep] }),
+      body: JSON.stringify({ keep: [...selected] }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -135,54 +185,24 @@ export default function PickProjectPage({ params }) {
   }
 
   const candidates = useMemo(() => project?.candidates || [], [project]);
-  const kept = candidates.filter((c) => keep.has(c.key));
-  const floor = candidates.filter((c) => !keep.has(c.key));
-  const busy = phase === "loading" || phase === "extracting" || phase === "sorting";
+  const laidOut = useMemo(() => layout(candidates, columns), [candidates, columns]);
+  const loading = phase === "loading" || phase === "extracting" || phase === "sorting";
+  const count = selected.size;
 
   return (
     <>
       <UtilityBar onError={setError} />
       <main className="page pick-page">
-        {project && (
-          <div className="pick-head">
-            <Favicon
-              url={project.url}
-              faviconUrl={project.favicon_url}
-              fills={project.favicon_fills !== false}
-              alt={project.domain}
-            />
-            <div className="pick-head-text">
-              <h1>{project.title || project.domain}</h1>
-              <p className="pick-credit">
-                By {project.agency_name || project.domain} ·{" "}
-                <a href={project.url} target="_blank" rel="noopener noreferrer">
-                  {project.domain}
-                  <ArrowUpRight size={13} />
-                </a>
-              </p>
-            </div>
-          </div>
-        )}
-
         {error && <p className="error">{error}</p>}
 
-        {busy && (
-          <div className="pick-status" role="status">
-            <span className="pick-status-dot" />
-            {phase === "extracting"
-              ? "Finding the images on the page…"
-              : phase === "sorting"
-                ? "Sorting the work from the rest of the page…"
-                : "Loading…"}
-          </div>
-        )}
+        {loading && <Loading phase={phase} />}
 
         {phase === "failed" && project && (
           <div className="empty-state empty-state-search">
-            <h2 className="empty-state-headline">Nothing to pick from.</h2>
+            <h2 className="empty-state-headline">Nothing to choose from.</h2>
             <p className="empty-state-body">{project.error || "That page couldn't be read."}</p>
             <div className="pick-failed-actions">
-              <button className="primary" onClick={retryExtract}>
+              <button className="primary" onClick={() => run(project)}>
                 Try Again
               </button>
               <button className="danger-btn" onClick={discard}>
@@ -192,62 +212,77 @@ export default function PickProjectPage({ params }) {
           </div>
         )}
 
-        {project?.state === "picking" && phase !== "extracting" && (
+        {phase === "ready" && project && (
           <>
+            <div className="pick-head">
+              <Favicon
+                url={project.url}
+                faviconUrl={project.favicon_url}
+                fills={project.favicon_fills !== false}
+                alt={project.domain}
+              />
+              <div className="pick-head-text">
+                <h1>{project.title || project.domain}</h1>
+                <p className="pick-credit">
+                  By {project.agency_name || project.domain} ·{" "}
+                  <a href={project.url} target="_blank" rel="noopener noreferrer">
+                    {project.domain}
+                    <ArrowUpRight size={13} />
+                  </a>
+                </p>
+              </div>
+            </div>
+
             {project.summary && (
               <p className="pick-summary">
                 <Sparkles size={14} />
                 {project.summary}
               </p>
             )}
-            {project.ai_state === "failed" && phase !== "sorting" && (
+            {project.ai_state === "failed" && (
               <p className="pick-note">
-                {project.error || "The AI didn't sort these."}{" "}
+                {project.error || "The AI didn't pick these."}{" "}
                 <button className="link-btn" onClick={retryAi}>
                   Try the AI again
                 </button>
               </p>
             )}
 
-            <section className="pick-section">
-              <h2>
-                Keeping <span className="pick-count">{kept.length}</span>
-              </h2>
-              {kept.length ? (
-                <div className="pick-grid">
-                  {kept.map((c) => (
-                    <Tile key={c.key} candidate={c} kept onToggle={toggle} />
-                  ))}
-                </div>
-              ) : (
-                <p className="pick-empty">Nothing kept yet. Click an image on the floor to keep it.</p>
-              )}
-            </section>
-
-            <section className="pick-section pick-floor">
-              <h2>
-                Cutting room floor <span className="pick-count">{floor.length}</span>
-              </h2>
-              <p className="pick-hint">
-                What looked like the agency&rsquo;s own site rather than the work. Deleted when you save.
+            <div className="pick-toolbar">
+              <p>
+                {project.ai_state === "done"
+                  ? "The AI has ticked what looks like the work. Click any image to change it."
+                  : "Tick the images you want to keep."}
               </p>
-              {floor.length ? (
-                <div className="pick-grid">
-                  {floor.map((c) => (
-                    <Tile key={c.key} candidate={c} kept={false} onToggle={toggle} />
+              <div className="pick-toolbar-actions">
+                <button className="link-btn" onClick={() => setSelected(new Set(candidates.map((c) => c.key)))}>
+                  Select all
+                </button>
+                <button className="link-btn" onClick={() => setSelected(new Set())}>
+                  Select none
+                </button>
+              </div>
+            </div>
+
+            <div className="visual-board" ref={gridRef} style={{ "--board-gap": `${GAP}px` }}>
+              {laidOut.map((column, i) => (
+                <div className="visual-column" key={i}>
+                  {column.map((c) => (
+                    <Tile key={c.key} candidate={c} selected={selected.has(c.key)} onToggle={toggle} />
                   ))}
                 </div>
-              ) : (
-                <p className="pick-empty">Everything on the page is being kept.</p>
-              )}
-            </section>
+              ))}
+            </div>
 
             <div className="pick-bar">
               <button className="danger-btn" onClick={discard} disabled={saving}>
-                Discard Project
+                Discard
               </button>
-              <button className="primary" onClick={save} disabled={saving || busy || kept.length === 0}>
-                {saving ? "Saving…" : `Save ${kept.length} Visual${kept.length === 1 ? "" : "s"}`}
+              <span className="pick-bar-count">
+                {count} of {candidates.length} selected
+              </span>
+              <button className="primary" onClick={save} disabled={saving || count === 0}>
+                {saving ? "Saving…" : `Save ${count} Visual${count === 1 ? "" : "s"}`}
               </button>
             </div>
           </>

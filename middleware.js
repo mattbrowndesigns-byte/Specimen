@@ -8,6 +8,8 @@ import { DEMO_FLAG_COOKIE, DEMO_PASS_COOKIE, DEMO_REFUSAL, isValidDemoPass } fro
 // the job's results are rejected at the door).
 const PUBLIC_PATHS = [
   "/login",
+  // Where a password-reset email lands, signed out by definition.
+  "/reset-password",
   "/auth/callback",
   "/api/auth",
   "/api/capture-callback",

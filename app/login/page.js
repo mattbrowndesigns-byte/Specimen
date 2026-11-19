@@ -16,6 +16,28 @@ function LoginForm() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [notice, setNotice] = useState(null);
+
+  // Sends a reset link that lands on /reset-password. The answer is the same
+  // whether or not the email has an account, so this can't be used to find
+  // out who does.
+  async function sendReset() {
+    setError(null);
+    setNotice(null);
+    const address = email.trim().toLowerCase();
+    if (!address) {
+      setError("Type your email above first, then press this again.");
+      return;
+    }
+    const { error: resetError } = await supabaseBrowser().auth.resetPasswordForEmail(address, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (resetError && /rate|limit/i.test(resetError.message)) {
+      setError("Too many reset emails in the last hour. Try again later.");
+      return;
+    }
+    setNotice("If that email has an account, a reset link is on its way. Check your spam folder too.");
+  }
 
   async function submit(e) {
     e.preventDefault();
@@ -99,6 +121,7 @@ function LoginForm() {
 
         <form onSubmit={submit}>
           {error && <p className="error">{error}</p>}
+          {notice && <p className="auth-notice">{notice}</p>}
 
           <label className="field">
             <span>Email</span>
@@ -161,6 +184,11 @@ function LoginForm() {
           <button className="auth-submit" type="submit" disabled={busy}>
             {busy ? "Working…" : mode === "invite" ? "Create account" : "Sign in"}
           </button>
+          {mode === "signin" && (
+            <button type="button" className="auth-forgot" onClick={sendReset}>
+              Forgot your password?
+            </button>
+          )}
         </form>
 
         <p className="auth-footnote">

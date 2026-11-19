@@ -1,4 +1,4 @@
-import { Globe, Crop, Link2 } from "lucide-react";
+import { Globe, Crop, Link2, Images } from "lucide-react";
 
 // One kind, one icon, everywhere it appears: the Add menu, the dashboard's
 // tabs, a shared collection's tabs and the page a stranger lands on. That only
@@ -37,6 +37,19 @@ export const KINDS = [
     one: "Resource",
     blurb: "Save a tool or reference",
     Icon: Link2,
+  },
+  // A prototype on the owner's account first. `demo: false` keeps it off the
+  // demo's tabs and Add menu until it's ported there; the demo account has no
+  // visuals, and a tab of nothing is a worse demo than no tab.
+  {
+    id: "visual",
+    tab: "visuals",
+    add: "visual",
+    label: "Visuals",
+    one: "Visuals",
+    blurb: "Pull the work off a case study",
+    Icon: Images,
+    demo: false,
   },
 ];
 

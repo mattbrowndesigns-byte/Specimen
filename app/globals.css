@@ -5795,6 +5795,39 @@ a.card {
   cursor: default;
 }
 
+/* Forgot password: a quiet text link under Sign in, centred, so it reads as
+   a way out rather than a second action. */
+.auth-forgot {
+  display: block;
+  margin: 12px auto 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.auth-forgot:hover {
+  color: var(--text);
+}
+
+.auth-notice {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.auth-submit-link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+
 .auth-footnote {
   margin: 18px 0 0;
   font-size: 12px;
@@ -7489,4 +7522,458 @@ a.card {
   .import-panel {
     padding: 16px;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Visuals (M20). The images off a case study, one card each.
+   ------------------------------------------------------------------------- */
+
+/* The board. Columns are laid out in JS (VisualsTab.js), shortest first, so
+   the newest saves read across the top rather than down column one. */
+.visual-board {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--board-gap, 16px);
+  margin-top: 16px;
+}
+
+.visual-column {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--board-gap, 16px);
+}
+
+.visual-card {
+  position: relative;
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--stage, var(--surface-sunken));
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Full column width, which is safe here and nowhere else a capture shows:
+   columns are 240-~400px and every thumb is at least 300px on its short
+   edge, so this shrinks rather than stretches. The width/height attributes
+   reserve the shape before it loads. */
+.visual-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Title and credit sit under the picture on a scrim, shown on hover and
+   always on touch. The credit is never hidden for long: it is how the board
+   says whose work this is. */
+.visual-card-caption {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 28px 12px 10px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.visual-card:hover .visual-card-caption,
+.visual-card:focus-visible .visual-card-caption {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .visual-card-caption {
+    opacity: 1;
+  }
+}
+
+.visual-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.visual-card-credit {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+/* Projects not yet picked from. First on the tab, because each one is
+   holding storage until it's saved or discarded. */
+.visual-pending {
+  margin: 4px 0 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.visual-pending h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.visual-pending-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin: 0 -10px;
+  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.visual-pending-row:hover {
+  background: var(--surface-hover);
+}
+
+.visual-pending-name {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.visual-pending-name strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.visual-pending-name small {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* The picker. */
+.pick-page {
+  padding-bottom: 96px;
+}
+
+.pick-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 12px;
+}
+
+.pick-head h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+  color: var(--brand-ink);
+}
+
+.pick-credit {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.pick-credit a {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: inherit;
+}
+
+.pick-summary {
+  display: flex;
+  gap: 8px;
+  max-width: 44em;
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-body);
+}
+
+.pick-summary svg {
+  flex: none;
+  margin-top: 4px;
+  color: var(--accent);
+}
+
+.pick-note {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-size: 14px;
+}
+
+.pick-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 16px;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.pick-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pick-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes pick-pulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pick-status-dot {
+    animation: none;
+  }
+}
+
+.pick-section {
+  margin-top: 24px;
+}
+
+.pick-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.pick-count {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  color: var(--text-secondary);
+}
+
+.pick-hint,
+.pick-empty {
+  margin: -6px 0 12px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.pick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+  gap: 14px;
+}
+
+.pick-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.12s ease, opacity 0.12s ease;
+}
+
+.pick-tile-kept {
+  border-color: var(--brand-ink);
+}
+
+.pick-floor .pick-tile {
+  opacity: 0.6;
+}
+
+.pick-floor .pick-tile:hover,
+.pick-floor .pick-tile:focus-visible {
+  opacity: 1;
+}
+
+/* Contained, not cropped: you're judging the whole image, and a crop would
+   hide exactly the logo in the corner that makes one of them chrome. */
+.pick-tile-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  background: var(--stage, var(--surface-sunken));
+}
+
+.pick-tile-frame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.pick-tile-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px 10px;
+}
+
+.pick-tile-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.pick-tile-reason {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.pick-tile-action {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.pick-tile:hover .pick-tile-action,
+.pick-tile:focus-visible .pick-tile-action {
+  opacity: 1;
+}
+
+/* The decision stays in reach however far down the floor you've scrolled. */
+.pick-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px var(--grid-margin);
+  border-top: 1px solid var(--border);
+  background: rgba(var(--surface-rgb), 0.94);
+  backdrop-filter: blur(8px);
+}
+
+.pick-bar .danger-btn.danger-btn {
+  margin-right: auto;
+}
+
+/* The solid dark button, not the orange one: Add is already orange in the
+   bar above, and two of those on one screen argue. */
+.pick-bar .primary,
+.pick-failed-actions .primary {
+  padding: 9px 16px;
+  border: 1px solid var(--invert-bg);
+  border-radius: 8px;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pick-bar .primary:hover:not(:disabled),
+.pick-failed-actions .primary:hover {
+  background: var(--invert-bg-hover);
+  border-color: var(--invert-bg-hover);
+}
+
+.pick-bar .primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.pick-failed-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* A visual's own page. */
+.visual-stage {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+  border-radius: 12px;
+  background: var(--stage, var(--surface-sunken));
+}
+
+.visual-stage a {
+  display: block;
+  max-width: 100%;
+}
+
+.visual-stage img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.visual-credit p {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.visual-credit-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.visual-credit-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-secondary);
+}
+
+.visual-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.visual-strip-item {
+  flex: none;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  background: var(--stage, var(--surface-sunken));
+}
+
+.visual-strip-item img {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
+.visual-strip-current {
+  border-color: var(--brand-ink);
+}
+
+.visual-similar {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+  gap: 14px;
+  align-items: start;
 }

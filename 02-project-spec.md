@@ -48,6 +48,72 @@ detail page and no style reading.
 This does not reopen any of the non-goals below. It adds a kind of record;
 it changes nothing about how sites and components work.
 
+**Visuals (M20).** The fourth library, and the first one that isn't about the
+web. An agency case study is twelve pieces of finished work -- the logo, the
+logo on a bus, the packaging, the poster -- presented on a page whose own
+design is beside the point. A website capture of it records the agency's
+template; what the owner wanted was the work. So a Visuals save pulls the
+images off the page and keeps each one as its own record.
+
+Decisions, settled:
+
+- **One URL is a *project*; each image kept is a *visual*.** A visual is the
+  unit of the library: its own card, its own detail page, its own tags. A logo
+  and that logo on a bus are different findings even though they came from
+  the same page, and search has to be able to land on one without the other.
+- **The tab is a Pinterest-style board, not a grid of projects.** Every visual
+  is a card, at its own aspect ratio, in a masonry layout. Seeing everything is
+  the point; grouping by project happens on the detail page instead.
+- **The machine pre-selects, the owner decides.** After extraction one Gemini
+  request sees every candidate image plus where it sat on the page (alt text,
+  whether it was in the header, footer or nav, whether it linked to another
+  case study) and decides which are *the work* and which are the agency's own
+  chrome -- their logo, team photos, a client-logo wall, thumbnails of other
+  projects. The picker shows two piles: **Keeping** and the **cutting room
+  floor**. A click moves an image between them; Save keeps the first pile and
+  deletes the second from storage.
+- **One request per project, not per image.** The free tier is 20 requests a
+  day per model. Every candidate goes into the same request as several image
+  parts (the technique `screenshotParts.js` already uses), and the answer
+  carries the selection, a title and tags per image, and a project title and
+  summary -- so a twelve-image case study costs what a website save costs.
+  If that call fails, pre-selection falls back to a free heuristic (size, and
+  not in the page's chrome) and the picker offers to try the AI again.
+- **Extraction runs on the server, not in GitHub Actions.** It needs the
+  markup, not a rendered screenshot, so a page fetch plus cheerio does it in
+  seconds with no runner to wait on. It reads `srcset` (largest size), the
+  lazy-loading attributes builders leave behind (`data-src`, `data-srcset`,
+  `data-lazy-src`), `<noscript>` fallbacks, `og:image` and inline background
+  images. A site that builds its images entirely in JavaScript will find
+  nothing; if that turns out to be common, the upgrade is a Playwright pass
+  on the runner, beside `analyze.js` -- `capture.js` stays off limits.
+- **Attribution is not optional.** Every visual stores the page it came from
+  and the agency's name and domain, and both are shown on the card and the
+  detail page. Neither can be edited away. If anyone asks for something to be
+  taken down, it is taken down.
+- **Storage is the constraint, and is accepted.** Images are stored as WebP at
+  quality 78, at most 2400px on the long edge, plus an 800px-wide thumbnail
+  for the board. Roughly 3--5 MB per twelve-image project. The cutting room
+  floor is deleted on save, so only kept images cost anything.
+- **Tags: a new `medium` facet, plus two shared ones.** Medium answers "what
+  is this artifact" -- Logo, Packaging, Poster, Signage, Photography, 3D and so
+  on. Aesthetic and Vertical are reused, because Brutalist means the same thing
+  on a billboard and a client's industry is a client's industry. Block/pattern
+  and page type are web vocabulary and stay out.
+- **Related is two questions.** "More from this project" (the siblings, in page
+  order) and "Similar" (shared tags elsewhere in Visuals, ranked by
+  `lib/related.js`). Embeddings via pgvector are the later upgrade if tag
+  overlap reads too blunt.
+- **No colour or type reading.** For a website, a palette taken from pixels
+  reports the photography; for a visual, the photography *is* the thing.
+  Nothing about a visual needs `analyze.js`.
+
+Out of scope for the first version: video and motion (a later pass would keep
+the embed link and a poster frame, never the file), the demo account,
+collections, favourites, sharing, the review queue and the enrichment queue.
+It is built on the owner's account first and ported to the demo when it has
+earned it.
+
 ## Stack
 
 | Layer | Choice | Why |

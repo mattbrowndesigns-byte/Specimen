@@ -3214,6 +3214,26 @@ h1 {
   color: var(--text);
 }
 
+/* The held tab is set semi-bold (in Refined), and bold glyphs are wider, so
+   the tab grew and pushed the ones after it along by a few pixels on every
+   click. Each label carries an invisible bold copy of itself, zero height,
+   so its width is already the bold width; the weight changes and nothing
+   moves. */
+.tab-label {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.tab-label::after {
+  content: attr(data-label);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* Components */
 
 a.card {
@@ -8356,6 +8376,100 @@ a.card {
   color: var(--text-secondary);
 }
 
+/* "By Upstatement" is the link to the page it came from -- the domain
+   beside it said the same thing twice. */
+.lightbox-caption-credit a {
+  text-decoration: none;
+}
+
+.lightbox-caption-credit a:hover {
+  text-decoration: underline;
+}
+
+.lightbox-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* The AI status note at the top of Details. In place rather than a pop-up:
+   it's about this panel, says why, and offers the one useful next step.
+   Working is quiet and pulses; waiting is neutral; failed is warm, never
+   red -- nothing is broken, Google's free tier was slow. */
+.ai-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ai-status p {
+  flex: 1;
+  margin: 0;
+}
+
+.ai-status strong {
+  font-weight: 600;
+}
+
+.ai-status button {
+  flex: none;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ai-status button:hover {
+  background: var(--surface-hover);
+}
+
+.ai-status-working {
+  align-items: center;
+  background: var(--field-bg);
+  color: var(--text-secondary);
+}
+
+.ai-status-queued {
+  background: var(--field-bg);
+  color: var(--text-secondary);
+}
+
+.ai-status-failed {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.ai-status-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: ai-status-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes ai-status-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-status-dot {
+    animation: none;
+  }
+}
+
 .lightbox-original {
   display: inline-flex;
   align-items: center;
@@ -8378,12 +8492,14 @@ a.card {
   margin: -6px -6px 6px 0;
 }
 
+/* The same 38px circle and 18px X as the lightbox's own close, so the two
+   read as one control in two places. */
 .lightbox-panel-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   padding: 0;
   border: none;
   border-radius: 50%;

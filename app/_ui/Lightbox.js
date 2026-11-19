@@ -28,16 +28,81 @@ const DETAILS_KEY = "specimen.visuals.details";
 // and `onUpdated(visual)` keep the board in step with edits made here.
 // "By Favor the Brave · favorthebrave.com", the same line in the caption and
 // at the top of Details: who made it, and the page it came from.
-function Credit({ credit, visual }) {
+function Credit({ credit, visual, withOriginal = false }) {
   return (
     <span className="lightbox-caption-credit">
-      By {credit} ·{" "}
       <a href={visual.url} target="_blank" rel="noopener noreferrer">
-        {visual.domain}
+        By {credit}
         <ArrowUpRight size={12} />
       </a>
+      {/* The agency's own file, often larger than the copy kept here: the
+          way to the best version of the image, so it stays, but quietly. */}
+      {withOriginal && visual.source_image_url && (
+        <>
+          {" · "}
+          <a className="lightbox-original" href={visual.source_image_url} target="_blank" rel="noopener noreferrer">
+            Original file
+            <ArrowUpRight size={12} />
+          </a>
+        </>
+      )}
     </span>
   );
+}
+
+// The note at the top of Details when the AI hasn't finished with this
+// image, or couldn't: what's happening, why, and what you can do. In place,
+// not a pop-up -- it's about the panel you're looking at, and it should
+// still be there when you look back.
+function AiStatus({ project, working, failure, onRetry }) {
+  if (working) {
+    return (
+      <div className="ai-status ai-status-working" role="status">
+        <span className="ai-status-dot" />
+        <span>{working}</span>
+      </div>
+    );
+  }
+  if (failure) {
+    return (
+      <div className="ai-status ai-status-failed" role="alert">
+        <p>
+          <strong>{failure}</strong> Nothing was changed.
+        </p>
+        <button type="button" onClick={onRetry}>
+          Try again
+        </button>
+      </div>
+    );
+  }
+  if (project?.ai_state === "queued" || project?.ai_state === "pending") {
+    return (
+      <div className="ai-status ai-status-queued" role="status">
+        <p>
+          <strong>Description and tags are on their way.</strong>{" "}
+          {project.error ? `${project.error} ` : "The AI didn't answer when this was saved. "}
+          It&rsquo;s trying again on its own and usually fills in within the hour.
+        </p>
+        <button type="button" onClick={onRetry}>
+          Try now
+        </button>
+      </div>
+    );
+  }
+  if (project?.ai_state === "failed") {
+    return (
+      <div className="ai-status ai-status-failed" role="alert">
+        <p>
+          <strong>The AI couldn&rsquo;t describe this project.</strong> {project.error || ""} It has stopped trying
+          on its own.
+        </p>
+        <button type="button" onClick={onRetry}>
+          Try again
+        </button>
+      </div>
+    );
+  }
+  return null;
 }
 
 export default function Lightbox({ items, sequence, startId, onClose, onChange, onDeleted, onUpdated }) {
@@ -51,6 +116,11 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
   const [editingSummary, setEditingSummary] = useState(false);
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
+  // What the AI is doing right now (a sentence), and why the last request
+  // failed (a sentence) -- both shown in the AiStatus note.
+  const [aiWorking, setAiWorking] = useState(null);
+  const [aiFailure, setAiFailure] = useState(null);
+  const [failedField, setFailedField] = useState(null);
   const [order, setOrder] = useState(sequence);
 
   const byId = useMemo(() => new Map(items.map((v) => [v.id, v])), [items]);
@@ -247,22 +317,46 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
   }
 
   // The whole project again, in one request; only fills what's empty.
-  async function regenerate() {
-    setBusy("regenerate");
-    setError(null);
-    const res = await fetch(`/api/visuals/projects/${visual.project_id}/describe`, { method: "POST" });
+  // `field` is "summary" or "tags" for one image's Regenerate -- each
+  // section has its own, so a description you like survives re-picking the
+  // tags -- or null for the whole project (the status note's Try now).
+  async function regenerate(field) {
+    setBusy(field ? `regenerate-${field}` : "regenerate");
+    setAiFailure(null);
+    setFailedField(field);
+    setAiWorking(
+      field === "summary"
+        ? "Writing a new description…"
+        : field === "tags"
+          ? "Picking new tags…"
+          : "Writing descriptions and tags for this project…"
+    );
+    const res = await fetch(`/api/visuals/projects/${visual.project_id}/describe`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(field ? { visualId: id, field } : {}),
+    });
+    const data = await res.json().catch(() => ({}));
     setBusy(null);
-    if (!res.ok) {
-      setError((await res.json().catch(() => ({}))).error || "Couldn't describe this project");
-      return;
-    }
-    const data = await loadDetail(id);
-    if (data) {
-      setTitleDraft(data.visual.title || "");
-      setSummaryDraft(data.visual.summary || "");
-      onUpdated?.(data.visual);
+    setAiWorking(null);
+    // A one-image failure is shown here; a whole-project one is recorded on
+    // the project, and the note reads that once the detail reloads.
+    if ((!res.ok || !data.ok) && field) setAiFailure(data.error || "The AI couldn't describe this.");
+    const detailData = await loadDetail(id);
+    if (detailData) {
+      setTitleDraft(detailData.visual.title || "");
+      setSummaryDraft(detailData.visual.summary || "");
+      onUpdated?.(detailData.visual);
     }
   }
+
+  // While a project is waiting in the queue, look again every minute, so the
+  // note gives way to the description without anyone refreshing.
+  useEffect(() => {
+    if (!detailsOpen || detail?.project?.ai_state !== "queued") return undefined;
+    const timer = setInterval(() => loadDetail(id), 60000);
+    return () => clearInterval(timer);
+  }, [detailsOpen, detail?.project?.ai_state, id, loadDetail]);
 
   async function handleDelete() {
     if (!confirm("Delete this visual? The image is removed from your library and from storage.")) return;
@@ -376,7 +470,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
               lightbox's buttons, rather than floating beside the heading. */}
           <div className="lightbox-panel-bar">
             <button type="button" className="lightbox-panel-close" onClick={toggleDetails} aria-label="Hide details">
-              <X size={17} />
+              <X size={18} />
             </button>
           </div>
 
@@ -393,23 +487,16 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
               onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
             />
             <p className="lightbox-panel-credit">
-              <Credit credit={credit} visual={visual} />
+              <Credit credit={credit} visual={visual} withOriginal />
             </p>
-            {/* The agency's own file, often larger than the copy kept here --
-                the way to the best version of the image, so it stays, but
-                quietly. */}
-            {visual.source_image_url && (
-              <a
-                className="lightbox-original"
-                href={visual.source_image_url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Original file
-                <ArrowUpRight size={12} />
-              </a>
-            )}
           </section>
+
+          <AiStatus
+            project={project}
+            working={aiWorking}
+            failure={aiFailure}
+            onRetry={() => regenerate(aiFailure ? failedField : null)}
+          />
 
           <section className="lightbox-panel-section detail-section">
             <h2 className="ai-heading">
@@ -444,7 +531,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
               <>
                 <p className="summary-text">
                   {visual.summary || (
-                    <span className="summary-empty">No summary yet. Regenerate describes the project and tags it.</span>
+                    <span className="summary-empty">No description yet.</span>
                   )}
                 </p>
                 {/* The image's own sentence above, the project's paragraph
@@ -457,8 +544,8 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
                 )}
                 <div className="section-head-actions section-actions-below">
                   <button onClick={() => setEditingSummary(true)}>Edit</button>
-                  <button className="link-btn" onClick={regenerate} disabled={busy === "regenerate"}>
-                    {busy === "regenerate" ? "Regenerating…" : "Regenerate"}
+                  <button className="link-btn" onClick={() => regenerate("summary")} disabled={Boolean(busy)}>
+                    {busy === "regenerate-summary" ? "Regenerating…" : "Regenerate"}
                   </button>
                 </div>
               </>
@@ -466,7 +553,19 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
           </section>
 
           <section className="lightbox-panel-section detail-section">
-            <h2>Tags</h2>
+            <div className="lightbox-section-head">
+              <h2>Tags</h2>
+              {/* Its own Regenerate, so re-picking tags never costs a
+                  description you liked. Replaces this image's tags. */}
+              <button
+                className="link-btn"
+                onClick={() => regenerate("tags")}
+                disabled={Boolean(busy)}
+                title="Replaces this image's medium, aesthetic and industry tags"
+              >
+                {busy === "regenerate-tags" ? "Regenerating…" : "Regenerate"}
+              </button>
+            </div>
             {tagsByFacet.map(({ facet, assigned, available }) => (
               <div className="facet-row" key={facet}>
                 <span className="facet-name">{FACET_LABELS[facet]}</span>

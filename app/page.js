@@ -189,9 +189,10 @@ export default function Home() {
           <CaptureProgress key={job.key} job={job} onDone={(result) => finishJob(job, result)} />
         ))}
 
-        {/* One sentence, Dribbble-style: only the purple phrase changes. */}
+        {/* One sentence, Dribbble-style: the purple top line changes, the
+            bottom line holds. */}
         <h2 className="page-hero">
-          Keep <HeroRotator />
+          <HeroRotator />
           <br />
           and find them in seconds.
         </h2>

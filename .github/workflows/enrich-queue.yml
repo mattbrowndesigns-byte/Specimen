@@ -46,3 +46,17 @@ jobs:
           URL="${CALLBACK_URL%/*}/capture-queue"
           echo "Draining $URL"
           curl -fsS -X POST "$URL" -H "x-callback-secret: $CALLBACK_SECRET"
+
+      # Visuals the AI couldn't describe at save time. Its own request for the
+      # same reason captures have one: a single visuals describe can take most
+      # of a minute on a slow day, and the enrichment step's budget is spent
+      # on sites.
+      - name: Drain visuals
+        if: always()
+        env:
+          CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
+          CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET }}
+        run: |
+          URL="${CALLBACK_URL%/*}/visuals-queue"
+          echo "Draining $URL"
+          curl -fsS -X POST "$URL" -H "x-callback-secret: $CALLBACK_SECRET"

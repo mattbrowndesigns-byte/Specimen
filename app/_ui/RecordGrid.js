@@ -51,7 +51,9 @@ export default function RecordGrid({ entries, emptyMessage, onRemove, removeLabe
             onClick={() => setTab(kind)}
           >
             <KindIcon kind={kind} />
-            {KIND[kind].label}
+            <span className="tab-label" data-label={KIND[kind].label}>
+              {KIND[kind].label}
+            </span>
             <span className="tab-count">{count}</span>
           </button>
         ))}

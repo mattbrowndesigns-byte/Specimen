@@ -31,7 +31,10 @@ export async function GET(request, { params }) {
       .order("position"),
     supabase
       .from("visual_project")
-      .select("id, title, summary, favicon_url, favicon_fills")
+      // "*" rather than a list: ai_attempts / ai_next_at arrived in
+      // schema_m21, and naming them would fail the whole read on a database
+      // that hasn't had it yet.
+      .select("*")
       .eq("id", visual.project_id)
       .eq("user_id", user.id)
       .maybeSingle(),

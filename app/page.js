@@ -206,7 +206,11 @@ export default function Home() {
               aria-pressed={tab === id}
             >
               <Icon size={16} />
-              {label}
+              {/* data-label lets the label reserve its bold width, so the
+                  held tab going semi-bold doesn't nudge its neighbours. */}
+              <span className="tab-label" data-label={label}>
+                {label}
+              </span>
             </button>
           ))}
         </div>

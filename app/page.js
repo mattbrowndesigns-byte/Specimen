@@ -194,7 +194,7 @@ export default function Home() {
         <h2 className="page-hero">
           <HeroRotator />
           <br />
-          and let AI tag and sort it all.
+          and let AI sort it all.
         </h2>
 
         {/* Icons from the shared kind list -- the same three the Add menu

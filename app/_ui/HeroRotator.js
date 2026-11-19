@@ -4,8 +4,8 @@ import { useIsDemo } from "./demoState";
 
 // The rotating top line of the dashboard hero's one sentence:
 //
-//   [Save the websites that inspire you]
-//   and let AI tag and sort it all.
+//   [Save any website]
+//   and let AI sort it all.
 //
 // The whole top line changes, in the brand purple, the way Dribbble's hero
 // does ("Browse client briefs / and get hired"); the bottom line holds still
@@ -15,8 +15,9 @@ import { useIsDemo } from "./demoState";
 // browsing, not hunting.
 //
 // The fixed line has no "it" or "them" pointing back at the top line, only
-// "it all", so it reads right after any line, singular or plural. A new line
-// needs only to start with a verb. This replaced two
+// "it all", so it reads right after any line, singular or plural. Lines are
+// kept to "Verb any [thing]": short enough to land in a glance, and "any"
+// says you save what you choose without a clause saying so. This replaced two
 // sentences ("Save what inspires you. / Find it when you need it."), which
 // said the same thing twice; one sentence that names a different thing each
 // time describes the product instead.
@@ -32,11 +33,11 @@ import { useIsDemo } from "./demoState";
 // you didn't see arrive. The first line is the same on the server and the
 // browser -- no random start -- or every load would be a hydration mismatch.
 const LINES = [
-  { text: "Save the websites that inspire you" },
-  { text: "Crop the details that catch your eye" },
+  { text: "Save any website" },
+  { text: "Crop any detail" },
   // Visuals aren't in the demo yet, so neither is the line about them.
-  { text: "Keep the brand work you admire", demo: false },
-  { text: "File the tools you rely on" },
+  { text: "Keep any image", demo: false },
+  { text: "File any tool" },
 ];
 
 const HOLD_MS = 5000;
@@ -74,7 +75,7 @@ export default function HeroRotator() {
     <span className="hero-rotator">
       {/* Read once, as a sentence, rather than announced every five
           seconds: the rotating copies are hidden from screen readers. */}
-      <span className="sr-only">Save the websites, details, brand work and tools that inspire you,</span>
+      <span className="sr-only">Save any website, detail, image or tool</span>
       {lines.map((line, i) => (
         <span
           key={line.text}

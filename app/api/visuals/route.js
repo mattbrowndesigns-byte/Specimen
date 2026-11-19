@@ -71,7 +71,7 @@ export async function POST(request) {
       return NextResponse.json({ project: existing });
     }
     return NextResponse.json(
-      { error: `You've already saved that case study${existing.title ? ` ("${existing.title}")` : ""}.` },
+      { error: `You've already saved the images from that page${existing.title ? ` ("${existing.title}")` : ""}.` },
       { status: 409 }
     );
   }

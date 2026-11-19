@@ -5,6 +5,7 @@ import UtilityBar from "../../../_ui/UtilityBar";
 import SiteFooter from "../../../_ui/SiteFooter";
 import Favicon from "../../../_ui/Favicon";
 import { useAnnounceWork } from "../../../_ui/workInFlight";
+import FeatureRotator from "../../../_ui/FeatureRotator";
 import { GAP, layout, useColumns } from "../../../_ui/masonry";
 
 // Where a case study's images are chosen before anything is saved.
@@ -44,6 +45,14 @@ function Loading({ phase }) {
           {phase === "sorting" ? "Picking out the work from the rest of the page" : "Finding the images on the page"}
           {elapsed < ESTIMATE_SECONDS ? `: about ${Math.ceil(ESTIMATE_SECONDS - elapsed)}s remaining.` : ": finishing up."}
         </p>
+        {/* The same aside the capture bar carries, so a visuals save reads as
+            the same kind of wait as every other save. */}
+        <span className="capture-status-aside">
+          <FeatureRotator className="capture-status-rotator" />
+          <a className="feature-rotator-more" href="/features">
+            All features
+          </a>
+        </span>
       </div>
     </div>
   );

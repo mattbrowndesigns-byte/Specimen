@@ -216,7 +216,7 @@ export default function VisualDetailPage({ params }) {
               <button onClick={() => saveField("needs_review", false)}>Mark Reviewed</button>
             )}
             <a className="visit-btn" href={visual.url} target="_blank" rel="noopener noreferrer">
-              View Case Study
+              Visit Source
               <ArrowUpRight size={15} />
             </a>
           </div>

@@ -6,6 +6,7 @@ import ResultCount from "./ResultCount";
 import NoMatches from "./NoMatches";
 import Favicon from "./Favicon";
 import useEdgeFade from "./useEdgeFade";
+import Lightbox from "./Lightbox";
 import { GAP, SEQUENCE_KEY, SIZES, MasonrySkeleton, layout, useColumns } from "./masonry";
 
 // Same three sizes and icons as the other tabs' card grids.
@@ -70,12 +71,37 @@ export default function VisualsTab({ allTags }) {
     }
   }
 
-  function rememberSequence() {
+  // The lightbox opens over the board rather than navigating away, so
+  // closing it lands you where you were, scrolled where you were. The address
+  // bar follows the open image (a refresh or a shared link opens it again
+  // through /visuals/[id]), and Back closes it.
+  const [lightbox, setLightbox] = useState(null);
+
+  function openLightbox(e, id) {
+    // Cmd-, Ctrl-, Shift- and middle-click keep their meaning: a new tab.
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    const sequence = visible.map((v) => v.id);
     try {
-      sessionStorage.setItem(SEQUENCE_KEY, JSON.stringify(visible.map((v) => v.id)));
+      sessionStorage.setItem(SEQUENCE_KEY, JSON.stringify(sequence));
     } catch {
-      // The lightbox falls back to the whole library's order.
+      // Only matters for a refresh mid-lightbox.
     }
+    window.history.pushState({ lightbox: true }, "", `/visuals/${id}`);
+    setLightbox({ startId: id, sequence });
+  }
+
+  useEffect(() => {
+    function onPop() {
+      setLightbox(null);
+    }
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  function closeLightbox() {
+    if (window.history.state?.lightbox) window.history.back();
+    else setLightbox(null);
   }
 
   useEffect(() => {
@@ -245,7 +271,7 @@ export default function VisualsTab({ allTags }) {
         {laidOut.map((column, i) => (
           <div className="visual-column" key={i}>
             {column.map((v) => (
-              <a key={v.id} className="visual-card" href={`/visuals/${v.id}`} onClick={rememberSequence}>
+              <a key={v.id} className="visual-card" href={`/visuals/${v.id}`} onClick={(e) => openLightbox(e, v.id)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={v.thumb_url}
@@ -264,6 +290,20 @@ export default function VisualsTab({ allTags }) {
           </div>
         ))}
       </div>
+
+      {lightbox && (
+        <Lightbox
+          items={visuals}
+          sequence={lightbox.sequence}
+          startId={lightbox.startId}
+          onClose={closeLightbox}
+          onChange={(id) => window.history.replaceState({ lightbox: true }, "", `/visuals/${id}`)}
+          onUpdated={(updated) =>
+            setVisuals((prev) => prev.map((v) => (v.id === updated.id ? { ...v, ...updated } : v)))
+          }
+          onDeleted={(id) => setVisuals((prev) => prev.filter((v) => v.id !== id))}
+        />
+      )}
     </>
   );
 }

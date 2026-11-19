@@ -5518,6 +5518,63 @@ a.card {
   color: var(--brand-ink);
 }
 
+/* The hero's rotating second line (app/_ui/HeroRotator.js). Every line
+   shares one grid cell, so the box is the longest line's size from the first
+   paint and nothing beneath it shifts as the words change. The outgoing line
+   fades and drifts up 6px; the incoming one rises into place from 6px below,
+   both over 0.8s on a gentle ease -- slow enough to read as calm, not as a
+   ticker. */
+.hero-rotator {
+  display: inline-grid;
+  vertical-align: top;
+}
+
+.hero-rotator-line {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.hero-rotator-line.is-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* The one leaving goes up, not back down, so the motion has one direction.
+   The ones waiting stay 6px below, ready to rise. */
+.hero-rotator-line.is-leaving {
+  transform: translateY(-6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-rotator-line {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* A phone can't fit the longest line on one row at hero size; let it wrap
+   rather than overflow, still in the same shared cell. */
+@media (max-width: 520px) {
+  .hero-rotator-line {
+    white-space: normal;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Names the checkbox in the bulk bar: an unlabelled tick in a header row
    doesn't say what it would select. */
 .bulk-select-all-label {

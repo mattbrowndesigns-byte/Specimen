@@ -12,6 +12,7 @@ import { DemoProgress } from "./_ui/DemoAdd";
 import DemoTour from "./_ui/DemoTour";
 import { useDemoPhase, useIsDemo } from "./_ui/demoState";
 import SiteFooter from "./_ui/SiteFooter";
+import HeroRotator from "./_ui/HeroRotator";
 import { addItem, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
 
 export default function Home() {
@@ -191,7 +192,7 @@ export default function Home() {
         <h2 className="page-hero">
           Save what inspires you.
           <br />
-          Find it when you need it.
+          <HeroRotator />
         </h2>
 
         {/* Icons from the shared kind list -- the same three the Add menu

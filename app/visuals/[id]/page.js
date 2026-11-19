@@ -36,6 +36,7 @@ export default function VisualDetailPage({ params }) {
   const [savingField, setSavingField] = useState(null);
   const [error, setError] = useState(null);
   const [missing, setMissing] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/visuals/${id}`);
@@ -143,6 +144,23 @@ export default function VisualDetailPage({ params }) {
       return;
     }
     await addTag(data.tag.id);
+    await loadTags();
+  }
+
+  // Describes the whole project again in one request -- the siblings share a
+  // summary and get their titles and tags in the same pass. Only fills what's
+  // empty, so nothing you've typed is overwritten.
+  async function regenerate() {
+    setRegenerating(true);
+    setError(null);
+    const res = await fetch(`/api/visuals/projects/${visual.project_id}/describe`, { method: "POST" });
+    setRegenerating(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Couldn't describe this project");
+      return;
+    }
+    await load();
     await loadTags();
   }
 
@@ -277,10 +295,17 @@ export default function VisualDetailPage({ params }) {
               ) : (
                 <>
                   <p className="summary-text">
-                    {visual.summary || <span className="summary-empty">No summary for this project.</span>}
+                    {visual.summary || (
+                      <span className="summary-empty">
+                        No summary yet. Use Regenerate to describe this project and tag its images.
+                      </span>
+                    )}
                   </p>
                   <div className="section-head-actions section-actions-below">
                     <button onClick={() => setEditingSummary(true)}>Edit</button>
+                    <button className="link-btn" onClick={regenerate} disabled={regenerating}>
+                      {regenerating ? "Regenerating…" : "Regenerate"}
+                    </button>
                   </div>
                 </>
               )}

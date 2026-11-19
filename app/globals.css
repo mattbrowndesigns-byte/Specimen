@@ -5524,9 +5524,13 @@ a.card {
    fades and drifts up 6px; the incoming one rises into place from 6px below,
    both over 0.8s on a gentle ease -- slow enough to read as calm, not as a
    ticker. */
+/* The rotating phrase is the brand purple -- the capture bar's --ramp-mid,
+   #7b4bd8 on the light page and #9a6ef0 on the dark one -- so the part that
+   changes is the part that's coloured, and the ink around it holds still. */
 .hero-rotator {
   display: inline-grid;
   vertical-align: top;
+  color: var(--ramp-mid);
 }
 
 .hero-rotator-line {

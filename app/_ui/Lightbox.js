@@ -447,6 +447,14 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
                     <span className="summary-empty">No summary yet. Regenerate describes the project and tags it.</span>
                   )}
                 </p>
+                {/* The image's own sentence above, the project's paragraph
+                    here -- once, not copied onto every image. */}
+                {project?.summary && project.summary !== visual.summary && (
+                  <div className="lightbox-about">
+                    <span className="lightbox-about-label">About the project</span>
+                    <p>{project.summary}</p>
+                  </div>
+                )}
                 <div className="section-head-actions section-actions-below">
                   <button onClick={() => setEditingSummary(true)}>Edit</button>
                   <button className="link-btn" onClick={regenerate} disabled={busy === "regenerate"}>

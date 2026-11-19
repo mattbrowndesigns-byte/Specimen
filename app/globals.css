@@ -7563,6 +7563,13 @@ a.card {
   display: block;
   width: 100%;
   height: auto;
+  /* The website cards' hover, exactly: a slow, slight zoom inside the
+     card's own rounded edge. */
+  transition: transform 0.6s var(--ease, cubic-bezier(0.2, 0.7, 0.2, 1));
+}
+
+.visual-card:hover img {
+  transform: scale(1.015);
 }
 
 /* Title and credit sit under the picture on a scrim, shown on hover and
@@ -8031,7 +8038,9 @@ a.card {
    picture is the brightest thing on screen, whatever the app's theme. */
 .modal-backdrop:has(> .modal.lightbox) {
   padding: 0;
-  background: rgba(8, 8, 10, 0.94);
+  /* Solid: at 94% the app bar showed through behind the lightbox's own
+     buttons, two sets of controls stacked in one corner. */
+  background: #08080a;
   backdrop-filter: none;
   z-index: 60;
 }
@@ -8073,12 +8082,6 @@ a.card {
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
-}
-
-.lightbox-counter {
-  font-size: 13px;
-  color: rgba(242, 242, 243, 0.65);
-  font-variant-numeric: tabular-nums;
 }
 
 .lightbox-top-actions {
@@ -8161,8 +8164,7 @@ a.card {
   font-weight: 600;
 }
 
-.lightbox-caption-credit,
-.lightbox-caption-tags {
+.lightbox-caption-credit {
   font-size: 13px;
   color: rgba(242, 242, 243, 0.65);
 }
@@ -8241,9 +8243,129 @@ a.card {
 }
 
 .lightbox-panel-credit {
-  margin: 6px 0;
+  margin: 6px 0 4px;
+}
+
+/* The same credit line as the caption, on the app's surface instead of the
+   dark ground, so it takes the app's own greys. */
+.lightbox-panel .lightbox-caption-credit {
   font-size: 14px;
   color: var(--text-secondary);
+}
+
+.lightbox-panel .lightbox-caption-credit a:hover {
+  color: var(--text);
+}
+
+.lightbox-original {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.lightbox-original:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+/* The panel's own close, where every side panel puts it. The title leaves
+   room for it rather than running underneath. */
+.lightbox-panel-head {
+  position: relative;
+  padding-right: 40px;
+}
+
+.lightbox-panel-close {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.lightbox-panel-close:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+/* Tooltips for the lightbox's icon buttons: a small label that drops in
+   under the button after a beat, so passing over a row of them doesn't
+   flash every name. The last one in a row is anchored to its right edge,
+   or it would hang off the side of the screen. */
+/* The panel's close is already absolutely positioned, which anchors its
+   tooltip just as well -- adding it here once pulled it out of its corner. */
+.lightbox-icon[data-tip] {
+  position: relative;
+}
+
+.lightbox-icon[data-tip]::after,
+.lightbox-panel-close[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 2;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #f2f2f3;
+  color: #111113;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -4px);
+  transition: opacity 0.14s ease, transform 0.14s ease;
+}
+
+.lightbox-icon[data-tip]:hover::after,
+.lightbox-icon[data-tip]:focus-visible::after,
+.lightbox-panel-close[data-tip]:hover::after,
+.lightbox-panel-close[data-tip]:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  transition-delay: 0.25s;
+}
+
+.lightbox-top-actions > :last-child[data-tip]::after,
+.lightbox-panel-close[data-tip]::after {
+  left: auto;
+  right: 0;
+  transform: translateY(-4px);
+}
+
+.lightbox-top-actions > :last-child[data-tip]:hover::after,
+.lightbox-top-actions > :last-child[data-tip]:focus-visible::after,
+.lightbox-panel-close[data-tip]:hover::after,
+.lightbox-panel-close[data-tip]:focus-visible::after {
+  transform: translateY(0);
+}
+
+/* In the panel the tooltip sits on the app's surface, not the dark ground,
+   so it takes the solid-button pair instead of a fixed light chip. */
+.lightbox-panel-close[data-tip]::after {
+  background: var(--invert-bg);
+  color: var(--invert-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox-icon[data-tip]::after,
+  .lightbox-panel-close[data-tip]::after {
+    transition: opacity 0.14s ease;
+  }
 }
 
 .lightbox-thumbs {

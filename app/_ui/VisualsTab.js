@@ -1,12 +1,21 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Grid3x3, LayoutGrid, Square } from "lucide-react";
+import { ArrowRight, Grid3x3, LayoutGrid, SlidersHorizontal, Square } from "lucide-react";
 import SearchField from "./SearchField";
 import ResultCount from "./ResultCount";
 import NoMatches from "./NoMatches";
 import Favicon from "./Favicon";
 import useEdgeFade from "./useEdgeFade";
 import Lightbox from "./Lightbox";
+import FilterModal from "./FilterModal";
+
+// The three questions a visual's tags answer, in the order the filter
+// modal lists them.
+const FILTER_FACETS = [
+  { id: "medium", label: "Medium" },
+  { id: "aesthetic", label: "Aesthetic" },
+  { id: "vertical", label: "Industry" },
+];
 import { GAP, SEQUENCE_KEY, SIZES, MasonrySkeleton, layout, useColumns } from "./masonry";
 
 // Same three sizes and icons as the other tabs' card grids.
@@ -140,6 +149,15 @@ export default function VisualsTab({ allTags }) {
   }, [visuals, allTags]);
 
   const [stripRef, stripFade] = useEdgeFade([chips.length, selected.size]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Every visual tag with a count over visuals -- the modal hides the ones
+  // nothing uses, the same rule the other tabs' filters follow.
+  const filterOptions = useMemo(() => {
+    const counts = new Map();
+    for (const v of visuals) for (const t of v.tags || []) counts.set(t.id, (counts.get(t.id) || 0) + 1);
+    return allTags.map((t) => ({ ...t, usage_count: counts.get(t.id) || 0 }));
+  }, [visuals, allTags]);
 
   const searchTerms = useMemo(() => {
     const words = [
@@ -207,6 +225,10 @@ export default function VisualsTab({ allTags }) {
           historyKey="specimen.recent.visuals"
           terms={searchTerms}
         />
+        <button className="filters-btn" onClick={() => setFiltersOpen(true)}>
+          <SlidersHorizontal size={15} />
+          Filters{selected.size > 0 ? ` (${selected.size})` : ""}
+        </button>
       </div>
 
       {chips.length > 0 && (
@@ -280,16 +302,29 @@ export default function VisualsTab({ allTags }) {
                   height={v.height || undefined}
                   loading="lazy"
                 />
+                {/* Just what it is. Who made it is one click away, in the
+                    lightbox caption, where there's room to say it properly. */}
                 <span className="visual-card-caption">
                   <span className="visual-card-title">{v.title || "Untitled"}</span>
-                  {/* Credit on every card, always. */}
-                  <span className="visual-card-credit">{v.agency_name || v.domain}</span>
                 </span>
               </a>
             ))}
           </div>
         ))}
       </div>
+
+      {filtersOpen && (
+        <FilterModal
+          allTags={filterOptions}
+          facets={FILTER_FACETS}
+          selectedTagIds={selected}
+          onClose={() => setFiltersOpen(false)}
+          onApply={(next) => {
+            setSelected(next);
+            setFiltersOpen(false);
+          }}
+        />
+      )}
 
       {lightbox && (
         <Lightbox

@@ -47,7 +47,7 @@ export const KINDS = [
     add: "visual",
     label: "Visuals",
     one: "Visuals",
-    blurb: "Pull the work off a case study",
+    blurb: "Save the images from any page",
     Icon: Images,
     demo: false,
   },

@@ -178,7 +178,7 @@ export default function VisualsTab({ allTags }) {
         <div className="empty-state">
           <h2 className="empty-state-headline">Start your board.</h2>
           <p className="empty-state-body">
-            Paste an agency case study into Add, choose Visuals, and every piece of work on the page
+            Choose Visuals in Add and paste any page with images worth keeping. Each one you pick
             becomes its own card, tagged and credited.
           </p>
         </div>

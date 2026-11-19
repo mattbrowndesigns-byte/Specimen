@@ -4,14 +4,19 @@ import { useIsDemo } from "./demoState";
 
 // The rotating top line of the dashboard hero's one sentence:
 //
-//   [Save the sites you study]
-//   and find them in seconds.
+//   [Save the websites that inspire you]
+//   and let AI tag and sort it all.
 //
 // The whole top line changes, in the brand purple, the way Dribbble's hero
-// does ("Browse client briefs / and get hired"); the bottom line -- the
-// promise -- holds still in ink. Every line is "Verb the [things] you
-// [verb]", ending on something plural, so "find them" reads right after any
-// of them and a new line can be added without touching the grammar. This replaced two
+// does ("Browse client briefs / and get hired"); the bottom line holds still
+// in ink. The split follows what Kivli is: the top names one kind of save,
+// the bottom says the part nobody else does -- the AI files it for you.
+// Speed was the wrong promise ("find them in seconds"): half the time you're
+// browsing, not hunting.
+//
+// The fixed line has no "it" or "them" pointing back at the top line, only
+// "it all", so it reads right after any line, singular or plural. A new line
+// needs only to start with a verb. This replaced two
 // sentences ("Save what inspires you. / Find it when you need it."), which
 // said the same thing twice; one sentence that names a different thing each
 // time describes the product instead.
@@ -27,10 +32,10 @@ import { useIsDemo } from "./demoState";
 // you didn't see arrive. The first line is the same on the server and the
 // browser -- no random start -- or every load would be a hydration mismatch.
 const LINES = [
-  { text: "Save the sites you study" },
-  { text: "Crop the details you\u2019d steal" },
+  { text: "Save the websites that inspire you" },
+  { text: "Crop the details that catch your eye" },
   // Visuals aren't in the demo yet, so neither is the line about them.
-  { text: "Collect the brands you admire", demo: false },
+  { text: "Keep the brand work you admire", demo: false },
   { text: "File the tools you rely on" },
 ];
 
@@ -69,7 +74,7 @@ export default function HeroRotator() {
     <span className="hero-rotator">
       {/* Read once, as a sentence, rather than announced every five
           seconds: the rotating copies are hidden from screen readers. */}
-      <span className="sr-only">Save the sites, details, brands and tools you love,</span>
+      <span className="sr-only">Save the websites, details, brand work and tools that inspire you,</span>
       {lines.map((line, i) => (
         <span
           key={line.text}

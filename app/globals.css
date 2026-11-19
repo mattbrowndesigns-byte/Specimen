@@ -8110,8 +8110,7 @@ a.card {
 }
 
 .lightbox-icon:hover,
-.lightbox-nav:hover,
-.lightbox-icon.active {
+.lightbox-nav:hover {
   background: rgba(255, 255, 255, 0.18);
 }
 
@@ -8271,56 +8270,51 @@ a.card {
   text-decoration: underline;
 }
 
-/* The panel's own close, where every side panel puts it. The title leaves
-   room for it rather than running underneath. */
-.lightbox-panel-head {
-  position: relative;
-  padding-right: 40px;
+/* The panel's close: its own row at the top, right-aligned, in a round
+   holder like the lightbox's buttons, with the title starting below it. */
+.lightbox-panel-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin: -6px -6px 6px 0;
 }
 
 .lightbox-panel-close {
-  position: absolute;
-  top: -4px;
-  right: -6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: none;
-  color: var(--text-muted);
+  background: var(--field-bg);
+  color: var(--text);
   cursor: pointer;
+  transition: background 0.12s ease;
 }
 
 .lightbox-panel-close:hover {
   background: var(--surface-hover);
-  color: var(--text);
 }
 
-/* Tooltips for the lightbox's icon buttons: a small label that drops in
-   under the button after a beat, so passing over a row of them doesn't
-   flash every name. The last one in a row is anchored to its right edge,
-   or it would hang off the side of the screen. */
-/* The panel's close is already absolutely positioned, which anchors its
-   tooltip just as well -- adding it here once pulled it out of its corner. */
+/* Tooltips for the two icons that need naming -- Details and full screen.
+   A grey pill that drops in under the button after a beat, so passing over
+   them doesn't flash both names. The close buttons have none: an X says
+   what it does. */
 .lightbox-icon[data-tip] {
   position: relative;
 }
 
-.lightbox-icon[data-tip]::after,
-.lightbox-panel-close[data-tip]::after {
+.lightbox-icon[data-tip]::after {
   content: attr(data-tip);
   position: absolute;
   top: calc(100% + 8px);
   left: 50%;
   z-index: 2;
-  padding: 5px 9px;
-  border-radius: 6px;
-  background: #f2f2f3;
-  color: #111113;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: #2c2c30;
+  color: #f2f2f3;
   font-size: 12px;
   font-weight: 500;
   line-height: 1.2;
@@ -8332,38 +8326,14 @@ a.card {
 }
 
 .lightbox-icon[data-tip]:hover::after,
-.lightbox-icon[data-tip]:focus-visible::after,
-.lightbox-panel-close[data-tip]:hover::after,
-.lightbox-panel-close[data-tip]:focus-visible::after {
+.lightbox-icon[data-tip]:focus-visible::after {
   opacity: 1;
   transform: translate(-50%, 0);
   transition-delay: 0.25s;
 }
 
-.lightbox-top-actions > :last-child[data-tip]::after,
-.lightbox-panel-close[data-tip]::after {
-  left: auto;
-  right: 0;
-  transform: translateY(-4px);
-}
-
-.lightbox-top-actions > :last-child[data-tip]:hover::after,
-.lightbox-top-actions > :last-child[data-tip]:focus-visible::after,
-.lightbox-panel-close[data-tip]:hover::after,
-.lightbox-panel-close[data-tip]:focus-visible::after {
-  transform: translateY(0);
-}
-
-/* In the panel the tooltip sits on the app's surface, not the dark ground,
-   so it takes the solid-button pair instead of a fixed light chip. */
-.lightbox-panel-close[data-tip]::after {
-  background: var(--invert-bg);
-  color: var(--invert-text);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .lightbox-icon[data-tip]::after,
-  .lightbox-panel-close[data-tip]::after {
+  .lightbox-icon[data-tip]::after {
     transition: opacity 0.14s ease;
   }
 }

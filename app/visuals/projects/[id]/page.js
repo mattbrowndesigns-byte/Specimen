@@ -1,6 +1,6 @@
 "use client";
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, Check, Sparkles } from "lucide-react";
+import { Check } from "lucide-react";
 import UtilityBar from "../../../_ui/UtilityBar";
 import SiteFooter from "../../../_ui/SiteFooter";
 import Favicon from "../../../_ui/Favicon";
@@ -15,8 +15,9 @@ import { GAP, layout, useColumns } from "../../../_ui/masonry";
 // line, so you could start choosing, and then the AI's answer landed and
 // reset every choice you'd made. Nothing is shown until it can't change.
 //
-// Then one grid, the same masonry as the board, with every image the page
-// had. The AI's picks arrive ticked; a click ticks or unticks. Save keeps the
+// Then the avatar, the title and one grid -- the same masonry as the board,
+// with every image the page had. No summary or instructions above it; the
+// ticks explain themselves. The AI's picks arrive ticked; a click ticks or unticks. Save keeps the
 // ticked ones and deletes the rest from storage.
 
 // Finding the images is ~4s and the AI sort ~12s on a real case study.
@@ -223,22 +224,9 @@ export default function PickProjectPage({ params }) {
               />
               <div className="pick-head-text">
                 <h1>{project.title || project.domain}</h1>
-                <p className="pick-credit">
-                  By {project.agency_name || project.domain} ·{" "}
-                  <a href={project.url} target="_blank" rel="noopener noreferrer">
-                    {project.domain}
-                    <ArrowUpRight size={13} />
-                  </a>
-                </p>
               </div>
             </div>
 
-            {project.summary && (
-              <p className="pick-summary">
-                <Sparkles size={14} />
-                {project.summary}
-              </p>
-            )}
             {project.ai_state === "failed" && (
               <p className="pick-note">
                 {project.error || "The AI didn't pick these."}{" "}
@@ -247,22 +235,6 @@ export default function PickProjectPage({ params }) {
                 </button>
               </p>
             )}
-
-            <div className="pick-toolbar">
-              <p>
-                {project.ai_state === "done"
-                  ? "The AI has ticked what looks like the work. Click any image to change it."
-                  : "Tick the images you want to keep."}
-              </p>
-              <div className="pick-toolbar-actions">
-                <button className="link-btn" onClick={() => setSelected(new Set(candidates.map((c) => c.key)))}>
-                  Select all
-                </button>
-                <button className="link-btn" onClick={() => setSelected(new Set())}>
-                  Select none
-                </button>
-              </div>
-            </div>
 
             <div className="visual-board" ref={gridRef} style={{ "--board-gap": `${GAP}px` }}>
               {laidOut.map((column, i) => (
@@ -281,6 +253,14 @@ export default function PickProjectPage({ params }) {
               <span className="pick-bar-count">
                 {count} of {candidates.length} selected
               </span>
+              <button
+                className="link-btn"
+                onClick={() =>
+                  setSelected(count === candidates.length ? new Set() : new Set(candidates.map((c) => c.key)))
+                }
+              >
+                {count === candidates.length ? "Select none" : "Select all"}
+              </button>
               <button className="primary" onClick={save} disabled={saving || count === 0}>
                 {saving ? "Saving…" : `Save ${count} Visual${count === 1 ? "" : "s"}`}
               </button>

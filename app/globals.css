@@ -8334,6 +8334,28 @@ a.card {
   color: var(--text);
 }
 
+/* The project's paragraph under the image's own description: same voice,
+   a step quieter, labelled so it's clear which of the two is about this
+   picture. */
+.lightbox-about {
+  margin-top: 12px;
+}
+
+.lightbox-about-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.lightbox-about p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
 .lightbox-original {
   display: inline-flex;
   align-items: center;

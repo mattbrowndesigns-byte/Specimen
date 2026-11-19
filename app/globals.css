@@ -6533,6 +6533,84 @@ a.card {
   gap: 2px;
 }
 
+/* Resource cards: the Cards view of the Resources tab. A tile with no
+   picture -- the brand mark, the name, where it lives, a short description
+   and the folders -- on the library card's own chrome (.card), so it borders,
+   rounds and hovers like a website card does. Cards in a row share a height,
+   and the chips sit at the foot whatever the summary's length. */
+.resource-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  min-height: 190px;
+}
+
+.resource-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+/* A bigger mark than a row's, since it stands where a card's picture would. */
+.resource-card-top .favicon-badge {
+  --favicon-size: 36px;
+}
+
+.resource-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.resource-card:hover .resource-card-title {
+  text-decoration: underline;
+}
+
+.resource-card-summary {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.resource-card .resource-tags {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.resource-card .resource-tags .chip-filter,
+.resource-card .resource-actions {
+  position: relative;
+  z-index: 1;
+}
+
+.resource-card:hover .resource-actions {
+  opacity: 1;
+}
+
+.library-loading .resource-card .skeleton-disc {
+  --favicon-size: 36px;
+  margin-bottom: 10px;
+  background: var(--surface-sunken);
+}
+
+.library-loading .resource-card .skeleton-line {
+  background: var(--surface-sunken);
+}
+
 /* In headlines the actions sit at the end of the line rather than in a column
    of their own, so they take the row's remaining space the way `.visit` does
    in the library's own headline view. */

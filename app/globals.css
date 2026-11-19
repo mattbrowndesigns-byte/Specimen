@@ -8041,6 +8041,10 @@ a.card {
    rule would lose and the lightbox would sit in a rounded card. */
 .modal-backdrop > .modal.lightbox.lightbox {
   display: flex;
+  /* Side by side: the base .modal is a column, and inheriting that put the
+     Details panel below the picture, off the bottom of the screen -- the i
+     button looked like it did nothing. */
+  flex-direction: row;
   width: 100vw;
   max-width: none;
   height: 100vh;

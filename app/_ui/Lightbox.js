@@ -47,6 +47,16 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
     setOrder((prev) => (prev.includes(target) ? prev : [...prev, target]));
     setId(target);
   }, []);
+
+  // The thumbnails are links, not buttons: each goes to another image, so
+  // Cmd-click opening it in a new tab is right -- and a <button> inside a
+  // .detail-section is caught by refined.css's capsule-button rule, which
+  // rounded every square thumbnail into a pill.
+  function thumbClick(e, target) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    jump(target);
+  }
   const index = order.indexOf(id);
   const prevId = index > 0 ? order[index - 1] : null;
   const nextId = index >= 0 && index < order.length - 1 ? order[index + 1] : null;
@@ -439,17 +449,17 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
               <h2>More from this project</h2>
               <div className="lightbox-thumbs">
                 {siblings.map((s) => (
-                  <button
+                  <a
                     key={s.id}
-                    type="button"
+                    href={`/visuals/${s.id}`}
                     className={`lightbox-thumb${s.id === id ? " current" : ""}`}
-                    onClick={() => jump(s.id)}
+                    onClick={(e) => thumbClick(e, s.id)}
                     title={s.title || undefined}
                     aria-current={s.id === id ? "true" : undefined}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={s.thumb_url} alt={s.title || "Visual"} loading="lazy" />
-                  </button>
+                  </a>
                 ))}
               </div>
             </section>
@@ -460,16 +470,16 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
               <h2>Similar</h2>
               <div className="lightbox-thumbs">
                 {similar.map(({ item }) => (
-                  <button
+                  <a
                     key={item.id}
-                    type="button"
+                    href={`/visuals/${item.id}`}
                     className="lightbox-thumb"
-                    onClick={() => jump(item.id)}
+                    onClick={(e) => thumbClick(e, item.id)}
                     title={`${item.title || "Untitled"} · ${item.agency_name || item.domain}`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.thumb_url} alt={item.title || "Visual"} loading="lazy" />
-                  </button>
+                  </a>
                 ))}
               </div>
             </section>

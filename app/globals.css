@@ -8253,6 +8253,7 @@ a.card {
 }
 
 .lightbox-thumb {
+  display: block;
   aspect-ratio: 1;
   padding: 0;
   border: 2px solid transparent;

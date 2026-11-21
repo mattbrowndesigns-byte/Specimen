@@ -276,6 +276,44 @@ What text cannot do is carry a picture: the screenshots are links, and most
 chat apps will not open a link to look. That is the case for the next step, a
 connection an AI can search directly and see the images through.
 
+## Letting the AI look for itself
+
+Copying fixed the carrying, and showed what was still missing. The question a
+designer asks halfway through a project is rarely "here is my collection". It
+is "have I saved a pricing page like this?", and answering that means the AI
+has to be able to look.
+
+So Kivli is now an MCP server, the open standard Claude, ChatGPT and most
+coding tools use to reach outside data. Connect an AI once and it can search
+the library, open a save, read a collection and find things like the one in
+front of it.
+
+Images travel with the answer. A site comes back with the top of its
+screenshot attached, and the rest of the page is cut into numbered sections the
+model asks for one at a time. A full page handed over whole gets squeezed to a
+postage stamp, which is the same lesson the tagging learned from Gemini.
+
+"Similar" is not a model's opinion. It ranks by shared tags, which are a
+curated vocabulary, then by shared typefaces, and every result says what it
+shares. No request is spent, and the answer can be checked.
+
+Signing in is Supabase's job. Its OAuth server issues and refreshes the
+tokens, and Kivli's part is one consent page that says what the app will and
+won't be able to do. Disconnecting it signs the app out on its very next call,
+which I tested rather than assumed.
+
+> The library stopped being somewhere you go, and became something your tools
+> can ask.
+
+| Tools an AI can call | Added to the monthly bill |
+|---|---|
+| **7**, every one of them read-only | **$0**, on the same free tiers as everything else |
+
+It reads and nothing more, for now. Writing is the obvious other half, saving a
+link from inside a chat, and it is the half where a mistake gets noticed late.
+The demo library has its own address with no sign-in, so anyone can point their
+own AI at it and try: https://specimen-gamma-six.vercel.app/api/mcp/demo
+
 ## What I deliberately did not build
 
 **Drag and drop folders.** A folder here is a tag, so one item can sit in two of

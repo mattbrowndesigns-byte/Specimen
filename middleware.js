@@ -42,6 +42,13 @@ const PUBLIC_PATHS = [
   "/demo-original",
   "/demo-refined",
   "/demo-elevated",
+  // The MCP server. Public at the door because an AI app does not carry the
+  // browser's session: it sends a Bearer token from Supabase's OAuth server,
+  // which the route checks itself, and /api/mcp/demo answers as the demo
+  // account with no sign-in at all.
+  "/api/mcp",
+  // Where an AI app learns who signs people in for that server (RFC 9728).
+  "/.well-known",
 ];
 
 export async function middleware(request) {
@@ -91,7 +98,11 @@ export async function middleware(request) {
     }
     const login = request.nextUrl.clone();
     login.pathname = "/login";
-    login.search = pathname === "/" ? "" : `?next=${encodeURIComponent(pathname)}`;
+    // The query string comes along: an AI app's consent page is nothing
+    // without its authorization_id, and a sign-in that dropped it would land
+    // on a page that no longer knows what it was asked.
+    const next = `${pathname}${request.nextUrl.search}`;
+    login.search = next === "/" ? "" : `?next=${encodeURIComponent(next)}`;
     return NextResponse.redirect(login);
   }
 

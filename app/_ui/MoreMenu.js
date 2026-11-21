@@ -10,6 +10,7 @@ import {
   Tag,
   ListChecks,
   Import,
+  Plug,
   UserPlus,
   Info,
   CircleQuestionMark,
@@ -39,6 +40,9 @@ const LINKS = [
   // Last in the group, and in the menu rather than the bar, because it is a
   // thing you do once: on the day you stop using the other bookmarking app.
   { href: "/import", label: "Import Links", Icon: Import },
+  // Set up once per AI app, then used from inside that app, so it sits with
+  // the other things you do once rather than in the bar.
+  { href: "/connect", label: "Connect an AI", Icon: Plug },
 ];
 
 const SECONDARY = [

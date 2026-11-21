@@ -2121,6 +2121,53 @@ the row keeps the original's `flex-shrink: 0`, so it laid out at full width and
 ran off the edge the day Copy for AI made it wider than a phone. `max-width:
 100%` is the fix. The Original still overflows on a phone, as it always did.
 
+**Kivli is an MCP server, and it only reads.** `/api/mcp` speaks Streamable
+HTTP statelessly: a fresh `McpServer` and transport per request, answering in
+plain JSON (`lib/mcp/auth.js`'s `serve`), because a serverless function keeps
+nothing between calls and no tool needs a conversation. Seven tools in
+`lib/mcp/server.js`, their reads in `lib/mcp/library.js`, and a save is
+rendered by `lib/exportMarkdown.js` -- the Copy for AI renderer -- so it reads
+the same pasted or fetched. No tool writes, which is the whole reason
+`/api/mcp/demo` can answer as the demo account with no sign-in and no rule at
+the door: there is nothing to refuse. Adding a write tool ends that, and the
+demo route has to learn to say no first.
+
+**Sign-in is Supabase's OAuth 2.1 server; Kivli owns only the consent page.**
+Supabase issues, refreshes and revokes the tokens. In its dashboard,
+Authentication -> OAuth Server has to be on, with Authorization Path
+`/oauth/consent` and dynamic client registration enabled, and Site URL must
+be the production address, since the consent URL is Site URL + path.
+`/.well-known/oauth-protected-resource` tells a client that Supabase signs
+people in; the route checks each Bearer token with `getUser()`, not by
+reading its claims, so Disconnect on `/connect` signs an app out on its next
+call. Verified with a real token: 200, then 401 `invalid_token` the moment the
+session was signed out. `/.well-known/oauth-authorization-server` is a
+pass-through for clients on the older spec and answers 502 until the OAuth
+server is switched on. `/api/mcp` and `/.well-known` are in `PUBLIC_PATHS`
+because an AI app carries no browser session. The consent page wants a real
+session: a demo pass is a stranger holding someone else's copy.
+
+**Sign-in's `next` keeps its query string now, and it only takes a path.** The
+consent page is nothing without its `authorization_id`, and middleware used to
+send `next` as the pathname alone. With that fixed, `?next=https://elsewhere`
+would have bounced a fresh sign-in off-site, so the login page now accepts
+`/...` and nothing else.
+
+**Screenshots go to a model in sections, not whole.** The same reason as
+`screenshotParts.js`: a 1440 x 15,000 page handed over as one image is
+squeezed to a postage stamp. `lib/mcp/images.js` cuts desktop at 1.25x its
+width and mobile at 2.2x, overlapping 8%, as JPEG no longer than 1,400px (every
+client takes JPEG; not every one takes WebP). `get_item` attaches part 1 and
+`get_screenshot` scrolls; the renderers take `imagesAttached` to drop "Images
+are linked, not included", which would be wrong there.
+
+**Anything that reads "all of them" has to page.** Supabase returns 1,000
+rows and says nothing: `taggable` holds 1,778 across the two libraries and a
+plain select hands back exactly 1,000. `lib/mcp/library.js` reads through
+`allRows`. `attachTags`, `attachCapturesAndTags` and `/api/tags`'s counts do
+not yet; each library is about 900 tag links, so they are under the cap for
+now and will start silently dropping tags somewhere past seventy sites.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

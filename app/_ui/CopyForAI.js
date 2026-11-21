@@ -42,6 +42,15 @@ export async function copyMarkdown(url) {
   }
 }
 
+// Plain text, from the page rather than from a route: the same fallbacks.
+export async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    if (!legacyCopy(text)) throw err;
+  }
+}
+
 function legacyCopy(text) {
   const area = document.createElement("textarea");
   area.value = text;

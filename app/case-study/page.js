@@ -484,6 +484,65 @@ export default function CaseStudyPage() {
 
         <section className="prose-row">
           <div className="prose-section prose-row-aside">
+            <h2>Letting the AI look for itself</h2>
+          </div>
+          <div className="prose-section">
+            <p>
+              Copying fixed the carrying, and showed what was still missing. The question a
+              designer asks halfway through a project is rarely &ldquo;here is my collection&rdquo;.
+              It is &ldquo;have I saved a pricing page like this?&rdquo;, and answering that means
+              the AI has to be able to look.
+            </p>
+            <p>
+              So Kivli is now an MCP server, the open standard Claude, ChatGPT and most coding
+              tools use to reach outside data. Connect an AI once and it can search the library,
+              open a save, read a collection and find things like the one in front of it.
+            </p>
+            <p>
+              Images travel with the answer. A site comes back with the top of its screenshot
+              attached, and the rest of the page is cut into numbered sections the model asks for
+              one at a time. A full page handed over whole gets squeezed to a postage stamp, which
+              is the same lesson the tagging learned from Gemini.
+            </p>
+            <p>
+              &ldquo;Similar&rdquo; is not a model&rsquo;s opinion. It ranks by shared tags, which
+              are a curated vocabulary, then by shared typefaces, and every result says what it
+              shares. No request is spent, and the answer can be checked.
+            </p>
+            <p>
+              Signing in is Supabase&rsquo;s job. Its OAuth server issues and refreshes the
+              tokens, and Kivli&rsquo;s part is one consent page that says what the app will and
+              won&rsquo;t be able to do. Disconnecting it signs the app out on its very next call,
+              which I tested rather than assumed.
+            </p>
+            <p className="case-point">
+              The library stopped being somewhere you go, and became something your tools can ask.
+            </p>
+            <dl className="measure-grid">
+              <div>
+                <dt>Tools an AI can call</dt>
+                <dd>
+                  7<span>every one of them read-only</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Added to the monthly bill</dt>
+                <dd>
+                  $0<span>on the same free tiers as everything else</span>
+                </dd>
+              </div>
+            </dl>
+            <p>
+              It reads and nothing more, for now. Writing is the obvious other half, saving a link
+              from inside a chat, and it is the half where a mistake gets noticed late. The demo
+              library has its own address with no sign-in, so anyone can point their own AI at it
+              and try.
+            </p>
+          </div>
+        </section>
+
+        <section className="prose-row">
+          <div className="prose-section prose-row-aside">
             <h2>What I deliberately did not build</h2>
           </div>
           <div className="prose-section">

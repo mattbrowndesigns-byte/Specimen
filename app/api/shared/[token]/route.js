@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachCapturesAndTags } from "@/lib/siteQueries";
 import { attachTags } from "@/lib/tagAttach";
 import { resolveShare } from "@/lib/shareScope";
-import { allRows } from "@/lib/paging";
+import { allRows, allRowsIn } from "@/lib/paging";
 
 // The public read. No session, because the point of a share link is that the
 // person opening it doesn't have an account.
@@ -24,6 +24,10 @@ const SITE_FIELDS =
 const COMPONENT_FIELDS = "id, name, summary, image_url, source_url, created_at";
 const RESOURCE_FIELDS =
   "id, url, domain, title, summary, saved_at, favicon_url, favicon_fills";
+// A visual's credit columns are copied down from its project, so the row is
+// enough to say whose work it is. No notes, no review flag, no favourite.
+const VISUAL_FIELDS =
+  "id, title, summary, image_url, thumb_url, url, domain, agency_name, width, height, saved_at";
 
 // Every read logs its own failure. The previous version destructured `data`
 // alone, so a bad column name came back as an empty array that looked exactly
@@ -62,6 +66,20 @@ async function readResources(supabase, userId, ids) {
   }
   const rows = checked("resources", await query.order("saved_at", { ascending: false }));
   return attachTags(supabase, rows, "resource");
+}
+
+// Only a collection reaches visuals: no tab-level scope covers them yet.
+// Paged and chunked, because a collection can hold every image off a case
+// study and an id list that long is past one request's worth.
+async function readVisuals(supabase, userId, ids) {
+  if (!ids.length) return [];
+  const rows = await allRowsIn(
+    ids,
+    (chunk) => supabase.from("visual").select(VISUAL_FIELDS).eq("user_id", userId).in("id", chunk),
+    "visuals"
+  );
+  rows.sort((a, b) => String(b.saved_at).localeCompare(String(a.saved_at)) || a.id.localeCompare(b.id));
+  return attachTags(supabase, rows, "visual");
 }
 
 const GONE = () =>
@@ -113,13 +131,14 @@ async function read({ params }) {
     const idsOf = (type) =>
       items.filter((i) => i.target_type === type).map((i) => i.target_id);
 
-    // A collection mixes all three kinds, so all three are read -- this used
-    // to return sites only, which quietly dropped every component and resource
-    // someone had bookmarked into it.
-    const [sites, components, resources] = await Promise.all([
+    // A collection mixes every kind, so every kind is read -- this used to
+    // return sites only, which quietly dropped every component and resource
+    // someone had bookmarked into it, and then visuals the same way.
+    const [sites, components, resources, visuals] = await Promise.all([
       readSites(supabase, share.user_id, idsOf("site")),
       readComponents(supabase, share.user_id, idsOf("component")),
       readResources(supabase, share.user_id, idsOf("resource")),
+      readVisuals(supabase, share.user_id, idsOf("visual")),
     ]);
 
     return NextResponse.json({
@@ -129,6 +148,7 @@ async function read({ params }) {
       sites,
       components,
       resources,
+      visuals,
     });
   }
 
@@ -164,6 +184,7 @@ async function read({ params }) {
       sites: [],
       components: [],
       resources,
+      visuals: [],
     });
   }
 
@@ -186,5 +207,6 @@ async function read({ params }) {
     sites,
     components,
     resources,
+    visuals: [],
   });
 }

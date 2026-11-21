@@ -23,7 +23,12 @@ import CopyForAI from "./CopyForAI";
 // The share payload keys its arrays in the plural; the shared kind list is
 // what supplies the label and the icon, so a Website looks the same to a
 // stranger as it does to the owner.
-const TABS = { sites: KIND.site, components: KIND.component, resources: KIND.resource };
+const TABS = {
+  sites: KIND.site,
+  components: KIND.component,
+  resources: KIND.resource,
+  visuals: KIND.visual,
+};
 
 // The same first screenful the dashboard shows. A library of 150 sites should
 // not render 150 cards to a stranger deciding whether to look at the second
@@ -55,6 +60,7 @@ export default function SharedLibrary({ token }) {
   const sites = state.sites || [];
   const components = state.components || [];
   const resources = state.resources || [];
+  const visuals = state.visuals || [];
 
   // Only the kinds that actually have something in them. A library share from
   // an account with no components shouldn't offer an empty Components tab --
@@ -65,14 +71,15 @@ export default function SharedLibrary({ token }) {
         ["sites", sites.length],
         ["components", components.length],
         ["resources", resources.length],
+        ["visuals", visuals.length],
       ].filter(([, count]) => count > 0),
-    [sites.length, components.length, resources.length]
+    [sites.length, components.length, resources.length, visuals.length]
   );
 
   const active = tab && tabs.some(([id]) => id === tab) ? tab : tabs[0]?.[0];
-  const total = sites.length + components.length + resources.length;
+  const total = sites.length + components.length + resources.length + visuals.length;
 
-  const all = active === "sites" ? sites : active === "components" ? components : resources;
+  const all = { sites, components, resources, visuals }[active] || [];
   const page = all.slice(0, shown);
   const remaining = all.length - page.length;
 
@@ -174,6 +181,25 @@ export default function SharedLibrary({ token }) {
           </div>
         )}
 
+        {/* A visual has no page of its own a stranger can open -- the owner's
+            lightbox wants a session -- so the card goes where the image came
+            from: the case study, which is also where the credit lives. */}
+        {active === "visuals" && (
+          <div className="grid grid-medium">
+            {page.map((visual) => (
+              <SharedCard
+                key={visual.id}
+                href={visual.url || visual.image_url}
+                visitTitle="Open the page it came from"
+                thumb={visual.thumb_url || visual.image_url}
+                natural
+                name={visual.title || visual.agency_name || visual.domain || "Untitled image"}
+                tags={visual.tags}
+              />
+            ))}
+          </div>
+        )}
+
         {/* Rows, exactly as the owner sees them, minus every control. A
             resource is a link and the link is the whole of it. */}
         {active === "resources" && (
@@ -268,7 +294,18 @@ export default function SharedLibrary({ token }) {
 // -- and the arrow still goes out to the live site, exactly as it does on the
 // owner's dashboard. A component and a resource have no such page, so for them
 // the two stay the same link.
-function SharedCard({ href, internal, visitHref, thumb, natural, name, faviconUrl, fills, tags }) {
+function SharedCard({
+  href,
+  internal,
+  visitHref,
+  visitTitle = "Open the live site",
+  thumb,
+  natural,
+  name,
+  faviconUrl,
+  fills,
+  tags,
+}) {
   const visit = visitHref || href;
   const outward = internal ? {} : { target: "_blank", rel: "noopener noreferrer nofollow" };
   return (
@@ -293,7 +330,7 @@ function SharedCard({ href, internal, visitHref, thumb, natural, name, faviconUr
           href={visit}
           target="_blank"
           rel="noopener noreferrer nofollow"
-          title="Open the live site"
+          title={visitTitle}
         >
           <ArrowUpRight size={17} />
         </a>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsCollection } from "@/lib/ownership";
+import { allRows } from "@/lib/paging";
 
 export const dynamic = "force-dynamic";
 
@@ -23,16 +24,22 @@ export async function GET(request, { params }) {
     .single();
   if (error) return NOT_FOUND();
 
-  const { data: items, error: itemsError } = await supabase
-    .from("collection_item")
-    .select("target_type, target_id, added_at")
-    .eq("collection_id", id)
-    .order("added_at", { ascending: false });
-  if (itemsError) {
+  let items;
+  try {
+    items = await allRows(
+      () =>
+        supabase
+          .from("collection_item")
+          .select("target_type, target_id, added_at")
+          .eq("collection_id", id)
+          .order("added_at", { ascending: false }),
+      "collection items"
+    );
+  } catch (itemsError) {
     return NextResponse.json({ error: itemsError.message }, { status: 500 });
   }
 
-  return NextResponse.json({ collection, items: items || [] });
+  return NextResponse.json({ collection, items });
 }
 
 export async function PATCH(request, { params }) {

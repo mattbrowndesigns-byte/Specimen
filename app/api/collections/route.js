@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsCollection } from "@/lib/ownership";
+import { allRowsIn } from "@/lib/paging";
 
 export const dynamic = "force-dynamic";
 
@@ -33,15 +34,21 @@ export async function GET(request) {
 
   // Scoped to this account's collections, so counts and covers can't be read
   // off someone else's.
+  // Every item in every collection, so paged past Supabase's silent cap.
   const collectionIds = (collections || []).map((c) => c.id);
-  const { data: items, error: itemsError } = collectionIds.length
-    ? await supabase
-        .from("collection_item")
-        .select("collection_id, target_type, target_id, added_at")
-        .in("collection_id", collectionIds)
-        .order("added_at", { ascending: false })
-    : { data: [], error: null };
-  if (itemsError) {
+  let items;
+  try {
+    items = await allRowsIn(
+      collectionIds,
+      (chunk) =>
+        supabase
+          .from("collection_item")
+          .select("collection_id, target_type, target_id, added_at")
+          .in("collection_id", chunk)
+          .order("added_at", { ascending: false }),
+      "collection items"
+    );
+  } catch (itemsError) {
     return NextResponse.json({ error: itemsError.message }, { status: 500 });
   }
 

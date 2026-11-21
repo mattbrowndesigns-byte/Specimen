@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsTag } from "@/lib/ownership";
+import { allRows } from "@/lib/paging";
 
 // Moves everything tagged with sourceId onto targetId, then deletes the source
 // tag (its now-empty taggable rows cascade away).
@@ -44,17 +45,19 @@ export async function POST(request) {
     return NextResponse.json({ error: sourceError.message }, { status: 500 });
   }
 
-  const [{ data: rows, error: readError }, { data: onTarget, error: targetError }] =
-    await Promise.all([
-      supabase.from("taggable").select("target_type, target_id").eq("tag_id", sourceId),
-      supabase.from("taggable").select("target_type, target_id").eq("tag_id", targetId),
+  // Paged, and it matters more here than anywhere: the source tag is deleted
+  // below, so a link the read never saw is a link the merge destroys.
+  let rows, onTarget;
+  try {
+    [rows, onTarget] = await Promise.all([
+      allRows(() => supabase.from("taggable").select("target_type, target_id").eq("tag_id", sourceId), "the tag's saves"),
+      allRows(() => supabase.from("taggable").select("target_type, target_id").eq("tag_id", targetId), "the target's saves"),
     ]);
-
-  if (readError || targetError) {
-    return NextResponse.json({ error: (readError || targetError).message }, { status: 500 });
+  } catch (readError) {
+    return NextResponse.json({ error: readError.message }, { status: 500 });
   }
 
-  const already = new Set((onTarget || []).map((r) => `${r.target_type}:${r.target_id}`));
+  const already = new Set(onTarget.map((r) => `${r.target_type}:${r.target_id}`));
   const added = rows.filter((r) => !already.has(`${r.target_type}:${r.target_id}`));
 
   if (added.length) {

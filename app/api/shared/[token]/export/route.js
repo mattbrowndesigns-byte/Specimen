@@ -4,6 +4,7 @@ import { resolveShare, shareReachesSite } from "@/lib/shareScope";
 import { loadCollection, loadGroup, loadSites } from "@/lib/exportData";
 import { collectionMarkdown, siteMarkdown } from "@/lib/exportMarkdown";
 import { exportFailed, markdownResponse } from "@/lib/exportResponse";
+import { allRows } from "@/lib/paging";
 
 export const dynamic = "force-dynamic";
 
@@ -57,16 +58,19 @@ export async function GET(request, { params }) {
         .eq("facet", "resource_type")
         .maybeSingle();
       if (!tag) return GONE();
-      const { data: tagged, error } = await supabase
-        .from("taggable")
-        .select("target_id")
-        .eq("tag_id", tag.id)
-        .eq("target_type", "resource");
-      if (error) throw new Error(error.message);
+      const tagged = await allRows(
+        () =>
+          supabase
+            .from("taggable")
+            .select("target_id")
+            .eq("tag_id", tag.id)
+            .eq("target_type", "resource"),
+        "the folder"
+      );
       const group = await loadGroup(
         supabase,
         share.user_id,
-        { resourceIds: (tagged || []).map((r) => r.target_id) },
+        { resourceIds: tagged.map((r) => r.target_id) },
         { shared: true }
       );
       return markdownResponse(request, collectionMarkdown({ title: tag.label, ...group }, { ...opts, sourceUrl }), "collection", tag.label);

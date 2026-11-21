@@ -2179,10 +2179,33 @@ are linked, not included", which would be wrong there.
 
 **Anything that reads "all of them" has to page.** Supabase returns 1,000
 rows and says nothing: `taggable` holds 1,778 across the two libraries and a
-plain select hands back exactly 1,000. `lib/mcp/library.js` reads through
-`allRows`. `attachTags`, `attachCapturesAndTags` and `/api/tags`'s counts do
-not yet; each library is about 900 tag links, so they are under the cap for
-now and will start silently dropping tags somewhere past seventy sites.
+plain select hands back exactly 1,000. `lib/paging.js` is the way past it --
+`allRows(build, label)` walks `.range()` a thousand at a time, and
+`allRowsIn(ids, build, label)` splits an id list into hundreds (a whole
+library of uuids in one `in.(...)` is a query string tens of kilobytes long)
+and pages each chunk. Both throw with the label on a failed page, because
+returning what was read so far is the `data`-without-`error` bug again.
+`attachTags`, `attachCapturesAndTags`, `/api/tags`'s counts, the tag merge,
+`/api/collections`, a collection's items, `/api/search-counts` and the shared
+folder and collection reads all go through it.
+
+It was not hypothetical by the time it was fixed: the owner's library carried
+1,238 tag links against its own vocabulary (the visuals account for half), so
+Manage Tags had been showing usage counts read off the first 1,000. The merge
+was the dangerous one -- it reads the source tag's links, moves them, then
+deletes the source, so a link the read never saw was a link the merge
+destroyed.
+
+Every page is ordered by `id` on top of whatever the caller asked for, and
+that is load-bearing rather than tidy. `.range()` over an order with ties is
+not a stable walk, and a desktop and mobile capture share one `captured_at` on
+purpose. A builder passed in is a function, not a query, because a builder is
+spent once it has been awaited. Still unpaged, because nothing is near the
+cap: the plain `site` / `component` / `resource` / `tag` list reads and the
+`search_sites` RPC, which are one row per save or per word.
+
+The MCP server's own `allRows` in `lib/mcp/library.js` was written before `lib/paging.js` and
+does the same walk, so there are two copies of it; it is safe to point it at the shared one.
 
 ## Local environment
 

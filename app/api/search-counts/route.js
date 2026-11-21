@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED } from "@/lib/ownership";
+import { allRows, allRowsIn } from "@/lib/paging";
 
 export const dynamic = "force-dynamic";
 
@@ -30,40 +31,47 @@ function quoted(query) {
 // last read is what keeps the count honest: ids reached through `taggable`
 // carry no user_id of their own, so they are checked against the table rather
 // than trusted because the tag they hang off belongs to the right person.
+//
+// Every read is paged and throws on failure. Destructuring `data` alone, as
+// this used to, turned a failed read into a count of zero -- and a false
+// "nothing over there either" is the one answer this route must never give.
 async function countMatches(supabase, userId, { table, columns, targetType, query }) {
   const value = quoted(query);
 
-  const [{ data: direct }, { data: tags }] = await Promise.all([
-    supabase
-      .from(table)
-      .select("id")
-      .eq("user_id", userId)
-      .or(columns.map((column) => `${column}.ilike.${value}`).join(",")),
-    supabase.from("tag").select("id").eq("user_id", userId).ilike("label", `%${query}%`),
+  const [direct, tags] = await Promise.all([
+    allRows(
+      () =>
+        supabase
+          .from(table)
+          .select("id")
+          .eq("user_id", userId)
+          .or(columns.map((column) => `${column}.ilike.${value}`).join(",")),
+      `${table} matches`
+    ),
+    allRows(
+      () => supabase.from("tag").select("id").eq("user_id", userId).ilike("label", `%${query}%`),
+      "matching tags"
+    ),
   ]);
 
-  const ids = new Set((direct || []).map((row) => row.id));
+  const ids = new Set(direct.map((row) => row.id));
 
-  if (tags?.length) {
-    const { data: tagged } = await supabase
-      .from("taggable")
-      .select("target_id")
-      .eq("target_type", targetType)
-      .in(
-        "tag_id",
-        tags.map((tag) => tag.id)
-      );
-    for (const row of tagged || []) ids.add(row.target_id);
-  }
+  // A two-letter search can match a good part of the vocabulary, and the
+  // links under that many tags run past Supabase's silent 1,000-row cap.
+  const tagged = await allRowsIn(
+    tags.map((tag) => tag.id),
+    (chunk) =>
+      supabase.from("taggable").select("target_id").eq("target_type", targetType).in("tag_id", chunk),
+    "tagged matches"
+  );
+  for (const row of tagged) ids.add(row.target_id);
 
-  if (!ids.size) return 0;
-
-  const { data: owned } = await supabase
-    .from(table)
-    .select("id")
-    .eq("user_id", userId)
-    .in("id", [...ids]);
-  return (owned || []).length;
+  const owned = await allRowsIn(
+    [...ids],
+    (chunk) => supabase.from(table).select("id").eq("user_id", userId).in("id", chunk),
+    `${table} ownership`
+  );
+  return owned.length;
 }
 
 export async function GET(request) {
@@ -86,21 +94,29 @@ export async function GET(request) {
   // and, if it ever stopped working, would hand back a null count that reads
   // as "no matches" -- a silent zero is the one answer this feature must never
   // give. A few hundred rows, once, on a search that already found nothing.
-  const [sites, component, resource] = await Promise.all([
-    supabase.rpc("search_sites", { search_query: query, owner: user.id }),
-    countMatches(supabase, user.id, {
-      table: "component",
-      columns: ["name", "summary", "notes", "source_url"],
-      targetType: "component",
-      query,
-    }),
-    countMatches(supabase, user.id, {
-      table: "resource",
-      columns: ["title", "summary", "notes", "url"],
-      targetType: "resource",
-      query,
-    }),
-  ]);
+  // A failed count throws and answers 500, which the nudge reads as "no
+  // nudge" -- never as a zero it would then report.
+  let sites, component, resource;
+  try {
+    [sites, component, resource] = await Promise.all([
+      supabase.rpc("search_sites", { search_query: query, owner: user.id }),
+      countMatches(supabase, user.id, {
+        table: "component",
+        columns: ["name", "summary", "notes", "source_url"],
+        targetType: "component",
+        query,
+      }),
+      countMatches(supabase, user.id, {
+        table: "resource",
+        columns: ["title", "summary", "notes", "url"],
+        targetType: "resource",
+        query,
+      }),
+    ]);
+  } catch (error) {
+    console.error("Search counts failed:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   if (sites.error) {
     console.error("Search counts (sites) failed:", sites.error.message);

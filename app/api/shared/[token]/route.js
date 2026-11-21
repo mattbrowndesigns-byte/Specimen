@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachCapturesAndTags } from "@/lib/siteQueries";
 import { attachTags } from "@/lib/tagAttach";
 import { resolveShare } from "@/lib/shareScope";
+import { allRows } from "@/lib/paging";
 
 // The public read. No session, because the point of a share link is that the
 // person opening it doesn't have an account.
@@ -66,7 +67,19 @@ async function readResources(supabase, userId, ids) {
 const GONE = () =>
   NextResponse.json({ error: "This link is no longer available" }, { status: 404 });
 
-export async function GET(request, { params }) {
+// A failed read throws -- the paged ones do, and so does attachCapturesAndTags
+// -- and lands here as the codebase's `{ error }` shape rather than as a bare
+// 500 page the shared view cannot put into words.
+export async function GET(request, context) {
+  try {
+    return await read(context);
+  } catch (error) {
+    console.error("Shared read failed:", error.message);
+    return NextResponse.json({ error: "Couldn't load this shared library" }, { status: 500 });
+  }
+}
+
+async function read({ params }) {
   const { token } = await params;
 
   const supabase = supabaseAdmin();
@@ -88,13 +101,17 @@ export async function GET(request, { params }) {
       .maybeSingle();
     if (!collection) return GONE();
 
-    const { data: items } = await supabase
-      .from("collection_item")
-      .select("target_id, target_type")
-      .eq("collection_id", collection.id);
+    const items = await allRows(
+      () =>
+        supabase
+          .from("collection_item")
+          .select("target_id, target_type")
+          .eq("collection_id", collection.id),
+      "collection items"
+    );
 
     const idsOf = (type) =>
-      (items || []).filter((i) => i.target_type === type).map((i) => i.target_id);
+      items.filter((i) => i.target_type === type).map((i) => i.target_id);
 
     // A collection mixes all three kinds, so all three are read -- this used
     // to return sites only, which quietly dropped every component and resource
@@ -125,16 +142,20 @@ export async function GET(request, { params }) {
       .maybeSingle();
     if (!tag) return GONE();
 
-    const { data: tagged } = await supabase
-      .from("taggable")
-      .select("target_id")
-      .eq("tag_id", tag.id)
-      .eq("target_type", "resource");
+    const tagged = await allRows(
+      () =>
+        supabase
+          .from("taggable")
+          .select("target_id")
+          .eq("tag_id", tag.id)
+          .eq("target_type", "resource"),
+      "the folder"
+    );
 
     const resources = await readResources(
       supabase,
       share.user_id,
-      (tagged || []).map((row) => row.target_id)
+      tagged.map((row) => row.target_id)
     );
     return NextResponse.json({
       kind: "folder",

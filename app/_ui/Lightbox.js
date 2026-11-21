@@ -1,8 +1,9 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Check, ChevronLeft, ChevronRight, Copy, Info, Maximize2, Minimize2, Sparkles, X } from "lucide-react";
-import { useCopyState } from "./CopyForAI";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, Info, Maximize2, Minimize2, Sparkles, X } from "lucide-react";
+import CopyForAI from "./CopyForAI";
 import ModalShell from "./ModalShell";
+import SaveActions from "./SaveActions";
 import TagCombobox from "./TagCombobox";
 import { rankRelated } from "@/lib/related";
 
@@ -22,6 +23,9 @@ import { rankRelated } from "@/lib/related";
 const FACET_LABELS = { medium: "Medium", aesthetic: "Aesthetic", vertical: "Industry" };
 const FACETS = Object.keys(FACET_LABELS);
 const DETAILS_KEY = "specimen.visuals.details";
+// Matches the close transition in globals.css; the panel stays mounted this
+// long after Hide so it can slide out rather than vanish.
+const PANEL_EXIT_MS = 380;
 
 // `items` is the board's list (for instant image, title and credit while the
 // full record loads), `sequence` the ids to walk, `startId` the one opened.
@@ -37,7 +41,9 @@ function Credit({ credit, visual, withOriginal = false }) {
         <ArrowUpRight size={12} />
       </a>
       {/* The agency's own file, often larger than the copy kept here: the
-          way to the best version of the image, so it stays, but quietly. */}
+          way to the best version of the image, so it stays, but quietly --
+          the same size as the credit and in grey, so the two read as one
+          line with the maker first rather than as a footnote beside it. */}
       {withOriginal && visual.source_image_url && (
         <>
           {" · "}
@@ -123,7 +129,12 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
   const [aiFailure, setAiFailure] = useState(null);
   const [failedField, setFailedField] = useState(null);
   const [order, setOrder] = useState(sequence);
-  const copy = useCopyState();
+  // The panel outlives detailsOpen by one transition: mounted while it slides
+  // out, unmounted once it has. `panelShown` is what the CSS animates on,
+  // set a frame after mounting so the opening has a "from" to start at.
+  const [panelMounted, setPanelMounted] = useState(false);
+  const [panelShown, setPanelShown] = useState(false);
+  const exitTimer = useRef(null);
 
   const byId = useMemo(() => new Map(items.map((v) => [v.id, v])), [items]);
 
@@ -224,6 +235,18 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
       document.body.style.overflow = previous;
     };
   }, []);
+
+  useEffect(() => {
+    clearTimeout(exitTimer.current);
+    if (detailsOpen) {
+      setPanelMounted(true);
+      const frame = requestAnimationFrame(() => requestAnimationFrame(() => setPanelShown(true)));
+      return () => cancelAnimationFrame(frame);
+    }
+    setPanelShown(false);
+    exitTimer.current = setTimeout(() => setPanelMounted(false), PANEL_EXIT_MS);
+    return () => clearTimeout(exitTimer.current);
+  }, [detailsOpen]);
 
   function toggleDetails() {
     setDetailsOpen((open) => {
@@ -384,28 +407,13 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
   }));
 
   return (
-    <ModalShell label={visual.title || "Visual"} className={`lightbox${detailsOpen ? " lightbox-with-details" : ""}`} onClose={onClose}>
+    <ModalShell label={visual.title || "Visual"} className={`lightbox${panelShown ? " lightbox-with-details" : ""}`} onClose={onClose}>
       <div className="lightbox-view">
         <div className="lightbox-top">
           {/* Tooltips are data-tip rather than title: a native title waits a
               second and a half and can't be styled, and these icons need
               naming the first time you look at them. */}
           <div className="lightbox-top-actions">
-            {/* An icon here rather than a labelled button: the bar is all
-                icons, and the tooltip names it the first time you look. */}
-            <button
-              type="button"
-              className="lightbox-icon"
-              onClick={() => copy.run(`/api/export/visual/${visual.id}`)}
-              disabled={copy.state === "copying"}
-              aria-label="Copy for AI"
-              data-tip={copy.state === "copied" ? "Copied" : copy.state === "error" ? copy.message : "Copy for AI"}
-            >
-              {copy.state === "copied" ? <Check size={16} /> : <Copy size={16} />}
-            </button>
-            <span className="sr-only" role="status">
-              {copy.state === "copied" || copy.state === "error" ? copy.message : ""}
-            </span>
             <button
               type="button"
               className="lightbox-icon"
@@ -481,8 +489,12 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
         </div>
       </div>
 
-      {detailsOpen && (
-        <aside className="lightbox-panel" aria-label="Details">
+      {/* The holder's width eases open and shut, so the picture resizes with
+          it instead of jumping; the panel inside slides in from the right
+          and fades, on the same curve. */}
+      {panelMounted && (
+        <div className={`lightbox-panel-holder${panelShown ? " is-shown" : ""}`}>
+        <aside className="lightbox-panel" aria-label="Details" inert={!panelShown}>
           {/* Its own row above the title, in a holding shape like the
               lightbox's buttons, rather than floating beside the heading. */}
           <div className="lightbox-panel-bar">
@@ -506,6 +518,23 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
             <p className="lightbox-panel-credit">
               <Credit credit={credit} visual={visual} withOriginal />
             </p>
+            {/* What you do with the picture rather than to its record: keep
+                it, file it, carry it into an AI. Copy for AI lived on the
+                dark bar over the image, where it was one more unlabelled
+                circle; here it has its words, beside the two it belongs
+                with, the way a site's header has them. Keyed on the visual
+                because the heart holds its own state. */}
+            <div className="detail-actions lightbox-panel-actions">
+              <SaveActions
+                key={visual.id}
+                kind="visual"
+                id={visual.id}
+                name={visual.title || "Visual"}
+                isFavorite={visual.is_favorite}
+                onFavoriteChange={(next) => onUpdated?.({ ...visual, is_favorite: next })}
+              />
+              <CopyForAI url={`/api/export/visual/${visual.id}`} />
+            </div>
           </section>
 
           <AiStatus
@@ -655,6 +684,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
             </div>
           </section>
         </aside>
+        </div>
       )}
     </ModalShell>
   );

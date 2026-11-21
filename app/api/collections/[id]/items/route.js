@@ -8,14 +8,18 @@ import {
   ownsSite,
   ownsComponent,
   ownsResource,
+  ownsVisual,
 } from "@/lib/ownership";
 
-const TARGET_TYPES = new Set(["site", "component", "resource"]);
+// "visual" needs schema_m22.sql applied; before that the insert fails on the
+// table's own check and the modal says so.
+const TARGET_TYPES = new Set(["site", "component", "resource", "visual"]);
 
 const OWNS = {
   site: ownsSite,
   component: ownsComponent,
   resource: ownsResource,
+  visual: ownsVisual,
 };
 
 export async function POST(request, { params }) {

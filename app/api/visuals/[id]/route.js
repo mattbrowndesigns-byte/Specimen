@@ -94,7 +94,9 @@ export async function DELETE(request, { params }) {
     .maybeSingle();
   if (!visual) return NOT_FOUND();
 
+  // Both polymorphic tables, since neither has a foreign key to cascade on.
   await supabase.from("taggable").delete().eq("target_type", "visual").eq("target_id", id);
+  await supabase.from("collection_item").delete().eq("target_type", "visual").eq("target_id", id);
   const { error } = await supabase.from("visual").delete().eq("id", id).eq("user_id", user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   await removeFiles(supabase, [visual.image_url, visual.thumb_url]);

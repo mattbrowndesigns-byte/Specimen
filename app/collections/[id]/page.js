@@ -20,11 +20,12 @@ export default function CollectionDetailPage({ params }) {
   // library endpoints and get matched up here -- the same shape RelatedSection
   // uses.
   const load = useCallback(async () => {
-    const [collectionRes, sitesRes, componentsRes, resourcesRes] = await Promise.all([
+    const [collectionRes, sitesRes, componentsRes, resourcesRes, visualsRes] = await Promise.all([
       fetch(`/api/collections/${id}`),
       fetch("/api/sites"),
       fetch("/api/components"),
       fetch("/api/resources"),
+      fetch("/api/visuals"),
     ]);
 
     if (!collectionRes.ok) {
@@ -35,7 +36,7 @@ export default function CollectionDetailPage({ params }) {
     const { collection: found, items } = await collectionRes.json();
     setCollection(found);
 
-    const byType = { site: new Map(), component: new Map(), resource: new Map() };
+    const byType = { site: new Map(), component: new Map(), resource: new Map(), visual: new Map() };
     if (sitesRes.ok) {
       const data = await sitesRes.json();
       for (const site of data.sites || []) byType.site.set(site.id, site);
@@ -47,6 +48,10 @@ export default function CollectionDetailPage({ params }) {
     if (resourcesRes.ok) {
       const data = await resourcesRes.json();
       for (const r of data.resources || []) byType.resource.set(r.id, r);
+    }
+    if (visualsRes.ok) {
+      const data = await visualsRes.json();
+      for (const v of data.visuals || []) byType.visual.set(v.id, v);
     }
 
     // Looked up by target_type rather than site-or-else-component: the

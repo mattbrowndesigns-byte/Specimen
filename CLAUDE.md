@@ -2101,9 +2101,30 @@ each site in brief, and skips reading discovered pages altogether.
 
 `shared: true` on the loaders is what drops notes and hidden saves, and the
 columns are listed in `exportData.js` rather than inherited from a helper, the
-same rule as the share routes. Collections hold sites, components and
-resources only -- `visual` was never added to `collection_item` -- so a visual
-exports alone, from the lightbox's copy icon.
+same rule as the share routes. A visual exports alone, from Copy for AI in
+the lightbox's Details panel.
+
+**Visuals go in collections now, on the owner's side only.** `schema_m22.sql`
+adds `visual` to `collection_item`'s check, the lightbox's Details panel
+carries the heart and bookmark (`SaveActions kind="visual"`), and Favourites,
+the collection list's covers, a collection's page and `RecordGrid` all read
+`/api/visuals`. The visual DELETE route removes its `collection_item` rows,
+as every polymorphic delete must. Not yet taught about visuals, so a visual
+in a collection is missing from them: the shared collection read
+(`/api/shared/[token]` and its page), the collection's Copy for AI
+(`loadCollection` in `lib/exportData.js`) and the MCP server's collection
+counts. That is the data-without-error shape again -- an item quietly absent
+-- so finish those before anyone shares a collection holding visuals.
+
+**The lightbox's Details panel is a drawer, kept mounted to close.**
+`.lightbox-panel-holder` animates its width from 0 to 400px with the panel
+pinned to its right edge, so the picture resizes continuously and the panel
+reads as sliding in from the screen's edge; on a phone the holder slides over
+the picture with a transform instead. `PANEL_EXIT_MS` in `Lightbox.js` keeps
+the panel mounted for the close transition and must match the CSS. The fade
+is deliberately shorter than the slide both ways: a slower one measured as a
+holder 233px open around a panel at 9% opacity, an empty strip arriving
+before its contents.
 
 **Clipboard writes have to start inside the click.** Safari ends the click's
 permission while the export is being fetched, so `fetch` then `writeText`

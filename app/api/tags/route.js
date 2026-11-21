@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsTag } from "@/lib/ownership";
+import { allRowsIn } from "@/lib/paging";
 
 const FACETS = ["vertical", "page_type", "block_pattern", "aesthetic", "resource_type", "medium"];
 
@@ -26,12 +27,17 @@ export async function GET() {
   }
 
   // Counts come from this account's own tags, so a shared tag_id can't leak a
-  // usage count from someone else's library.
-  const tagIds = tags.map((t) => t.id);
-  const { data: taggables, error: countError } = tagIds.length
-    ? await supabase.from("taggable").select("tag_id").in("tag_id", tagIds)
-    : { data: [], error: null };
-  if (countError) {
+  // usage count from someone else's library. Paged, because a library's tag
+  // links run past Supabase's silent 1,000-row cap, and every count past it
+  // would come out low without a word.
+  let taggables;
+  try {
+    taggables = await allRowsIn(
+      tags.map((t) => t.id),
+      (chunk) => supabase.from("taggable").select("tag_id").in("tag_id", chunk),
+      "tag counts"
+    );
+  } catch (countError) {
     return NextResponse.json({ error: countError.message }, { status: 500 });
   }
 

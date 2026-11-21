@@ -2121,6 +2121,33 @@ the row keeps the original's `flex-shrink: 0`, so it laid out at full width and
 ran off the edge the day Copy for AI made it wider than a phone. `max-width:
 100%` is the fix. The Original still overflows on a phone, as it always did.
 
+**Anything that reads "all of them" has to page.** Supabase returns 1,000
+rows and says nothing: `taggable` holds 1,778 across the two libraries and a
+plain select hands back exactly 1,000. `lib/paging.js` is the way past it --
+`allRows(build, label)` walks `.range()` a thousand at a time, and
+`allRowsIn(ids, build, label)` splits an id list into hundreds (a whole
+library of uuids in one `in.(...)` is a query string tens of kilobytes long)
+and pages each chunk. Both throw with the label on a failed page, because
+returning what was read so far is the `data`-without-`error` bug again.
+`attachTags`, `attachCapturesAndTags`, `/api/tags`'s counts, the tag merge,
+`/api/collections`, a collection's items, `/api/search-counts` and the shared
+folder and collection reads all go through it.
+
+It was not hypothetical by the time it was fixed: the owner's library carried
+1,238 tag links against its own vocabulary (the visuals account for half), so
+Manage Tags had been showing usage counts read off the first 1,000. The merge
+was the dangerous one -- it reads the source tag's links, moves them, then
+deletes the source, so a link the read never saw was a link the merge
+destroyed.
+
+Every page is ordered by `id` on top of whatever the caller asked for, and
+that is load-bearing rather than tidy. `.range()` over an order with ties is
+not a stable walk, and a desktop and mobile capture share one `captured_at` on
+purpose. A builder passed in is a function, not a query, because a builder is
+spent once it has been awaited. Still unpaged, because nothing is near the
+cap: the plain `site` / `component` / `resource` / `tag` list reads and the
+`search_sites` RPC, which are one row per save or per word.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

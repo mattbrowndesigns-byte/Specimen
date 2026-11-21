@@ -8705,3 +8705,325 @@ a.card {
 .shared-export {
   margin: -4px 0 20px;
 }
+
+/* ---- Connect an AI ------------------------------------------------------ */
+
+/* The consent page borrows the sign-in card whole and adds two short lists:
+   what the app will be able to do, and what it won't. The second list is the
+   one that makes the yes easy, so it is not tucked into small print. */
+.consent-app {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.consent-section {
+  margin: 0 0 16px;
+}
+
+.consent-section h2 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.consent-section ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.consent-section li + li {
+  margin-top: 2px;
+}
+
+.connect-panel {
+  margin-bottom: 16px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+}
+
+.connect-panel h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.connect-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.connect-panel h2 + .connect-note {
+  margin-top: 0;
+}
+
+/* The address, in a filled well with its copy button inside the same shape,
+   so the two read as one control rather than a string and a button. */
+.connect-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 4px 4px 14px;
+  background: var(--field-bg);
+  border-radius: 10px;
+}
+
+.connect-field + .connect-field,
+.connect-steps + .connect-field {
+  margin-top: 12px;
+}
+
+.connect-field code {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.connect-copy.connect-copy,
+.connect-revoke.connect-revoke {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  height: var(--control-h);
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.connect-copy.connect-copy:hover,
+.connect-revoke.connect-revoke:hover {
+  background: var(--surface-sunken);
+}
+
+.connect-switch {
+  margin-bottom: 14px;
+}
+
+/* Block flow, not a flex column: a flex <ol> loses its numbers. */
+.connect-steps,
+.connect-examples {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.connect-steps li + li,
+.connect-examples li + li {
+  margin-top: 6px;
+}
+
+.connect-examples {
+  padding-left: 0;
+  list-style: none;
+}
+
+.connect-grants {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.connect-grants li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border-soft);
+}
+
+.connect-grants li:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.connect-grant-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.connect-grant-date {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.connect-revoke.connect-revoke {
+  margin-left: auto;
+}
+
+/* On a phone the address wraps instead of scrolling inside its well: a
+   sideways scroll in a 250px box is a thing nobody finds, and the end of the
+   address is the part that differs (/api/mcp against /api/mcp/demo). */
+@media (max-width: 700px) {
+  .connect-field code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    padding: 6px 0;
+  }
+}
+
+.consent-card .auth-tagline {
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+/* ---- Telling people their AI can connect -------------------------------- */
+
+/* The nudge after a copy. Absolutely placed under the button, so the header
+   row it sits in does not reflow while someone is reading it. */
+.copy-ai {
+  position: relative;
+}
+
+.copy-ai-nudge {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: max-content;
+  max-width: min(340px, calc(100vw - 32px));
+  padding: 10px 8px 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  animation: copy-ai-nudge-in 0.18s ease-out;
+}
+
+.copy-ai-nudge-end {
+  left: auto;
+  right: 0;
+}
+
+.copy-ai-nudge > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+.copy-ai-nudge a {
+  color: var(--text);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* .icon-btn so `.detail-actions button` and the Refined capsule rule leave it
+   alone (both exclude or lose to it), then sized down for a small card. */
+.copy-ai-nudge .icon-btn.icon-btn {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin: -3px 0 -3px 2px;
+}
+
+@keyframes copy-ai-nudge-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-ai-nudge {
+    animation: none;
+  }
+}
+
+/* The one-time note on the dashboard. A card in the page's own surface, not a
+   band: the band at the top belongs to the demo, and this says something
+   once rather than standing guard over every page. */
+.connect-note-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 12px 12px 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+}
+
+.connect-note-icon {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.connect-note-card p {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.connect-note-card strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.connect-note-link {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-h);
+  padding: 0 14px;
+  border-radius: 8px;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.connect-note-link:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 700px) {
+  .connect-note-card {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .connect-note-card p {
+    flex-basis: calc(100% - 80px);
+  }
+
+  /* Close stays on the first line, in the corner where a close belongs;
+     Set it up wraps under the sentence it finishes. */
+  .connect-note-close {
+    order: 1;
+  }
+
+  .connect-note-link {
+    order: 2;
+    margin-left: 30px;
+  }
+}

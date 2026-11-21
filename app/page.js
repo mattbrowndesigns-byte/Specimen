@@ -13,6 +13,7 @@ import DemoTour from "./_ui/DemoTour";
 import { useDemoPhase, useIsDemo } from "./_ui/demoState";
 import SiteFooter from "./_ui/SiteFooter";
 import HeroRotator from "./_ui/HeroRotator";
+import ConnectNote from "./_ui/ConnectNote";
 import { addItem, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
 
 export default function Home() {
@@ -188,6 +189,8 @@ export default function Home() {
         {jobs.map((job) => (
           <CaptureProgress key={job.key} job={job} onDone={(result) => finishJob(job, result)} />
         ))}
+
+        <ConnectNote />
 
         {/* One sentence, Dribbble-style: the purple top line changes, the
             bottom line holds. */}

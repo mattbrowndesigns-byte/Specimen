@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { Check, Copy, Download } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Check, Copy, Download, Plug, X } from "lucide-react";
+import { claimNudge, retireNudge } from "./connectPrompts";
 
 // Puts the Markdown an export route returns on the clipboard.
 //
@@ -42,6 +43,15 @@ export async function copyMarkdown(url) {
   }
 }
 
+// Plain text, from the page rather than from a route: the same fallbacks.
+export async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    if (!legacyCopy(text)) throw err;
+  }
+}
+
 function legacyCopy(text) {
   const area = document.createElement("textarea");
   area.value = text;
@@ -75,11 +85,14 @@ export function useCopyState() {
       await copyMarkdown(url);
       setState("copied");
       setMessage("Copied. Paste it into any AI chat.");
+      timer.current = setTimeout(() => setState("idle"), 2400);
+      return true;
     } catch (err) {
       setState("error");
       setMessage(err?.message && err.message !== "Failed to fetch" ? err.message : "Couldn’t copy that");
+      timer.current = setTimeout(() => setState("idle"), 2400);
+      return false;
     }
-    timer.current = setTimeout(() => setState("idle"), 2400);
   }
   return { state, message, run };
 }
@@ -89,16 +102,47 @@ export function useCopyState() {
 // beside it is for the other use -- a file dropped into a project folder -- and
 // is a plain link, so the browser saves it under the stable name the route
 // sets rather than whatever a blob URL would be called.
+//
+// A successful copy is also the one moment someone is certainly carrying the
+// library into an AI by hand, so it is where they hear that the AI could come
+// and get it instead (connectPrompts.js says how often). A card under the
+// button rather than a line beside it, so nothing in the row moves.
 export default function CopyForAI({ url, label = "Copy for AI", className = "" }) {
   const { state, message, run } = useCopyState();
+  const [nudge, setNudge] = useState(false);
+  const nudgeTimer = useRef(null);
+  const nudgeRef = useRef(null);
+  // The button sits at the right of a site's header and the left of a
+  // collection's, so the card opens away from whichever edge is nearer.
+  const [nudgeEnd, setNudgeEnd] = useState(false);
   const join = url.includes("?") ? "&" : "?";
+  useEffect(() => () => clearTimeout(nudgeTimer.current), []);
+  useLayoutEffect(() => {
+    if (!nudge || !nudgeRef.current) return;
+    const rect = nudgeRef.current.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 16) setNudgeEnd(true);
+  }, [nudge]);
+
+  async function copy() {
+    if (!(await run(url)) || nudge || !claimNudge()) return;
+    setNudgeEnd(false);
+    setNudge(true);
+    // Long enough to read twice; it is a suggestion, not something to dismiss.
+    nudgeTimer.current = setTimeout(() => setNudge(false), 9000);
+  }
+
+  function closeNudge() {
+    retireNudge();
+    clearTimeout(nudgeTimer.current);
+    setNudge(false);
+  }
 
   return (
     <span className={`copy-ai ${className}`.trim()}>
       <button
         type="button"
         className="copy-ai-btn"
-        onClick={() => run(url)}
+        onClick={copy}
         disabled={state === "copying"}
         title="Copies everything Kivli knows about this, ready to paste into ChatGPT, Claude or any other AI"
       >
@@ -117,6 +161,20 @@ export default function CopyForAI({ url, label = "Copy for AI", className = "" }
       <span className="sr-only" role="status">
         {state === "copied" || state === "error" ? message : ""}
       </span>
+      {nudge && (
+        <span ref={nudgeRef} className={`copy-ai-nudge${nudgeEnd ? " copy-ai-nudge-end" : ""}`} role="note">
+          <Plug size={15} aria-hidden="true" />
+          <span>
+            Want your AI to search Kivli on its own?{" "}
+            <a href="/connect" onClick={retireNudge}>
+              Connect it
+            </a>
+          </span>
+          <button type="button" className="icon-btn copy-ai-nudge-close" onClick={closeNudge} aria-label="Don’t show this again">
+            <X size={14} />
+          </button>
+        </span>
+      )}
     </span>
   );
 }

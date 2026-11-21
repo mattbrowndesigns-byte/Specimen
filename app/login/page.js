@@ -7,7 +7,11 @@ import Wordmark from "../_ui/Wordmark";
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || "/";
+  // Only a path on this site. An AI app's consent page now arrives through
+  // here, which made "sign in, then go wherever the link says" worth closing:
+  // ?next=https://elsewhere would have sent a fresh sign-in off-site.
+  const asked = params.get("next") || "/";
+  const next = asked.startsWith("/") && !asked.startsWith("//") && !asked.startsWith("/\\") ? asked : "/";
 
   const [mode, setMode] = useState("signin");
   const [email, setEmail] = useState("");

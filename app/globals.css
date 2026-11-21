@@ -8682,3 +8682,26 @@ a.card {
     border-left: none;
   }
 }
+
+/* Copy for AI: a labelled button and a download beside it. The button takes
+   whatever row it sits in -- `.detail-actions button` sizes it in a header --
+   and only needs its icon laid out; doubled to beat that (0,1,1) rule on
+   display, which it otherwise leaves as inline-block. */
+.copy-ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.copy-ai-btn.copy-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* A shared page has no header row of its own to sit in, so the export gets
+   one under the title. */
+.shared-export {
+  margin: -4px 0 20px;
+}

@@ -1339,8 +1339,13 @@
       min-width: 0;
     }
 
+    /* Wrapping alone did nothing once Copy for AI made the row wider than a
+       phone: the row keeps the original's flex-shrink: 0, so it laid out at
+       its full width and ran off the edge rather than breaking a line. The
+       cap is what gives it a width to wrap inside. */
     & .detail-actions {
       flex-wrap: wrap;
+      max-width: 100%;
     }
 
     & .capture-panel {

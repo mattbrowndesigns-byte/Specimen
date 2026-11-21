@@ -432,6 +432,58 @@ export default function CaseStudyPage() {
 
         <section className="prose-row">
           <div className="prose-section prose-row-aside">
+            <h2>Handing the library to someone else&rsquo;s AI</h2>
+          </div>
+          <div className="prose-section">
+            <p>
+              A product designer friend put it simply: the research happens in Kivli, and then the
+              work happens in an AI chat, and nothing carries one into the other. Gathering a
+              project&rsquo;s references into a collection was only half useful if they stayed
+              there.
+            </p>
+            <p>
+              So every save and every collection has a Copy for AI button. It produces a plain
+              Markdown file, which every model reads, and a download beside it for dropping the
+              same file into a project folder. I did not build &ldquo;Open in ChatGPT&rdquo;.
+              Those links carry the whole text in the address, which a collection outgrows, and
+              they pick the reader&rsquo;s model for them.
+            </p>
+            <p>
+              The interesting part was what to say at the top. Not a product pitch, and not a
+              prompt, because the reader brings their own question. What a model actually needs is
+              how far to trust each part: the colours and type were measured in a real browser,
+              the tags and summary were written by a model, and the notes are mine.
+            </p>
+            <p className="case-point">
+              A model that knows which lines were measured weighs a note above a guess. One that
+              doesn&rsquo;t treats them as equals.
+            </p>
+            <dl className="measure-grid">
+              <div>
+                <dt>AI requests per copy</dt>
+                <dd>
+                  0<span>rendered from what is already known</span>
+                </dd>
+              </div>
+              <div>
+                <dt>A six-item research collection</dt>
+                <dd>
+                  3,885<span>words, dated, with what they share up top</span>
+                </dd>
+              </div>
+            </dl>
+            <p>
+              Every file says when it was made, and the same thing always downloads under the same
+              name, so a fresh copy replaces a stale one instead of sitting beside it. What text
+              cannot do is carry a picture: the screenshots are links, and most chat apps will not
+              open a link to look. That is the case for the next step, a connection an AI can
+              search directly and see the images through.
+            </p>
+          </div>
+        </section>
+
+        <section className="prose-row">
+          <div className="prose-section prose-row-aside">
             <h2>What I deliberately did not build</h2>
           </div>
           <div className="prose-section">

@@ -14,6 +14,7 @@ import InspectorPanes, { Pane } from "../../_ui/InspectorPanes";
 import useVariant from "../../_ui/useVariant";
 import { archiveUrl, captureTimeline, formatCaptureDate } from "@/lib/captures";
 import { explainCaptureFailure } from "@/lib/captureFailure";
+import CopyForAI from "../../_ui/CopyForAI";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -358,6 +359,7 @@ export default function SiteDetailPage({ params }) {
             <button onClick={recapture} disabled={recapturing}>
               {recapturing ? "Re-capturing…" : "Re-capture"}
             </button>
+            <CopyForAI url={`/api/export/site/${site.id}`} />
             {/* Last, and the only filled control here: going to the real site is
                 what you came for, everything left of it acts on the record. */}
             <a className="visit-btn" href={site.url} target="_blank" rel="noopener noreferrer">

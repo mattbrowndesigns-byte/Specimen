@@ -5,6 +5,7 @@ import UtilityBar from "../_ui/UtilityBar";
 import SiteFooter from "../_ui/SiteFooter";
 import { copyText } from "../_ui/CopyForAI";
 import { useIsDemo } from "../_ui/demoState";
+import { retireAll } from "../_ui/connectPrompts";
 
 // How to point an AI app at your library, and which ones you already have.
 //
@@ -105,6 +106,8 @@ export default function ConnectPage() {
     if (!res.ok) return;
     const data = await res.json();
     setGrants(data.grants || []);
+    // Connected somewhere: nothing left to nudge about.
+    if (data.grants?.length) retireAll();
     setUnavailable(Boolean(data.unavailable));
   }, []);
 

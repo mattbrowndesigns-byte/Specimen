@@ -2132,6 +2132,22 @@ the same pasted or fetched. No tool writes, which is the whole reason
 the door: there is nothing to refuse. Adding a write tool ends that, and the
 demo route has to learn to say no first.
 
+**Nobody finds an MCP server by looking, so two prompts tell them, and both
+run out.** `Connect an AI` sits in the menu and footer, which serves people
+who already know. The rest hear it at the moment it is true: after a
+successful Copy for AI -- that person is carrying the library into an AI by
+hand -- a card under the button suggests connecting instead, three times at
+most and never again once it is closed, followed or an app is connected. And
+`ConnectNote` puts one card on the dashboard for accounts that predate it,
+gone the first time it is closed and never drawn at all if the server says an
+app is already connected. A card, not a band across every page: the top band
+is the demo's, two stacked bands read as an alarm, and a one-time setup does
+not earn a prompt that stays. Not in the demo, which already has a tour; the
+nudge does show there and points at the no-sign-in demo address. The rules
+live in `app/_ui/connectPrompts.js`. The nudge opens away from whichever edge
+is nearer, because the button is at the right of a site's header and the left
+of a collection's.
+
 **Sign-in is Supabase's OAuth 2.1 server; Kivli owns only the consent page.**
 Supabase issues, refreshes and revokes the tokens. In its dashboard,
 Authentication -> OAuth Server has to be on, with Authorization Path

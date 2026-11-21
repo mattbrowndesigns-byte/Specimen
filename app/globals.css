@@ -8885,3 +8885,145 @@ a.card {
   margin-top: 12px;
   line-height: 1.5;
 }
+
+/* ---- Telling people their AI can connect -------------------------------- */
+
+/* The nudge after a copy. Absolutely placed under the button, so the header
+   row it sits in does not reflow while someone is reading it. */
+.copy-ai {
+  position: relative;
+}
+
+.copy-ai-nudge {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: max-content;
+  max-width: min(340px, calc(100vw - 32px));
+  padding: 10px 8px 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  animation: copy-ai-nudge-in 0.18s ease-out;
+}
+
+.copy-ai-nudge-end {
+  left: auto;
+  right: 0;
+}
+
+.copy-ai-nudge > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+.copy-ai-nudge a {
+  color: var(--text);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* .icon-btn so `.detail-actions button` and the Refined capsule rule leave it
+   alone (both exclude or lose to it), then sized down for a small card. */
+.copy-ai-nudge .icon-btn.icon-btn {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin: -3px 0 -3px 2px;
+}
+
+@keyframes copy-ai-nudge-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-ai-nudge {
+    animation: none;
+  }
+}
+
+/* The one-time note on the dashboard. A card in the page's own surface, not a
+   band: the band at the top belongs to the demo, and this says something
+   once rather than standing guard over every page. */
+.connect-note-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 12px 12px 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+}
+
+.connect-note-icon {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.connect-note-card p {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.connect-note-card strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.connect-note-link {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-h);
+  padding: 0 14px;
+  border-radius: 8px;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.connect-note-link:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 700px) {
+  .connect-note-card {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .connect-note-card p {
+    flex-basis: calc(100% - 80px);
+  }
+
+  /* Close stays on the first line, in the corner where a close belongs;
+     Set it up wraps under the sentence it finishes. */
+  .connect-note-close {
+    order: 1;
+  }
+
+  .connect-note-link {
+    order: 2;
+    margin-left: 30px;
+  }
+}

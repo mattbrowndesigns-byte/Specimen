@@ -6,6 +6,7 @@ import ShareModal from "../../_ui/ShareModal";
 import RecordGrid from "../../_ui/RecordGrid";
 import ModalShell from "../../_ui/ModalShell";
 import SiteFooter from "../../_ui/SiteFooter";
+import CopyForAI from "../../_ui/CopyForAI";
 
 export default function CollectionDetailPage({ params }) {
   const { id } = usePromise(params);
@@ -113,6 +114,9 @@ export default function CollectionDetailPage({ params }) {
               the one that can't be undone -- wearing the same red it wears at
               the foot of a site's page. */}
           <div className="detail-actions">
+            {/* The research-collection case: gather a project's references
+                here, then carry the whole set into whatever AI you work in. */}
+            {collection && <CopyForAI url={`/api/export/collection/${collection.id}`} />}
             <button
               className="icon-btn"
               onClick={() => setSharing(true)}

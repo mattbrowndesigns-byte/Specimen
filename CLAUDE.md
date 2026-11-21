@@ -2086,6 +2086,41 @@ looked at it, which is what the reel caught after a tag filter.
 `LibraryBrowser`'s `sortItems` breaks every tie by id now. Real libraries hit
 it too: an import stamps a whole batch at once.
 
+**Copy for AI is a rendering, not a model call.** `lib/exportMarkdown.js`
+turns rows into Markdown and is pure; `lib/exportData.js` reads them, scoped
+to the owner; `/api/export/[kind]/[id]` serves the owner (a GET, so the demo
+can use it) and `/api/shared/[token]/export` serves a share link through
+`lib/shareScope.js`, with `?site=` for one site. No Gemini anywhere, so a copy
+costs nothing however often it's pressed. Every file opens with one
+blockquote saying how far to trust each part -- measured colours and type, AI
+tags and summary, the owner's notes -- and is dated, because a pasted file
+goes stale silently. `?download=1` adds a Content-Disposition with a stable
+name (`kivli-<slug>.md`, `kivli-collection-<slug>.md`) so a fresh download
+replaces the old one in a project folder. Above 30 items a group renders
+each site in brief, and skips reading discovered pages altogether.
+
+`shared: true` on the loaders is what drops notes and hidden saves, and the
+columns are listed in `exportData.js` rather than inherited from a helper, the
+same rule as the share routes. Collections hold sites, components and
+resources only -- `visual` was never added to `collection_item` -- so a visual
+exports alone, from the lightbox's copy icon.
+
+**Clipboard writes have to start inside the click.** Safari ends the click's
+permission while the export is being fetched, so `fetch` then `writeText`
+fails there silently. `copyMarkdown` hands the clipboard a `ClipboardItem`
+whose content is a promise, falls back to `writeText`, then to a hidden
+textarea and `execCommand("copy")`. That last one is not nostalgia: the Browser
+pane denies the Clipboard API outright (`Write permission denied`), and only
+the old route got through. It also can't read the clipboard back, so verify a
+copy there by listening for the `copy` event, and check the text itself by
+fetching the route.
+
+**The header's action row needed a width to wrap inside.** Refined's phone
+rule already said `flex-wrap: wrap` on `.detail-actions`, and it did nothing:
+the row keeps the original's `flex-shrink: 0`, so it laid out at full width and
+ran off the edge the day Copy for AI made it wider than a phone. `max-width:
+100%` is the fix. The Original still overflows on a phone, as it always did.
+
 ## Local environment
 
 - `git push` is blocked by the sandbox on this machine. Commit normally, then

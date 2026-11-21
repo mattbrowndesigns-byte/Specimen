@@ -8,6 +8,7 @@ import Wordmark from "../../../../_ui/Wordmark";
 import SiteStyle from "../../../../_ui/SiteStyle";
 import DiscoveredPages from "../../../../_ui/DiscoveredPages";
 import { captureTimeline, formatCaptureDate } from "@/lib/captures";
+import CopyForAI from "../../../../_ui/CopyForAI";
 
 // One saved site, as a stranger sees it.
 //
@@ -109,6 +110,7 @@ export default function SharedSitePage({ params }) {
               input here, which is most of why this page is its own file. */}
           <h1 className="shared-detail-title">{name}</h1>
           <div className="detail-actions">
+            <CopyForAI url={`/api/shared/${token}/export?site=${site.id}`} />
             <a className="visit-btn" href={site.url} target="_blank" rel="noopener noreferrer nofollow">
               Visit site
               <ArrowUpRight size={15} />

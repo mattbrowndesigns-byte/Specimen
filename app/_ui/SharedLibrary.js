@@ -8,6 +8,7 @@ import Wordmark from "./Wordmark";
 import SharedFooter from "./SharedFooter";
 import { KIND } from "./kinds";
 import { latestCapture } from "@/lib/captures";
+import CopyForAI from "./CopyForAI";
 
 // What someone without an account sees.
 //
@@ -113,6 +114,11 @@ export default function SharedLibrary({ token }) {
         <h1 className="page-hero shared-title">{state.title}</h1>
         {named && state.ownerName && (
           <p className="shared-byline">Shared by {state.ownerName}</p>
+        )}
+        {total > 0 && (
+          <div className="detail-actions shared-export">
+            <CopyForAI url={`/api/shared/${token}/export`} />
+          </div>
         )}
 
         {tabs.length > 1 && (

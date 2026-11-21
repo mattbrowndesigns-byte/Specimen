@@ -8,6 +8,7 @@ import RelatedSection from "../../_ui/RelatedSection";
 import SaveActions from "../../_ui/SaveActions";
 import Favicon from "../../_ui/Favicon";
 import SiteFooter from "../../_ui/SiteFooter";
+import CopyForAI from "../../_ui/CopyForAI";
 
 const FACET_LABELS = {
   vertical: "Vertical",
@@ -215,6 +216,7 @@ export default function ComponentDetailPage({ params }) {
               isFavorite={component.is_favorite}
             />
             {component.needs_review && <button onClick={markReviewed}>Mark Reviewed</button>}
+            <CopyForAI url={`/api/export/component/${component.id}`} />
             {/* Last, and the only filled control here: going to the real site is
                 what you came for, everything left of it acts on the record. */}
             <a className="visit-btn" href={component.source_url} target="_blank" rel="noopener noreferrer">

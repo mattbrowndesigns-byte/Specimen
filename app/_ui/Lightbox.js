@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, ChevronLeft, ChevronRight, Info, Maximize2, Minimize2, Sparkles, X } from "lucide-react";
+import { ArrowUpRight, Check, ChevronLeft, ChevronRight, Copy, Info, Maximize2, Minimize2, Sparkles, X } from "lucide-react";
+import { useCopyState } from "./CopyForAI";
 import ModalShell from "./ModalShell";
 import TagCombobox from "./TagCombobox";
 import { rankRelated } from "@/lib/related";
@@ -122,6 +123,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
   const [aiFailure, setAiFailure] = useState(null);
   const [failedField, setFailedField] = useState(null);
   const [order, setOrder] = useState(sequence);
+  const copy = useCopyState();
 
   const byId = useMemo(() => new Map(items.map((v) => [v.id, v])), [items]);
 
@@ -389,6 +391,21 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
               second and a half and can't be styled, and these icons need
               naming the first time you look at them. */}
           <div className="lightbox-top-actions">
+            {/* An icon here rather than a labelled button: the bar is all
+                icons, and the tooltip names it the first time you look. */}
+            <button
+              type="button"
+              className="lightbox-icon"
+              onClick={() => copy.run(`/api/export/visual/${visual.id}`)}
+              disabled={copy.state === "copying"}
+              aria-label="Copy for AI"
+              data-tip={copy.state === "copied" ? "Copied" : copy.state === "error" ? copy.message : "Copy for AI"}
+            >
+              {copy.state === "copied" ? <Check size={16} /> : <Copy size={16} />}
+            </button>
+            <span className="sr-only" role="status">
+              {copy.state === "copied" || copy.state === "error" ? copy.message : ""}
+            </span>
             <button
               type="button"
               className="lightbox-icon"

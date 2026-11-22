@@ -8,6 +8,7 @@ import Favicon from "./Favicon";
 import useEdgeFade from "./useEdgeFade";
 import Lightbox from "./Lightbox";
 import FilterModal from "./FilterModal";
+import SaveActions from "./SaveActions";
 
 // The three questions a visual's tags answer, in the order the filter
 // modal lists them.
@@ -292,8 +293,14 @@ export default function VisualsTab({ allTags }) {
       <div className="visual-board" ref={setBoardEl} style={{ "--board-gap": `${GAP}px` }}>
         {laidOut.map((column, i) => (
           <div className="visual-column" key={i}>
+            {/* The heart and bookmark sit beside the link, not inside it: a
+                button inside an anchor is invalid, and a click on one would
+                also open the lightbox. Keyed on the favourite as well as the
+                id, because the heart holds its own state and the lightbox can
+                change it underneath. */}
             {column.map((v) => (
-              <a key={v.id} className="visual-card" href={`/visuals/${v.id}`} onClick={(e) => openLightbox(e, v.id)}>
+              <div key={v.id} className="visual-card-wrap">
+              <a className="visual-card" href={`/visuals/${v.id}`} onClick={(e) => openLightbox(e, v.id)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={v.thumb_url}
@@ -308,6 +315,18 @@ export default function VisualsTab({ allTags }) {
                   <span className="visual-card-title">{v.title || "Untitled"}</span>
                 </span>
               </a>
+              <SaveActions
+                key={`${v.id}:${Boolean(v.is_favorite)}`}
+                className="card-actions"
+                kind="visual"
+                id={v.id}
+                name={v.title || "Visual"}
+                isFavorite={v.is_favorite}
+                onFavoriteChange={(next) =>
+                  setVisuals((prev) => prev.map((x) => (x.id === v.id ? { ...x, is_favorite: next } : x)))
+                }
+              />
+              </div>
             ))}
           </div>
         ))}

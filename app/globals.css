@@ -7704,6 +7704,17 @@ a.card {
   gap: var(--board-gap, 16px);
 }
 
+/* Holds the card and its heart and bookmark side by side, so the buttons can
+   sit over the picture without being inside the link. The reveal is the
+   website cards' own: on hover, or always once something is a favourite. */
+.visual-card-wrap {
+  position: relative;
+}
+
+.visual-card-wrap:hover .card-actions {
+  opacity: 1;
+}
+
 .visual-card {
   position: relative;
   display: block;

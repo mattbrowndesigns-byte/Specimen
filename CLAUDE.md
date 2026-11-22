@@ -2104,17 +2104,24 @@ columns are listed in `exportData.js` rather than inherited from a helper, the
 same rule as the share routes. A visual exports alone, from Copy for AI in
 the lightbox's Details panel.
 
-**Visuals go in collections now, on the owner's side only.** `schema_m22.sql`
-adds `visual` to `collection_item`'s check, the lightbox's Details panel
-carries the heart and bookmark (`SaveActions kind="visual"`), and Favourites,
-the collection list's covers, a collection's page and `RecordGrid` all read
-`/api/visuals`. The visual DELETE route removes its `collection_item` rows,
-as every polymorphic delete must. Not yet taught about visuals, so a visual
-in a collection is missing from them: the shared collection read
-(`/api/shared/[token]` and its page), the collection's Copy for AI
-(`loadCollection` in `lib/exportData.js`) and the MCP server's collection
-counts. That is the data-without-error shape again -- an item quietly absent
--- so finish those before anyone shares a collection holding visuals.
+**Visuals go in collections, and every reader of a collection knows it.**
+`schema_m22.sql` adds `visual` to `collection_item`'s check, the lightbox's
+Details panel carries the heart and bookmark (`SaveActions kind="visual"`), and
+Favourites, the collection list's covers, a collection's page and `RecordGrid`
+all read `/api/visuals`. The visual DELETE route removes its `collection_item`
+rows, as every polymorphic delete must.
+
+The three readers that came after: a shared collection (`/api/shared/[token]`
+returns a `visuals` array with its columns listed, no notes, no review flag, no
+favourite; the page gives it a tab whose cards go out to the case study, since
+a stranger has no lightbox to open), a collection's Copy for AI (`loadVisuals`
+in `lib/exportData.js`, rendered by the same `visualMarkdown` a single visual
+uses, and counted apart in "What these have in common" because a visual's
+vocabulary is medium rather than blocks) and the MCP server (`list_collections`
+counts them, `get_collection` attaches each visual whole beside the website
+thumbnails). Only a collection reaches visuals from a share link: no tab-level
+scope covers them yet, so a library share still leaves them out -- on purpose,
+and the next thing to decide if visuals ever get a share scope of their own.
 
 **The lightbox's Details panel is a drawer, kept mounted to close.**
 `.lightbox-panel-holder` animates its width from 0 to 400px with the panel

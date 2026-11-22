@@ -141,7 +141,10 @@ export default function ConnectPage() {
         <p className="tag-page-note">
           Give Claude, ChatGPT or any AI app that supports MCP a way into your library. It can search
           your saves, open one with its screenshots, colours and type, read a collection, and find
-          things like the one you&rsquo;re looking at. It can read, and it can&rsquo;t change anything.
+          things like the one you&rsquo;re looking at.{" "}
+          {demo
+            ? "Here it can only read."
+            : "Ask it to and it can save websites and resources too, and file them in collections. It can't edit or delete anything you've already saved."}
         </p>
 
         {error && <p className="error">{error}</p>}

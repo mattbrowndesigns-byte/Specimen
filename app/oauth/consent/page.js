@@ -74,7 +74,7 @@ export default async function ConsentPage({ searchParams }) {
   return (
     <Card>
       <p className="auth-tagline">
-        <strong className="consent-app">{app}</strong> wants to read your library.
+        <strong className="consent-app">{app}</strong> wants to use your library.
       </p>
 
       <div className="consent-section">
@@ -83,12 +83,13 @@ export default async function ConsentPage({ searchParams }) {
           <li>Search your websites, components, resources and visuals</li>
           <li>Open any save, with its screenshots, colours, type and notes</li>
           <li>Read your collections and your tags</li>
+          <li>Save websites and resources you ask it to, and make and fill collections</li>
         </ul>
       </div>
       <div className="consent-section">
         <h2>It won&rsquo;t be able to</h2>
         <ul>
-          <li>Add, change or delete anything</li>
+          <li>Edit or delete anything you&rsquo;ve already saved</li>
           <li>See your password or anyone else&rsquo;s library</li>
         </ul>
       </div>

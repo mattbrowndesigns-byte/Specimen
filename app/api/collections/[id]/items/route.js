@@ -1,26 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { currentUser } from "@/lib/supabaseServer";
-import {
-  UNAUTHORIZED,
-  NOT_FOUND,
-  ownsCollection,
-  ownsSite,
-  ownsComponent,
-  ownsResource,
-  ownsVisual,
-} from "@/lib/ownership";
+import { UNAUTHORIZED, NOT_FOUND, ownsCollection } from "@/lib/ownership";
+import { COLLECTABLE, SaveError, addToCollection } from "@/lib/saves";
 
 // "visual" needs schema_m22.sql applied; before that the insert fails on the
 // table's own check and the modal says so.
-const TARGET_TYPES = new Set(["site", "component", "resource", "visual"]);
-
-const OWNS = {
-  site: ownsSite,
-  component: ownsComponent,
-  resource: ownsResource,
-  visual: ownsVisual,
-};
+const TARGET_TYPES = new Set(COLLECTABLE);
 
 export async function POST(request, { params }) {
   const user = await currentUser();
@@ -29,29 +15,16 @@ export async function POST(request, { params }) {
   const { id } = await params;
   const { targetType, targetId } = await request.json();
 
-  if (!TARGET_TYPES.has(targetType) || !targetId) {
-    return NextResponse.json({ error: "targetType and targetId are required" }, { status: 400 });
-  }
-
   const supabase = supabaseAdmin();
   if (!(await ownsCollection(supabase, id, user.id))) return NOT_FOUND();
-  // The record has to be yours too, or a bookmark could pull another
-  // library's row into a collection here.
-  if (!(await OWNS[targetType](supabase, targetId, user.id))) return NOT_FOUND();
 
-  // Adding something that's already in the collection is a no-op, not an
-  // error: the modal is a set of toggles and double-clicks happen.
-  const { error } = await supabase
-    .from("collection_item")
-    .upsert(
-      { collection_id: id, target_type: targetType, target_id: targetId },
-      { onConflict: "collection_id,target_type,target_id", ignoreDuplicates: true }
-    );
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    await addToCollection(supabase, user.id, id, targetType, targetId);
+    return NextResponse.json({ ok: true }, { status: 201 });
+  } catch (err) {
+    if (err instanceof SaveError) return NextResponse.json({ error: err.message }, { status: err.status });
+    throw err;
   }
-  return NextResponse.json({ ok: true }, { status: 201 });
 }
 
 export async function DELETE(request, { params }) {

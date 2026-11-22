@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsCollection } from "@/lib/ownership";
 import { allRowsIn } from "@/lib/paging";
+import { SaveError, createCollection } from "@/lib/saves";
 
 export const dynamic = "force-dynamic";
 
@@ -84,25 +85,11 @@ export async function POST(request) {
   if (!user) return UNAUTHORIZED();
 
   const body = await request.json();
-  const name = (body.name || "").trim();
-  if (!name) {
-    return NextResponse.json({ error: "A collection needs a name" }, { status: 400 });
+  try {
+    const data = await createCollection(supabaseAdmin(), user.id, body.name);
+    return NextResponse.json({ collection: { ...data, item_count: 0, contains_target: false } }, { status: 201 });
+  } catch (err) {
+    if (err instanceof SaveError) return NextResponse.json({ error: err.message }, { status: err.status });
+    throw err;
   }
-
-  const supabase = supabaseAdmin();
-  const { data, error } = await supabase
-    .from("collection")
-    .insert({ user_id: user.id, name })
-    .select("id, name, created_at")
-    .single();
-
-  if (error) {
-    // The unique index is on lower(name), so this is the duplicate-name case.
-    if (error.code === "23505") {
-      return NextResponse.json({ error: "You already have a collection with that name" }, { status: 409 });
-    }
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ collection: { ...data, item_count: 0, contains_target: false } }, { status: 201 });
 }

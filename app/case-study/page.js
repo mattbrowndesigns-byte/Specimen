@@ -522,7 +522,7 @@ export default function CaseStudyPage() {
               <div>
                 <dt>Tools an AI can call</dt>
                 <dd>
-                  7<span>every one of them read-only</span>
+                  11<span>seven that read and four that add</span>
                 </dd>
               </div>
               <div>
@@ -533,10 +533,30 @@ export default function CaseStudyPage() {
               </div>
             </dl>
             <p>
-              It reads and nothing more, for now. Writing is the obvious other half, saving a link
-              from inside a chat, and it is the half where a mistake gets noticed late. The demo
-              library has its own address with no sign-in, so anyone can point their own AI at it
-              and try.
+              Reading came first, and writing was the obvious other half. The research happens in
+              the chat. After twenty minutes comparing typefaces with an AI, the two you settle on
+              should not need copying out by hand. So a connected AI can now save websites and
+              resources, make a collection and file things into it, all from one sentence:
+              &ldquo;add these three sites to a new collection for the Acme project&rdquo;.
+            </p>
+            <p>
+              It adds and nothing else. No tool deletes, edits or retags, so a misread request
+              leaves something to tidy up rather than something to recover. A save from a chat runs
+              the same code as one from the Add box. I moved that code out of the app&rsquo;s
+              routes so there would only be one copy of it. Ask for more than three sites at once
+              and the rest join the import queue, because the free AI tier allows about ten saves a
+              day. A tool that ignored that would be promising tags it could not deliver.
+            </p>
+            <p>
+              The first font I saved this way came back titled &ldquo;Google Fonts&rdquo;. The page
+              calls itself &ldquo;Inter - Google Fonts&rdquo;, and the title cleanup keeps the
+              site&rsquo;s half of that. The AI already knows which font it was asked to save, so
+              the tool now takes a title from it.
+            </p>
+            <p>
+              The demo library still has its own address with no sign-in, so anyone can point their
+              own AI at it and try. It stays read-only because the four tools that write are only
+              given to a signed-in owner.
             </p>
           </div>
         </section>

@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { dispatchCapture } from "@/lib/github";
-import { fetchPageMeta } from "@/lib/pageMeta";
-import { iconFillsFrame, resolveIconUrl } from "@/lib/iconShape";
-import { guessSiteName } from "@/lib/ai";
 import { fetchSitesList } from "@/lib/siteQueries";
 import { currentUser } from "@/lib/supabaseServer";
-import { UNAUTHORIZED, atSaveLimit, SAVE_LIMIT } from "@/lib/ownership";
+import { UNAUTHORIZED } from "@/lib/ownership";
+import { SaveError, saveSite } from "@/lib/saves";
 
 export const dynamic = "force-dynamic";
 
@@ -28,78 +25,11 @@ export async function POST(request) {
   if (!user) return UNAUTHORIZED();
 
   const body = await request.json();
-  let rawUrl = (body.url || "").trim();
-
-  if (!rawUrl) {
-    return NextResponse.json({ error: "URL is required" }, { status: 400 });
-  }
-  if (!/^https?:\/\//i.test(rawUrl)) {
-    rawUrl = `https://${rawUrl}`;
-  }
-
-  let parsed;
   try {
-    parsed = new URL(rawUrl);
-  } catch {
-    return NextResponse.json({ error: "That doesn't look like a valid URL" }, { status: 400 });
-  }
-
-  const domain = parsed.hostname.replace(/^www\./, "");
-  let { name, textSnippet, links, faviconUrl } = await fetchPageMeta(parsed.toString());
-  faviconUrl = await resolveIconUrl(parsed.toString(), faviconUrl);
-
-  if (!name) {
-    name = await guessSiteName({ domain, textSnippet });
-  }
-
-  const supabase = supabaseAdmin();
-  // A ceiling per account: storage is one shared 1 GB, so one person filling
-  // it would take everyone else's library down with them.
-  if (await atSaveLimit(supabase, user.id)) {
-    return NextResponse.json(
-      { error: `You've reached the ${SAVE_LIMIT}-site limit for one account.` },
-      { status: 403 }
-    );
-  }
-
-  const { data: site, error } = await supabase
-    .from("site")
-    .insert({
-      user_id: user.id,
-      url: parsed.toString(),
-      domain,
-      name: name || domain,
-      favicon_url: faviconUrl || null,
-      favicon_fills: faviconUrl ? await iconFillsFrame(faviconUrl) : true,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  if (links?.length) {
-    const { error: pagesError } = await supabase
-      .from("page")
-      .insert(
-        links.map((link) => ({ site_id: site.id, user_id: user.id, url: link.url, label: link.label }))
-      );
-    if (pagesError) {
-      console.error("Failed to store discovered pages:", pagesError.message);
-    } else {
-      await supabase
-        .from("site")
-        .update({ pages_read_at: new Date().toISOString() })
-        .eq("id", site.id);
-    }
-  }
-
-  try {
-    await dispatchCapture({ targetId: site.id, url: site.url });
+    const { site } = await saveSite(supabaseAdmin(), user.id, body.url);
+    return NextResponse.json({ site: { ...site, capture: [] } }, { status: 201 });
   } catch (err) {
-    console.error("Failed to dispatch capture job:", err);
+    if (err instanceof SaveError) return NextResponse.json({ error: err.message }, { status: err.status });
+    throw err;
   }
-
-  return NextResponse.json({ site: { ...site, capture: [] } }, { status: 201 });
 }

@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { fetchResourceMeta } from "@/lib/pageMeta";
-import { iconFillsFrame, resolveIconUrl } from "@/lib/iconShape";
 import { attachTags } from "@/lib/tagAttach";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED } from "@/lib/ownership";
+import { SaveError, saveResource } from "@/lib/saves";
 
 export const dynamic = "force-dynamic";
 
@@ -42,63 +41,13 @@ export async function POST(request) {
   if (!user) return UNAUTHORIZED();
 
   const body = await request.json();
-  let rawUrl = (body.url || "").trim();
-
-  if (!rawUrl) {
-    return NextResponse.json({ error: "URL is required" }, { status: 400 });
-  }
-  if (!/^https?:\/\//i.test(rawUrl)) {
-    rawUrl = `https://${rawUrl}`;
-  }
-
-  let parsed;
   try {
-    parsed = new URL(rawUrl);
-  } catch {
-    return NextResponse.json({ error: "That doesn't look like a valid URL" }, { status: 400 });
+    const { resource } = await saveResource(supabaseAdmin(), user.id, body.url);
+    return NextResponse.json({ resource: { ...resource, tags: [] } }, { status: 201 });
+  } catch (err) {
+    // A duplicate carries the id of the row already there, so the tab can
+    // scroll to it instead of quietly making a second copy.
+    if (err instanceof SaveError) return NextResponse.json({ error: err.message, ...err.extra }, { status: err.status });
+    throw err;
   }
-
-  const supabase = supabaseAdmin();
-  const domain = parsed.hostname.replace(/^www\./, "");
-  const url = parsed.toString();
-
-  // Saving the same link twice is a slip rather than an intention, so say so
-  // and hand back the row that's already there — the tab scrolls to it instead
-  // of quietly making a second copy.
-  const { data: duplicate } = await supabase
-    .from("resource")
-    .select("id, title")
-    .eq("user_id", user.id)
-    .eq("url", url)
-    .maybeSingle();
-  if (duplicate) {
-    return NextResponse.json(
-      { error: `You've already saved that. It's in your resources as "${duplicate.title}".`, duplicateId: duplicate.id },
-      { status: 409 }
-    );
-  }
-
-  const meta = await fetchResourceMeta(url);
-  const faviconUrl = await resolveIconUrl(url, meta.faviconUrl);
-
-  const { data: resource, error } = await supabase
-    .from("resource")
-    .insert({
-      user_id: user.id,
-      url,
-      domain,
-      // The domain is the honest fallback, and it's also the signal enrichment
-      // reads to know it should propose a real title.
-      title: meta.title || domain,
-      favicon_url: faviconUrl || null,
-      favicon_fills: faviconUrl ? await iconFillsFrame(faviconUrl) : true,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ resource: { ...resource, tags: [] } }, { status: 201 });
 }

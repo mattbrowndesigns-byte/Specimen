@@ -307,12 +307,32 @@ which I tested rather than assumed.
 
 | Tools an AI can call | Added to the monthly bill |
 |---|---|
-| **7**, every one of them read-only | **$0**, on the same free tiers as everything else |
+| **11**, seven that read and four that add | **$0**, on the same free tiers as everything else |
 
-It reads and nothing more, for now. Writing is the obvious other half, saving a
-link from inside a chat, and it is the half where a mistake gets noticed late.
-The demo library has its own address with no sign-in, so anyone can point their
-own AI at it and try: https://specimen-gamma-six.vercel.app/api/mcp/demo
+Reading came first, and writing was the obvious other half. The research
+happens in the chat. After twenty minutes comparing typefaces with an AI, the
+two you settle on should not need copying out by hand. So a connected AI can
+now save websites and resources, make a collection and file things into it, all
+from one sentence: "add these three sites to a new collection for the Acme
+project".
+
+It adds and nothing else. No tool deletes, edits or retags, so a misread
+request leaves something to tidy up rather than something to recover. A save
+from a chat runs the same code as one from the Add box. I moved that code out
+of the app's routes so there would only be one copy of it. Ask for more than
+three sites at once and the rest join the import queue, because the free AI
+tier allows about ten saves a day. A tool that ignored that would be promising
+tags it could not deliver.
+
+The first font I saved this way came back titled "Google Fonts". The page calls
+itself "Inter - Google Fonts", and the title cleanup keeps the site's half of
+that. The AI already knows which font it was asked to save, so the tool now
+takes a title from it.
+
+The demo library still has its own address with no sign-in, so anyone can
+point their own AI at it and try. It stays read-only because the four tools
+that write are only given to a signed-in owner:
+https://specimen-gamma-six.vercel.app/api/mcp/demo
 
 ## What I deliberately did not build
 

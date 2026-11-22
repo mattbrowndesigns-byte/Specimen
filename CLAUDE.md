@@ -2149,16 +2149,44 @@ the row keeps the original's `flex-shrink: 0`, so it laid out at full width and
 ran off the edge the day Copy for AI made it wider than a phone. `max-width:
 100%` is the fix. The Original still overflows on a phone, as it always did.
 
-**Kivli is an MCP server, and it only reads.** `/api/mcp` speaks Streamable
-HTTP statelessly: a fresh `McpServer` and transport per request, answering in
-plain JSON (`lib/mcp/auth.js`'s `serve`), because a serverless function keeps
-nothing between calls and no tool needs a conversation. Seven tools in
-`lib/mcp/server.js`, their reads in `lib/mcp/library.js`, and a save is
-rendered by `lib/exportMarkdown.js` -- the Copy for AI renderer -- so it reads
-the same pasted or fetched. No tool writes, which is the whole reason
-`/api/mcp/demo` can answer as the demo account with no sign-in and no rule at
-the door: there is nothing to refuse. Adding a write tool ends that, and the
-demo route has to learn to say no first.
+**Kivli is an MCP server, and it adds but never edits.** `/api/mcp` speaks
+Streamable HTTP statelessly: a fresh `McpServer` and transport per request,
+answering in plain JSON (`lib/mcp/auth.js`'s `serve`), because a serverless
+function keeps nothing between calls and no tool needs a conversation. Seven
+reading tools in `lib/mcp/server.js`, their reads in `lib/mcp/library.js`, and a
+save is rendered by `lib/exportMarkdown.js` -- the Copy for AI renderer -- so it
+reads the same pasted or fetched.
+
+Four writing tools in `lib/mcp/writeTools.js`: `save_websites`,
+`save_resources`, `create_collection`, `add_to_collection`. Nothing deletes,
+edits, merges or retags -- a misread request should leave something to tidy
+up, never something to recover. They are registered only when `owner.demo` is
+false, which is the whole of why `/api/mcp/demo` can answer as the demo account
+with no sign-in and no rule at the door: the tools that write do not exist
+there. Anything that builds a server for the demo must keep passing
+`demo: true`.
+
+They save through `lib/saves.js`, which is also what the Add box, the resource
+save and the collection routes call -- the save logic was moved out of those
+routes so a chat and the app run one save rather than two that agree today.
+The routes still own the session and the status codes; `SaveError` carries
+both the message and the status. Websites past `SITES_NOW` (3) in one call go
+to the capture queue like an import, because each one is a page fetch inside a
+60s request; resources past `RESOURCES_NOW` (3) are queued for enrichment,
+because each is a Gemini request out of twenty a day. The MCP dedupes on the
+normalised URL and hands back what's there; the Add box still doesn't check,
+which was left alone as a separate decision.
+
+A collection named in a write is matched exactly, ignoring case, and made if
+missing -- never the partial match `findCollectionId` uses for reads, because
+filing into the wrong collection is noticed late. `save_resources` takes an
+optional `title`: the resource save's `cleanSiteName` turns "Inter - Google
+Fonts" into "Google Fonts", which the app's own Add still does. The AI knows
+the font's name, so it can say.
+
+Apps approved before the write tools existed gained them without being asked
+again -- Supabase skips the consent page for an app it has already approved.
+The consent page now lists what an app can add.
 
 **Nobody finds an MCP server by looking, so two prompts tell them, and both
 run out.** `Connect an AI` sits in the menu and footer, which serves people

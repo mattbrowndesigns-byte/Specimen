@@ -8367,6 +8367,59 @@ a.card {
   border-left: 1px solid var(--border);
 }
 
+/* Details opens like a drawer rather than appearing. The holder's width
+   eases from nothing to the panel's, so the picture beside it resizes
+   continuously instead of jumping; the panel is pinned to the holder's right
+   edge, so a narrow holder shows the panel's right side first and it reads as
+   sliding in from the edge of the screen. Opening takes the long, soft curve
+   a system sheet uses -- quick to start, a long settle -- and closing is a
+   little shorter and plainer, because a thing you have dismissed should get
+   out of the way. Lightbox.js keeps the panel mounted for PANEL_EXIT_MS so the
+   close can play; change one and change the other. */
+.lightbox-panel-holder {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  width: 0;
+  height: 100vh;
+  overflow: hidden;
+  transition: width 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lightbox-panel-holder.is-shown {
+  width: min(400px, 100vw);
+  transition: width 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Only a brief fade, and it never outlasts the slide in either direction: a
+   slower one measured as a holder 233px open with its panel at 9% opacity --
+   an empty dark strip sliding in, then the panel arriving inside it. */
+.lightbox-panel-holder > .lightbox-panel {
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.55, 0, 1, 0.45);
+}
+
+.lightbox-panel-holder.is-shown > .lightbox-panel {
+  opacity: 1;
+  transition: opacity 0.16s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox-panel-holder,
+  .lightbox-panel-holder.is-shown,
+  .lightbox-panel-holder > .lightbox-panel,
+  .lightbox-panel-holder.is-shown > .lightbox-panel {
+    transition: none;
+  }
+}
+
+/* Keep it, file it, carry it into an AI: the header row a site page has,
+   under the credit. `.detail-actions` supplies the buttons' size and fill. */
+.lightbox-panel-actions {
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
 .lightbox-panel-section {
   margin: 0 0 20px;
   padding-bottom: 20px;
@@ -8413,6 +8466,14 @@ a.card {
 
 .lightbox-panel .lightbox-caption-credit a:hover {
   color: var(--text);
+}
+
+/* Who made it leads; the original file follows at the same size in grey.
+   It used to be 12px against the credit's 14, which read as small print
+   rather than as the second half of the same line. */
+.lightbox-panel .lightbox-caption-credit a:first-child {
+  color: var(--text);
+  font-weight: 600;
 }
 
 /* The project's paragraph under the image's own description: same voice,
@@ -8535,7 +8596,7 @@ a.card {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  font-size: 12px;
+  font-size: inherit;
   color: var(--text-muted);
   text-decoration: none;
 }
@@ -8674,10 +8735,23 @@ a.card {
     right: 6px;
   }
 
-  /* On a phone Details covers the picture rather than squeezing it. */
-  .lightbox-panel {
+  /* On a phone Details covers the picture rather than squeezing it, so the
+     holder slides over the top instead of growing beside it. */
+  .lightbox-panel-holder,
+  .lightbox-panel-holder.is-shown {
     position: absolute;
     inset: 0;
+    width: 100vw;
+    transform: translateX(100%);
+    transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .lightbox-panel-holder.is-shown {
+    transform: none;
+    transition: transform 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .lightbox-panel {
     width: 100vw;
     border-left: none;
   }

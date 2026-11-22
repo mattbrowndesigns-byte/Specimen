@@ -55,8 +55,12 @@ function Cover({ item }) {
 
 // Turns a {target_type, target_id} ref into something to draw, given the
 // library lists the page already fetched.
-export function makeResolver(sites, components, resources = new Map()) {
+export function makeResolver(sites, components, resources = new Map(), visuals = new Map()) {
   return (ref) => {
+    if (ref.target_type === "visual") {
+      const visual = visuals.get(ref.target_id);
+      return visual?.thumb_url ? { thumb: visual.thumb_url } : null;
+    }
     if (ref.target_type === "site") {
       const site = sites.get(ref.target_id);
       const thumb = site && latestCapture(site.capture, "desktop")?.thumb_url;

@@ -9,10 +9,11 @@ export default function FavoritesPage() {
   const [error, setError] = useState(null);
 
   const load = useCallback(async () => {
-    const [sitesRes, componentsRes, resourcesRes] = await Promise.all([
+    const [sitesRes, componentsRes, resourcesRes, visualsRes] = await Promise.all([
       fetch("/api/sites"),
       fetch("/api/components"),
       fetch("/api/resources"),
+      fetch("/api/visuals"),
     ]);
     const found = [];
     if (sitesRes.ok) {
@@ -33,6 +34,14 @@ export default function FavoritesPage() {
       const data = await resourcesRes.json();
       for (const r of data.resources || []) {
         if (r.is_favorite) found.push({ kind: "resource", item: r });
+      }
+    }
+    // Visuals have had a heart since they shipped, and until now nowhere to
+    // find what it kept.
+    if (visualsRes.ok) {
+      const data = await visualsRes.json();
+      for (const v of data.visuals || []) {
+        if (v.is_favorite) found.push({ kind: "visual", item: v });
       }
     }
     setEntries(found);

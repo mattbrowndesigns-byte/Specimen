@@ -10,7 +10,9 @@ import Favicon from "./Favicon";
 // collection. No search or filters here on purpose -- those lists are already
 // the filter.
 //
-// Each entry is { kind: "site" | "component" | "resource", item }.
+// Each entry is { kind: "site" | "component" | "resource" | "visual", item }.
+// A visual opens its own page (/visuals/[id], the lightbox on its own) and
+// keeps its natural shape in the card, like a component crop.
 //
 // It tabs when it's holding more than one kind, and doesn't when it isn't --
 // a collection of six websites has nothing to separate, and a tab strip with
@@ -110,9 +112,15 @@ export default function RecordGrid({ entries, emptyMessage, onRemove, removeLabe
           ? item.url
           : kind === "site"
             ? `/sites/${item.id}`
-            : `/components/${item.id}`;
+            : kind === "visual"
+              ? `/visuals/${item.id}`
+              : `/components/${item.id}`;
         const thumb =
-          kind === "site" ? latestCapture(item.capture, "desktop")?.thumb_url : item.image_url;
+          kind === "site"
+            ? latestCapture(item.capture, "desktop")?.thumb_url
+            : kind === "visual"
+              ? item.thumb_url
+              : item.image_url;
         const name = item.title || item.name || item.domain || "Untitled";
         return (
           <div className="card" key={`${kind}-${item.id}`}>
@@ -133,7 +141,7 @@ export default function RecordGrid({ entries, emptyMessage, onRemove, removeLabe
                   <span className="resource-cover-domain">{item.domain}</span>
                 </a>
               ) : (
-                <a className={`thumb${kind === "component" ? " thumb-natural" : ""}`} href={href}>
+                <a className={`thumb${kind === "component" || kind === "visual" ? " thumb-natural" : ""}`} href={href}>
                   {thumb ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={thumb} alt={name} />

@@ -14,17 +14,19 @@ export default function CollectionsPage() {
     sites: new Map(),
     components: new Map(),
     resources: new Map(),
+    visuals: new Map(),
   });
 
   // The collection rows carry member ids only, so the covers come from the two
   // library lists -- the same resolve-on-the-client shape the collection detail
   // page and Related use.
   const load = useCallback(async () => {
-    const [res, sitesRes, componentsRes, resourcesRes] = await Promise.all([
+    const [res, sitesRes, componentsRes, resourcesRes, visualsRes] = await Promise.all([
       fetch("/api/collections"),
       fetch("/api/sites"),
       fetch("/api/components"),
       fetch("/api/resources"),
+      fetch("/api/visuals"),
     ]);
     if (!res.ok) {
       setError("Couldn't load your collections");
@@ -37,6 +39,7 @@ export default function CollectionsPage() {
     const sites = new Map();
     const components = new Map();
     const resources = new Map();
+    const visuals = new Map();
     if (sitesRes.ok) {
       const payload = await sitesRes.json();
       for (const site of payload.sites || []) sites.set(site.id, site);
@@ -49,7 +52,11 @@ export default function CollectionsPage() {
       const payload = await resourcesRes.json();
       for (const r of payload.resources || []) resources.set(r.id, r);
     }
-    setLibrary({ sites, components, resources });
+    if (visualsRes.ok) {
+      const payload = await visualsRes.json();
+      for (const v of payload.visuals || []) visuals.set(v.id, v);
+    }
+    setLibrary({ sites, components, resources, visuals });
   }, []);
 
   useEffect(() => {
@@ -77,7 +84,7 @@ export default function CollectionsPage() {
   }
 
   const resolve = useMemo(
-    () => makeResolver(library.sites, library.components, library.resources),
+    () => makeResolver(library.sites, library.components, library.resources, library.visuals),
     [library]
   );
 

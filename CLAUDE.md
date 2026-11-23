@@ -2344,8 +2344,8 @@ The maker starts as `guessMaker`'s guess from the domain, editable there.
 A bookmarklet that read the page from the owner's own tab was built and taken out
 the same day (2026-11-23): setting up a bookmark was more friction than the paste
 it replaced, and it landed on its own install page when used. A URL is the
-workflow; a Chrome extension is the owner's preferred answer if this comes up
-again. The collector is in git history at `lib/saveButton.js`.
+workflow, and the browser extension is what replaced the bookmark. The page
+reader itself is still only in git history, at `lib/saveButton.js`.
 
 Two things it taught extraction stayed. Behance links each image to a page under
 the project's own, so a link beneath this page isn't a link away. Dribbble's
@@ -2431,6 +2431,31 @@ or re-crop of a described one reports its failure and changes nothing, because a
 queued version of it would have to clear tags edited by hand since. `enrich-queue`
 drains three, last. An upload is saved at once and described by a second request,
 so its queue entry is ten minutes out: only a tab that closed ever reaches it.
+
+**The browser extension is `extension/`, and it signs in with cookies it never
+reads.** Plain JavaScript, no build. A host permission for the app's address is
+what makes Chrome send the session cookie from the panel, SameSite=Lax included,
+and it covers no other site; the rest is `activeTab` and `storage`. The address
+is in both `config.js` and `manifest.json` and they must match. It is the public
+gamma-six one, and a session on the matt-e28c address doesn't count there.
+
+Saves run in the service worker, since the panel dies when you click the page; a
+port from the panel tells the worker whether to say how it went on the icon
+instead. `/api/extension/save` saves and files in one request for the same
+reason. It dedupes, so a page you have is filed rather than saved again. Component
+and Visual use the app's own routes and open a tab on the crop or the picker.
+`/api/extension/lookup` is a POST so the page's address stays out of logs, which
+also means a demo pass is refused and the panel asks you to sign in.
+
+A resource that already has a folder before its first description was filed by a
+person, so `runResourceEnrichment` leaves its folders alone; Regenerate doesn't.
+It is queued ten minutes out at save, the same net an uploaded component has.
+
+After changing anything in `extension/`: raise the manifest version, run
+`node scripts/pack-extension.mjs` and commit the zip, or `/extension` hands out
+the old one. The panel must stay under 600px, which is why its lists float. Tested
+in Chromium against the app and a stand-in database (Playwright, the panel opened
+as a page with `chrome.tabs.query` replaced); a real toolbar click is not.
 
 **Clipboard writes have to start inside the click.** Safari ends the click's
 permission while the export is being fetched, so `fetch` then `writeText`

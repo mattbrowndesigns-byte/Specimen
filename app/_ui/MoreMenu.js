@@ -11,6 +11,7 @@ import {
   ListChecks,
   Import,
   Plug,
+  Puzzle,
   UserPlus,
   Info,
   CircleQuestionMark,
@@ -43,6 +44,7 @@ const LINKS = [
   // Set up once per AI app, then used from inside that app, so it sits with
   // the other things you do once rather than in the bar.
   { href: "/connect", label: "MCP Server", Icon: Plug },
+  { href: "/extension", label: "Browser Extension", Icon: Puzzle },
 ];
 
 const SECONDARY = [

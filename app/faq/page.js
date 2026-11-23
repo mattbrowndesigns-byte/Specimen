@@ -21,7 +21,7 @@ const SECTIONS = [
       },
       {
         q: "Can I save the same site twice?",
-        a: "Yes, and it's often the right thing to do. Each save keeps its own captures, so saving a site again a year later gives you both versions side by side. If you'd rather update the one you have, use Re-capture on its page, which keeps the old screenshots on a timeline too.",
+        a: "Yes, and it's often the right thing to do. Each save keeps its own captures, so saving a site again a year later gives you both versions side by side. If you'd rather update the one you have, use Re-capture on its page, which keeps the old screenshots on a timeline too. The browser extension is the exception: it tells you the page is already here and offers to file it instead.",
       },
       {
         q: "Can I save something that isn't a website?",

@@ -743,8 +743,15 @@ export default function CaseStudyPage() {
             <p>
               A studio&rsquo;s case study wouldn&rsquo;t save because its site turns away anything that isn&rsquo;t a person at a browser. I tried a bookmark that read the page from my own tab, and took it out the same day: setting it up was more work than the paste it replaced. Pasting the link is still the whole workflow. When a page refuses, the same screen says so and takes the images there, dropped or pasted, filed under the link with the studio&rsquo;s name already filled in to correct.
             </p>
+            <h3>A button where the browsing happens</h3>
             <p>
-              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component or a clip, still have to be proven there.
+              Pasting a link means leaving the page you found. Raindrop had a button in the browser, and that was the habit I had to replace. Kivli has one now: press it on any page, choose what to save it as, file it in a collection and carry on. Saving runs behind the panel, because the panel is gone the moment you click back into the page, so a save you walk away from still finishes and the icon says how it went.
+            </p>
+            <p>
+              Three things came out of testing it. The collection list opened in the flow and made the panel 708 pixels tall, past the 600 Chrome allows, so Save dropped off the bottom; it floats inside the panel now. A folder you choose yourself is left alone, where the AI used to add up to two of its own beside it. And the panel says when you already have the page, which turns a second save into filing the first one.
+            </p>
+            <p>
+              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, and the browser button still have to be proven there.
             </p>
           </div>
         </section>

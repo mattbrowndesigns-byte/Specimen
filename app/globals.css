@@ -9257,6 +9257,27 @@ a.card {
   color: var(--text);
 }
 
+/* The extension's download, in the app's own primary shape: it is the one
+   thing on that page to press. */
+.extension-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.12s ease;
+}
+
+.extension-download:hover {
+  background: var(--invert-bg-hover);
+}
+
 .connect-copy.connect-copy,
 .connect-revoke.connect-revoke {
   display: inline-flex;

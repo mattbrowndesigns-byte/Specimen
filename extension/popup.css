@@ -1,0 +1,584 @@
+/* Kivli's own tokens, from app/variants/refined.css and globals.css. A copy,
+   because an extension can't read the site's stylesheet; it follows the
+   system's light or dark, since the app's own choice lives on the app. */
+@font-face {
+  font-family: "Lalezar";
+  src: url("fonts/lalezar-latin.woff2") format("woff2");
+  font-display: block;
+}
+
+:root {
+  color-scheme: light dark;
+  --bg: #fbfbfd;
+  --surface: #fff;
+  --surface-hover: #f2f2f5;
+  --field-bg: #eeeef2;
+  --seg-active: #fff;
+  --seg-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 0.5px rgba(0, 0, 0, 0.05);
+  --pop-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  --border-soft: #ececf0;
+  --border: #e2e2e7;
+  --border-strong: #d2d2d7;
+  --border-strong-hover: #bcbcc2;
+  --text: #1d1d1f;
+  --text-secondary: #46464b;
+  --text-muted: #5b5b61;
+  --text-faint: #6e6e73;
+  --accent-rgb: 232, 80, 46;
+  --accent-solid: #c93f1d;
+  --accent-solid-hover: #b53517;
+  --accent-solid-text: #fff;
+  --brand-ink: #211430;
+  --brand-ink-rgb: 33, 20, 48;
+  --danger: #c0392b;
+  --danger-bg: #fdf5f4;
+  --danger-border: #edcfca;
+  --ok-bg: #f2fbf4;
+  --ok-border: #bfe3c6;
+  --ok-text: #1f6b33;
+  --ease: cubic-bezier(0.28, 0.11, 0.32, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0a0a0b;
+    --surface: #161618;
+    --surface-hover: #222225;
+    --field-bg: #1c1c1f;
+    --seg-active: #3a3a3f;
+    --seg-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    --pop-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+    --border-soft: #1e1e21;
+    --border: #28282c;
+    --border-strong: #37373c;
+    --border-strong-hover: #4a4a51;
+    --text: #f5f5f7;
+    --text-secondary: #babac1;
+    --text-muted: #9e9ea6;
+    --text-faint: #8c8c94;
+    --accent-rgb: 240, 96, 60;
+    --accent-solid: #f0603c;
+    --accent-solid-hover: #ff7353;
+    --accent-solid-text: #17171a;
+    --brand-ink: #f0eaf7;
+    --brand-ink-rgb: 240, 234, 247;
+    --danger: #ff6f61;
+    --danger-bg: #2b1a18;
+    --danger-border: #55302b;
+    --ok-bg: #12291a;
+    --ok-border: #245c34;
+    --ok-text: #86d79b;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  width: 368px;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible,
+.kind input:focus-visible + span {
+  outline: 2px solid rgba(var(--accent-rgb), 0.55);
+  outline-offset: 2px;
+}
+
+/* The bar. The mark is trimmed of the descender Lalezar declares and Kivli
+   never uses, the same -0.307em the app's own mark takes. */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.mark {
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--brand-ink);
+  font: 400 30px/1 "Lalezar", sans-serif;
+}
+
+.mark::after {
+  content: "";
+  display: block;
+  margin-bottom: -0.307em;
+}
+
+.who {
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+main {
+  padding: 16px;
+}
+
+/* The page you're on */
+.page {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.badge img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.badge-letter {
+  border-color: transparent;
+  background: hsl(var(--hue) 42% 40%);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.page-text {
+  min-width: 0;
+}
+
+.page h1 {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.page p {
+  margin: 2px 0 0;
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Where it already is */
+.saved {
+  margin: 14px 0 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--ok-border);
+  border-radius: 12px;
+  background: var(--ok-bg);
+  list-style: none;
+}
+
+.saved li + li {
+  border-top: 1px solid var(--ok-border);
+}
+
+.saved button {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  background: none;
+  color: var(--ok-text);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.saved button:focus-visible {
+  outline-offset: -3px;
+}
+
+.saved button span {
+  flex: 1;
+}
+
+.saved button:hover span {
+  text-decoration: underline;
+}
+
+/* What to save it as: one track, one held, like every other set of options
+   in the app where one is held. */
+.kinds {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  margin-top: 16px;
+  padding: 3px;
+  border-radius: 14px;
+  background: var(--field-bg);
+}
+
+.kind {
+  cursor: pointer;
+}
+
+.kind input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kind span {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  height: 58px;
+  border-radius: 11px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  transition: background-color 0.18s var(--ease), color 0.18s var(--ease);
+}
+
+.kind:hover span {
+  color: var(--text);
+}
+
+.kind input:checked + span {
+  background: var(--seg-active);
+  box-shadow: var(--seg-shadow);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.blurb {
+  margin: 10px 2px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* Fields: the Add box's fill and edge */
+.field {
+  margin-top: 12px;
+}
+
+.field label {
+  display: block;
+  margin: 0 2px 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.picker,
+.picker-panel input,
+textarea {
+  width: 100%;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--field-bg);
+  transition: border-color 0.12s ease;
+}
+
+.picker:hover,
+.picker-panel input:hover,
+textarea:hover {
+  border-color: var(--border-strong-hover);
+}
+
+.picker-panel input:focus,
+textarea:focus {
+  border-color: rgba(var(--brand-ink-rgb), 0.5);
+  outline: none;
+}
+
+::placeholder {
+  color: var(--text-faint);
+}
+
+.picker {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 12px 0 14px;
+  text-align: left;
+}
+
+.picker svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.18s var(--ease);
+}
+
+.picker[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.picker-value {
+  overflow: hidden;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker-set {
+  color: var(--text);
+}
+
+.picker-panel {
+  position: absolute;
+  z-index: 1;
+  right: 16px;
+  left: 16px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--pop-shadow);
+}
+
+.picker-panel input {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.picker-list {
+  max-height: 156px;
+  margin-top: 4px;
+  overflow-y: auto;
+}
+
+.picker-option {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  font-size: 13px;
+  text-align: left;
+}
+
+.picker-option.active {
+  background: var(--surface-hover);
+}
+
+.picker-clear {
+  color: var(--text-muted);
+}
+
+.picker-check {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 14px;
+}
+
+.picker-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker-none {
+  margin: 0;
+  padding: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+textarea {
+  display: block;
+  padding: 9px 14px;
+  line-height: 1.45;
+  resize: none;
+}
+
+/* Buttons */
+.primary,
+.secondary {
+  height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  font-weight: 600;
+  transition: background-color 0.18s var(--ease), transform 0.18s var(--ease);
+}
+
+.primary {
+  background: var(--accent-solid);
+  color: var(--accent-solid-text);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--accent-solid-hover);
+}
+
+.secondary {
+  background: var(--field-bg);
+}
+
+.secondary:hover {
+  background: var(--border);
+}
+
+.primary:active:not(:disabled),
+.secondary:active {
+  transform: scale(0.97);
+}
+
+.primary:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+form > .primary {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.error {
+  margin: 12px 0 0;
+  padding: 9px 12px;
+  border: 1px solid var(--danger-border);
+  border-radius: 12px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.error-last {
+  margin: 0 0 14px;
+}
+
+/* Whole-panel states */
+.notice,
+.finished {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 12px 12px;
+  text-align: center;
+}
+
+.notice h1,
+.finished h1 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.notice p,
+.finished p {
+  max-width: 280px;
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  text-wrap: balance;
+}
+
+.finished .finished-name {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.notice .primary {
+  min-width: 140px;
+  margin-top: 18px;
+}
+
+.tick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 14px;
+  border: 1px solid var(--ok-border);
+  border-radius: 50%;
+  background: var(--ok-bg);
+  color: var(--ok-text);
+}
+
+.finished-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* The shape of the panel before it has an answer, so nothing jumps */
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bone {
+  border-radius: 12px;
+  background: var(--field-bg);
+  animation: bone 1.4s ease-in-out infinite;
+}
+
+@keyframes bone {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bone {
+    animation: none;
+  }
+}

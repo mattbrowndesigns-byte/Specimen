@@ -950,11 +950,21 @@ wins, because the picture has no opinion to offer.
 pool shared by every account on the deployment, so two people saving at once
 can trip the per-minute limit. `runEnrichment` tells a retryable failure (429,
 5xx — flagged on the error by `lib/ai.js`) from a permanent one, and queues the
-first with an exponential backoff. `enrich-queue.yml` drains three at a time
-every fifteen minutes; three, because the queue exists precisely because too
-many requests arrived at once. GitHub disables scheduled workflows on a repo
-idle for 60 days — if tags stop filling in on their own, check it's still
-enabled.
+first with an exponential backoff. The queue drains three at a time every
+fifteen minutes; three, because the queue exists precisely because too many
+requests arrived at once.
+
+**The queues run on Supabase's clock, because GitHub's was hours late.**
+`enrich-queue.yml` asked for every fifteen minutes and GitHub started it 3-5
+times a day through November 2026 (median gap 4.5 hours, worst 10.5). Every run
+succeeded, so nothing looked wrong. `schema_m27` schedules the four queue
+routes with pg_cron + pg_net; the workflow stays as a six-hourly backup. The
+scheduler's key is made by the migration and kept in `app_state`, so it can
+start a queue and nothing else (`lib/queueAuth.js`, fails closed). Each
+authorised run writes `queue_ran:<name>` there, which is how to check it.
+Don't move the job bodies into a function in `public`: the anon key could call
+it. The production URL is written in the jobs, so a new domain means re-running
+the file.
 
 **A shared library arrived with no components, and nothing said why.**
 `component` has never had `favicon_url` / `favicon_fills` -- a component's icon

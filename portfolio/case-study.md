@@ -413,6 +413,8 @@ The limit is 25 MB, which is about a minute of a recorded window or 24 seconds o
 
 **A search that couldn't find the client.** I saved Uber's rebrand, searched for Uber, and found nothing. Each image is titled for what is in it, like a bus stop sign, and the client's name lives on the project it came from. Search now reads the project's name as well, on the board, across tabs and from a connected AI.
 
+**A queue that was never on time.** Imports were meant to move every fifteen minutes. Looking into one slow save, I counted the actual runs: three to five a day, a typical gap of four and a half hours, and one of ten and a half. GitHub starts scheduled jobs when it has room. Every run had succeeded, so nothing looked broken. The schedule lives in the database now, still free, and each run leaves a note of when it happened.
+
 Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component or a clip, still have to be proven there.
 
 ## What I deliberately did not build

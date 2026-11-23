@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isQueueCaller } from "@/lib/queueAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { dispatchCapture } from "@/lib/github";
 import { fetchPageMeta } from "@/lib/pageMeta";
@@ -23,13 +24,12 @@ const DEADLINE_MS = 45000;
 const MAX_ATTEMPTS = 5;
 const backoffMs = (attempts) => Math.min(2 ** attempts, 60) * 60 * 1000;
 
-// Drained on a schedule by enrich-queue.yml, beside the Gemini queues but in
+// Drained on a schedule, beside the Gemini queues but in
 // its own request: a capture costs free runner minutes and a tag costs a slice
 // of a 20-a-day allowance, so sharing one 60-second budget between them would
 // let the cheap work crowd out the expensive work for nothing.
 export async function POST(request) {
-  const secret = request.headers.get("x-callback-secret");
-  if (!secret || secret !== process.env.CALLBACK_SECRET) {
+  if (!(await isQueueCaller(request, "capture"))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
+import { isQueueCaller } from "@/lib/queueAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { extractProject } from "@/lib/visuals";
 import { PICK_AHEAD } from "@/lib/importAhead";
 
 // Reads imported visuals projects: the first of their two background steps.
-// Drained by enrich-queue.yml every fifteen minutes, in its own request.
+// Drained every fifteen minutes, in its own request.
 //
 // Reading a page spends no AI at all -- it is a page fetch, up to forty image
 // downloads and two encodes each -- so it is rationed by something else
@@ -28,8 +29,7 @@ const MAX_ATTEMPTS = 3;
 const backoffMs = (attempts) => 15 * 2 ** (attempts - 1) * 60 * 1000;
 
 export async function POST(request) {
-  const secret = request.headers.get("x-callback-secret");
-  if (!secret || secret !== process.env.CALLBACK_SECRET) {
+  if (!(await isQueueCaller(request, "visuals-import"))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

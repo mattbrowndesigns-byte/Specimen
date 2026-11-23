@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isQueueCaller } from "@/lib/queueAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { runEnrichment } from "@/lib/enrich";
 import { runResourceEnrichment } from "@/lib/enrichResource";
@@ -28,11 +29,10 @@ const BATCH = 3;
 // due, and the next run is fifteen minutes away.
 const DEADLINE_MS = 45000;
 
-// Drained by enrich-queue.yml on a schedule. Authenticated with the same
-// shared secret the Actions callbacks use -- there's no session behind it.
+// Drained on a schedule (schema_m27, with enrich-queue.yml as the backup).
+// There's no session behind it -- see lib/queueAuth.js.
 export async function POST(request) {
-  const secret = request.headers.get("x-callback-secret");
-  if (!secret || secret !== process.env.CALLBACK_SECRET) {
+  if (!(await isQueueCaller(request, "enrich"))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

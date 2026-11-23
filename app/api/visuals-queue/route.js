@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { isQueueCaller } from "@/lib/queueAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { describeProject, selectProject } from "@/lib/visuals";
 
-// Drained by enrich-queue.yml every fifteen minutes, beside the sites' and
+// Drained every fifteen minutes, beside the sites' and
 // resources' queues: visual projects saved before the AI answered, or whose
 // describe pass failed on a slow or busy free tier -- and imported projects
 // waiting for their sort, which is the same one request asked before the
@@ -21,8 +22,7 @@ const START_BY_MS = 10000;
 const BATCH = 2;
 
 export async function POST(request) {
-  const secret = request.headers.get("x-callback-secret");
-  if (!secret || secret !== process.env.CALLBACK_SECRET) {
+  if (!(await isQueueCaller(request, "visuals"))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

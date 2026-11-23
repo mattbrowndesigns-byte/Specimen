@@ -7,6 +7,7 @@ import "./variants/refined.css";
 import "./variants/elevated.css";
 import { themeBootScript } from "@/lib/theme";
 import { variantBootScript } from "@/lib/variant";
+import DemoClarity from "./_ui/DemoClarity";
 import SiteAnalytics from "./_ui/SiteAnalytics";
 import Tooltips from "./_ui/Tooltips";
 
@@ -52,6 +53,7 @@ export default function RootLayout({ children }) {
       <body>
         {children}
         <SiteAnalytics />
+        <DemoClarity />
         <Tooltips />
       </body>
     </html>

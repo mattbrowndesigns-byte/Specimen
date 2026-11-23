@@ -2036,6 +2036,14 @@ signed-out visitor's beacon is redirected to /login and never counted. The
 dashboard toggle (Analytics -> Enable) has to be on as well, and nothing is
 recorded before it was: there is no way to see visits from before 2026-11-03.
 
+**Clarity records the demo and nothing else.** `app/_ui/DemoClarity.js` loads it
+only for a browser carrying the demo flag, never on localhost, /login,
+/reset-password, /oauth or a share link, and never for an automated browser. A
+recording can't follow someone into an account: sign-in is a full page load
+(`window.location.href`, not `router.push`) and middleware clears the flag, so
+anything that makes sign-in a client-side navigation has to stop Clarity first.
+`?notrack` opts a browser out. `CLARITY_ID` empty means it never loads.
+
 **The demo opens with a tour, hand-built like everything else.**
 `app/_ui/DemoTour.js` walks a first-time visitor through seven stops on the
 dashboard (welcome, tabs, search, tags, a save, the menu, Add) and ends by

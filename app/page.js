@@ -23,6 +23,13 @@ import { addItem, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
 // dashboard for something else shouldn't switch tabs a second time.
 let lastUploadShown = 0;
 
+// Takes ?tab= and friends off the address. It keeps the entry's own state,
+// which is where Next marks an entry as its own: wiping it made Back to here
+// a full reload, so closing the visuals viewer landed you on Websites.
+function clearSearch() {
+  window.history.replaceState(window.history.state, "", "/");
+}
+
 export default function Home() {
   const [tab, setTab] = useState("websites");
   const [allTags, setAllTags] = useState([]);
@@ -126,7 +133,7 @@ export default function Home() {
     const requestedTab = new URLSearchParams(window.location.search).get("tab");
     if (requestedTab && KINDS.some((k) => k.tab === requestedTab)) {
       setTab(requestedTab);
-      window.history.replaceState({}, "", "/");
+      clearSearch();
       return;
     }
 
@@ -134,7 +141,7 @@ export default function Home() {
     if (resourceId) {
       setTab("resources");
       setDescribeId(resourceId);
-      window.history.replaceState({}, "", "/");
+      clearSearch();
       return;
     }
 
@@ -142,7 +149,7 @@ export default function Home() {
     if (!job) return;
     setTab(job.kind === "component" ? "components" : "websites");
     setJobs((prev) => (prev.some((j) => j.key === job.key) ? prev : [...prev, job]));
-    window.history.replaceState({}, "", "/");
+    clearSearch();
   }, []);
 
   // Add is in the utility bar rather than inside a tab, so saving never depends

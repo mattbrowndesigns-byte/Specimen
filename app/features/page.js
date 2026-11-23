@@ -45,7 +45,7 @@ export default function FeaturesPage() {
           <h1>Everything Kivli Does</h1>
           <p className="prose-lede">
             Four kinds of thing worth keeping: whole websites, pieces of them, useful links, and the
-            work itself. Kivli takes each one in, writes it up and files it, so that finding it again
+            images of finished work. Kivli takes each one in, writes it up and files it, so that finding it again
             six months later takes seconds rather than an afternoon of scrolling.
           </p>
         </header>

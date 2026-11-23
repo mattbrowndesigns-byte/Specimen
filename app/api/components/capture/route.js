@@ -13,7 +13,8 @@ export const dynamic = "force-dynamic";
 // a five-hundred-link import would otherwise be five hundred rows reading
 // "waiting" above the library.
 //
-// Imported captures, and uploaded images (no url). One captured from the Add
+// Imported captures, uploaded images (no url) and screen grabs (a url, and the
+// file name only something uploaded has). One captured from the Add
 // menu goes straight to the crop tool and never needed a list; old ones were
 // never marked cropped, so listing them would resurrect every page anyone ever
 // cropped from.
@@ -35,7 +36,7 @@ export async function GET() {
       .from("component_capture")
       .select("id, url, domain, status, full_url, page_height, capture_error, capture_state, imported_at, file_name")
       .eq("user_id", user.id)
-      .or("imported_at.not.is.null,url.is.null")
+      .or("imported_at.not.is.null,url.is.null,file_name.not.is.null")
       .is("cropped_at", null)
       .or("status.eq.ready,status.eq.failed,capture_state.eq.failed")
       // Uploads first, by having no import date: they were just put there.

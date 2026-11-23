@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Kivli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Save the page you're on to your Kivli library.",
   "minimum_chrome_version": "116",
   "icons": {
@@ -20,7 +20,7 @@
     }
   },
   "background": { "service_worker": "background.js", "type": "module" },
-  "permissions": ["activeTab", "storage"],
+  "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["https://specimen-gamma-six.vercel.app/*"],
   "commands": {
     "_execute_action": { "suggested_key": { "default": "Alt+Shift+K" } }

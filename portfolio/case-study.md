@@ -429,6 +429,10 @@ The limit is 25 MB, which is about a minute of a recorded window or 24 seconds o
 
 Three things came out of testing it. The collection list opened in the flow and made the panel 708 pixels tall, past the 600 Chrome allows, so Save dropped off the bottom; it floats inside the panel now. A folder you choose yourself is left alone, where the AI used to add up to two of its own beside it. And the panel says when you already have the page, which turns a second save into filing the first one.
 
+That version still couldn't save the one case study I'd built it for. It asked Kivli's server to read the page, and the page was blocking Kivli's server. The panel now reads the page itself, from the tab that already has it open, and lists its images to tick. Only what's ticked leaves the browser. A clip is the exception: something has to draw frames from it for the AI, so those finish in Kivli's own picker, already ticked. Component can photograph the screen as it stands, which is the only way to keep something that needs a sign-in or an open menu.
+
+Testing that found an image that loads as you scroll being thrown away for its size, because what it had so far was a one-pixel placeholder.
+
 Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, and the browser button still have to be proven there.
 
 ## What I deliberately did not build

@@ -9,6 +9,7 @@ const SHAPES = {
   check: '<path d="M20 6 9 17l-5-5"/>',
   chevron: '<path d="m6 9 6 6 6-6"/>',
   out: '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
+  play: '<path d="M6 4.5v15l13-7.5z" fill="currentColor"/>',
   plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
 };
 

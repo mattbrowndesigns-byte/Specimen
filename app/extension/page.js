@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { BadgeCheck, Download, FolderPlus, Images, PanelTop } from "lucide-react";
+import { BadgeCheck, Crop, Download, FolderPlus, Images, Keyboard, PanelTop } from "lucide-react";
 import UtilityBar from "../_ui/UtilityBar";
 import SiteFooter from "../_ui/SiteFooter";
 import { useIsDemo } from "../_ui/demoState";
@@ -24,13 +24,23 @@ const ABILITIES = [
   },
   {
     Icon: Images,
-    title: "Straight to the crop or the images",
-    body: "Choose Component or Visual and Kivli opens in a new tab on the step that needs you. A social post starts on Visual.",
+    title: "Pick images off any page",
+    body: "Choose Visual and tick the images you want from the ones on your screen. That gets past most sites that turn Kivli away. A clip finishes in Kivli’s own picker.",
+  },
+  {
+    Icon: Crop,
+    title: "Grab what you can see",
+    body: "Choose Component to photograph the screen as it is, signed in or mid-menu, and crop it straight away. Full-page capture is still there.",
   },
   {
     Icon: BadgeCheck,
     title: "Know when you already have it",
     body: "The panel says when the page is already in your library and links to it, so you don’t save it twice.",
+  },
+  {
+    Icon: Keyboard,
+    title: "One shortcut",
+    body: "Option Shift K on a Mac, Alt Shift K elsewhere. Return saves, so a website is two keystrokes from your library.",
   },
 ];
 
@@ -121,9 +131,10 @@ export default function ExtensionPage() {
             <section className="connect-explain">
               <h2>What it can see</h2>
               <p>
-                Only the address, title and icon of the page you press the button on. The address goes to
-                Kivli when the panel opens, to check whether you already have it, and the title goes with it
-                when you save. It can&rsquo;t see other tabs, your history or what&rsquo;s on the page.
+                Only the page you press the button on, and only then. Its address goes to Kivli when the panel
+                opens, to check whether you already have it. It looks through the page for images when you
+                choose Visual and sends the ones you tick, and it photographs the screen when you press Grab
+                This Screen. It can&rsquo;t see other tabs or your history.
               </p>
             </section>
           </>

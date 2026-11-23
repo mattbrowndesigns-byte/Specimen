@@ -307,8 +307,8 @@ function CropQueue({ crops, onCrop, onKeep, keeping, onDiscard }) {
 
   // The queue stops this many short of what is waiting, so if the list is
   // that long, the reason nothing new is arriving is the list itself.
-  // Uploads don't count: they were never part of what it captured ahead.
-  const held = crops.queued > 0 && ready.length - uploads.length + crops.capturing >= crops.cropAhead;
+  // Uploads and screen grabs don't count: it never captured them ahead.
+  const held = crops.queued > 0 && ready.filter((c) => c.imported_at).length + crops.capturing >= crops.cropAhead;
 
   return (
     <div className="visual-pending crop-queue">

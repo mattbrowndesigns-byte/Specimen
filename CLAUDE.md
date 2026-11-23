@@ -2344,8 +2344,8 @@ The maker starts as `guessMaker`'s guess from the domain, editable there.
 A bookmarklet that read the page from the owner's own tab was built and taken out
 the same day (2026-11-23): setting up a bookmark was more friction than the paste
 it replaced, and it landed on its own install page when used. A URL is the
-workflow, and the browser extension is what replaced the bookmark. The page
-reader itself is still only in git history, at `lib/saveButton.js`.
+workflow, and the browser extension is what replaced the bookmark. Its page reader
+is `extension/reader.js`.
 
 Two things it taught extraction stayed. Behance links each image to a page under
 the project's own, so a link beneath this page isn't a link away. Dribbble's
@@ -2442,8 +2442,22 @@ gamma-six one, and a session on the matt-e28c address doesn't count there.
 Saves run in the service worker, since the panel dies when you click the page; a
 port from the panel tells the worker whether to say how it went on the icon
 instead. `/api/extension/save` saves and files in one request for the same
-reason. It dedupes, so a page you have is filed rather than saved again. Component
-and Visual use the app's own routes and open a tab on the crop or the picker.
+reason. It dedupes, so a page you have is filed rather than saved again.
+
+Visual reads the open page (`reader.js`, injected with `scripting`, only once
+Visual is chosen) and lists its images; `/api/extension/visuals` downloads the
+ticked ones and saves them without the picker, marked `chosen` so nothing
+downstream can untick them. Kivli never fetches the page itself, which is the
+point. It does fetch the image files, so a site that guards those too still fails,
+and says so. A clip among them goes to the picker, because frames need a decoder.
+An image still waiting to lazy-load is its placeholder's size, so size says nothing
+about it. "Let Kivli Read the Page" is the old route, and better for X's clips.
+
+Component photographs the visible tab and uploads it the way an uploaded component
+goes, with `pageUrl`: a capture with a url AND a `file_name`, which is how the crop
+list and Discard know a grab from an abandoned Add capture. `/?crop=<id>` opens the
+crop tool and keeps its id in the address until the grab is read.
+
 `/api/extension/lookup` is a POST so the page's address stays out of logs, which
 also means a demo pass is refused and the panel asks you to sign in.
 
@@ -2453,7 +2467,8 @@ It is queued ten minutes out at save, the same net an uploaded component has.
 
 After changing anything in `extension/`: raise the manifest version, run
 `node scripts/pack-extension.mjs` and commit the zip, or `/extension` hands out
-the old one. The panel must stay under 600px, which is why its lists float. Tested
+the old one. The panel must stay under 600px, which is why its lists float and
+the image grid measures what is left. Tested
 in Chromium against the app and a stand-in database (Playwright, the panel opened
 as a page with `chrome.tabs.query` replaced); a real toolbar click is not.
 

@@ -35,13 +35,55 @@ async function open(path) {
   await chrome.tabs.create({ url: `${KIVLI}${path}` });
 }
 
-async function save({ kind, url, title, note, folderId, collectionId, collectionName }) {
+// What's on screen, as an image ready to crop. It goes the way an uploaded
+// component does: straight into Storage on an address Kivli signs, then Kivli
+// is told it's there.
+async function grab({ url, windowId }) {
+  let shot;
+  try {
+    const picture = await chrome.tabs.captureVisibleTab(windowId, { format: "png" });
+    shot = await (await fetch(picture)).blob();
+  } catch {
+    return { ok: false, error: "Chrome wouldn't let Kivli photograph this page." };
+  }
+  const start = await post("/api/components/upload", {
+    files: [{ name: "Screen grab.png", type: "image/png", size: shot.size }],
+  });
+  if (!start.ok) return start;
+  const { path, signedUrl } = start.data.uploads[0];
+  const sent = await fetch(signedUrl, {
+    method: "PUT",
+    headers: { "Content-Type": "image/png", "x-upsert": "true" },
+    body: shot,
+  }).catch(() => null);
+  if (!sent?.ok) return { ok: false, error: "The screen grab didn't upload. Try again." };
+  const done = await post("/api/components/upload/process", { path, name: "Screen grab", pageUrl: url });
+  if (!done.ok) return done;
+  await open(`/?crop=${done.data.capture.id}`);
+  return { ok: true, opened: true };
+}
+
+async function save({ kind, how, url, title, note, folderId, collectionId, collectionName, page, windowId }) {
+  if (kind === "component" && how === "grab") return grab({ url, windowId });
+
   if (kind === "component") {
     const res = await post("/api/components/capture", { url });
     if (!res.ok) return res;
     const { id, domain } = res.data.capture;
     await open(`/?${new URLSearchParams({ job: `component:${id}`, label: domain || "" })}`);
     return { ok: true, opened: true };
+  }
+
+  if (kind === "visual" && how === "chosen") {
+    const res = await post("/api/extension/visuals", { page, collectionId, collectionName });
+    if (!res.ok) return res;
+    // A clip among them: Kivli's picker draws its frames, and has them ticked.
+    if (res.data.open) {
+      await open(res.data.open);
+      return { ok: true, opened: true };
+    }
+    if (res.data.saved) post(`/api/visuals/projects/${res.data.projectId}/describe`);
+    return res;
   }
 
   if (kind === "visual") {

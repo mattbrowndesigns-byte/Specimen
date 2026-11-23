@@ -144,6 +144,23 @@ export default function Home() {
       return;
     }
 
+    // A screen grab from the extension: already here, so straight into the
+    // crop tool. The address keeps its id until the grab has been read, so a
+    // reload on the way asks again; one that can't be read is still on the
+    // tab's crop list.
+    const cropId = new URLSearchParams(window.location.search).get("crop");
+    if (cropId) {
+      setTab("components");
+      fetch(`/api/components/capture/${cropId}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.capture?.status === "ready" && !data.capture.cropped_at) setPendingCapture(data.capture);
+          clearSearch();
+        })
+        .catch(() => {});
+      return;
+    }
+
     const job = jobFromSearch(window.location.search);
     if (!job) return;
     setTab(job.kind === "component" ? "components" : "websites");

@@ -1,10 +1,12 @@
 import { KIVLI } from "./config.js";
 import { post } from "./api.js";
 import { icon } from "./icons.js";
+import { readPage } from "./reader.js";
 
 // The panel. One screen: the page you're on, what to save it as, where to put
-// it, Save. Website and Resource are saved from here. Component and Visual end
-// at a step only you can do, so their button opens Kivli on that step.
+// it, Save. A Component opens Kivli, because a crop has to be drawn; the rest
+// are saved from here. A Visual is picked here from the images already on your
+// screen, so a page that turns Kivli away can still be saved from.
 
 const KINDS = [
   {
@@ -19,8 +21,9 @@ const KINDS = [
     id: "component",
     one: "Component",
     tab: "Components",
-    blurb: "Kivli captures the page in a new tab, and you crop the part you want.",
-    action: "Capture and Crop",
+    blurb: "Grab what you can see and crop it, or have Kivli capture the whole page.",
+    action: "Grab This Screen",
+    other: "Capture Full Page",
   },
   {
     id: "resource",
@@ -34,8 +37,7 @@ const KINDS = [
     id: "visual",
     one: "Visual",
     tab: "Visuals",
-    blurb: "Kivli reads the page in a new tab, and you choose the images to keep.",
-    action: "Choose Images",
+    other: "Let Kivli Read the Page",
   },
 ];
 const KIND = Object.fromEntries(KINDS.map((k) => [k.id, k]));
@@ -228,6 +230,131 @@ function picker({ label, empty, placeholder, options, create, onChange }) {
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
+// As tall as Chrome lets a panel be, less a hair.
+const PANEL_MAX = 596;
+
+// What one save takes, the same as Kivli's own picker.
+const MAX_CLIPS = 8;
+
+// The images on the page, to tick. Read once, the first time Visual is held:
+// until then nothing on the page has been looked at.
+function imagePicker(tabId, onChange) {
+  const chosen = new Set();
+  const grid = el("div", { className: "tiles" });
+  const count = el("span", { attrs: { role: "status" } });
+  const every = el("button", { type: "button", className: "link" });
+  const bar = el("div", { className: "tiles-bar", hidden: true }, count, every);
+  const says = el("p", { className: "blurb", textContent: "Looking through the page…" });
+  const node = el("div", { className: "images" }, says, bar, grid);
+  let page = null;
+  let items = [];
+  let reading = false;
+
+  const clipCount = () => [...chosen].filter((i) => i.clip).length;
+
+  function draw(note) {
+    count.textContent = note || (chosen.size ? `${chosen.size} of ${items.length} chosen` : `${items.length} on this page`);
+    every.textContent = chosen.size ? "Clear" : "All Images";
+    every.hidden = !items.some((i) => !i.clip);
+    [...grid.children].forEach((tile, i) => tile.setAttribute("aria-pressed", String(chosen.has(items[i]))));
+    onChange();
+  }
+
+  function toggle(item) {
+    if (chosen.has(item)) chosen.delete(item);
+    else if (item.clip && clipCount() >= MAX_CLIPS) return draw(`Up to ${MAX_CLIPS} clips at a time`);
+    else chosen.add(item);
+    return draw();
+  }
+
+  // Images only: a clip is up to 15 MB of a small library, so each is a choice.
+  every.addEventListener("click", () => {
+    if (chosen.size) chosen.clear();
+    else items.filter((i) => !i.clip).forEach((i) => chosen.add(i));
+    draw();
+  });
+
+  function tile(item) {
+    const picture = item.t
+      ? el("img", { src: item.t, alt: "", loading: "lazy" })
+      : item.clip
+        ? el("video", { src: item.u, muted: true, preload: "metadata" })
+        : null;
+    const button = el(
+      "button",
+      {
+        type: "button",
+        className: "tile",
+        attrs: { "aria-pressed": "false", "aria-label": item.a || item.h || (item.clip ? "Clip" : "Image") },
+        onclick: () => toggle(item),
+      },
+      picture,
+      item.clip && el("span", { className: "tile-clip" }, icon("play", 10)),
+      el("span", { className: "tile-check" }, icon("check", 13))
+    );
+    // Not being shown here says nothing about whether it can be saved.
+    picture?.addEventListener("error", () => {
+      picture.replaceWith(el("span", { className: "tile-name", textContent: item.a || item.h || "No preview" }));
+    });
+    return button;
+  }
+
+  async function read() {
+    if (page || reading) return;
+    reading = true;
+    try {
+      const [run] = await chrome.scripting.executeScript({ target: { tabId }, func: readPage });
+      page = run?.result || null;
+    } catch {
+      page = null;
+    }
+    reading = false;
+    if (!page) {
+      says.textContent = "Chrome doesn’t let extensions look at this page.";
+      return;
+    }
+    items = [...page.images, ...page.videos.map((v) => ({ ...v, clip: true }))];
+    if (!items.length) {
+      says.textContent = "No images big enough to keep were found. If the page loads as you scroll, scroll it and try again.";
+      return;
+    }
+    says.hidden = true;
+    bar.hidden = false;
+    grid.replaceChildren(...items.map(tile));
+    if (items.length === 1) chosen.add(items[0]);
+    draw();
+  }
+
+  // Whatever height the rest of the panel leaves, so Save is never below the
+  // fold: a long title, a row saying it's saved and a collection all take some.
+  function fit() {
+    if (!grid.children.length) return;
+    const { scrollTop } = grid;
+    grid.style.maxHeight = "0px";
+    const rest = document.body.scrollHeight;
+    grid.style.maxHeight = `${Math.max(112, Math.min(300, PANEL_MAX - rest))}px`;
+    grid.scrollTop = scrollTop;
+  }
+
+  return {
+    node,
+    read,
+    fit,
+    count: () => chosen.size,
+    clips: clipCount,
+    // Only what was ticked leaves the browser.
+    page: () => {
+      const held = items.filter((i) => chosen.has(i)).map(({ t, c, l, ...rest }) => rest);
+      const bare = ({ clip, ...rest }) => rest;
+      return {
+        ...page,
+        images: held.filter((i) => !i.clip).map(bare),
+        videos: held.filter((i) => i.clip).map(bare),
+      };
+    },
+  };
+}
+
 function savedLine(match) {
   if (match.kind === "component") return `${plural(match.count, "component")} from this page`;
   if (match.kind === "visual") return match.saved ? "Images saved from this page" : "Images waiting for you to choose";
@@ -303,7 +430,9 @@ function render(tab, found, firstKind) {
 
   const error = el("p", { className: "error", hidden: true, attrs: { role: "alert" } });
   const submit = el("button", { type: "submit", className: "primary" });
-  const form = el("form", {}, kinds, blurb, folder.node, collection.node, noteField, error, submit);
+  const other = el("button", { type: "button", className: "other", onclick: () => go("kivli") });
+  const images = imagePicker(tab.id, () => update());
+  const form = el("form", {}, kinds, blurb, images.node, folder.node, collection.node, noteField, error, submit, other);
 
   // The save already here for the kind that's held, if there is one. What's
   // left to do with it is file it, so the rest of the form goes.
@@ -311,21 +440,43 @@ function render(tab, found, firstKind) {
 
   function update() {
     const existing = match();
-    const inPlace = kind === "site" || kind === "resource";
-    blurb.textContent = existing
-      ? "You can still add it to a collection."
-      : KIND[kind].blurb;
+    const noted = kind === "site" || kind === "resource";
+    const visual = kind === "visual";
+    if (visual) images.read();
+    const clips = visual && images.clips() > 0;
+    blurb.textContent = existing ? "You can still add it to a collection." : KIND[kind].blurb || "";
+    blurb.hidden = !blurb.textContent;
+    images.node.hidden = !visual;
     folder.node.hidden = kind !== "resource" || Boolean(existing);
-    collection.node.hidden = !inPlace;
-    noteField.hidden = !inPlace || Boolean(existing);
-    submit.textContent = busy ? "Saving…" : existing ? "Add to Collection" : KIND[kind].action;
-    submit.disabled = busy || Boolean(existing && !collection.value());
+    // Not with a clip: that save finishes in Kivli, and is filed there.
+    collection.node.hidden = kind === "component" || clips;
+    noteField.hidden = !noted || Boolean(existing);
+    other.hidden = !KIND[kind].other;
+    other.textContent = KIND[kind].other || "";
+    other.disabled = busy;
+    submit.textContent = action({ existing, visual, clips });
+    submit.disabled = busy || Boolean(existing && !collection.value()) || (visual && !images.count());
     error.hidden = true;
+    if (visual) images.fit();
   }
 
-  form.addEventListener("submit", async (e) => {
+  function action({ existing, visual, clips }) {
+    if (busy) return kind === "component" ? "Starting…" : "Saving…";
+    if (existing) return "Add to Collection";
+    if (!visual) return KIND[kind].action;
+    if (clips) return "Continue in Kivli";
+    return images.count() ? `Save ${plural(images.count(), "Image")}` : "Save Images";
+  }
+
+  form.addEventListener("submit", (e) => {
     e.preventDefault();
-    if (busy || submit.disabled) return;
+    if (!submit.disabled) go(kind === "component" ? "grab" : kind === "visual" ? "chosen" : null);
+  });
+
+  // `how` is which of a kind's two ways: from this screen, or by Kivli opening
+  // the page itself.
+  async function go(how) {
+    if (busy) return;
     const chosen = collection.value();
     const existing = match();
     if (existing && chosen?.id && existing.collections?.includes(chosen.id)) {
@@ -343,7 +494,10 @@ function render(tab, found, firstKind) {
         type: "save",
         payload: {
           kind: was,
+          how,
           url,
+          windowId: tab.windowId,
+          page: how === "chosen" ? images.page() : null,
           title: tab.title || "",
           note: existing ? "" : note.value,
           folderId: was === "resource" && !existing ? folder.value()?.id : null,
@@ -371,7 +525,8 @@ function render(tab, found, firstKind) {
     }
     error.textContent = result?.error || "Something went wrong saving that. Try again.";
     error.hidden = false;
-  });
+    images.fit();
+  }
 
   // Command or Control with Return saves from inside the note, where Return
   // alone is a new line.
@@ -385,11 +540,20 @@ function render(tab, found, firstKind) {
   // Return saves straight away. Not by focusing the button, which opened the
   // panel with a ring around it before anyone had touched a key.
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && document.activeElement === document.body && form.isConnected) form.requestSubmit();
+    if (e.key === "Enter" && document.activeElement === document.body && form.isConnected && !submit.disabled) form.requestSubmit();
   });
 }
 
 function finished(data, kind, chosen) {
+  if (kind === "visual") {
+    const where = data.collectionId && chosen ? chosen.label : null;
+    done({
+      title: data.saved ? `Saved ${plural(data.saved, "image")}` : "Already in Visuals",
+      lines: [data.saved && "Kivli is describing and tagging them now.", where && `They’re in ${where}.`, data.warning],
+      href: "/?tab=visuals",
+    });
+    return;
+  }
   const where = data.collectionId && chosen ? chosen.label : null;
   const title = data.existing
     ? where
@@ -401,15 +565,20 @@ function finished(data, kind, chosen) {
   if (!data.existing && where) lines.push(`It’s in ${where}.`);
   if (data.warning) lines.push(data.warning);
 
-  const done = el("button", { type: "button", className: "primary", textContent: "Done", onclick: () => window.close() });
+  done({ title, name: data.name, lines, href: kind === "site" ? `/sites/${data.id}` : "/?tab=resources" });
+}
+
+function done({ title, name, lines, href }) {
+  const said = lines.filter(Boolean).join(" ");
+  const close = el("button", { type: "button", className: "primary", textContent: "Done", onclick: () => window.close() });
   main.replaceChildren(
     el(
       "section",
       { className: "finished", attrs: { role: "status" } },
       el("span", { className: "tick" }, icon("check", 22)),
       el("h1", { textContent: title }),
-      el("p", { className: "finished-name", textContent: data.name }),
-      lines.length > 0 && el("p", { textContent: lines.join(" ") }),
+      name && el("p", { className: "finished-name", textContent: name }),
+      said && el("p", { textContent: said }),
       el(
         "div",
         { className: "finished-actions" },
@@ -417,13 +586,13 @@ function finished(data, kind, chosen) {
           type: "button",
           className: "secondary",
           textContent: "Open in Kivli",
-          onclick: () => openKivli(kind === "site" ? `/sites/${data.id}` : "/?tab=resources"),
+          onclick: () => openKivli(href),
         }),
-        done
+        close
       )
     )
   );
-  done.focus({ focusVisible: false });
+  close.focus({ focusVisible: false });
 }
 
 function signIn() {

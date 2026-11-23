@@ -237,8 +237,7 @@ difference and the track is fractional. Not worth chasing: the track is
 fractional at every width below the ceiling regardless. Below 700px both drop
 to 20/16, since on a phone content width is worth more than air at the edges.
 Change either number and re-check the spans — the whole system derives from
-them, which is why the feature cards kept landing on columns 5 and 9 through
-both of these changes without being touched.
+them.
 
 **The chrome bands are padded by `--grid-margin` and nothing else.** That one
 declaration on `.utility-bar-inner`, `.site-footer-inner` and
@@ -288,9 +287,8 @@ boxes leaves the eye seeing two different starts. The FAQ's first question
 is pulled up by its row's top padding plus a negative margin, and that pair has
 been re-derived once already: putting the chevron in a 36px holder centred the
 question's text 4px lower and the row drifted 6.81px below its heading, which
-is the whole reason this is measured and not a constant; a feature card's grid needs pushing *down* 7px
-so the card's edge meets the cap line. Verified at 0.02px, 0.28px and 1.02px
-out on FAQ, features and about. Change a heading size and these want
+is the whole reason this is measured and not a constant. Verified at 0.02px and
+1.02px out on FAQ and about. Change a heading size and these want
 re-measuring.
 
 **`--brand-ink` is the wordmark's colour, and it isn't `--text`.** A very dark
@@ -435,12 +433,19 @@ had all shipped without a line in this file, so the rotator on an empty library
 was still describing a product that only saved websites.
 
 **The list is grouped by kind first, then by what works on all of them.** The
-first four groups are the four kinds (`kind` takes its icon from kinds.js) and
-hold only what is particular to each; the rest are by purpose. Grouping the
+first four groups are the four kinds and hold only what is particular to each; the rest are by purpose. Grouping the
 whole page by kind was the first idea: sorted, 20 of the 37 features belonged to
 no one kind. `also` on a card is extra rotator lines, so merging two cards
 loses no tip. State only what every kind a card names can do: "everything the
 AI writes waits for review" outlived visuals, which aren't in the queue.
+
+**/features is heading, line, cards, down the left edge, and it is the one
+written page not on 4 + 8.** It was: sticky headings beside the cards, jump
+cards at the top, two part headings, a closing panel sending you "back to your
+library". A sticky aside earns its column beside long copy; beside a grid it
+emptied as soon as its few words were read. The owner asked for all four to go.
+Cards are two across because every group is even: an odd group leaves a hole.
+The lede is at most three lines, on a phone too, so measure it if it changes.
 
 **All colour comes from `:root` custom properties**; dark mode is the single
 `:root[data-theme="dark"]` override block, so never add a raw hex. `--invert-*`
@@ -1594,7 +1599,7 @@ notes were a second voice explaining what "Saving" meant to a reader who had
 already read four questions about saving, and the About page's were doing the
 same. `.prose-aside-note` is gone from the stylesheet with them. The features
 page keeps a line under each group heading, which is a different job: it
-introduces four to six cards that are otherwise a grid of names.
+introduces cards that are otherwise a grid of names.
 
 **A written page's title needed room it wasn't taking.** `.prose-head` opened
 at 8px on top of `.page`'s 24, so a 52px title started 32px under the bar and

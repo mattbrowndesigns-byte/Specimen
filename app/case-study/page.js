@@ -686,6 +686,9 @@ export default function CaseStudyPage() {
             <p>
               The features page still opened with pasting a URL, and filed 37 cards by topic, so components had one and nobody could tell there were four kinds of thing to save. The obvious fix was to group it by kind. I sorted the list first, and 20 of the 37 belonged to no single kind, so they would have been repeated four times or dropped. It leads with the four kinds now, then what each does, then what works across all of them, in 28 cards. One claim had quietly become false on the way: that everything the AI writes waits for review.
             </p>
+            <p>
+              The first version of that layout did too much. Headings sat in a sticky column that went empty once you had read them, four jump cards repeated the headings below, and a panel at the end offered to take you back to your library, which the logo already does. It is a heading, a line and the cards now, with a lead of three lines at most.
+            </p>
             <h3>A component that moves</h3>
             <p>
               The next thing I tried to upload was a screen recording, because some components are only worth saving for how they move. A clip is kept whole, so there is no crop to offer and the page says so rather than showing a control that does nothing. Its card shows one frame with a play mark; its own page plays the clip, muted and looping.

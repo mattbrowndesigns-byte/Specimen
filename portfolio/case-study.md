@@ -421,6 +421,10 @@ The limit is 25 MB, which is about a minute of a recorded window or 24 seconds o
 
 **One busy model stopped the rest.** Three free AI models stand behind every description, each with its own daily allowance. The app moved to the next one when a model ran out, but not when it was busy. While I was saving a clip, the first had run out, the second was overloaded, and the third was never asked. A busy model now gets one more try before the next takes over, all inside the minute the server allows.
 
+**A page only a person could open.** A studio's case study wouldn't save because its site turns away anything that isn't a person at a browser. I didn't want to work around that, but I was already past it: the page was open in front of me. The Save Button is a bookmark that reads the page in my own tab and hands Kivli the list of its images and clips, with the credit. On that page it saved the project's images and five of its clips; one was over the size limit and one had stopped answering. Behance and Dribbble turn Kivli away too, and the button reads the work and the designer's name on both.
+
+**Every clip says what it is.** Clips were tagged by subject, so there was no way to pull up just the motion work. Each one is now tagged Video when it was filmed and Motion Graphics when it was designed. The AI picks which of the two, and the app makes sure there is one, because a rule I'd have to check isn't a rule.
+
 Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component or a clip, still have to be proven there.
 
 ## What I deliberately did not build

@@ -735,6 +735,14 @@ export default function CaseStudyPage() {
             <p>
               Three free AI models stand behind every description, each with its own daily allowance. The app moved to the next one when a model ran out, but not when it was busy. While I was saving a clip, the first had run out, the second was overloaded, and the third was never asked. A busy model now gets one more try before the next takes over, all inside the minute the server allows.
             </p>
+            <h3>A page only a person could open</h3>
+            <p>
+              A studio&rsquo;s case study wouldn&rsquo;t save because its site turns away anything that isn&rsquo;t a person at a browser. I didn&rsquo;t want to work around that, but I was already past it: the page was open in front of me. The Save Button is a bookmark that reads the page in my own tab and hands Kivli the list of its images and clips, with the credit. On that page it saved the project&rsquo;s images and five of its clips; one was over the size limit and one had stopped answering. Behance and Dribbble turn Kivli away too, and the button reads the work and the designer&rsquo;s name on both.
+            </p>
+            <h3>Every clip says what it is</h3>
+            <p>
+              Clips were tagged by subject, so there was no way to pull up just the motion work. Each one is now tagged Video when it was filmed and Motion Graphics when it was designed. The AI picks which of the two, and the app makes sure there is one, because a rule I&rsquo;d have to check isn&rsquo;t a rule.
+            </p>
             <p>
               Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component or a clip, still have to be proven there.
             </p>

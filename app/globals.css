@@ -524,8 +524,7 @@ h1 {
    reachable from anywhere, on a white band so they read as chrome rather than
    as the first row of content. Sticky, so Add stays in reach down a long grid. */
 /* What a refused click in the demo says (app/_ui/DemoNotice.js). Fixed at the
-   foot of the window, centred, in the banner's inverted colours, because it
-   is the banner's sentence arriving at the moment it applies. */
+   foot of the window, centred, inverted, at the moment it applies. */
 .demo-notice {
   position: fixed;
   left: 50%;
@@ -539,47 +538,6 @@ h1 {
   color: var(--invert-text);
   font-size: 13px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
-}
-
-/* The demo's banner (app/_ui/UtilityBar.js). Inverted, because it is the one
-   line on screen that is about the app rather than part of it, and it scrolls
-   away while the bar under it stays: it needs reading once, not watching. The
-   chrome bands' own padding, so its text starts on the wordmark's line. */
-.demo-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-  flex-wrap: wrap;
-  padding: 8px var(--grid-margin);
-  background: var(--invert-bg);
-  color: var(--invert-text);
-  font-size: 13px;
-}
-
-.demo-banner p {
-  margin: 0;
-}
-
-/* A bare glyph in the banner's own ink. The padding is the hit area, and the
-   negative margin takes it back out of the band so closing it doesn't make the
-   banner taller than its sentence does. */
-.demo-banner-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin: -6px calc(var(--grid-margin) * -0.25) -6px auto;
-  padding: 6px;
-  border: none;
-  border-radius: 6px;
-  background: none;
-  color: inherit;
-  cursor: pointer;
-  opacity: 0.75;
-}
-
-.demo-banner-close:hover {
-  opacity: 1;
 }
 
 /* The demo's first-visit tour (app/_ui/DemoTour.js). Above everything else in
@@ -1669,47 +1627,14 @@ h1 {
   background: var(--accent-hover);
 }
 
-/* The demo's Add (app/_ui/DemoAdd.js). A kind the demo can't replay stays in
-   the menu, so the menu still shows what the app holds, but reads as
-   unavailable rather than as broken. */
-.add-option:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-
-.add-option:disabled:hover {
-  background: none;
-}
-
+/* The demo's Add (app/_ui/DemoAdd.js), whose address is fixed. */
 .add-pop-form input[readonly] {
   background: var(--surface-sunken);
   border-color: var(--border-strong);
   color: var(--text-muted);
 }
 
-.add-pop-note {
-  margin: -4px 0 12px;
-  font-size: 12px;
-  color: var(--text-muted);
-}
 
-.demo-used p {
-  margin: 0 0 12px;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--text-secondary);
-}
-
-/* The used-up demo hands over to sign-up, which is a link, so the anchor takes
-   the buttons' shape beside it. */
-.add-pop-actions a.primary {
-  display: inline-flex;
-  align-items: center;
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  text-decoration: none;
-}
 
 /* Scrolling tag strip */
 

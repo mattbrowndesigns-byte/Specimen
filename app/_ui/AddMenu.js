@@ -11,7 +11,7 @@ import { ACCEPT_ATTR, UPLOAD_HINT, hasFiles } from "@/lib/uploadClient";
 // (a page capture you then crop a region out of), or a resource -- a link
 // saved for what it does rather than how it looks, which takes no capture at
 // all and so is the one Add that finishes while you're still looking at it.
-const URL_LABELS = {
+export const URL_LABELS = {
   website: "Website URL",
   component: "Page to crop from",
   resource: "Link to save",

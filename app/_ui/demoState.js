@@ -2,37 +2,32 @@
 import { useSyncExternalStore } from "react";
 
 // What the browser knows about the demo, which is two things: whether this is
-// one, and how far the visitor's one save has got.
+// one, and how far the visitor's save has got.
 //
 // Neither decides anything the server cares about. The flag cookie only
-// chooses the banner and the staged Add; a stranger who forges it gets a
-// banner. What can actually be read or written is the signed pass, checked in
+// chooses the staged Add and the tour; a stranger who forges it gets those. What can actually be read or written is the signed pass, checked in
 // middleware.js -- see lib/demo.js.
 
 // The saves the demo makes, one per kind, each by replaying a record the demo
 // account already holds. Keyed by the Add menu's `add` id. `match` says which
 // rows in that tab are the replayed one, and those are held out of the grid
-// until the save lands. A kind with no entry here is shown in the menu as not
-// being in the demo.
+// until the save lands. Every kind in kinds.js needs an entry.
 export const DEMO_SAVES = {
   website: {
     url: "https://ramp.com",
     label: "Ramp",
-    note: "In the demo, every website save is ramp.com.",
     seconds: 12,
     match: (site) => site.domain === "ramp.com",
   },
   component: {
     url: "https://stripe.com/pricing",
     label: "Stripe",
-    note: "In the demo, every component save is a block from Stripe’s pricing page.",
     seconds: 12,
     match: (component) => hostOf(component.source_url) === "stripe.com",
   },
   resource: {
     url: "https://lucide.dev/icons/",
     label: "Lucide Icons",
-    note: "In the demo, every resource save is Lucide.",
     seconds: 6,
     match: (resource) => resource.domain === "lucide.dev",
   },
@@ -41,7 +36,6 @@ export const DEMO_SAVES = {
   visual: {
     url: "https://www.wolffolins.com/work/uber",
     label: "Uber",
-    note: "In the demo, every visuals save is Wolff Olins’ Uber project.",
     seconds: 8,
     match: (visual) => visual.url === "https://www.wolffolins.com/work/uber",
   },
@@ -74,34 +68,6 @@ export function isDemoBrowser() {
 // and saying "not a demo" there is what keeps hydration quiet.
 export function useIsDemo() {
   return useSyncExternalStore(noSubscribe, isDemoBrowser, () => false);
-}
-
-// Whether the banner has been closed. Per browser, like the save: someone who
-// closed it once has read it, and a demo that puts it back on every page would
-// be nagging a person who is trying to look at the work.
-const BANNER_KEY = "specimen.demo.banner";
-
-function readBannerClosed() {
-  try {
-    return localStorage.getItem(BANNER_KEY) === "closed";
-  } catch {
-    return false;
-  }
-}
-
-export function closeDemoBanner() {
-  try {
-    localStorage.setItem(BANNER_KEY, "closed");
-  } catch {
-    // Blocked storage means it comes back next visit, which is harmless.
-  }
-  for (const notify of listeners) notify();
-}
-
-export function useDemoBannerClosed() {
-  // The server has no storage, so it renders the banner open and a closed one
-  // disappears after hydration -- the quiet direction to be wrong in.
-  return useSyncExternalStore(subscribe, readBannerClosed, () => false);
 }
 
 // Whether this browser has been shown the tour (DemoTour.js). Finishing and
@@ -143,8 +109,7 @@ export function startDemoTour() {
 }
 
 // idle | capturing | saved, per kind, remembered per browser so a save
-// survives opening a record and coming back, and so it is one go per kind
-// rather than one per page load. The website's key predates the other two.
+// survives opening a record and coming back. Adding again replays it. The website's key predates the other two.
 const listeners = new Set();
 
 const phaseKey = (kind) => (kind === "website" ? PHASE_KEY : `${PHASE_KEY}.${kind}`);

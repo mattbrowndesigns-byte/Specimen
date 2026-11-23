@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { markTourSeen, readTourSeen, TOUR_EVENT, useDemoPhase, useIsDemo } from "./demoState";
+import { markTourSeen, readTourSeen, TOUR_EVENT, useIsDemo } from "./demoState";
 
 // A first look round the dashboard for someone arriving from the demo link.
 //
@@ -26,7 +26,7 @@ const STEPS = [
   {
     title: "Welcome to Kivli",
     body:
-      "Kivli is a library for design inspiration. Save a link and it takes a full-page screenshot, tags it and writes a summary. This is a copy of a real library, so everything here was captured and described by the app itself.",
+      "Kivli is a library for design inspiration. Save a link and it takes a full-page screenshot, tags it and writes a summary. This is a copy of a real library, so everything here was captured and described by the app itself. Look around; changes aren't saved.",
   },
   {
     target: '[data-tour="tabs"]',
@@ -63,10 +63,7 @@ const STEPS = [
   {
     target: '[data-tour="add"]',
     title: "Now try it",
-    body: "Add a website and the demo saves ramp.com for you, so you can watch a capture happen from start to finish.",
-    // Only while the staged save is still unused: once Ramp is in, Add opens
-    // a note saying so, and a tour ending on it would be ending on a no.
-    onlyBeforeSave: true,
+    body: "Add a website and watch a capture happen from start to finish. Here it saves ramp.com, sped up from about a minute.",
   },
 ];
 
@@ -111,7 +108,6 @@ function measure(el, fitChildren) {
 
 export default function DemoTour() {
   const demo = useIsDemo();
-  const addPhase = useDemoPhase("website");
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
   // The element a stop found, tagged with the stop it belongs to, and its box
@@ -125,7 +121,7 @@ export default function DemoTour() {
   const cardRef = useRef(null);
   const primaryRef = useRef(null);
 
-  const steps = STEPS.filter((s) => !s.onlyBeforeSave || addPhase === "idle");
+  const steps = STEPS;
   const step = steps[Math.min(index, steps.length - 1)];
   const last = index >= steps.length - 1;
 

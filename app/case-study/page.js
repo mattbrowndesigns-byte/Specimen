@@ -482,12 +482,17 @@ export default function CaseStudyPage() {
             <p>
               Saving is the one thing a demo has to show and the one thing it cannot do for real,
               because every save spends my own twenty-a-day AI budget. So Add is staged: the
-              address is locked to ramp.com, the field says so, and a twelve second bar plays
-              before the card lands. Every screenshot and tag it reveals is real output from a real
+              address is locked to ramp.com, and a twelve second bar plays before the card
+              lands. Every screenshot and tag it reveals is real output from a real
               save.
             </p>
             <p className="case-point">
-              Staged and saying so reads as a designed demo. Staged and hiding it reads as a trick.
+              The tour says what is staged, once. After that, every word is the app&rsquo;s own.
+            </p>
+            <p>
+              It used to say so everywhere: a banner, a note under the field, a disclaimer in the
+              progress bar, a card for a save you had already used. Each was honest, and together
+              they kept pulling you out of the thing you had come to see.
             </p>
             <p>
               First-time visitors get a seven-stop tour that ends by opening Add, and their visits

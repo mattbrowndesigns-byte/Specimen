@@ -28,7 +28,7 @@ const APPS = [
     steps: [
       "In Claude, open Settings, then Connectors.",
       "Choose Add custom connector. Name it Kivli and paste the address above.",
-      ["Press Connect. Kivli opens and asks you to allow access.", "Press Add. The demo needs no sign-in."],
+      ["Press Connect. Kivli opens and asks you to allow access.", "Press Add. There's no sign-in."],
       "In a chat, turn Kivli on from the tools menu and ask away.",
     ],
   },
@@ -248,7 +248,7 @@ export default function ConnectPage() {
             to it: search your saves, open one with its screenshots, colours and type, and read a
             whole collection.{" "}
             {demo
-              ? "Here it can only read, and it reads the demo library."
+              ? "It can only read; it can't change anything."
               : "Ask it to and it can save websites and resources too. It can't edit or delete anything you've already saved."}
           </p>
         </section>
@@ -278,7 +278,7 @@ export default function ConnectPage() {
               {address && <CopyField value={address} label="MCP server address" />}
               <p className="connect-note">
                 {demo
-                  ? "This is the demo library, so there's no sign-in."
+                  ? "There's no sign-in."
                   : "It's yours alone: anything using it signs in as you."}
               </p>
             </div>

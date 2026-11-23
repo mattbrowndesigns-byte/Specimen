@@ -315,9 +315,6 @@
     border-radius: 10px;
   }
 
-  & .demo-banner {
-    letter-spacing: -0.005em;
-  }
 
   & .site-footer {
     border-top-color: var(--border-soft);

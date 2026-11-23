@@ -1984,19 +1984,21 @@ Add is staged (`DemoAdd.js`), one replayed save per kind in `DEMO_SAVES`: Ramp,
 a Stripe pricing block, Lucide, and Wolff Olins' Uber project (three images and
 a loop that land together). Each replays a row the seed has to contain. The component one
 outlived its row: it was a ramp.com block no longer in the library, so the bar
-ran, said saved, and nothing arrived. The URL is locked and the field says
-so, Ramp is held out of the grid until Submit, and the dashboard plays a
+ran, said saved, and nothing arrived. The URL is locked, Ramp is held out of the grid until Submit, and the dashboard plays a
 twelve-second bar before the card lands. A real save from strangers would spend
 the owner's twenty-a-day Gemini budget, and every screenshot and tag the staged
-one opens is real output -- staged and saying so reads as a designed demo,
-staged and hiding it reads as a trick. `DemoNotice` wraps `fetch` and shows the
+one opens is real output. The tour is the only place that says any of this:
+the welcome card that changes aren't saved, the last one that the save is
+staged and sped up. Every field, progress bar and confirmation uses the real
+app's words, and Add can be pressed again and replays. It used to be said on
+every control (a note under the field, a disclaimer in the bar, a banner, a
+"that was the demo's one save" card) and the owner's rule is that a line which
+isn't in the real app doesn't belong in the demo. `DemoNotice` wraps `fetch` and shows the
 refusal whenever a click is refused, because many controls answer a failed
 write by quietly reverting, which in a demo reads as broken. The menu drops
-Share and Your Name and has no Sign Out, and the banner is a sentence with a
-close button -- no Create Your Own and no Exit. This is a portfolio link, not a
+Share and Your Name and has no Sign Out, Create Your Own or Exit. This is a portfolio link, not a
 funnel: the owner does not want strangers signing up, and nowhere to go from a
-demo but away is what a close tab is for. Closing is remembered per browser
-(`specimen.demo.banner`).
+demo but away is what a close tab is for.
 
 **A real session ends the demo, in the browser as well as on the server.** The
 pass already lost to a session in `currentUser()`, but `kivli_demo` -- the flag

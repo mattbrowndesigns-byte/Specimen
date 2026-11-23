@@ -419,6 +419,8 @@ The limit is 25 MB, which is about a minute of a recorded window or 24 seconds o
 
 **The AI was judging clips by their cover.** An uploaded clip gets five stills, because the browser that uploads it can open it. A clip saved from a link got one, its cover, and the cover of that LinkedIn post was a plain blue gradient, so its description was about gradients. Linked clips are now looked through in the picker before the AI is asked, in the same single request. Clips saved earlier get theirs the next time you press Regenerate.
 
+**One busy model stopped the rest.** Three free AI models stand behind every description, each with its own daily allowance. The app moved to the next one when a model ran out, but not when it was busy. While I was saving a clip, the first had run out, the second was overloaded, and the third was never asked. A busy model now gets one more try before the next takes over, all inside the minute the server allows.
+
 Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component or a clip, still have to be proven there.
 
 ## What I deliberately did not build

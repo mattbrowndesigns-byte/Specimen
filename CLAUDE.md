@@ -887,9 +887,15 @@ its life. Requests are scarce; tokens are not.
 
 **"Per model" is the useful half, so `GEMINI_MODELS` is a list.** A second
 model is a second allowance on the same key. `callModel` does one model with
-the 5xx retries; `callGemini` walks the list, and moves on **only** for a 429 --
-a 400 would be wrong at the next model too, and a 503 has already been waited
-out. The fallbacks are not a downgrade, they are the days that used to fail:
+the 5xx retries; `callGemini` walks the list, and moves on for a 429 or a 5xx --
+never a 400, which would be wrong at the next model too. A 503 used to stop the
+walk, on the grounds that it had been waited out: on 2026-11-23 the first model
+was spent, the second busy, and the third never asked. A model with others
+behind it now gets two attempts, the last one four, all inside `BUDGET_MS`
+(50s), which also caps the attempts that used to get 50s *each* in a 60s route.
+A timeout doesn't move on: it has spent the next model's time, and shortening it
+would cut off the capable model's slow good answers. One model busy means the
+day isn't declared spent. The fallbacks are not a downgrade, they are the days that used to fail:
 the capable model answers whenever it can, and the others only ever see a
 request that would otherwise have been refused outright. Both were tested
 against a structured vision request before being trusted with one.

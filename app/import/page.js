@@ -1,12 +1,11 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Upload } from "lucide-react";
-import { KINDS as ALL_KINDS } from "../_ui/kinds";
+import { KIND, KINDS } from "../_ui/kinds";
 import UtilityBar from "../_ui/UtilityBar";
 import SiteFooter from "../_ui/SiteFooter";
 import ImportStatus from "../_ui/ImportStatus";
 import { parseLinks } from "@/lib/importLinks";
-import { CROP_AHEAD, PICK_AHEAD } from "@/lib/importAhead";
 
 // Bringing a bookmarking app's worth of links across in one paste.
 //
@@ -20,18 +19,10 @@ import { CROP_AHEAD, PICK_AHEAD } from "@/lib/importAhead";
 // it finishes over days, not minutes. What it says instead is exactly where
 // each pile is, and that closing the tab changes nothing.
 //
-// Four kinds, in the dashboard's order and with its icons. Two of them finish
-// on their own; two end at a step only you can take -- drawing a crop, picking
-// images -- so those say up front that they wait for you, and why they only
-// prepare a few at a time.
-const NOTES = {
-  site: "Each one gets a full page screenshot, a summary and tags.",
-  component: `Each page is captured, then waits on the Components tab for you to crop. Kivli keeps ${CROP_AHEAD} ready at a time, since an uncropped capture takes up storage.`,
-  resource: "Links saved for what they do. No screenshot, so these land fast.",
-  visual: `Each page's images are pulled and sorted by the AI, then wait on the Visuals tab for you to pick. Kivli reads ${PICK_AHEAD} ahead of you, since unpicked images take up storage.`,
-};
-
-const KINDS = ALL_KINDS.map(({ id, label, Icon }) => ({ id, label, Icon, note: NOTES[id] }));
+// Four kinds, in the dashboard's order and with its icons, and no sentence
+// beside them: anyone importing has already used the app, and the names say
+// what each is. The one thing they don't say -- components and visuals wait
+// for you to crop or pick -- is said when it applies, after the import.
 
 const MAX_CHARS = 2_000_000;
 
@@ -120,7 +111,6 @@ export default function ImportPage() {
     }
   }
 
-  const kindInfo = KINDS.find((k) => k.id === kind);
   const overLimit =
     kind === "site" && account && items.length > account.remaining ? items.length - account.remaining : 0;
 
@@ -159,7 +149,6 @@ export default function ImportPage() {
                 </button>
               ))}
             </div>
-            <p className="import-kind-note">{kindInfo.note}</p>
           </div>
 
           <label className="import-drop-label" htmlFor="import-text">
@@ -251,7 +240,7 @@ export default function ImportPage() {
             <div className="import-preview">
               <p className="import-preview-count">
                 <strong>{items.length}</strong> {items.length === 1 ? "link" : "links"} ready to
-                import as {kindInfo.label.toLowerCase()}.
+                import as {KIND[kind].label.toLowerCase()}.
               </p>
               <ul className="import-preview-notes">
                 {parsed.duplicates > 0 && (

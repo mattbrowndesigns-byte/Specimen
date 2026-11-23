@@ -1635,3 +1635,202 @@
     color: var(--text-muted);
   }
 }
+
+/* Visuals that move, and visuals from your own files (schema_m24)
+   ===========================================================================
+   A loop takes exactly the place its poster would: the same full-column
+   width, the same slow hover zoom, the same rounded crop. Nothing about a
+   card should change shape between the poster showing and the video playing,
+   or the board would twitch every time a loop scrolled into view. */
+:root[data-variant="refined"] {
+  & .visual-card video,
+  & .pick-tile video {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* A page's poster is sometimes a slightly different crop from its video;
+       the box is the video's shape, and the poster fills it rather than
+       letterboxing inside it. */
+    object-fit: cover;
+    transition: transform 0.6s var(--ease, cubic-bezier(0.2, 0.7, 0.2, 1));
+  }
+
+  & .visual-card:hover video {
+    transform: scale(1.015);
+  }
+
+  & .pick-tile video {
+    transition: opacity 0.15s ease;
+  }
+
+  /* A paused loop -- off screen, or for someone who asked for less motion --
+     looks like a still, so it carries a mark. Top left, opposite the heart
+     and bookmark, small enough to read as a label rather than a button: it
+     isn't one, the whole card is. */
+  & .visual-card-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    pointer-events: none;
+  }
+
+  /* The same stepping back an unticked or already-saved image does. */
+  & .pick-tile:not(.pick-tile-selected) video {
+    opacity: 0.45;
+  }
+
+  & .pick-tile:not(.pick-tile-selected):hover video {
+    opacity: 0.8;
+  }
+
+  & .pick-tile.pick-tile-saved video,
+  & .pick-tile.pick-tile-saved:hover video {
+    opacity: 0.3;
+    filter: grayscale(1);
+  }
+
+  /* In the picker the top left is the tick's. */
+  & .pick-tile .visual-card-badge {
+    left: auto;
+    right: 8px;
+  }
+
+  /* The lightbox's video carries the browser's own controls; its corners
+     match the still's. */
+  & video.lightbox-image {
+    background: #000;
+  }
+
+  /* The window-sized drop target. A scrim the overlay colour, and one card
+     in the middle saying what letting go will do -- the same card shape the
+     modals use, so it reads as the app answering rather than the browser. */
+  & .visual-drop {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--overlay);
+    pointer-events: none;
+    animation: refined-fade 0.12s ease-out;
+  }
+
+  & .visual-drop-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 28px 36px;
+    border: 2px dashed var(--border-strong);
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--text);
+    text-align: center;
+
+    & svg {
+      color: var(--accent);
+    }
+
+    & strong {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    & small {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+  }
+
+  & .visual-upload-status {
+    margin-top: 4px;
+
+    & .capture-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+  }
+
+  & .visual-upload-skipped {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* The Add menu's other way in for a visual. A word on a rule, then one
+     filled button, then the formats -- the alternative to the URL above it,
+     not a second form. */
+  & .add-pop-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 14px;
+
+    & button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      height: var(--control-h, 32px);
+      padding: 0 14px;
+      border: none;
+      border-radius: 999px;
+      background: var(--field-bg);
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    & button:hover:not(:disabled) {
+      background: var(--surface-hover);
+    }
+
+    & button:disabled {
+      cursor: default;
+      color: var(--text-muted);
+    }
+
+    & small {
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--text-muted);
+    }
+  }
+
+  & .add-pop-or {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+
+    &::before,
+    &::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+  }
+
+  & .pick-head-note {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+}

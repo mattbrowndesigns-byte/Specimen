@@ -2210,6 +2210,34 @@ thumbnails). Only a collection reaches visuals from a share link: no tab-level
 scope covers them yet, so a library share still leaves them out -- on purpose,
 and the next thing to decide if visuals ever get a share scope of their own.
 
+**A visual can come from your own files, and then it has no url.**
+`schema_m24.sql` makes `url` and `domain` nullable on `visual` and
+`visual_project`; one upload batch is one project, described in one request.
+Anything that renders a visual's credit has to cope with neither existing --
+the lightbox says "Uploaded from your files", the export says so in Credit,
+a shared card falls back to the image. The file never passes through a
+function: `/api/visuals/upload` hands out signed upload URLs, the browser PUTs
+straight into Storage (no key needed, CORS is open), and
+`/api/visuals/upload/[id]` reads it back, encodes the WebP pair and deletes
+the original from `uploads/`. That is the whole reason for the detour: Vercel
+refuses a body over 4.5MB, and a retina screenshot is routinely bigger. An
+animated GIF stays animated (sharp `animated: true` to animated WebP).
+
+**A visual can be a looping video, and the picture is still its poster.**
+`visual.video_url` is the stored MP4; `image_url` / `thumb_url` are its poster
+frame, so every reader that only knows pictures keeps working, and only the
+board, picker and lightbox play it (`app/_ui/VisualMedia.js`, in-view only,
+never under reduced motion). Extraction reads `<video>` sources and Webflow's
+`data-video-urls`, keeps MP4 only (sniffed on `ftyp`, not trusted from
+Content-Type), stops downloading at `MAX_VIDEO_BYTES` (15MB -- storage is 1GB
+for everything) and counts the rest into `videos_too_large` for the picker to
+say. Dimensions come from the MP4's `tkhd` box. A video with no poster is
+stored with `needs_poster` and the picker draws a frame in the browser
+(`lib/videoFrame.js`) and posts it to `/poster`, one at a time because each
+write replaces the whole candidates jsonb -- before the AI sort, since the
+model can only look at a still. Every delete goes through `mediaFiles()`, or
+the MP4 is left in storage.
+
 **The lightbox's Details panel is a drawer, kept mounted to close.**
 `.lightbox-panel-holder` animates its width from 0 to 400px with the panel
 pinned to its right edge, so the picture resizes continuously and the panel

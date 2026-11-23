@@ -27,7 +27,7 @@ const RESOURCE_FIELDS =
 // A visual's credit columns are copied down from its project, so the row is
 // enough to say whose work it is. No notes, no review flag, no favourite.
 const VISUAL_FIELDS =
-  "id, title, summary, image_url, thumb_url, url, domain, agency_name, width, height, saved_at";
+  "id, title, summary, image_url, thumb_url, video_url, url, domain, agency_name, width, height, saved_at";
 
 // Every read logs its own failure. The previous version destructured `data`
 // alone, so a bad column name came back as an empty array that looked exactly

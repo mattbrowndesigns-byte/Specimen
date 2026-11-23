@@ -5,6 +5,7 @@ import CopyForAI from "./CopyForAI";
 import ModalShell from "./ModalShell";
 import SaveActions from "./SaveActions";
 import TagCombobox from "./TagCombobox";
+import VisualMedia from "./VisualMedia";
 import { rankRelated } from "@/lib/related";
 
 // A saved visual, opened the way images are meant to be opened: over the
@@ -33,7 +34,18 @@ const PANEL_EXIT_MS = 380;
 // and `onUpdated(visual)` keep the board in step with edits made here.
 // "By Favor the Brave · favorthebrave.com", the same line in the caption and
 // at the top of Details: who made it, and the page it came from.
+//
+// An upload has no page and no maker on record, so there's no link to make
+// and nothing to say "By" in front of -- it says where it came from instead,
+// quietly, so the missing credit reads as a fact and not as an omission.
 function Credit({ credit, visual, withOriginal = false }) {
+  if (!visual.url) {
+    return (
+      <span className="lightbox-caption-credit">
+        {credit ? <span>By {credit}</span> : <span className="lightbox-uploaded">Uploaded from your files</span>}
+      </span>
+    );
+  }
   return (
     <span className="lightbox-caption-credit">
       <a href={visual.url} target="_blank" rel="noopener noreferrer">
@@ -449,14 +461,19 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
           }}
         >
           <figure className="lightbox-figure">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            {/* A video plays as the case study played it: muted, looping,
+                inline. It keeps the browser's controls here and nowhere
+                else -- this is where you'd want to pause on a frame or
+                scrub back, and they're the only way to start it for
+                someone whose system asks for less motion. */}
+            <VisualMedia
               key={visual.id}
               className="lightbox-image"
+              visual={visual}
               src={visual.image_url}
               alt={visual.title || "Visual"}
-              width={visual.width || undefined}
-              height={visual.height || undefined}
+              playInView={false}
+              controls
             />
             <figcaption className="lightbox-caption">
               <span className="lightbox-caption-title">{visual.title || "Untitled"}</span>
@@ -669,7 +686,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
                     href={`/visuals/${item.id}`}
                     className="lightbox-thumb"
                     onClick={(e) => thumbClick(e, item.id)}
-                    data-tip={`${item.title || "Untitled"} · ${item.agency_name || item.domain}`}
+                    data-tip={[item.title || "Untitled", item.agency_name || item.domain].filter(Boolean).join(" · ")}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.thumb_url} alt={item.title || "Visual"} loading="lazy" />

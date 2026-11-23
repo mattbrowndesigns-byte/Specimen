@@ -8,6 +8,7 @@ import DemoAdd from "./DemoAdd";
 import DemoNotice from "./DemoNotice";
 import { closeDemoBanner, useDemoBannerClosed, useIsDemo } from "./demoState";
 import { addItem, jobHandoffUrl, resourceHandoffUrl } from "@/lib/addItem";
+import { UPLOAD_PROBLEMS_KEY, describeUpload, sortFiles, uploadVisualFiles } from "@/lib/visualUploadClient";
 
 // The library's chrome, the same on every page: identity (which doubles as the
 // way home), the review bell, Add, and a menu holding everything that isn't a
@@ -39,6 +40,42 @@ export default function UtilityBar({ onAdd, onError }) {
       ? resourceHandoffUrl(result.resource)
       : jobHandoffUrl(result.job);
     return true;
+  }
+
+  // Uploaded images go to the Visuals tab, where they land on the board. The
+  // describe is sent with keepalive so it survives the navigation; if it
+  // doesn't answer, the batch is already in the queue and fills in there.
+  async function handleUpload(files, onProgress) {
+    const { ok, skipped } = sortFiles(files);
+    if (!ok.length) {
+      onError?.(skipped[0] || "Choose a PNG, JPEG, WebP or GIF.");
+      return false;
+    }
+    try {
+      const result = await uploadVisualFiles(ok, {
+        onProgress: ({ done, total }) => onProgress(`Uploading ${Math.min(done + 1, total)} of ${total}…`),
+      });
+      if (!result.visuals.length) {
+        onError?.(result.failed[0] || "Those images couldn't be uploaded.");
+        return false;
+      }
+      describeUpload(result.projectId, { keepalive: true });
+      const problems = [...skipped, ...result.failed];
+      // Said on the board they're about to land on: an error shown here would
+      // be gone with the page before anyone read it.
+      if (problems.length) {
+        try {
+          sessionStorage.setItem(UPLOAD_PROBLEMS_KEY, JSON.stringify(problems));
+        } catch {
+          // Not shown is the cost of no storage; the files that worked are saved.
+        }
+      }
+      window.location.href = "/?tab=visuals";
+      return true;
+    } catch (err) {
+      onError?.(err.message);
+      return false;
+    }
   }
 
   return (
@@ -74,7 +111,7 @@ export default function UtilityBar({ onAdd, onError }) {
           </div>
           <div className="nav-links">
             <NotificationBell />
-            {demo ? <DemoAdd /> : <AddMenu onSubmit={handleAdd} />}
+            {demo ? <DemoAdd /> : <AddMenu onSubmit={handleAdd} onUpload={handleUpload} />}
             <MoreMenu />
           </div>
         </div>

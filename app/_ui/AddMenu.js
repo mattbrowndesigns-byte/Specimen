@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { KINDS } from "./kinds";
+import { ACCEPT_ATTR, UPLOAD_HINT } from "@/lib/visualUploadClient";
 
 // Lives in the page header so saving never depends on which tab is open.
 // Three kinds: a website (full record, appears in the grid), a component
@@ -15,13 +16,18 @@ const URL_LABELS = {
   visual: "Page with images",
 };
 
-export default function AddMenu({ onSubmit, variant }) {
+// `onUpload(files, onProgress)` takes images from the visual's file picker --
+// a screenshot that doesn't live on any page -- and resolves true when the
+// menu can close. Without it the Upload button isn't offered.
+export default function AddMenu({ onSubmit, onUpload, variant }) {
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState(null);
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(null);
   const wrapRef = useRef(null);
   const inputRef = useRef(null);
+  const fileRef = useRef(null);
 
   useEffect(() => {
     function onDocClick(e) {
@@ -46,6 +52,18 @@ export default function AddMenu({ onSubmit, variant }) {
     setOpen(false);
     setKind(null);
     setUrl("");
+    setProgress(null);
+  }
+
+  async function chooseFiles(e) {
+    const files = [...(e.target.files || [])];
+    e.target.value = "";
+    if (!files.length || busy) return;
+    setBusy(true);
+    const ok = await onUpload(files, setProgress);
+    setBusy(false);
+    setProgress(null);
+    if (ok) close();
   }
 
   async function submit(e) {
@@ -98,9 +116,32 @@ export default function AddMenu({ onSubmit, variant }) {
               Cancel
             </button>
             <button type="submit" className="primary" disabled={busy}>
-              {busy ? "Starting…" : "Submit"}
+              {busy && !progress ? "Starting…" : "Submit"}
             </button>
           </div>
+
+          {/* The other way in for a visual: a file that never lived on a
+              page. Below the URL rather than beside it, because pasting a
+              link is still the common case and this is the alternative to
+              it, not a second field to fill in. */}
+          {kind === "visual" && onUpload && (
+            <div className="add-pop-upload">
+              <span className="add-pop-or">or</span>
+              <button type="button" onClick={() => fileRef.current?.click()} disabled={busy}>
+                <Upload size={15} />
+                {progress ? progress : "Upload Images"}
+              </button>
+              <small>{UPLOAD_HINT}. Or drop them on the Visuals tab.</small>
+              <input
+                ref={fileRef}
+                type="file"
+                accept={ACCEPT_ATTR}
+                multiple
+                hidden
+                onChange={chooseFiles}
+              />
+            </div>
+          )}
         </form>
       )}
     </div>

@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachTags } from "@/lib/tagAttach";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND } from "@/lib/ownership";
-import { VISUAL_COLUMNS, removeFiles } from "@/lib/visuals";
+import { VISUAL_COLUMNS, mediaFiles, removeFiles } from "@/lib/visuals";
 
 // One visual, its tags, and the rest of the project it came from in page
 // order -- "more from this project" needs nothing else.
@@ -25,7 +25,7 @@ export async function GET(request, { params }) {
   const [{ data: siblings }, { data: project }] = await Promise.all([
     supabase
       .from("visual")
-      .select("id, title, thumb_url, width, height, position")
+      .select("id, title, thumb_url, video_url, width, height, position")
       .eq("project_id", visual.project_id)
       .eq("user_id", user.id)
       .order("position"),
@@ -88,7 +88,7 @@ export async function DELETE(request, { params }) {
   const supabase = supabaseAdmin();
   const { data: visual } = await supabase
     .from("visual")
-    .select("id, project_id, image_url, thumb_url")
+    .select("id, project_id, image_url, thumb_url, video_url")
     .eq("id", id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -99,7 +99,7 @@ export async function DELETE(request, { params }) {
   await supabase.from("collection_item").delete().eq("target_type", "visual").eq("target_id", id);
   const { error } = await supabase.from("visual").delete().eq("id", id).eq("user_id", user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  await removeFiles(supabase, [visual.image_url, visual.thumb_url]);
+  await removeFiles(supabase, mediaFiles(visual));
 
   const { count } = await supabase
     .from("visual")

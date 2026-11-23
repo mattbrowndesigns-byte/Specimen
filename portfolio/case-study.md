@@ -145,6 +145,18 @@ The vocabulary is three facets. Industry and aesthetic are shared with websites,
 
 Two guards came from running it for real. A title is two to six words by instruction, and one came back as hundreds of words of looping filler, so anything past eight words is treated as that and replaced. And files are named by their content and cached for a year, because the free plan's limit on what a board of images can serve is the first one a library like this would hit.
 
+Two things it could not hold at first. A screenshot on my desktop had no page to paste, and case studies loop MP4s that a still frame records badly. Uploads go from the browser straight into storage on a signed link, because Vercel refuses a request over 4.5 MB and a retina screenshot of a long page is often bigger; the server only reads the file back to make the WebP. A batch of uploads is described in one request, like a page.
+
+Videos are kept as muted loops of up to 15 MB each, because the free plan's 1 GB holds every capture and every image too. On Jade Kuzak's Gemini page, three of the six loops were over that, and the picker says so rather than letting the page look as if it had none.
+
+> The server has no video decoder. Every browser is one.
+
+The board lays everything out by a still, and the AI can only look at one. Focus Lab's pages hand over a poster with every video; Cargo sites like Jade Kuzak's hand over none. Decoding video on the server would mean a large binary on a free function, so for a video with no poster the picker plays the stored file in the browser, draws a frame a second in, and sends that back as the poster.
+
+| Largest video kept | Largest request Vercel accepts |
+|---|---|
+| **15 MB**, of a 1 GB free plan | **4.5 MB**, so uploads go straight to storage |
+
 ## Two progress bars, not one percentage
 
 A hundred imported bookmarks is two hundred AI requests against a tier that

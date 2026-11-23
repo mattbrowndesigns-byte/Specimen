@@ -1,12 +1,19 @@
 "use client";
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Play } from "lucide-react";
 import UtilityBar from "../../../_ui/UtilityBar";
 import SiteFooter from "../../../_ui/SiteFooter";
 import Favicon from "../../../_ui/Favicon";
 import { useAnnounceWork } from "../../../_ui/workInFlight";
 import FeatureRotator from "../../../_ui/FeatureRotator";
 import { GAP, MasonrySkeleton, layout, useColumns } from "../../../_ui/masonry";
+import VisualMedia from "../../../_ui/VisualMedia";
+import { grabFrame } from "@/lib/videoFrame";
+
+// Mirrors MAX_VIDEO_BYTES in lib/visualExtract.js, which is the rule; this is
+// only the sentence that says it.
+const MAX_VIDEO_MB = 15;
+const MAX_PAGE_MB = 40;
 
 // Where a case study's images are chosen before anything is saved.
 //
@@ -47,7 +54,11 @@ function Loading({ phase }) {
       </div>
       <div className="capture-status-row">
         <p>
-          {phase === "sorting" ? "Picking out the work from the rest of the page" : "Finding the images on the page"}
+          {phase === "sorting"
+            ? "Picking out the work from the rest of the page"
+            : phase === "posters"
+              ? "Taking a still from each video"
+              : "Finding the images and videos on the page"}
           {elapsed < ESTIMATE_SECONDS ? `: about ${Math.ceil(ESTIMATE_SECONDS - elapsed)}s remaining.` : ": finishing up."}
         </p>
         {/* The same aside the capture bar carries, so a visuals save reads as
@@ -69,14 +80,7 @@ function Tile({ candidate, selected, onToggle }) {
   if (candidate.saved) {
     return (
       <div className="pick-tile pick-tile-saved" aria-label={`Already saved: ${candidate.title || "image"}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={candidate.thumb_url}
-          alt=""
-          width={candidate.width || undefined}
-          height={candidate.height || undefined}
-          loading="lazy"
-        />
+        <VisualMedia visual={candidate} src={candidate.thumb_url} alt="" loading="lazy" />
         <span className="pick-saved-badge">In your library</span>
       </div>
     );
@@ -88,16 +92,16 @@ function Tile({ candidate, selected, onToggle }) {
       className={`pick-tile${selected ? " pick-tile-selected" : ""}`}
       onClick={() => onToggle(candidate.key)}
       aria-pressed={selected}
-      aria-label={`${selected ? "Selected" : "Not selected"}: ${candidate.title || candidate.alt || "image"}`}
+      aria-label={`${selected ? "Selected" : "Not selected"}: ${candidate.title || candidate.alt || (candidate.video_url ? "video" : "image")}`}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={candidate.thumb_url}
-        alt=""
-        width={candidate.width || undefined}
-        height={candidate.height || undefined}
-        loading="lazy"
-      />
+      {/* A video plays in the picker too: whether it's worth keeping is
+          mostly a question of what it does. */}
+      <VisualMedia visual={candidate} src={candidate.thumb_url} alt="" loading="lazy" />
+      {candidate.video_url && (
+        <span className="visual-card-badge" aria-hidden="true">
+          <Play size={10} fill="currentColor" />
+        </span>
+      )}
       <span className="pick-check" aria-hidden="true">
         {selected && <Check size={14} strokeWidth={3} />}
       </span>
@@ -137,7 +141,7 @@ export default function PickProjectPage({ params }) {
   // nothing that arrives later can overwrite a choice you've made.
   const show = useCallback((p) => {
     setProject(p);
-    setSelected(new Set((p.candidates || []).filter((c) => c.keep && !c.saved).map((c) => c.key)));
+    setSelected(new Set((p.candidates || []).filter((c) => c.keep && !c.saved && !c.needs_poster).map((c) => c.key)));
     setPhase(p.state === "failed" ? "failed" : "ready");
   }, []);
 
@@ -148,6 +152,28 @@ export default function PickProjectPage({ params }) {
       if (p.state === "extracting" || p.state === "queued" || p.state === "failed") {
         setPhase("extracting");
         await fetch(`/api/visuals/projects/${id}/extract`, { method: "POST" });
+        p = await load();
+        if (!p) return;
+      }
+      // Videos the page gave no poster get one drawn here, from the stored
+      // MP4, before the AI sorts -- the model can only look at a still, and
+      // the board lays everything out by one. One at a time, because each
+      // write replaces the project's whole candidate list.
+      const needing = (p.candidates || []).filter((c) => c.needs_poster && !c.saved);
+      if (p.state === "picking" && needing.length) {
+        setPhase("posters");
+        for (const c of needing) {
+          const form = new FormData();
+          form.append("key", c.key);
+          try {
+            const { blob } = await grabFrame(c.video_url);
+            form.append("frame", blob, `${c.key}.jpg`);
+          } catch {
+            // No frame: the server drops the video rather than offering a
+            // blank tile.
+          }
+          await fetch(`/api/visuals/projects/${id}/poster`, { method: "POST", body: form }).catch(() => {});
+        }
         p = await load();
         if (!p) return;
       }
@@ -215,11 +241,15 @@ export default function PickProjectPage({ params }) {
     if (res.ok) window.location.href = "/?tab=visuals";
   }
 
-  const candidates = useMemo(() => project?.candidates || [], [project]);
+  // A video still without a poster couldn't be drawn or stored; it has no
+  // picture to save, so it isn't offered.
+  const candidates = useMemo(() => (project?.candidates || []).filter((c) => !c.needs_poster), [project]);
   const fresh = useMemo(() => candidates.filter((c) => !c.saved), [candidates]);
   const hasSaved = fresh.length < candidates.length;
   const laidOut = useMemo(() => layout(candidates, columns), [candidates, columns]);
-  const loading = phase === "loading" || phase === "extracting" || phase === "sorting";
+  const loading = phase === "loading" || phase === "extracting" || phase === "posters" || phase === "sorting";
+  const videoCount = fresh.filter((c) => c.video_url).length;
+  const tooLarge = project?.videos_too_large || 0;
   const count = selected.size;
 
   return (
@@ -271,6 +301,16 @@ export default function PickProjectPage({ params }) {
                   <p className="pick-note">
                     Sorted by size and position for now. {project.error || "The AI hasn't looked at these yet."} Pick
                     by hand, or come back once it has.
+                  </p>
+                )}
+                {/* The size cap is said wherever a video could be: always
+                    when one was left out for it, and as a note beside any
+                    that were kept, so it's no surprise next time. */}
+                {(tooLarge > 0 || videoCount > 0) && (
+                  <p className="pick-head-note">
+                    {tooLarge > 0
+                      ? `${tooLarge} video${tooLarge === 1 ? " was" : "s were"} left out for size. Videos can be up to ${MAX_VIDEO_MB} MB each, and ${MAX_PAGE_MB} MB for one page.`
+                      : `Videos are kept as muted loops, up to ${MAX_VIDEO_MB} MB each.`}
                   </p>
                 )}
               </div>

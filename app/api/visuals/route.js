@@ -21,7 +21,9 @@ export async function GET() {
       .from("visual_project")
       .select("id, url, domain, title, agency_name, favicon_url, favicon_fills, state, ai_state, created_at")
       .eq("user_id", user.id)
-      .neq("state", "saved")
+      // A batch of uploads is "uploading" for the second before its first
+      // file lands; it has nothing to pick, so it's no business of this list.
+      .not("state", "in", "(saved,uploading)")
       .order("created_at", { ascending: false }),
   ]);
   if (visualsRes.error) return NextResponse.json({ error: visualsRes.error.message }, { status: 500 });

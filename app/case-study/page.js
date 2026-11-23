@@ -678,8 +678,18 @@ export default function CaseStudyPage() {
             <p>
               Doing it turned up a gap. Websites, resources and visuals all wait in line when the AI is too busy to describe them. Components never did: one saved on a busy day stayed untitled until I noticed. They share the same line now, uploaded or not.
             </p>
+            <h3>A component that moves</h3>
             <p>
-              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component, still have to be proven there.
+              The next thing I tried to upload was a screen recording, because some components are only worth saving for how they move. A clip is kept whole, so there is no crop to offer and the page says so rather than showing a control that does nothing. Its card shows one frame with a play mark; its own page plays the clip, muted and looping.
+            </p>
+            <p>
+              A .mov is mostly a label. The screen recordings on my Mac are all H.264 inside, which every browser plays, so nothing has to be converted: the file is relabelled as an MP4 without touching the picture. What is inside can also be HEVC or ProRes, which often will not play in Chrome or Firefox, so the file is read before a byte of it is sent, and a refusal says which format it is and which menu in QuickTime Player fixes it. The same pass takes out the sound, down to its bytes, and whatever else a phone or a Mac writes beside the picture, because the stored file sits at a public address and a voice in the room is not part of a component.
+            </p>
+            <p>
+              The limit is 25 MB, which is about a minute of a recorded window or 24 seconds of a whole retina screen, measured off real recordings. The AI never sees the video. The browser draws five stills across it and sends them as one request, told they are one clip in order, which is how a description can say that a card slides right and grows. On a test clip that did exactly that, it came back as an expanding card and tagged as one.
+            </p>
+            <p>
+              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component or a clip, still have to be proven there.
             </p>
           </div>
         </section>

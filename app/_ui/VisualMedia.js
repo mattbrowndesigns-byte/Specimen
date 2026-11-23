@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { Play } from "lucide-react";
 
 // A visual's picture: an <img>, or for a visual kept from a looping MP4, the
 // loop itself -- muted, inline, no controls, the way the case study showed
@@ -71,5 +72,16 @@ export default function VisualMedia({ visual, src, poster, className, alt, playI
       aria-label={alt}
       disablePictureInPicture
     />
+  );
+}
+
+// On a picture that stands for something that moves: a loop that is paused --
+// off screen, or reduced motion -- and a component clip, whose card only ever
+// shows its poster, both look exactly like a still.
+export function ClipBadge() {
+  return (
+    <span className="visual-card-badge" aria-label="Video">
+      <Play size={10} fill="currentColor" />
+    </span>
   );
 }

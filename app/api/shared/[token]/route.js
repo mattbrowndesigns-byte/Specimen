@@ -21,7 +21,7 @@ const SITE_FIELDS =
 // icon is derived from its source_url at render time (see ComponentsTab's
 // adapter). Selecting them returned an error and an empty array, so a library
 // share silently arrived with no components at all and no way to tell why.
-const COMPONENT_FIELDS = "id, name, summary, image_url, source_url, created_at";
+const COMPONENT_FIELDS = "id, name, summary, image_url, video_url, source_url, created_at";
 const RESOURCE_FIELDS =
   "id, url, domain, title, summary, saved_at, favicon_url, favicon_fills";
 // A visual's credit columns are copied down from its project, so the row is

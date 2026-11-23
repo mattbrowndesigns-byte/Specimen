@@ -9,6 +9,7 @@ import SharedFooter from "./SharedFooter";
 import { KIND } from "./kinds";
 import { latestCapture } from "@/lib/captures";
 import CopyForAI from "./CopyForAI";
+import { ClipBadge } from "./VisualMedia";
 
 // What someone without an account sees.
 //
@@ -169,9 +170,10 @@ export default function SharedLibrary({ token }) {
             {page.map((component) => (
               <SharedCard
                 key={component.id}
-                href={component.source_url || component.image_url}
+                href={component.source_url || component.video_url || component.image_url}
                 source={component.source_url}
-                visitTitle={component.source_url ? undefined : "Open the image"}
+                visitTitle={component.source_url ? undefined : component.video_url ? "Open the clip" : "Open the image"}
+                video={component.video_url}
                 thumb={component.image_url}
                 natural
                 name={component.name || "Untitled component"}
@@ -191,9 +193,10 @@ export default function SharedLibrary({ token }) {
             {page.map((visual) => (
               <SharedCard
                 key={visual.id}
-                href={visual.url || visual.image_url}
+                href={visual.url || visual.video_url || visual.image_url}
                 source={visual.url}
-                visitTitle={visual.url ? "Open the page it came from" : "Open the image"}
+                visitTitle={visual.url ? "Open the page it came from" : visual.video_url ? "Open the clip" : "Open the image"}
+                video={visual.video_url}
                 thumb={visual.thumb_url || visual.image_url}
                 natural
                 name={visual.title || visual.agency_name || visual.domain || "Untitled image"}
@@ -304,6 +307,7 @@ export default function SharedLibrary({ token }) {
 function SharedCard({
   href,
   source,
+  video,
   internal,
   visitHref,
   visitTitle = "Open the live site",
@@ -326,6 +330,7 @@ function SharedCard({
           ) : (
             <div className="placeholder">No capture</div>
           )}
+          {video && <ClipBadge />}
         </a>
       </div>
       <div className="card-footer">

@@ -88,7 +88,7 @@ export async function DELETE(request, { params }) {
   const supabase = supabaseAdmin();
   const { data: visual } = await supabase
     .from("visual")
-    .select("id, project_id, image_url, thumb_url, video_url")
+    .select("id, project_id, image_url, thumb_url, video_url, video_frames")
     .eq("id", id)
     .eq("user_id", user.id)
     .maybeSingle();

@@ -113,13 +113,21 @@ export default function ComponentsTab({
   // opens straight in the crop tool, which is where a captured page goes; a
   // batch waits on the list, where each can be cropped or kept as it is.
   const uploads = useUploads("component");
+  // A clip has nothing to crop and is on the board as soon as it lands.
   const landed = uploads.reduce((n, u) => n + u.items.length, 0);
   useEffect(() => {
-    if (landed) loadCrops();
+    if (!landed) return;
+    loadCrops();
+    loadComponents();
   }, [landed, loadCrops]);
   useEffect(() => {
     const single = uploads.find(
-      (u) => u.phase === "done" && u.total === 1 && u.items.length === 1 && !openedUploads.has(u.id)
+      (u) =>
+        u.phase === "done" &&
+        u.total === 1 &&
+        u.items.length === 1 &&
+        !u.items[0].video_url &&
+        !openedUploads.has(u.id)
     );
     if (!single || pendingCapture) return;
     openedUploads.add(single.id);
@@ -273,7 +281,7 @@ export default function ComponentsTab({
         onQueryChange={setQuery}
         searchPlaceholder="Search components by name, summary, notes or tag…"
         emptyHeadline="Save the parts, not just the page."
-        emptyMessage="Capture any page, then crop out the one block worth keeping: a pricing table, a nav, a hero. Or drop a screenshot of one anywhere on this page."
+        emptyMessage="Capture any page, then crop out the one block worth keeping: a pricing table, a nav, a hero. Or drop a screenshot or a recording of one anywhere on this page."
         noun="component"
         adapter={ADAPTER}
         onAdd={onAdd}

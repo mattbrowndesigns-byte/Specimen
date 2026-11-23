@@ -9,10 +9,9 @@ import FeatureRotator from "../../../_ui/FeatureRotator";
 import { GAP, MasonrySkeleton, layout, useColumns } from "../../../_ui/masonry";
 import VisualMedia from "../../../_ui/VisualMedia";
 import { grabFrame } from "@/lib/videoFrame";
+import { MAX_LOOP_BYTES, toMB } from "@/lib/uploadLimits";
 
-// Mirrors MAX_VIDEO_BYTES in lib/visualExtract.js, which is the rule; this is
-// only the sentence that says it.
-const MAX_VIDEO_MB = 15;
+const MAX_VIDEO_MB = toMB(MAX_LOOP_BYTES);
 const MAX_PAGE_MB = 40;
 
 // Where a case study's images are chosen before anything is saved.

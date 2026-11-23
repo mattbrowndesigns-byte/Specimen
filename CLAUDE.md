@@ -2267,6 +2267,39 @@ up to 3840px of width, because every crop is cut from it; kept whole, `image_url
 IS `source_image_url`. Deleting the component deletes those files, unless another
 row points at them, which the demo's copy does.
 
+**An uploaded clip is never decoded on the server, so the browser does all the
+looking.** `lib/clip.js` draws the poster and five stills across the clip off the
+file itself, before anything is sent, and they travel with the `process` request
+as a form. They are kept (`video_frames` jsonb, `schema_m26.sql`, on `component`
+and `visual`) because the AI may not answer until tomorrow and Regenerate asks
+again in months. All five go into ONE request, labelled as frames of one clip in
+order; a visual's clip is one entry in the batch holding an array. The poster is
+`image_url`, so nothing that shows a component as a still had to change, and
+component cards never play: a looping 25 MB card in a grid is real egress.
+
+A component clip is a component the moment it lands -- nothing to crop, so it
+never waits on the crop list -- and `recrop` refuses one.
+
+**A MOV is an MP4 with a different name, and only the name is changed.**
+`lib/mp4.js` reads the container's boxes, in the browser to refuse before
+uploading and on the server to be sure. H.264 8-bit 4:2:0 is the only thing
+taken, because HEVC, ProRes, AV1 and High 10 don't play everywhere; every refusal
+names the format and the QuickTime Player menu that fixes it. No transcoding: the
+headers of real Mac screen recordings were all H.264, so there was nothing for a
+pipeline to rescue. If HDR screen recording ever becomes the default, it is HEVC
+and that answer changes. `strip()` then rewrites in place -- `qt  ` brand to
+`mp42`, every track but the picture to `free` with its samples zeroed, and `udta`
+/ `meta` the same -- so no sound or location survives at a public URL. A
+fragmented MP4 with sound is refused, since it has no table saying where the
+sound is. Checked in Chrome 157 and in AVFoundation (Safari's engine); Firefox is
+not installed here and is reasoned about, not tested.
+
+**Every upload limit is in `lib/uploadLimits.js`.** 25 MB a file, 20 files, 4 clips
+at a time, and 15 MB for a loop pulled off a case study, which nobody chose by
+size. Supabase's free plan stops at 50 MB an object and 1 GB in all. Deleting
+either kind goes through `mediaFiles()`, which includes `video_frames`, so any
+read that is about to delete must select all four columns.
+
 **Components have the retry queue now.** They never did: a crop saved while
 Gemini was busy stayed unnamed until someone pressed Regenerate. `describeComponent`
 in `lib/componentCrop.js` queues only a component with no summary -- a Regenerate

@@ -1064,7 +1064,8 @@
     box-shadow: var(--lift-shadow);
   }
 
-  & .detail-capture img {
+  & .detail-capture img,
+  & .detail-capture video {
     border-radius: var(--r-card);
   }
 
@@ -1746,6 +1747,29 @@
      looks like a still, so it carries a mark. Top left, opposite the heart
      and bookmark, small enough to read as a label rather than a button: it
      isn't one, the whole card is. */
+  & .thumb:has(> .visual-card-badge),
+  & .row-thumb:has(> .visual-card-badge) {
+    position: relative;
+  }
+
+  /* A component clip on its own page, at the size a crop would be. */
+  & .component-detail-capture video {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 80vh;
+    background: var(--stage, var(--surface-sunken));
+  }
+
+  & .clip-note {
+    grid-area: expand;
+    justify-self: center;
+    margin: 14px 0 0;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
   & .visual-card-badge {
     position: absolute;
     top: 8px;

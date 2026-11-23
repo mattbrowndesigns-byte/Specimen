@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, Grid3x3, LayoutGrid, Play, SlidersHorizontal, Square } from "lucide-react";
+import { ArrowRight, Grid3x3, LayoutGrid, SlidersHorizontal, Square } from "lucide-react";
 import SearchField from "./SearchField";
 import ResultCount from "./ResultCount";
 import NoMatches from "./NoMatches";
@@ -10,7 +10,7 @@ import useEdgeFade from "./useEdgeFade";
 import Lightbox from "./Lightbox";
 import FilterModal from "./FilterModal";
 import SaveActions from "./SaveActions";
-import VisualMedia from "./VisualMedia";
+import VisualMedia, { ClipBadge } from "./VisualMedia";
 import useFileDrop, { DropOverlay } from "./useFileDrop";
 import { startVisualUpload, useUploads } from "./uploads";
 
@@ -341,7 +341,7 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
           <h2 className="empty-state-headline">Start your board.</h2>
           <p className="empty-state-body">
             Choose Visuals in Add and paste any page with images or looping videos worth keeping, or
-            drop your own screenshots anywhere on this page. Each one becomes its own card, tagged
+            drop your own screenshots and clips anywhere on this page. Each one becomes its own card, tagged
             and credited.
           </p>
         </div>
@@ -367,13 +367,7 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
               <div key={v.id} className="visual-card-wrap">
               <a className="visual-card" href={`/visuals/${v.id}`} onClick={(e) => openLightbox(e, v.id)}>
                 <VisualMedia visual={v} src={v.thumb_url} alt={v.title || "Visual"} loading="lazy" />
-                {/* A loop that is paused -- off screen, or reduced motion --
-                    looks exactly like a still, so it says what it is. */}
-                {v.video_url && (
-                  <span className="visual-card-badge" aria-label="Video">
-                    <Play size={10} fill="currentColor" />
-                  </span>
-                )}
+                {v.video_url && <ClipBadge />}
                 {/* Just what it is. Who made it is one click away, in the
                     lightbox caption, where there's room to say it properly. */}
                 <span className="visual-card-caption">

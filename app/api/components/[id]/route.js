@@ -4,7 +4,7 @@ import { attachTags } from "@/lib/tagAttach";
 import { attachSiteFavicons } from "@/lib/componentFavicons";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
-import { removeFiles } from "@/lib/visuals";
+import { mediaFiles, removeFiles } from "@/lib/visuals";
 
 export async function GET(request, { params }) {
   const user = await currentUser();
@@ -81,12 +81,12 @@ export async function DELETE(request, { params }) {
   await supabase.from("collection_item").delete().eq("target_type", "component").eq("target_id", id);
 
   // A captured page's screenshot may be the source of several components, so
-  // it stays. An upload belongs to its one component and goes with it --
-  // unless another row points at the same file, which is what the demo's copy
-  // of a library does.
+  // it stays. An upload -- an image, or a clip with its poster and stills --
+  // belongs to its one component and goes with it, unless another row points
+  // at the same file, which is what the demo's copy of a library does.
   const { data: doomed } = await supabase
     .from("component")
-    .select("source_url, source_image_url, image_url")
+    .select("source_url, source_image_url, image_url, video_url, video_frames")
     .eq("id", id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -97,18 +97,21 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  if (doomed && !doomed.source_url && doomed.source_image_url) {
+  if (doomed && !doomed.source_url) {
+    const original = doomed.video_url ? "video_url" : "source_image_url";
     const { count, error: sharedError } = await supabase
       .from("component")
       .select("id", { count: "exact", head: true })
-      .eq("source_image_url", doomed.source_image_url);
-    if (!sharedError && count === 0) {
-      await removeFiles(supabase, [...new Set([doomed.source_image_url, doomed.image_url])]);
-      await supabase
-        .from("component_capture")
-        .delete()
-        .eq("full_url", doomed.source_image_url)
-        .eq("user_id", user.id);
+      .eq(original, doomed[original]);
+    if (doomed[original] && !sharedError && count === 0) {
+      await removeFiles(supabase, [...new Set([doomed.source_image_url, ...mediaFiles(doomed)])].filter(Boolean));
+      if (!doomed.video_url) {
+        await supabase
+          .from("component_capture")
+          .delete()
+          .eq("full_url", doomed.source_image_url)
+          .eq("user_id", user.id);
+      }
     }
   }
   return NextResponse.json({ ok: true });

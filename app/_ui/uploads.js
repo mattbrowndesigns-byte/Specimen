@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useSyncExternalStore } from "react";
-import { describeComponent, describeUpload, sendComponentImages, sendVisuals, sortFiles } from "@/lib/uploadClient";
+import { describeComponent, describeUpload, readClips, sendComponentFiles, sendVisuals, sortFiles } from "@/lib/uploadClient";
 
 // Every upload in flight, and how each is going.
 //
@@ -51,11 +51,14 @@ export function dismissUpload(id) {
 
 // Files still leaving this browser are lost by a full page load; once they're
 // in, the rest happens on the server and leaving costs nothing.
+const leaving = (u) => u.phase === "reading" || u.phase === "uploading";
+
 function warnBeforeLeaving(e) {
-  if (uploads.some((u) => u.phase === "uploading")) e.preventDefault();
+  if (uploads.some(leaving)) e.preventDefault();
 }
 
-// phase: uploading (bytes leaving the browser, a real fraction), saving (the
+// phase: reading (clips being opened, to see whether and how they play),
+// uploading (bytes leaving the browser, a real fraction), saving (the
 // server is encoding the last of them), describing (the AI), done.
 //
 // `send` uploads the files, `after(result, id)` is whatever the kind does with
@@ -64,16 +67,20 @@ async function start(kind, fileList, send, after) {
   const { ok, skipped } = sortFiles(fileList);
   if (!ok.length && !skipped.length) return;
   const id = nextId++;
-  const label = ok.length === 1 ? ok[0].name : `${ok.length} images`;
+  const label = ok.length === 1 ? ok[0].name : `${ok.length} files`;
   set([
     ...uploads,
-    { id, kind, label, total: ok.length, sent: 0, phase: ok.length ? "uploading" : "done", items: [], failed: skipped, queued: false },
+    { id, kind, label, total: ok.length, sent: 0, phase: ok.length ? "reading" : "done", items: [], failed: skipped, queued: false },
   ]);
   if (!ok.length) return;
 
   window.addEventListener("beforeunload", warnBeforeLeaving);
   try {
-    const result = await send(ok, {
+    const { ready, clips, failed } = await readClips(ok);
+    update(id, (u) => ({ phase: "uploading", total: ready.length, failed: [...u.failed, ...failed] }));
+    if (!ready.length) return;
+    const result = await send(ready, {
+      clips,
       onBytes: (sent) => update(id, (u) => ({ sent, phase: sent >= 1 && u.phase === "uploading" ? "saving" : u.phase })),
       onItem: (item) => update(id, (u) => ({ items: [...u.items, item] })),
     });
@@ -83,7 +90,7 @@ async function start(kind, fileList, send, after) {
     update(id, (u) => ({ failed: [...u.failed, err.message || "The upload couldn't start."] }));
   } finally {
     update(id, { phase: "done" });
-    if (!uploads.some((u) => u.phase === "uploading")) window.removeEventListener("beforeunload", warnBeforeLeaving);
+    if (!uploads.some(leaving)) window.removeEventListener("beforeunload", warnBeforeLeaving);
   }
 }
 
@@ -98,7 +105,15 @@ export function startVisualUpload(fileList) {
 }
 
 export function startComponentUpload(fileList) {
-  return start("component", fileList, sendComponentImages);
+  return start("component", fileList, sendComponentFiles, (result, id) => {
+    // Clips are components already; images wait to be cropped or kept.
+    const clips = result.items.filter((item) => item.video_url);
+    describeComponents(clips);
+    // The describing panel says the rest, so one that has nothing else to add
+    // steps aside rather than leaving two panels about the same clip.
+    const { failed } = uploads.find((u) => u.id === id);
+    if (clips.length === result.items.length && !failed.length) dismissUpload(id);
+  });
 }
 
 // Saved components, described one after another. Each is already in the queue,

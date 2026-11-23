@@ -2,6 +2,7 @@
 import { useEffect, useState, use as usePromise } from "react";
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import CropTool from "../../_ui/CropTool";
+import VisualMedia from "../../_ui/VisualMedia";
 import TagCombobox from "../../_ui/TagCombobox";
 import UtilityBar from "../../_ui/UtilityBar";
 import RelatedSection from "../../_ui/RelatedSection";
@@ -177,7 +178,7 @@ export default function ComponentDetailPage({ params }) {
   const activeImage = viewport === "mobile" ? component.mobile_image_url : component.image_url;
   const activeSource =
     viewport === "mobile" ? component.mobile_source_image_url : component.source_image_url;
-  const canCropHere = Boolean(activeSource);
+  const canCropHere = Boolean(activeSource) && !component.video_url;
   // No page behind it: nothing to visit, no mobile shot, and the whole image
   // is as fair a crop as any part of it.
   const uploaded = !component.source_url;
@@ -277,7 +278,17 @@ export default function ComponentDetailPage({ params }) {
               ) : (
                 <>
                   <div className="detail-capture component-detail-capture">
-                    {activeImage ? (
+                    {component.video_url ? (
+                      // Muted and looping, like a clip on the Visuals board,
+                      // with the controls that let you stop on a frame.
+                      <VisualMedia
+                        visual={component}
+                        src={component.image_url}
+                        alt={component.name || "Component"}
+                        playInView={false}
+                        controls
+                      />
+                    ) : activeImage ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={activeImage} alt={component.name || "Component"} />
                     ) : (
@@ -291,6 +302,7 @@ export default function ComponentDetailPage({ params }) {
                     )}
                   </div>
 
+                  {component.video_url && <p className="clip-note">A clip is kept whole, so there is nothing to crop.</p>}
                   {canCropHere && (
                     <button className="capture-expand" onClick={() => setRecropping(true)}>
                       {uploaded
@@ -347,7 +359,7 @@ export default function ComponentDetailPage({ params }) {
                       <span className="summary-empty">
                         {component.enrichment_state === "queued"
                           ? "Waiting for the AI. This will fill in on its own."
-                          : `No summary yet. Use Regenerate to describe this ${uploaded && !component.crop_rect ? "image" : "crop"}.`}
+                          : `No summary yet. Use Regenerate to describe this ${component.video_url ? "clip" : uploaded && !component.crop_rect ? "image" : "crop"}.`}
                       </span>
                     )}
                   </p>

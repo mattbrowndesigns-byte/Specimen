@@ -21,10 +21,19 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 // What a finished one says about the files that made it.
 function outcome({ kind, items, queued }) {
   const n = items.length;
+  const clips = items.filter((item) => item.video_url).length;
   if (kind === "component") {
-    return n === 1 ? "✓ Image uploaded. Crop it, or use it as it is." : `✓ ${n} images uploaded. Crop each one, or use it as it is.`;
+    const images = n - clips;
+    const kept = clips && `✓ ${clips === 1 ? "Clip" : `${clips} clips`} saved.`;
+    const crop =
+      images === 1
+        ? "✓ Image uploaded. Crop it, or use it as it is."
+        : images > 1 && `✓ ${images} images uploaded. Crop each one, or use it as it is.`;
+    return [kept, crop].filter(Boolean).join(" ");
   }
-  const what = kind === "describe" ? (n === 1 ? "Component" : `${n} components`) : n === 1 ? "Image" : `${n} images`;
+  const thing = clips === 0 ? "image" : clips === n ? "clip" : "file";
+  const word = kind === "describe" ? "component" : thing;
+  const what = n === 1 ? word[0].toUpperCase() + word.slice(1) : `${n} ${word}s`;
   const words = kind === "describe" ? "the name and tags are" : "the title and tags are";
   return queued
     ? `✓ ${what} saved. The AI hasn’t answered yet, so ${words} queued and will fill in on their own.`
@@ -108,6 +117,7 @@ export default function UploadProgress({ upload }) {
       </div>
       <div className="capture-status-row">
         <p>
+          {phase === "reading" && `Opening ${label}…`}
           {phase === "uploading" && `Uploading ${label}: ${Math.floor(sent * 100)}%. Keep this page open.`}
           {phase === "saving" && `Saving ${label}${total > 1 ? `: ${added} of ${total} done` : ""}…`}
           {phase === "describing" && describing(upload)}

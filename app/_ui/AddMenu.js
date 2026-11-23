@@ -21,7 +21,7 @@ const URL_LABELS = {
 // The two kinds that are pictures have a second way in: a file that never lived
 // on a page. Where each goes, and what the box says about it.
 const UPLOADS = {
-  component: { start: startComponentUpload, tab: "components", over: "Let go, then crop it or keep it whole" },
+  component: { start: startComponentUpload, tab: "components", over: "Let go to add it to Components" },
   visual: { start: startVisualUpload, tab: "visuals", over: "Let go to add them to Visuals" },
 };
 
@@ -192,7 +192,7 @@ export default function AddMenu({ onSubmit, variant }) {
                 disabled={busy}
               >
                 <ImageUp size={24} />
-                <strong>{dragOver ? "Drop to upload" : "Drop images here"}</strong>
+                <strong>{dragOver ? "Drop to upload" : "Drop images or clips here"}</strong>
                 <span>{dragOver ? UPLOADS[kind].over : "or click to choose files"}</span>
                 <small>{UPLOAD_HINT}</small>
               </button>

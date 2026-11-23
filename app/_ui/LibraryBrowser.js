@@ -18,6 +18,7 @@ import SearchElsewhere from "./SearchElsewhere";
 import NoMatches from "./NoMatches";
 import useEdgeFade from "./useEdgeFade";
 import SaveActions from "./SaveActions";
+import { ClipBadge } from "./VisualMedia";
 import Favicon from "./Favicon";
 import AddMenu from "./AddMenu";
 import FeatureRotator from "./FeatureRotator";
@@ -414,6 +415,7 @@ export default function LibraryBrowser({
                   ) : (
                     <div className="placeholder">{adapter.pendingLabel(item)}</div>
                   )}
+                  {item.video_url && <ClipBadge />}
                 </a>
                 <SaveActions
                   className="card-actions"
@@ -464,6 +466,7 @@ export default function LibraryBrowser({
                 ) : (
                   <div className="placeholder">…</div>
                 )}
+                {item.video_url && <ClipBadge />}
               </a>
               <div className="row-body">
                 <span className="row-title">

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED } from "@/lib/ownership";
-import { UploadError } from "@/lib/visualUpload";
+import { UploadError } from "@/lib/uploadError";
 import { startComponentUpload } from "@/lib/componentUpload";
 
 // Step one of a component upload: a signed URL per file, which the browser

@@ -27,6 +27,10 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: "Component not found" }, { status: 404 });
   }
 
+  if (component.video_url) {
+    return NextResponse.json({ error: "A clip is kept whole, so there's nothing to crop" }, { status: 400 });
+  }
+
   const sourceImageUrl =
     viewport === "mobile" ? component.mobile_source_image_url : component.source_image_url;
 

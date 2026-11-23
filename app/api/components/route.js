@@ -4,7 +4,7 @@ import { attachTags } from "@/lib/tagAttach";
 import { attachSiteFavicons } from "@/lib/componentFavicons";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
-import { cropAndUpload, describeComponent } from "@/lib/componentCrop";
+import { UPLOAD_GRACE_MS, cropAndUpload, describeComponent } from "@/lib/componentCrop";
 
 export async function GET(request) {
   const user = await currentUser();
@@ -15,7 +15,7 @@ export async function GET(request) {
   let query = supabase
     .from("component")
     .select(
-      "id, site_id, source_url, name, summary, notes, image_url, crop_rect, created_at, needs_review, is_favorite, enrichment_state"
+      "id, site_id, source_url, name, summary, notes, image_url, crop_rect, created_at, needs_review, is_favorite, enrichment_state, video_url"
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
@@ -32,11 +32,6 @@ export async function GET(request) {
   const withFavicons = await attachSiteFavicons(supabase, withTags);
   return NextResponse.json({ components: withFavicons });
 }
-
-// The describe for an upload is asked for by the browser as soon as this
-// returns, so the queue's first look is ten minutes out -- long enough for twenty
-// in a row, and it only ever sees one the browser walked away from.
-const UPLOAD_GRACE_MS = 10 * 60 * 1000;
 
 // Creates a component from a finished component_capture: a region cropped out
 // of it, or -- for an uploaded image only, which is often already just the

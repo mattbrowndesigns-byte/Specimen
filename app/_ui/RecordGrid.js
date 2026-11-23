@@ -4,6 +4,7 @@ import { latestCapture } from "@/lib/captures";
 import SaveActions from "./SaveActions";
 import { KIND, KINDS } from "./kinds";
 import Favicon from "./Favicon";
+import { ClipBadge } from "./VisualMedia";
 
 // A plain grid of mixed sites, components and resources, for the pages that
 // show a hand-picked set rather than a browsable library: favorites and one
@@ -148,6 +149,7 @@ export default function RecordGrid({ entries, emptyMessage, onRemove, removeLabe
                   ) : (
                     <div className="placeholder">No image</div>
                   )}
+                  {item.video_url && <ClipBadge />}
                 </a>
               )}
               <SaveActions

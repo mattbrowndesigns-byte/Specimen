@@ -38,9 +38,6 @@ export const KINDS = [
     blurb: "Save a tool or reference",
     Icon: Link2,
   },
-  // A prototype on the owner's account first. `demo: false` keeps it off the
-  // demo's tabs and Add menu until it's ported there; the demo account has no
-  // visuals, and a tab of nothing is a worse demo than no tab.
   {
     id: "visual",
     tab: "visuals",
@@ -49,7 +46,6 @@ export const KINDS = [
     one: "Visual",
     blurb: "Save the images from any page",
     Icon: Images,
-    demo: false,
   },
 ];
 

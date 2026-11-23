@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachCapturesAndTags } from "@/lib/siteQueries";
-import { storagePathsForCaptures } from "@/lib/storage";
+import { captureFiles, removeUnshared } from "@/lib/storage";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsSite } from "@/lib/ownership";
 
@@ -100,14 +100,6 @@ export async function DELETE(request, { params }) {
 
   const { data: captures } = await supabase.from("capture").select("full_url, thumb_url").eq("site_id", id);
 
-  const paths = storagePathsForCaptures(captures);
-  if (paths.length) {
-    const { error: storageError } = await supabase.storage.from("Captures").remove(paths);
-    if (storageError) {
-      console.error("Failed to remove capture files:", storageError.message);
-    }
-  }
-
   await supabase.from("taggable").delete().eq("target_type", "site").eq("target_id", id);
   await supabase.from("collection_item").delete().eq("target_type", "site").eq("target_id", id);
 
@@ -115,5 +107,6 @@ export async function DELETE(request, { params }) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  await removeUnshared(supabase, { table: "capture", column: "full_url", rows: captures, filesOf: captureFiles });
   return NextResponse.json({ ok: true });
 }

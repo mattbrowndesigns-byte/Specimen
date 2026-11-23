@@ -23,11 +23,11 @@ export const DEMO_SAVES = {
     match: (site) => site.domain === "ramp.com",
   },
   component: {
-    url: "https://ramp.com",
-    label: "Ramp",
-    note: "In the demo, every component save is a block from ramp.com.",
+    url: "https://stripe.com/pricing",
+    label: "Stripe",
+    note: "In the demo, every component save is a block from Stripe’s pricing page.",
     seconds: 12,
-    match: (component) => hostOf(component.source_url) === "ramp.com",
+    match: (component) => hostOf(component.source_url) === "stripe.com",
   },
   resource: {
     url: "https://lucide.dev/icons/",
@@ -35,6 +35,15 @@ export const DEMO_SAVES = {
     note: "In the demo, every resource save is Lucide.",
     seconds: 6,
     match: (resource) => resource.domain === "lucide.dev",
+  },
+  // A whole project rather than one image, because that is what a visuals
+  // save is: one page in, several cards out.
+  visual: {
+    url: "https://gretelny.com/netflix",
+    label: "Netflix",
+    note: "In the demo, every visuals save is Gretel’s Netflix project.",
+    seconds: 8,
+    match: (visual) => visual.url === "https://gretelny.com/netflix",
   },
 };
 
@@ -171,6 +180,8 @@ export function useDemoPhase(kind) {
 // that was there all along. While the save runs it is shown as a real save in
 // flight looks -- `inFlight` strips what hasn't "arrived" yet -- and once
 // saved it takes the newest date, since it is the newest thing in the library.
+// An `inFlight` that answers null keeps it out until then, for a kind with
+// nothing to show part-way.
 export function useDemoHold(kind, items, { inFlight, dateField }) {
   const demo = useIsDemo();
   const phase = useDemoPhase(kind);
@@ -181,6 +192,8 @@ export function useDemoHold(kind, items, { inFlight, dateField }) {
     if (!match(item)) return [item];
     if (phase === "idle") return [];
     const landed = { ...item, [dateField]: now };
-    return [phase === "capturing" ? inFlight(landed) : landed];
+    if (phase !== "capturing") return [landed];
+    const arriving = inFlight(landed);
+    return arriving ? [arriving] : [];
   });
 }

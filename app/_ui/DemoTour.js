@@ -30,12 +30,12 @@ const STEPS = [
   },
   {
     target: '[data-tour="tabs"]',
-    // The row runs the width of the page and the three tabs sit at its start;
+    // The row runs the width of the page and the tabs sit at its start;
     // a spotlight on the row is mostly empty band.
     fitChildren: true,
-    title: "Three libraries",
+    title: "Four libraries",
     body:
-      "Websites keep whole pages. Components are crops of the parts worth keeping. Resources are tools and references, saved for what they do rather than how they look.",
+      "Websites keep whole pages. Components are crops of the parts worth keeping. Resources are tools and references, saved for what they do. Visuals are the images themselves, kept from case studies and project pages.",
   },
   {
     target: '[data-tour="search"]',

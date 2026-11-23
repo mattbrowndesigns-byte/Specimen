@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useIsDemo } from "./demoState";
 
 // The rotating top line of the dashboard hero's one sentence:
 //
@@ -36,16 +35,13 @@ import { useIsDemo } from "./demoState";
 const LINES = [
   { text: "Save any website" },
   { text: "Crop any detail" },
-  // Visuals aren't in the demo yet, so neither is the line about them.
-  { text: "Keep any image", demo: false },
+  { text: "Keep any image" },
   { text: "File any tool" },
 ];
 
 const HOLD_MS = 5000;
 
 export default function HeroRotator() {
-  const demo = useIsDemo();
-  const lines = demo ? LINES.filter((l) => l.demo !== false) : LINES;
   const [index, setIndex] = useState(0);
   // The line that just left, so it can go up while the waiting ones sit
   // below: one direction of travel, in at the bottom and out at the top.
@@ -64,23 +60,21 @@ export default function HeroRotator() {
       if (document.hidden) return;
       setIndex((i) => {
         setLeaving(i);
-        return (i + 1) % lines.length;
+        return (i + 1) % LINES.length;
       });
     }, HOLD_MS);
     return () => clearInterval(timer);
-  }, [lines.length]);
-
-  const active = index % lines.length;
+  }, []);
 
   return (
     <span className="hero-rotator">
       {/* Read once, as a sentence, rather than announced every five
           seconds: the rotating copies are hidden from screen readers. */}
       <span className="sr-only">Save any website, detail, image or tool</span>
-      {lines.map((line, i) => (
+      {LINES.map((line, i) => (
         <span
           key={line.text}
-          className={`hero-rotator-line${i === active ? " is-active" : i === leaving ? " is-leaving" : ""}`}
+          className={`hero-rotator-line${i === index ? " is-active" : i === leaving ? " is-leaving" : ""}`}
           aria-hidden="true"
         >
           {line.text}

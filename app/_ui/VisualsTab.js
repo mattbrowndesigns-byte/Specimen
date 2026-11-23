@@ -13,6 +13,7 @@ import SaveActions from "./SaveActions";
 import VisualMedia, { ClipBadge } from "./VisualMedia";
 import useFileDrop, { DropOverlay } from "./useFileDrop";
 import { startVisualUpload, useUploads } from "./uploads";
+import { useDemoHold, useIsDemo } from "./demoState";
 
 // The three questions a visual's tags answer, in the order the filter
 // modal lists them.
@@ -62,7 +63,7 @@ function keepLanded(rows, prev, landed) {
 }
 
 export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onSearchElsewhere }) {
-  const [visuals, setVisuals] = useState([]);
+  const [loadedVisuals, setVisuals] = useState([]);
   const [pending, setPending] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(null);
@@ -71,6 +72,15 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
   const [size, setSize] = useState("medium");
   const [boardEl, setBoardEl] = useState(null);
   const columns = useColumns(boardEl, SIZES[size]);
+
+  // In the demo, the project the staged Add replays arrives all at once when
+  // the save lands: there is nothing to show of an image before it has been
+  // picked. The board is in the server's order, so what lands goes to the top.
+  const held = useDemoHold("visual", loadedVisuals, { dateField: "saved_at", inFlight: () => null });
+  const visuals = useMemo(
+    () => (held === loadedVisuals ? held : [...held].sort((a, b) => b.saved_at.localeCompare(a.saved_at))),
+    [held, loadedVisuals]
+  );
 
   // A per-browser preference, like the other tabs' view switches.
   useEffect(() => {
@@ -144,7 +154,8 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
     };
   }, []);
 
-  const dragging = useFileDrop(startVisualUpload);
+  const demo = useIsDemo();
+  const dragging = useFileDrop(demo ? null : startVisualUpload);
 
   // Each uploaded image lands on the board the moment it's encoded, untitled,
   // so a drop has an answer before the AI does. `seen` is what stops one you

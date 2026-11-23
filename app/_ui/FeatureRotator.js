@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { FEATURES } from "@/lib/features";
-import { useIsDemo } from "./demoState";
 
 // Things worth knowing about Kivli, shown a line at a time.
 //
@@ -16,9 +15,6 @@ const CYCLE_MS = 4600;
 const SWAP_MS = 4800;
 
 export default function FeatureRotator({ className = "" }) {
-  // The demo has no visuals, so it doesn't advertise them while you wait.
-  const demo = useIsDemo();
-  const lines = demo ? FEATURES.filter((f) => f.demo !== false) : FEATURES;
   const [index, setIndex] = useState(0);
 
   // Randomised after mount, not in the initial state. Picking at render time
@@ -26,15 +22,15 @@ export default function FeatureRotator({ className = "" }) {
   // which is a hydration mismatch -- React then throws away the server's HTML
   // for this subtree and logs an error on every page that shows a rotator.
   useEffect(() => {
-    setIndex(Math.floor(Math.random() * lines.length));
-  }, [lines.length]);
+    setIndex(Math.floor(Math.random() * FEATURES.length));
+  }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => setIndex((i) => (i + 1) % lines.length), SWAP_MS);
+    const timer = setInterval(() => setIndex((i) => (i + 1) % FEATURES.length), SWAP_MS);
     return () => clearInterval(timer);
-  }, [lines.length]);
+  }, []);
 
-  const { Icon, short } = lines[index % lines.length];
+  const { Icon, short } = FEATURES[index];
 
   return (
     <p className={`feature-rotator ${className}`.trim()}>

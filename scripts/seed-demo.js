@@ -9,8 +9,15 @@
 // under a visitor. The cost is that the demo is a snapshot -- re-run this
 // after a cleanup or a batch of saves you want shown.
 //
-// Screenshots are not copied, only the rows pointing at them: a capture's URL
-// is a public Storage path, and two rows naming one file cost nothing.
+// Files are not copied, only the rows pointing at them: a capture's URL is a
+// public Storage path, and two rows naming one file cost nothing. That is why
+// every delete in the app checks whether another row still uses the file
+// (removeUnshared in lib/storage.js).
+//
+// Anything uploaded from someone's own computer stays out: a saved web page
+// was public already, and a dropped file may never have been. So does any
+// domain in DEMO_SKIP_DOMAINS (.env.local, comma separated), for saves that
+// are fine in a library and not on a portfolio link.
 //
 // Reads .env.local. The source is whoever owns NEXT_PUBLIC_SHOWCASE_SHARE,
 // the target is DEMO_USER_ID, and it refuses to run if those are the same
@@ -35,6 +42,15 @@ const TOKEN = env.NEXT_PUBLIC_SHOWCASE_SHARE;
 // The site the demo's staged Add replays. Its saved_at is set to now so it
 // lands first in a newest-first grid when the visitor "saves" it.
 const DEMO_DOMAIN = "ramp.com";
+const DEMO_VISUALS_URL = "https://gretelny.com/netflix";
+
+const SKIP = new Set(
+  (env.DEMO_SKIP_DOMAINS || "")
+    .split(",")
+    .map((domain) => domain.trim())
+    .filter(Boolean),
+);
+const wanted = (row) => !SKIP.has(row.domain);
 
 for (const [key, value] of Object.entries({
   SUPABASE_URL: env.SUPABASE_URL,
@@ -110,6 +126,12 @@ const STRIP = [
   "capture_state",
   "capture_attempts",
   "capture_next_at",
+  "ai_attempts",
+  "ai_next_at",
+  "extract_attempts",
+  "extract_next_at",
+  // Or the demo's import page would report the owner's imports as its own.
+  "imported_at",
 ];
 
 function copy(row, overrides) {
@@ -127,13 +149,21 @@ async function main() {
   const SOURCE = share.user_id;
   if (SOURCE === TARGET) throw new Error("DEMO_USER_ID is the showcase owner; refusing to overwrite it");
 
-  const [tags, sites, components, resources, collections] = await Promise.all([
+  const [tags, allSites, allComponents, allResources, collections, allProjects, allVisuals] = await Promise.all([
     all(() => db.from("tag").select("*").eq("user_id", SOURCE).eq("is_approved", true)),
     all(() => db.from("site").select("*").eq("user_id", SOURCE).eq("is_hidden", false)),
     all(() => db.from("component").select("*").eq("user_id", SOURCE)),
     all(() => db.from("resource").select("*").eq("user_id", SOURCE)),
     all(() => db.from("collection").select("*").eq("user_id", SOURCE)),
+    all(() => db.from("visual_project").select("*").eq("user_id", SOURCE).eq("state", "saved")),
+    all(() => db.from("visual").select("*").eq("user_id", SOURCE)),
   ]);
+  const sites = allSites.filter(wanted);
+  const components = allComponents.filter((c) => c.source_url);
+  const resources = allResources.filter(wanted);
+  const projects = allProjects.filter((p) => p.url && wanted(p));
+  const projectIds = new Set(projects.map((p) => p.id));
+  const visuals = allVisuals.filter((v) => v.url && projectIds.has(v.project_id));
   const siteIds = sites.map((site) => site.id);
   const [captures, pages] = await Promise.all([
     rowsIn("capture", "site_id", siteIds),
@@ -145,18 +175,21 @@ async function main() {
 
   console.log(
     `Source ${SOURCE}: ${sites.length} sites, ${captures.length} captures, ${pages.length} pages, ` +
-      `${components.length} components, ${resources.length} resources, ${tags.length} tags, ` +
-      `${taggables.length} tag links, ${collections.length} collections`,
+      `${components.length} components, ${resources.length} resources, ${visuals.length} visuals ` +
+      `from ${projects.length} projects, ${tags.length} tags, ${taggables.length} tag links, ${collections.length} collections`,
   );
   if (!sites.some((site) => site.domain === DEMO_DOMAIN)) {
     console.warn(`Warning: no ${DEMO_DOMAIN} in the library, so the demo's Add will have nothing to replay.`);
   }
-  // The other two replays, matched the same way app/_ui/demoState.js does.
-  if (!components.some((c) => /^https?:\/\/(www\.)?ramp\.com\b/.test(c.source_url))) {
-    console.warn("Warning: no ramp.com component in the library, so the demo's component Add will have nothing to replay.");
+  // The other replays, matched the same way app/_ui/demoState.js does.
+  if (!components.some((c) => /^https?:\/\/(www\.)?stripe\.com\b/.test(c.source_url))) {
+    console.warn("Warning: no stripe.com component in the library, so the demo's component Add will have nothing to replay.");
   }
   if (!resources.some((r) => r.domain === "lucide.dev")) {
     console.warn("Warning: no lucide.dev resource in the library, so the demo's resource Add will have nothing to replay.");
+  }
+  if (!visuals.some((v) => v.url === DEMO_VISUALS_URL)) {
+    console.warn(`Warning: no visuals from ${DEMO_VISUALS_URL}, so the demo's visuals Add will have nothing to replay.`);
   }
   if (!WRITE) {
     console.log("Dry run. Re-run with --write to replace the demo account's library.");
@@ -173,7 +206,7 @@ async function main() {
       await rows(db.from("taggable").delete().in("tag_id", old.slice(i, i + 100)));
     }
   }
-  for (const table of ["collection", "site", "component", "resource", "tag"]) {
+  for (const table of ["collection", "site", "component", "resource", "visual", "visual_project", "tag"]) {
     await rows(db.from(table).delete().eq("user_id", TARGET));
   }
 
@@ -192,6 +225,10 @@ async function main() {
     copy(c, { id: remap(c.id), site_id: ids.get(c.site_id) || null, is_favorite: false }),
   );
   const newResources = resources.map((r) => copy(r, { id: remap(r.id), is_favorite: false }));
+  const newProjects = projects.map((p) => copy(p, { id: remap(p.id), candidates: [] }));
+  const newVisuals = visuals.map((v) =>
+    copy(v, { id: remap(v.id), project_id: ids.get(v.project_id), is_favorite: false }),
+  );
   const newCollections = collections.map((c) => copy(c, { id: remap(c.id) }));
 
   // A link survives only if both ends were copied: a tag on a hidden site, or
@@ -211,14 +248,16 @@ async function main() {
   await insert("page", newPages);
   await insert("component", newComponents);
   await insert("resource", newResources);
+  await insert("visual_project", newProjects);
+  await insert("visual", newVisuals);
   await insert("taggable", newTaggables);
   await insert("collection", newCollections);
   await insert("collection_item", newItems);
 
   console.log(
     `Copied to ${TARGET}: ${newSites.length} sites, ${newCaptures.length} captures, ${newPages.length} pages, ` +
-      `${newComponents.length} components, ${newResources.length} resources, ${newTags.length} tags, ` +
-      `${newTaggables.length} tag links, ${newCollections.length} collections, ${newItems.length} collection items`,
+      `${newComponents.length} components, ${newResources.length} resources, ${newVisuals.length} visuals, ` +
+      `${newTags.length} tags, ${newTaggables.length} tag links, ${newCollections.length} collections, ${newItems.length} collection items`,
   );
 }
 

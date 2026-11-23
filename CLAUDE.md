@@ -1966,13 +1966,25 @@ Verified: a forged pass redirects to /login and 401s on the API.
 
 The demo account is a copy, filled by `node scripts/seed-demo.js --write`
 (dry run without the flag): the showcase owner's visible sites, captures,
-pages, components, resources, approved tags and collections, with notes,
-favourites, review flags and queue state stripped. Screenshots are shared by
-URL, not copied. It is a snapshot -- re-run it after a cleanup. It pages every
+pages, components, resources, visuals, approved tags and collections, with
+notes, favourites, review flags and queue state stripped. Uploads from a
+computer stay out, and so does any domain in `DEMO_SKIP_DOMAINS` (`.env.local`):
+a public portfolio link is not the place for every save. It is a snapshot --
+re-run it after a cleanup, and read its warnings, which name any staged Add
+left with nothing to replay. It pages every
 read, because Supabase stops at 1,000 rows without saying so and the first dry
 run reported exactly 1,000 pages out of 1,272.
 
-Add is staged (`DemoAdd.js`): the URL is locked to ramp.com and the field says
+Files are shared by URL, not copied, so deleting a site or a visual in the
+owner's library used to pull the picture out of the demo. Deletes go through
+`removeUnshared` (`lib/storage.js`): rows first, then only the files no other
+row names, and nothing at all if that check fails.
+
+Add is staged (`DemoAdd.js`), one replayed save per kind in `DEMO_SAVES`: Ramp,
+a Stripe pricing block, Lucide, and Gretel's Netflix project (eight images that
+land together). Each replays a row the seed has to contain. The component one
+outlived its row: it was a ramp.com block no longer in the library, so the bar
+ran, said saved, and nothing arrived. The URL is locked and the field says
 so, Ramp is held out of the grid until Submit, and the dashboard plays a
 twelve-second bar before the card lands. A real save from strangers would spend
 the owner's twenty-a-day Gemini budget, and every screenshot and tag the staged

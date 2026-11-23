@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { storagePathsForCaptures } from "@/lib/storage";
+import { captureFiles, removeUnshared } from "@/lib/storage";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsSite } from "@/lib/ownership";
 
@@ -35,14 +35,6 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ error: "Those captures aren't on this site" }, { status: 404 });
   }
 
-  const paths = storagePathsForCaptures(captures);
-  if (paths.length) {
-    const { error: storageError } = await supabase.storage.from("Captures").remove(paths);
-    if (storageError) {
-      console.error("Failed to remove capture files:", storageError.message);
-    }
-  }
-
   const { error: deleteError } = await supabase
     .from("capture")
     .delete()
@@ -55,6 +47,8 @@ export async function DELETE(request, { params }) {
   if (deleteError) {
     return NextResponse.json({ error: deleteError.message }, { status: 500 });
   }
+
+  await removeUnshared(supabase, { table: "capture", column: "full_url", rows: captures, filesOf: captureFiles });
 
   return NextResponse.json({ ok: true, deleted: captures.length });
 }

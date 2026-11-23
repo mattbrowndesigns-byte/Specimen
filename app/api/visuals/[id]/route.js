@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachTags } from "@/lib/tagAttach";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND } from "@/lib/ownership";
-import { VISUAL_COLUMNS, mediaFiles, removeFiles } from "@/lib/visuals";
+import { VISUAL_COLUMNS, removeMedia } from "@/lib/visuals";
 
 // One visual, its tags, and the rest of the project it came from in page
 // order -- "more from this project" needs nothing else.
@@ -99,7 +99,7 @@ export async function DELETE(request, { params }) {
   await supabase.from("collection_item").delete().eq("target_type", "visual").eq("target_id", id);
   const { error } = await supabase.from("visual").delete().eq("id", id).eq("user_id", user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  await removeFiles(supabase, mediaFiles(visual));
+  await removeMedia(supabase, [visual]);
 
   const { count } = await supabase
     .from("visual")

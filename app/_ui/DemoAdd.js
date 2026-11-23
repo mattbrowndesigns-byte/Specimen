@@ -15,8 +15,8 @@ import { DEMO_SAVES, setDemoPhase, useDemoPhase } from "./demoState";
 // ramp.com, by replaying the save the demo account already holds: every
 // screenshot, tag and colour on the page it opens is real output, and the
 // field says plainly that every save in the demo is that one. The same goes
-// for a component (a block from ramp.com) and a resource (Lucide) -- one
-// replayed save per kind, listed in DEMO_SAVES.
+// for a component (a block from Stripe), a resource (Lucide) and visuals (one
+// Netflix project) -- one replayed save per kind, listed in DEMO_SAVES.
 //
 // It stands in for AddMenu in the utility bar. From any page but the
 // dashboard it starts the save and goes there, the same way a real Add hands
@@ -27,6 +27,7 @@ const URL_LABELS = {
   website: "Website URL",
   component: "Page to crop from",
   resource: "Link to save",
+  visual: "Page to save images from",
 };
 
 const RUNNING_LINES = {
@@ -35,12 +36,15 @@ const RUNNING_LINES = {
   component: (label, left) =>
     `Capturing ${label} and cropping a block: about ${left}s remaining. Sped up for the demo; in the real app you crop it yourself once the capture lands.`,
   resource: (label, left) => `Saving ${label} and sorting it into a folder: about ${left}s remaining.`,
+  visual: (label, left) =>
+    `Finding the images on the ${label} project: about ${left}s remaining. In the real app you pick which ones to keep.`,
 };
 
 const DONE_LINES = {
   website: (label) => `${label} captured and tagged. Open its card to see what Kivli read from it.`,
   component: (label) => `A block from ${label} saved and described. Open its card to see it.`,
   resource: (label) => `${label} saved, summarised and filed.`,
+  visual: (label) => `The images from ${label} saved, each one described and tagged. Open one to see it full screen.`,
 };
 
 export default function DemoAdd() {
@@ -48,6 +52,7 @@ export default function DemoAdd() {
     website: useDemoPhase("website"),
     component: useDemoPhase("component"),
     resource: useDemoPhase("resource"),
+    visual: useDemoPhase("visual"),
   };
   const [open, setOpen] = useState(false);
   // The kind whose form is open, or null for the menu.
@@ -107,11 +112,11 @@ export default function DemoAdd() {
         </div>
       )}
 
-      {/* The real menu's three kinds. A kind with nothing to replay says so
+      {/* The real menu's kinds. A kind with nothing to replay says so
           rather than disappearing. */}
       {open && !form && (
         <div className="add-pop">
-          {KINDS.filter((k) => k.demo !== false).map(({ add, one, blurb, Icon }) => {
+          {KINDS.map(({ add, one, blurb, Icon }) => {
             const live = Boolean(DEMO_SAVES[add]);
             return (
               <button

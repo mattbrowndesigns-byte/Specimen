@@ -12,7 +12,7 @@ import { useUploads } from "./_ui/uploads";
 import Arcade from "./_ui/Arcade";
 import { DemoProgress } from "./_ui/DemoAdd";
 import DemoTour from "./_ui/DemoTour";
-import { useDemoPhase, useIsDemo } from "./_ui/demoState";
+import { useDemoPhase } from "./_ui/demoState";
 import SiteFooter from "./_ui/SiteFooter";
 import HeroRotator from "./_ui/HeroRotator";
 import ConnectNote from "./_ui/ConnectNote";
@@ -48,8 +48,6 @@ export default function Home() {
 
   const incomingFor = (id) => (handoff?.tab === id ? handoff.query : null);
   const [error, setError] = useState(null);
-  const demo = useIsDemo();
-  const tabs = demo ? KINDS.filter((k) => k.demo !== false) : KINDS;
 
   // The demo's staged save, started from the utility bar here or on any other
   // page. The panel outlives the phase by a few seconds so the confirmation is
@@ -59,6 +57,7 @@ export default function Home() {
     website: useDemoPhase("website"),
     component: useDemoPhase("component"),
     resource: useDemoPhase("resource"),
+    visual: useDemoPhase("visual"),
   };
   const [demoPanels, setDemoPanels] = useState([]);
   const demoStarted = Object.keys(demoPhases).find((kind) => demoPhases[kind] === "capturing");
@@ -229,7 +228,7 @@ export default function Home() {
             shows, so the thing you pressed to save it is the thing you press
             to find it again. */}
         <div className="tab-switcher" data-tour="tabs">
-          {tabs.map(({ tab: id, label, Icon }) => (
+          {KINDS.map(({ tab: id, label, Icon }) => (
             <button
               key={id}
               className={tab === id ? "active" : ""}

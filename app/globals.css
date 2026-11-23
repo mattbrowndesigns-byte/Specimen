@@ -8874,10 +8874,17 @@ a.card {
 /* The menu is the app's own (.more-pop / .more-item), opened under the arrow
    and held to the right edge of the control. Each option says what it does in
    one short line, since "download" alone doesn't say what you'd get. */
+/* Fixed and placed by CopyForAI.js against the window, so no container can
+   clip it. Hidden until placed, so it never flashes at the top-left corner
+   for the frame before its position is known. Above the lightbox (z 50). */
 .copy-ai-menu.copy-ai-menu {
-  top: calc(100% + 6px);
-  right: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: auto;
+  z-index: 1000;
   min-width: 270px;
+  visibility: hidden;
 }
 
 .copy-ai-menu .more-item.more-item {

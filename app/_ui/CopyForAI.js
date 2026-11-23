@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown, Copy, Download, FileOutput, Plug, X } from "lucide-react";
 import { claimNudge, retireNudge } from "./connectPrompts";
 
@@ -124,22 +125,70 @@ export default function CopyForAI({ url, label = "Export for AI", className = ""
   const join = url.includes("?") ? "&" : "?";
   const [menuOpen, setMenuOpen] = useState(false);
   const wrapRef = useRef(null);
+  const buttonRef = useRef(null);
+  const menuRef = useRef(null);
   useEffect(() => () => clearTimeout(nudgeTimer.current), []);
   // The menu closes on a click anywhere else or on Escape, like every menu.
   useEffect(() => {
     if (!menuOpen) return undefined;
     function onDown(e) {
-      if (!wrapRef.current?.contains(e.target)) setMenuOpen(false);
+      if (!wrapRef.current?.contains(e.target) && !menuRef.current?.contains(e.target)) setMenuOpen(false);
     }
+    // Escape closes the menu and stops there. Caught on the way down, before
+    // the document listener a modal closes itself with, or one press in the
+    // lightbox would close the menu and the lightbox together.
     function onKey(e) {
-      if (e.key === "Escape") setMenuOpen(false);
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      setMenuOpen(false);
+      buttonRef.current?.focus();
+    }
+    // Pinned to the button by position, so it closes rather than drifting
+    // when the page or a panel scrolls underneath it.
+    function close() {
+      setMenuOpen(false);
     }
     document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
     return () => {
       document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
     };
+  }, [menuOpen]);
+
+  // The menu is drawn into <body> at a fixed position, the same way the
+  // tooltips are, because the button lives in containers that clip: the
+  // lightbox's Details panel cut the menu's left half off, since it opened
+  // leftward from the button's right edge and the panel ends just past it.
+  // Placed against the window instead (or the panel, inside the lightbox):
+  // right edges aligned when there's room on the left, left edges aligned when
+  // there isn't, kept 8px inside either way, and opened upward if there's no
+  // room below.
+  useLayoutEffect(() => {
+    const menu = menuRef.current;
+    const button = buttonRef.current;
+    if (!menuOpen || !menu || !button) return;
+    const b = button.getBoundingClientRect();
+    const w = menu.offsetWidth;
+    const h = menu.offsetHeight;
+    // Inside the lightbox's Details panel the menu keeps to the panel: not
+    // because anything clips it now, but because hanging over the image by a
+    // few pixels reads as misplaced.
+    const panel = button.closest(".lightbox-panel")?.getBoundingClientRect();
+    const minLeft = (panel ? panel.left : 0) + 8;
+    const maxRight = (panel ? panel.right : window.innerWidth) - 8;
+    let left = b.right - w;
+    if (left < minLeft) left = b.left;
+    left = Math.max(minLeft, Math.min(left, maxRight - w));
+    let top = b.bottom + 6;
+    if (top + h > window.innerHeight - 8 && b.top - 6 - h > 8) top = b.top - 6 - h;
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+    menu.style.visibility = "visible";
   }, [menuOpen]);
   useLayoutEffect(() => {
     if (!nudge || !nudgeRef.current) return;
@@ -165,6 +214,7 @@ export default function CopyForAI({ url, label = "Export for AI", className = ""
   return (
     <span ref={wrapRef} className={`copy-ai ${className}`.trim()}>
       <button
+        ref={buttonRef}
         type="button"
         className="copy-ai-btn"
         onClick={() => setMenuOpen((open) => !open)}
@@ -176,8 +226,8 @@ export default function CopyForAI({ url, label = "Export for AI", className = ""
         {state === "copied" ? "Copied" : state === "error" ? "Couldn’t copy" : state === "copying" ? "Copying…" : label}
         <ChevronDown size={15} className="copy-ai-chevron" aria-hidden="true" />
       </button>
-      {menuOpen && (
-        <span className="more-pop copy-ai-menu" role="menu">
+      {menuOpen && createPortal(
+        <span ref={menuRef} className="more-pop copy-ai-menu" role="menu">
           <button type="button" role="menuitem" className="more-item more-item-button" onClick={copy}>
             <Copy size={15} />
             <span>
@@ -192,7 +242,8 @@ export default function CopyForAI({ url, label = "Export for AI", className = ""
               <small>The same, as a Markdown file</small>
             </span>
           </a>
-        </span>
+        </span>,
+        document.body
       )}
       <span className="sr-only" role="status">
         {state === "copied" || state === "error" ? message : ""}

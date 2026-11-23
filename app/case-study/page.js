@@ -619,7 +619,7 @@ export default function CaseStudyPage() {
             </p>
             <h3>Copy and download are one control</h3>
             <p>
-              Every save and collection had Copy for AI and, beside it, a bare download icon with nothing holding it. The first fix made them one capsule with two targets inside it, the label copying and an arrow opening a menu, and two things to press in one shape was one too many. It is a single button now, Export for AI, opening a menu with Copy and Download, and no tooltip, because the menu says what each does.
+              Every save and collection had Copy for AI and, beside it, a bare download icon with nothing holding it. The first fix made them one capsule with two targets inside it, the label copying and an arrow opening a menu, and two things to press in one shape was one too many. It is a single button now, Export for AI, opening a menu with Copy and Download, and no tooltip, because the menu says what each does. The menu is drawn above the whole page, because in the image viewer the panel it sat in cut its left half off.
             </p>
             <h3>A strip that sat off-centre by four pixels</h3>
             <p>

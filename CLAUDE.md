@@ -2113,12 +2113,17 @@ more (the `title` props left are component settings, like ShareModal's). A tip
 that wraps gets 10px corners instead of a pill. Colours are `--tip-bg` /
 `--tip-text`, dark in both themes.
 
-**Copy for AI is one capsule in two parts.** The label copies in one click; the
-arrow opens the app's own menu (`.more-pop` / `.more-item`) with Copy and
-Download. The download used to be a bare icon beside the button, a shape with
-nothing holding it in every header row. Refined's capsule rule for header
-buttons excludes `.copy-ai button`, or the menu's items become capsules. A lone
-icon button in a header row (Share on a collection) gets a filled 36px circle.
+**Export for AI is one button, and its menu is drawn in `<body>`.** It opens
+Copy and Download (`.more-pop` / `.more-item`), with no tooltip. It was a split
+capsule for a day -- label copies, arrow opens -- which was two targets in one
+shape. The menu is a portal at a fixed position, placed by `CopyForAI.js`
+against the window (or the lightbox's panel, inside it): as an absolute child
+it was cut off by the Details panel, which clips. It closes on scroll and
+resize because it doesn't travel with the button, and it catches Escape on the
+window in the capture phase so one press closes the menu and not the lightbox
+under it. Refined's capsule rule for header buttons excludes `.copy-ai button`.
+A lone icon button in a header row (Share on a collection) gets a filled 36px
+circle.
 
 **A site badge never comes up empty.** `Favicon.js` asks gstatic for 128px when
 drawing (stored URLs say 64, soft in the 44px header badge on a 2x screen),

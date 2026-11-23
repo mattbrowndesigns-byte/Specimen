@@ -2312,6 +2312,20 @@ endpoint its own embeds use. Instagram, Dribbble and Behance refuse outright;
 the error says to upload it and use Edit Credit, which applies to the whole
 page's images, or to the one image if it was uploaded.
 
+A post's clip comes in several sizes and the largest can be over the 15MB cap
+(James Barnard's is 16.2MB at 720p, 13.3 at 640p), so `downloadBest` steps down
+before giving up.
+
+**A linked clip is looked through in the picker, where there is a decoder.**
+It used to be sorted on its cover alone, and Aman Sidz's cover is a blue
+gradient. The picker draws five moments of each video before the AI is asked
+(`grabClip`, sharing `MOMENTS` with uploads) and posts them with any missing
+poster to `/poster`; they are kept as `video_frames`. A page of clips shares
+`FRAME_ALLOWANCE`, never under two each, and 30 seconds of drawing. An import
+sorts with no browser open, so Regenerate in the lightbox draws them for any
+clip that has none (`/api/visuals/[id]/frames`) -- which is also how clips saved
+before this get theirs.
+
 An image the AI passes over gets no tags, so keeping it anyway used to leave
 it bare. Posts are sorted with `describeOnly`, and anything else kept without
 tags is queued for them; a whole-project describe only tags what has none.

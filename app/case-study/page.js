@@ -727,6 +727,10 @@ export default function CaseStudyPage() {
             <p>
               I saved a motion designer&rsquo;s LinkedIn post and the app got two things wrong at once. It said the work was by LinkedIn, and what looked like the video was only its preview picture, with the play button painted on. A post is now read as a post: the credit is the person, linking to their profile, and the clip itself is kept, so it&rsquo;s still there if they delete it. The page also carries other people&rsquo;s posts underneath, so only the first one is read, or someone else&rsquo;s work would be saved under their name. The credit can be edited by hand too, for the platforms that can&rsquo;t be read.
             </p>
+            <h3>The AI was judging clips by their cover</h3>
+            <p>
+              An uploaded clip gets five stills, because the browser that uploads it can open it. A clip saved from a link got one, its cover, and the cover of that LinkedIn post was a plain blue gradient, so its description was about gradients. Linked clips are now looked through in the picker before the AI is asked, in the same single request. Clips saved earlier get theirs the next time you press Regenerate.
+            </p>
             <p>
               Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component or a clip, still have to be proven there.
             </p>

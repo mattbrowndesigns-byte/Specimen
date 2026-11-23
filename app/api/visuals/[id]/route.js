@@ -15,7 +15,7 @@ export async function GET(request, { params }) {
   const supabase = supabaseAdmin();
   const { data: visual, error } = await supabase
     .from("visual")
-    .select(VISUAL_COLUMNS)
+    .select(`${VISUAL_COLUMNS}, video_frames`)
     .eq("id", id)
     .eq("user_id", user.id)
     .maybeSingle();

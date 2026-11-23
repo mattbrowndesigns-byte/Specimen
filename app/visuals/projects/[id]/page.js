@@ -9,7 +9,7 @@ import FeatureRotator from "../../../_ui/FeatureRotator";
 import { GAP, MasonrySkeleton, layout, useColumns } from "../../../_ui/masonry";
 import VisualMedia from "../../../_ui/VisualMedia";
 import { DEMO_SAVES, addDemoPicks, isDemoBrowser, readDemoPicks } from "../../../_ui/demoState";
-import { grabFrame } from "@/lib/videoFrame";
+import { grabClip } from "@/lib/videoFrame";
 import { MAX_LOOP_BYTES, toMB } from "@/lib/uploadLimits";
 
 const MAX_VIDEO_MB = toMB(MAX_LOOP_BYTES);
@@ -35,6 +35,9 @@ const MAX_PAGE_MB = 40;
 
 // Finding the images is ~4s and the AI sort ~12s on a real case study.
 const ESTIMATE_SECONDS = 18;
+// How long to spend looking through a page's videos before the AI is asked.
+// Past it the rest are sorted on their posters, as they all once were.
+const MOMENTS_BUDGET_MS = 30000;
 
 // In the demo the page has already been read and sorted -- for real, once, and
 // kept on the demo's project -- so the wait is the only part replayed, at about
@@ -67,7 +70,7 @@ function Loading({ phase, seconds }) {
           {phase === "sorting"
             ? "Picking out the work from the rest of the page"
             : phase === "posters"
-              ? "Taking a still from each video"
+              ? "Looking through each video"
               : "Finding the images and videos on the page"}
           {elapsed < seconds ? `: about ${Math.ceil(seconds - elapsed)}s remaining.` : ": finishing up."}
         </p>
@@ -166,23 +169,26 @@ export default function PickProjectPage({ params }) {
         p = await load();
         if (!p) return;
       }
-      // Videos the page gave no poster get one drawn here, from the stored
-      // MP4, before the AI sorts -- the model can only look at a still, and
-      // the board lays everything out by one. One at a time, because each
-      // write replaces the project's whole candidate list.
-      const needing = (p.candidates || []).filter((c) => c.needs_poster && !c.saved);
+      // Before the AI sorts, each video is looked through here, where there is
+      // a decoder: five moments for the model, which can only see stills, and
+      // a poster if the page gave none. One at a time, because each write
+      // replaces the project's whole candidate list.
+      const unseen = (c) => p.ai_state !== "done" && !c.video_frames;
+      const needing = (p.candidates || []).filter((c) => c.video_url && !c.saved && (c.needs_poster || unseen(c)));
       if (p.state === "picking" && needing.length) {
         setPhase("posters");
+        const until = Date.now() + MOMENTS_BUDGET_MS;
         for (const c of needing) {
+          const moments = unseen(c) && Date.now() < until;
+          if (!moments && !c.needs_poster) continue;
+          const drawn = await grabClip(c.video_url, { poster: Boolean(c.needs_poster), moments });
+          // Nothing to add. A video that needs a poster is sent regardless:
+          // the server drops one it can't draw rather than offer a blank tile.
+          if (!c.needs_poster && !drawn.moments.length) continue;
           const form = new FormData();
           form.append("key", c.key);
-          try {
-            const { blob } = await grabFrame(c.video_url);
-            form.append("frame", blob, `${c.key}.jpg`);
-          } catch {
-            // No frame: the server drops the video rather than offering a
-            // blank tile.
-          }
+          if (drawn.poster) form.append("frame", drawn.poster, `${c.key}.jpg`);
+          drawn.moments.forEach((blob, i) => form.append("moment", blob, `${c.key}-${i}.jpg`));
           await fetch(`/api/visuals/projects/${id}/poster`, { method: "POST", body: form }).catch(() => {});
         }
         p = await load();

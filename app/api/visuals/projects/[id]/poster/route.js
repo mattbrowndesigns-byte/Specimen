@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND } from "@/lib/ownership";
-import { setPoster } from "@/lib/visuals";
+import { setStills } from "@/lib/visuals";
+import { formImages } from "@/lib/formImages";
 
-// A poster frame the picker drew in the browser for a video the page gave no
-// poster: form fields `key` and `frame` (an image file), or `key` alone when
-// the browser couldn't draw one and the video should be dropped. A frame is a
-// single still, far under Vercel's 4.5MB body limit.
+// The stills the picker drew of one video in the browser: form fields `key`,
+// `frame` (its poster, when the page gave none) and `moment` (several, for the
+// AI). A video that needs a poster and arrives without one is dropped. Six
+// small stills, far under Vercel's 4.5MB body limit.
 export const maxDuration = 30;
 
 export async function POST(request, { params }) {
@@ -17,10 +18,10 @@ export async function POST(request, { params }) {
   const form = await request.formData().catch(() => null);
   const key = form?.get("key");
   if (typeof key !== "string" || !key) return NextResponse.json({ error: "key is required" }, { status: 400 });
-  const frame = form.get("frame");
-  const buffer = frame && typeof frame.arrayBuffer === "function" ? Buffer.from(await frame.arrayBuffer()) : null;
+  const [poster] = await formImages(form, "frame");
+  const frames = await formImages(form, "moment");
 
-  const result = await setPoster(id, user.id, key, buffer);
+  const result = await setStills(id, user.id, key, { poster, frames });
   if (result.notFound) return NOT_FOUND();
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 422 });
   return NextResponse.json({ ok: true });

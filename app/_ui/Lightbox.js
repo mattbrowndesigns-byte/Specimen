@@ -8,6 +8,7 @@ import SaveActions from "./SaveActions";
 import TagCombobox from "./TagCombobox";
 import VisualMedia from "./VisualMedia";
 import { platformOf, sourceLabel } from "@/lib/platforms";
+import { grabClip } from "@/lib/videoFrame";
 import { rankRelated } from "@/lib/related";
 
 // A saved visual, opened the way images are meant to be opened: over the
@@ -424,6 +425,17 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
     setBusy(field ? `regenerate-${field}` : "regenerate");
     setAiFailure(null);
     setFailedField(field);
+    // A clip the AI has only ever seen the cover of: one saved before clips
+    // were looked through, or sorted with no browser open to do it.
+    if (visual.video_url && !visual.video_frames?.length && !demo) {
+      setAiWorking("Looking through the clip…");
+      const { moments } = await grabClip(visual.video_url);
+      if (moments.length) {
+        const form = new FormData();
+        moments.forEach((blob, i) => form.append("moment", blob, `${i}.jpg`));
+        await fetch(`/api/visuals/${id}/frames`, { method: "POST", body: form }).catch(() => {});
+      }
+    }
     setAiWorking(
       field === "summary"
         ? "Writing a new description…"

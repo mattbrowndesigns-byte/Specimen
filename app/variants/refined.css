@@ -1165,12 +1165,17 @@
     padding: 0 14px;
     border-color: transparent;
     border-radius: 999px;
-    background: var(--field-bg);
     font-weight: 500;
     transition: background-color 0.18s var(--ease), transform 0.18s var(--ease);
   }
 
-  & .detail-section button:not(.icon-btn):not(.link-btn):not(.palette-swatch):not(.combobox-option):not(.promote-btn):not(.combobox-chip > button):hover:not(:disabled) {
+  /* The fill is its own rule so Save can keep the solid one. Set above, this
+     selector's weight beat `.primary` and Save was dark text on a dark pill. */
+  & .detail-section button:not(.icon-btn):not(.link-btn):not(.palette-swatch):not(.combobox-option):not(.promote-btn):not(.combobox-chip > button):not(.primary) {
+    background: var(--field-bg);
+  }
+
+  & .detail-section button:not(.icon-btn):not(.link-btn):not(.palette-swatch):not(.combobox-option):not(.promote-btn):not(.combobox-chip > button):not(.primary):hover:not(:disabled) {
     background: var(--chip-strong-bg);
   }
 
@@ -1181,6 +1186,10 @@
   & .detail-section .section-head-actions button.primary {
     background: var(--invert-bg);
     color: var(--invert-text);
+  }
+
+  & .detail-section .section-head-actions button.primary:hover:not(:disabled) {
+    opacity: 0.88;
   }
 
   & .facet-row {

@@ -739,6 +739,10 @@ export default function CaseStudyPage() {
             <p>
               Clips were tagged by subject, so there was no way to pull up just the motion work. Each one is now tagged Video when it was filmed and Motion Graphics when it was designed. The AI picks which of the two, and the app makes sure there is one, because a rule I&rsquo;d have to check isn&rsquo;t a rule.
             </p>
+            <h3>When a page won&rsquo;t let it in</h3>
+            <p>
+              A studio&rsquo;s case study wouldn&rsquo;t save because its site turns away anything that isn&rsquo;t a person at a browser. I tried a bookmark that read the page from my own tab, and took it out the same day: setting it up was more work than the paste it replaced. Pasting the link is still the whole workflow. When a page refuses, the same screen says so and takes the images there, dropped or pasted, filed under the link with the studio&rsquo;s name already filled in to correct.
+            </p>
             <p>
               Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component or a clip, still have to be proven there.
             </p>

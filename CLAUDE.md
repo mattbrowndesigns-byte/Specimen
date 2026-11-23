@@ -2333,8 +2333,13 @@ clip that has none (`/api/visuals/[id]/frames`) -- which is also how clips saved
 before this get theirs.
 
 A site behind Cloudflare's check (wearemotto.com: 403 to the fetch, fine in a
-browser) is not worked around. The picker says it blocks automated visits and
-points at uploading with Add Credit; it used to say "The page answered 403".
+browser) is not worked around, an archive or a second way in included. The picker
+says so, and the same screen takes the page's images by drop, paste or file
+(`app/_ui/PageDrop.js`): the URL stays the workflow and the images land under it.
+Each is saved as it lands, because collecting means going back and forth to the
+page; `startUpload` joins the page's project instead of making a batch, only when
+it is `failed` or `saved` (one mid-pick holds candidates a save would discard).
+The maker starts as `guessMaker`'s guess from the domain, editable there.
 
 A bookmarklet that read the page from the owner's own tab was built and taken out
 the same day (2026-11-23): setting up a bookmark was more friction than the paste

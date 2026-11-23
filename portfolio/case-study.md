@@ -423,6 +423,8 @@ The limit is 25 MB, which is about a minute of a recorded window or 24 seconds o
 
 **Every clip says what it is.** Clips were tagged by subject, so there was no way to pull up just the motion work. Each one is now tagged Video when it was filmed and Motion Graphics when it was designed. The AI picks which of the two, and the app makes sure there is one, because a rule I'd have to check isn't a rule.
 
+**When a page won't let it in.** A studio's case study wouldn't save because its site turns away anything that isn't a person at a browser. I tried a bookmark that read the page from my own tab, and took it out the same day: setting it up was more work than the paste it replaced. Pasting the link is still the whole workflow. When a page refuses, the same screen says so and takes the images there, dropped or pasted, filed under the link with the studio's name already filled in to correct.
+
 Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component or a clip, still have to be proven there.
 
 ## What I deliberately did not build

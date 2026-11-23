@@ -434,6 +434,14 @@ anything *not* in there is invisible in both. Resources, folders and sharing
 had all shipped without a line in this file, so the rotator on an empty library
 was still describing a product that only saved websites.
 
+**The list is grouped by kind first, then by what works on all of them.** The
+first four groups are the four kinds (`kind` takes its icon from kinds.js) and
+hold only what is particular to each; the rest are by purpose. Grouping the
+whole page by kind was the first idea: sorted, 20 of the 37 features belonged to
+no one kind. `also` on a card is extra rotator lines, so merging two cards
+loses no tip. State only what every kind a card names can do: "everything the
+AI writes waits for review" outlived visuals, which aren't in the queue.
+
 **All colour comes from `:root` custom properties**; dark mode is the single
 `:root[data-theme="dark"]` override block, so never add a raw hex. `--invert-*`
 is the solid-dark-button pair, which flips to a solid *light* button in dark

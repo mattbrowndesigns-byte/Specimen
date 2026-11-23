@@ -392,6 +392,8 @@ Doing it turned up a gap. Websites, resources and visuals all wait in line when 
 
 **Three rows you couldn't choose between.** The list of AI apps with access showed Claude three times, because adding the connector again records a new approval. My first fix added a paragraph explaining that and a time on each row, and two of the three times were the same. Explaining a confusing list is not fixing it. It is one row per app now, with its number of approvals and one Disconnect for all of them, and it stays out of the way until something is connected.
 
+**A features page telling an old story.** The features page still opened with pasting a URL, and filed 37 cards by topic, so components had one and nobody could tell there were four kinds of thing to save. The obvious fix was to group it by kind. I sorted the list first, and 20 of the 37 belonged to no single kind, so they would have been repeated four times or dropped. It leads with the four kinds now, then what each does, then what works across all of them, in 28 cards. One claim had quietly become false on the way: that everything the AI writes waits for review.
+
 Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component, still have to be proven there.
 
 ## What I deliberately did not build

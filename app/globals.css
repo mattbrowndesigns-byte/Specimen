@@ -8436,7 +8436,12 @@ a.card {
   border-bottom-color: var(--text-muted);
 }
 
+/* Wraps as two things, so Edit Credit starts at the edge on its own line. */
 .lightbox-panel-credit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
   margin: 6px 0 4px;
 }
 
@@ -8461,7 +8466,6 @@ a.card {
 }
 
 .lightbox-panel-credit .link-btn.link-btn {
-  margin-left: 10px;
   font-size: 13px;
 }
 

@@ -166,18 +166,21 @@ async function main() {
     all(() => db.from("visual_project").select("*").eq("user_id", SOURCE).eq("state", "saved")),
     all(() => db.from("visual").select("*").eq("user_id", SOURCE)),
   ]);
-  const sites = allSites.filter(wanted);
   const components = allComponents.filter((c) => c.source_url);
   const resources = allResources.filter(wanted);
   const projects = allProjects.filter((p) => p.url && wanted(p));
   const projectIds = new Set(projects.map((p) => p.id));
   const isPicker = (row) => row.url === PICKER.url;
   const visuals = allVisuals.filter((v) => v.url && projectIds.has(v.project_id) && !isPicker(v));
+  // A site still waiting for its screenshot would sit in the demo as
+  // "Capturing" for good, since nothing is coming for the copy.
+  const allCaptures = await rowsIn("capture", "site_id", allSites.map((site) => site.id));
+  const captured = new Set(allCaptures.map((c) => c.site_id));
+  const sites = allSites.filter((site) => wanted(site) && captured.has(site.id));
   const siteIds = sites.map((site) => site.id);
-  const [captures, pages] = await Promise.all([
-    rowsIn("capture", "site_id", siteIds),
-    rowsIn("page", "site_id", siteIds),
-  ]);
+  const kept = new Set(siteIds);
+  const captures = allCaptures.filter((c) => kept.has(c.site_id));
+  const pages = await rowsIn("page", "site_id", siteIds);
   const tagIds = tags.map((tag) => tag.id);
   const taggables = await rowsIn("taggable", "tag_id", tagIds);
   const items = await rowsIn("collection_item", "collection_id", collections.map((c) => c.id));

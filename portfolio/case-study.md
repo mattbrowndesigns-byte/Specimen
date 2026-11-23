@@ -127,6 +127,24 @@ this one in the notes because it is the clearest case of the measurement
 knowing more than I did, and it is worth remembering before "fixing" a result
 that looks surprising.
 
+## Images are a library of their own
+
+Half of what I save from a studio's site is not the site. It is the work on it: the identity system on a bus shelter, the packaging, the poster series. Saving the page as a website photographed the case study's layout and lost the pictures I actually came for.
+
+So images became a fourth library. Paste a project page and Kivli pulls every image off it, guesses which ones are the work with a free heuristic, then spends one AI request sorting and describing the lot. A picker shows its choices and I make the final call; anything left out is deleted from storage, so a page only ever costs space for what I chose.
+
+> A logo and that logo on a bus are two findings.
+
+That is why each image is its own card on a board rather than one card per project. Grouping still happens, on the image's own page, where the rest of the project sits underneath it. The project's paragraph is written once and shown there, instead of being copied onto every image it came with.
+
+The vocabulary is three facets. Industry and aesthetic are shared with websites, because Brutalist means the same thing on a billboard as on a homepage. Medium is its own: poster, packaging, signage, identity system. Words a designer would search for, from a closed list, for the same reason the block vocabulary is one.
+
+| Requests to sort and describe a page | Facets on every image |
+|---|---|
+| **1**, however many images it has | **3**, medium, industry, aesthetic |
+
+Two guards came from running it for real. A title is two to six words by instruction, and one came back as hundreds of words of looping filler, so anything past eight words is treated as that and replaced. And files are named by their content and cached for a year, because the free plan's limit on what a board of images can serve is the first one a library like this would hit.
+
 ## Two progress bars, not one percentage
 
 A hundred imported bookmarks is two hundred AI requests against a tier that
@@ -333,6 +351,28 @@ The demo library still has its own address with no sign-in, so anyone can
 point their own AI at it and try. It stays read-only because the four tools
 that write are only given to a signed-in owner:
 https://specimen-gamma-six.vercel.app/api/mcp/demo
+
+## The details I'm still pushing on
+
+None of these is a story on its own. Together they are most of the difference between a tool that works and one that feels finished, so I keep them written down: what looked wrong, what was actually wrong, and what changed.
+
+**A blurry logo was a rule, not a file.** Intercom's mark looked soft in the header. It wasn't a bad image: Kivli picked a site's icon by whether it loaded, and Google's only Intercom icon is 48 pixels, drawn here at 88 on a sharp screen. Asking for a bigger one changes nothing, because Google quietly sends the size it has. Now every candidate is measured and the first one big enough wins, a site with no large icon anywhere keeps its sharpest, a round mark is scaled to meet its circle, and a site with no icon at all gets its initial on a colour of its own. A script re-asks for every save whenever the rule changes.
+
+**One tooltip, drawn above everything.** Some controls had a styled grey pill and most had the browser's own label, which waits a second and a half and looks different on every screen. The pill could not simply be copied everywhere: on a card it was clipped by the card's rounded edge. It is now one piece that draws on top of the whole page, used by about forty controls.
+
+**Copy and download are one control.** Every save and collection had Copy for AI and, beside it, a bare download icon with nothing holding it. They are one capsule now: the label copies in one click, the arrow beside it opens both options.
+
+**A strip that sat off-centre by four pixels.** The tag strip under the search measured 12 pixels above and 8 below on Websites, and 12 above and 18 below on Resources, whose view controls also lived on a different line from every other tab's. Both are 12 and 12 now, on every tab.
+
+**Descenders lost to an animation.** The rolling line on the home page is clipped to its row so the incoming line can't swing through the one below. The clip cut the tails off every y and p. Measured, those tails end 0.05em past the line box, so the clip now allows 0.08em.
+
+**Filters that could only narrow to nothing.** On the image board, picking Signage and then Editorial returned nothing, because it asked for images tagged both. The convention, and what the other libraries already did, is any of the chosen tags within one group and all of the groups together.
+
+**Labels that changed width.** The selected tab went bold, which made its label wider and nudged every tab after it sideways. They all share one weight now; the fill says which one you are in.
+
+**A finished job that looked unfinished.** The import panel was still showing a batch from weeks earlier, two full bars under a gradient band that read as a third bar. A finished batch now stays for the day it finishes and then goes.
+
+Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Uploading an image that doesn't live online and keeping a case study's looping videos are being built next, and so is importing all four kinds of save from a bookmarks file.
 
 ## What I deliberately did not build
 

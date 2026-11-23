@@ -508,6 +508,22 @@ it always arrives as PNG rather than ICO. The trade is that rendering a badge
 tells Google which domains are in the library. Google answers 404 when it has
 no icon, so status is the whole test.
 
+**An icon is chosen by its pixels, not by whether it loads.** Intercom's mark
+was blurry because the resolver took Google's answer the moment it loaded:
+asked for 64, Google sent its only Intercom icon, 48x48, and the 44px header
+badge drew it at 88 device pixels. Asking for 128 changes nothing there --
+Google quietly sends the size it has. So `resolveIconUrl` now measures every
+candidate in parallel -- Google at 128, the declared icon, an undeclared
+`/apple-touch-icon.png`, `/favicon.ico` -- and keeps the first in that order
+that is at least `ICON_MIN_PX` (96), else the largest. Some sites have nothing
+bigger anywhere (Intercom's best is 48), and those stay a little soft; the rule
+is that we never keep a smaller file than the site offers. Grow the badge and
+raise `ICON_MIN_PX` with it. A rule change only reaches rows saved after it,
+so `node scripts/refresh-icons.mjs` (dry run; `--write` to apply) re-asks for
+every site, resource and visual project. The badge side of the same lesson
+is in `Favicon.js`: filled marks scale 1.08 to meet the border, stored Google
+URLs are drawn at 128, and no icon at all draws a letter.
+
 **Whether an icon fills its badge or is inset is measured, not guessed** —
 `lib/iconShape.js` counts opaque pixels and compares to 0.70. The number that
 matters is pi/4 (0.785, a circle inscribed in its square): a disc-shaped mark

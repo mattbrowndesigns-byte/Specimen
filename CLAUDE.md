@@ -2334,29 +2334,18 @@ before this get theirs.
 
 A site behind Cloudflare's check (wearemotto.com: 403 to the fetch, fine in a
 browser) is not worked around. The picker says it blocks automated visits and
-offers the Save Button; it used to say "The page answered 403".
+points at uploading with Add Credit; it used to say "The page answered 403".
 
-**The Save Button is a bookmark that reads the page from inside the owner's own
-tab** (`lib/saveButton.js`, installed from `/save`). It only writes down where
-the images and clips are; the server still downloads them, which works because
-the files' CDNs are open where the page isn't. The list travels in the
-fragment of `/save#...`, because a fetch, a script tag or a postMessage can each
-be blocked by the page's own policies and a fragment can't, and it is never sent
-to a server. The code is a string, not a function: a bundler would add helpers
-that don't exist on someone else's page. It is copied into the bookmark, so a
-change reaches only buttons added after it. React refuses `javascript:` hrefs,
-so the link's is set by hand.
+A bookmarklet that read the page from the owner's own tab was built and taken out
+the same day (2026-11-23): setting up a bookmark was more friction than the paste
+it replaced, and it landed on its own install page when used. A URL is the
+workflow; a Chrome extension is the owner's preferred answer if this comes up
+again. The collector is in git history at `lib/saveButton.js`.
 
-Any site can open `/save#...`, so the button carries a key this browser made up
-(`specimen.save.key`); a list without it waits for a click. `readPageSave`
-treats every field as a stranger's. Pages collected this way are not sorted with
-`describeOnly`: a signed-in page is the post plus whatever hangs around it.
-
-Three things real pages taught it. Motto's share title names a different client,
-so the tab's title comes first. Behance links each image to a page under the
-project's own, so a link beneath this page isn't a link away. Dribbble's
-animations are GIFs, so extraction keeps a GIF moving (`encodeAnimated`, shared
-with uploads, 400 frames a page).
+Two things it taught extraction stayed. Behance links each image to a page under
+the project's own, so a link beneath this page isn't a link away. Dribbble's
+animations are GIFs, so a GIF is kept moving (`encodeAnimated`, shared with
+uploads, 400 frames a page).
 
 **Every clip is tagged Video or Motion Graphics.** The model picks which
 (`clip`, null for a still) and the code guarantees one; the two tags are made

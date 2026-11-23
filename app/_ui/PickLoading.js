@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import FeatureRotator from "./FeatureRotator";
 import { useAnnounceWork } from "./workInFlight";
 
-// The wait before a page's images can be chosen, in the picker and while the
-// Save Button's page is being read: the loading bar every other save uses.
+// The wait before a page's images can be chosen: the loading bar every other
+// save uses.
 export default function PickLoading({ phase, seconds }) {
   const [elapsed, setElapsed] = useState(0);
   useAnnounceWork(true);

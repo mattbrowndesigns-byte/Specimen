@@ -276,13 +276,6 @@ export default function PickProjectPage({ params }) {
               <button className="primary" onClick={() => run(project)}>
                 Try Again
               </button>
-              {/* A page Kivli was turned away from, which the owner's own
-                  browser wasn't. */}
-              {/Save Button/.test(project.error || "") && (
-                <a className="pick-cancel" href="/save">
-                  Get the Save Button
-                </a>
-              )}
               {/* Nothing was found, so there's nothing to lose by leaving --
                   and on a page pulled again, your saved images stay put. */}
               <button className="pick-cancel" onClick={() => cancel({ confirm: false })}>

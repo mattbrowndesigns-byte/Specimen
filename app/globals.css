@@ -4664,7 +4664,7 @@ a.card {
 }
 
 .feature-group:last-child {
-  margin-bottom: 40px;
+  margin-bottom: 8px;
 }
 
 .feature-group h2 {
@@ -4676,10 +4676,11 @@ a.card {
   color: var(--text);
 }
 
+/* No measure: one sentence, written to hold one line across the page. Capped
+   at a reading width it broke with two words left over. */
 .feature-group-blurb {
   margin: 0 0 24px;
-  max-width: 34em;
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1.5;
   color: var(--text-muted);
 }
@@ -4699,7 +4700,6 @@ a.card {
 
   .feature-group-blurb {
     margin-bottom: 20px;
-    font-size: 18px;
   }
 
   .feature-grid {

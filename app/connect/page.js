@@ -128,12 +128,33 @@ function CopyField({ value, label }) {
   );
 }
 
+// One row per app. Supabase keeps a record for every approval, and adding the
+// connector again is a new one, so a single app arrived as three rows called
+// "Claude" with nothing to choose between them. The name is all an approval
+// says about itself, so it is what they are grouped on; the count stays on the
+// row because one you don't remember giving is the thing worth noticing.
+function groupGrants(grants) {
+  const byName = new Map();
+  for (const grant of grants) {
+    const app = byName.get(grant.name) || { name: grant.name, grants: [], latest: null };
+    app.grants.push(grant);
+    if (grant.grantedAt && (!app.latest || new Date(grant.grantedAt) > new Date(app.latest))) app.latest = grant.grantedAt;
+    byName.set(grant.name, app);
+  }
+  return [...byName.values()];
+}
+
+const DAY = { day: "numeric", month: "short", year: "numeric" };
+
 export default function ConnectPage() {
   const demo = useIsDemo();
   const [origin, setOrigin] = useState("");
   const [app, setApp] = useState("claude");
   const [grants, setGrants] = useState(null);
   const [unavailable, setUnavailable] = useState(false);
+  const [unread, setUnread] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(null);
+  const [accessError, setAccessError] = useState(null);
   const [error, setError] = useState(null);
 
   // The address is this site's own, read after mount so a preview deploy
@@ -141,9 +162,18 @@ export default function ConnectPage() {
   useEffect(() => setOrigin(window.location.origin), []);
 
   const loadGrants = useCallback(async () => {
-    const res = await fetch("/api/account/connections");
-    if (!res.ok) return;
-    const data = await res.json();
+    // A list that couldn't be read is not an empty one. The section hides when
+    // nothing has access, so a failure has to say so or it would look the same.
+    let data;
+    try {
+      const res = await fetch("/api/account/connections");
+      if (!res.ok) throw new Error();
+      data = await res.json();
+    } catch {
+      setUnread(true);
+      return;
+    }
+    setUnread(false);
     setGrants(data.grants || []);
     // Connected somewhere: nothing left to nudge about.
     if (data.grants?.length) retireAll();
@@ -154,19 +184,39 @@ export default function ConnectPage() {
     loadGrants();
   }, [loadGrants]);
 
-  async function disconnect(grant) {
-    setError(null);
-    const res = await fetch(`/api/account/connections?client=${encodeURIComponent(grant.clientId)}`, { method: "DELETE" });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      setError(body.error || "Couldn’t disconnect that app");
-      return;
+  // Every approval the app holds, one at a time. Stops being a success if any
+  // of them fails, and the list is read again either way, so the row left
+  // behind is what is really still connected.
+  async function disconnect(app) {
+    setAccessError(null);
+    setDisconnecting(app.name);
+    let failed = 0;
+    for (const grant of app.grants) {
+      try {
+        const res = await fetch(`/api/account/connections?client=${encodeURIComponent(grant.clientId)}`, { method: "DELETE" });
+        if (!res.ok) failed += 1;
+      } catch {
+        failed += 1;
+      }
     }
-    loadGrants();
+    if (failed) {
+      const total = app.grants.length;
+      setAccessError(
+        failed === total
+          ? `Couldn’t disconnect ${app.name}. It still has access.`
+          : `Disconnected ${total - failed} of ${app.name}’s ${total} approvals. Try again for the rest.`
+      );
+    }
+    await loadGrants();
+    setDisconnecting(null);
   }
 
   const address = origin ? `${origin}/api/mcp${demo ? "/demo" : ""}` : "";
   const chosen = APPS.find((a) => a.id === app);
+  const connected = groupGrants(grants || []);
+  // Nothing to manage until something is connected: someone setting up for the
+  // first time sees the steps and not an empty list under them.
+  const showAccess = !demo && (unread || unavailable || accessError || connected.length > 0);
 
   return (
     <>
@@ -272,42 +322,46 @@ export default function ConnectPage() {
           </li>
         </ol>
 
-        {!demo && (
+        {showAccess && (
           <section className="connect-panel">
-            {/* The one place to take access back. Each time an app is added or
-                re-added it is a separate approval, which is why the same app
-                can be listed more than once; the time tells them apart. */}
             <h2>Apps with access</h2>
-            <p className="connect-note connect-grants-note">
-              Every AI app you&rsquo;ve allowed into your library. Adding an app again counts as a new
-              approval, so the same one can appear more than once. Disconnect signs that copy out; it
-              would have to ask you again.
-            </p>
-            {grants === null ? (
-              <p className="connect-note">Checking…</p>
-            ) : unavailable ? (
+            {unavailable ? (
               <p className="connect-note">Connecting apps isn&rsquo;t switched on for this Kivli yet.</p>
-            ) : grants.length === 0 ? (
-              <p className="connect-note">None yet. An app appears here once you allow it in step 3.</p>
             ) : (
+              <p className="connect-note connect-grants-note">AI apps that can read and add to your library.</p>
+            )}
+            {accessError && (
+              <p className="error" role="alert">
+                {accessError}
+              </p>
+            )}
+            {unread && (
+              <p className="error" role="alert">
+                Couldn&rsquo;t check which apps have access. Reload the page to try again.
+              </p>
+            )}
+            {connected.length > 0 && (
               <ul className="connect-grants">
-                {grants.map((grant) => (
-                  <li key={grant.clientId}>
-                    <span className="connect-grant-name">{grant.name}</span>
-                    {grant.grantedAt && (
-                      <span className="connect-grant-date">
-                        Allowed{" "}
-                        {new Date(grant.grantedAt).toLocaleString(undefined, {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    )}
-                    <button type="button" className="connect-revoke" onClick={() => disconnect(grant)}>
-                      Disconnect
+                {connected.map((app) => (
+                  <li key={app.name}>
+                    <span className="connect-grant-name">{app.name}</span>
+                    <span className="connect-grant-date">
+                      {[
+                        app.grants.length > 1 && `${app.grants.length} approvals`,
+                        app.latest &&
+                          `${app.grants.length > 1 ? "last allowed" : "Allowed"} ${new Date(app.latest).toLocaleDateString(undefined, DAY)}`,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                    <button
+                      type="button"
+                      className="connect-revoke"
+                      onClick={() => disconnect(app)}
+                      disabled={Boolean(disconnecting)}
+                      aria-label={`Disconnect ${app.name}`}
+                    >
+                      {disconnecting === app.name ? "Disconnecting…" : "Disconnect"}
                     </button>
                   </li>
                 ))}

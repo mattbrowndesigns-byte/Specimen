@@ -678,6 +678,10 @@ export default function CaseStudyPage() {
             <p>
               Doing it turned up a gap. Websites, resources and visuals all wait in line when the AI is too busy to describe them. Components never did: one saved on a busy day stayed untitled until I noticed. They share the same line now, uploaded or not.
             </p>
+            <h3>Three rows you couldn&rsquo;t choose between</h3>
+            <p>
+              The list of AI apps with access showed Claude three times, because adding the connector again records a new approval. My first fix added a paragraph explaining that and a time on each row, and two of the three times were the same. Explaining a confusing list is not fixing it. It is one row per app now, with its number of approvals and one Disconnect for all of them, and it stays out of the way until something is connected.
+            </p>
             <h3>A component that moves</h3>
             <p>
               The next thing I tried to upload was a screen recording, because some components are only worth saving for how they move. A clip is kept whole, so there is no crop to offer and the page says so rather than showing a control that does nothing. Its card shows one frame with a play mark; its own page plays the clip, muted and looping.

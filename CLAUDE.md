@@ -2394,6 +2394,14 @@ server is switched on. `/api/mcp` and `/.well-known` are in `PUBLIC_PATHS`
 because an AI app carries no browser session. The consent page wants a real
 session: a demo pass is a stranger holding someone else's copy.
 
+**Apps with access is one row per app, and hides when there are none.** Supabase
+keeps a record per approval, and re-adding a connector makes another, so one
+app listed as three identical rows. `/connect` groups them by name, the only
+thing an approval says about itself, and Disconnect revokes every one in the
+row, reporting a partial failure rather than passing it off. The count stays
+visible: names are self-declared, so an approval you don't remember is the
+signal. A list that fails to load says so, because hiding is what empty means.
+
 **Sign-in's `next` keeps its query string now, and it only takes a path.** The
 consent page is nothing without its `authorization_id`, and middleware used to
 send `next` as the pathname alone. With that fixed, `?next=https://elsewhere`

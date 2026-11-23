@@ -757,6 +757,9 @@ export default function CaseStudyPage() {
               Testing that found an image that loads as you scroll being thrown away for its size, because what it had so far was a one-pixel placeholder.
             </p>
             <p>
+              The first time I used it, the button was gray and the panel said Chrome wouldn&rsquo;t allow it on that page. It was nothing to do with the page. Chrome had picked up the new panel and gone on running the old permissions, and my error message blamed the only thing it could see. The panel checks its own version first now and offers to finish updating. I also took out a second button that asked Kivli to read the page instead, because it failed on exactly the pages the first one was for.
+            </p>
+            <p>
               Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, and the browser button still have to be proven there.
             </p>
           </div>

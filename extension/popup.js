@@ -37,7 +37,6 @@ const KINDS = [
     id: "visual",
     one: "Visual",
     tab: "Visuals",
-    other: "Let Kivli Read the Page",
   },
 ];
 const KIND = Object.fromEntries(KINDS.map((k) => [k.id, k]));
@@ -249,6 +248,7 @@ function imagePicker(tabId, onChange) {
   let page = null;
   let items = [];
   let reading = false;
+  let dead = false;
 
   const clipCount = () => [...chosen].filter((i) => i.clip).length;
 
@@ -300,22 +300,26 @@ function imagePicker(tabId, onChange) {
   }
 
   async function read() {
-    if (page || reading) return;
+    if (page || reading || dead) return;
     reading = true;
     try {
       const [run] = await chrome.scripting.executeScript({ target: { tabId }, func: readPage });
       page = run?.result || null;
-    } catch {
-      page = null;
+    } catch (err) {
+      console.error("Kivli couldn’t read the page:", err);
     }
     reading = false;
     if (!page) {
-      says.textContent = "Chrome doesn’t let extensions look at this page.";
+      dead = true;
+      says.textContent = "Kivli couldn’t look through this page. Reload the page and press the button again.";
+      onChange();
       return;
     }
     items = [...page.images, ...page.videos.map((v) => ({ ...v, clip: true }))];
     if (!items.length) {
-      says.textContent = "No images big enough to keep were found. If the page loads as you scroll, scroll it and try again.";
+      dead = true;
+      says.textContent = "No images big enough to keep were found. If the page loads as you scroll, scroll it and press the button again.";
+      onChange();
       return;
     }
     says.hidden = true;
@@ -340,6 +344,8 @@ function imagePicker(tabId, onChange) {
     node,
     read,
     fit,
+    dead: () => dead,
+    missesClip: () => Boolean(page?.unreachable),
     count: () => chosen.size,
     clips: clipCount,
     // Only what was ticked leaves the browser.
@@ -354,6 +360,9 @@ function imagePicker(tabId, onChange) {
     },
   };
 }
+
+// The two places Kivli reads a post's clip from that a page won't give up.
+const readsClips = (url) => /(^|\.)(x|twitter|linkedin)\.com$/.test(new URL(url).hostname);
 
 function savedLine(match) {
   if (match.kind === "component") return `${plural(match.count, "component")} from this page`;
@@ -449,10 +458,16 @@ function render(tab, found, firstKind) {
     images.node.hidden = !visual;
     folder.node.hidden = kind !== "resource" || Boolean(existing);
     // Not with a clip: that save finishes in Kivli, and is filed there.
-    collection.node.hidden = kind === "component" || clips;
+    const dead = visual && images.dead();
+    collection.node.hidden = kind === "component" || clips || dead;
     noteField.hidden = !noted || Boolean(existing);
-    other.hidden = !KIND[kind].other;
-    other.textContent = KIND[kind].other || "";
+    // For a visual, only where Kivli can do what this panel can't: the clip in
+    // a post it knows how to read. Anywhere else it would be a second button
+    // that fails on exactly the pages the first one is for.
+    const second = visual ? (readsClips(url) && images.missesClip() ? "Get This Post’s Clip in Kivli" : null) : KIND[kind].other;
+    other.hidden = !second;
+    other.textContent = second || "";
+    submit.hidden = dead;
     other.disabled = busy;
     submit.textContent = action({ existing, visual, clips });
     submit.disabled = busy || Boolean(existing && !collection.value()) || (visual && !images.count());
@@ -465,7 +480,7 @@ function render(tab, found, firstKind) {
     if (existing) return "Add to Collection";
     if (!visual) return KIND[kind].action;
     if (clips) return "Continue in Kivli";
-    return images.count() ? `Save ${plural(images.count(), "Image")}` : "Save Images";
+    return images.count() ? `Save ${plural(images.count(), "Image")}` : "Choose Images Above";
   }
 
   form.addEventListener("submit", (e) => {
@@ -602,6 +617,18 @@ function signIn() {
   });
 }
 
+// Chrome serves an unpacked extension's panel straight off the disk but goes on
+// running its old manifest and worker until it is reloaded, so for that long the
+// panel asks for things it hasn't been given. It looked like the page's fault.
+async function halfUpdated() {
+  try {
+    const onDisk = await (await fetch(chrome.runtime.getURL("manifest.json"), { cache: "no-store" })).json();
+    return onDisk.version !== chrome.runtime.getManifest().version;
+  } catch {
+    return false;
+  }
+}
+
 function loading() {
   main.replaceChildren(
     el("div", { className: "loading", attrs: { "aria-label": "Loading", role: "status" } }, ...[46, 64, 18, 58, 58, 42].map((h) => {
@@ -632,6 +659,14 @@ async function start() {
   // Held open so the worker knows someone is watching and the icon can stay
   // quiet about how it went.
   chrome.runtime.connect({ name: "panel" });
+
+  if (await halfUpdated()) {
+    notice("Kivli has been updated", "Finish updating, then press the Kivli button again.", {
+      label: "Finish Updating",
+      run: () => chrome.runtime.reload(),
+    });
+    return;
+  }
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const no = refusal(tab?.url || "");

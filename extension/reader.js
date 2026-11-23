@@ -79,6 +79,8 @@ export function readPage() {
   const seen = new Set();
   const images = [];
   const videos = [];
+  // Clips playing from somewhere only the page itself can reach.
+  let unreachable = 0;
   const add = (list, url, el, extra) => {
     if (!url || url.length > 2000 || seen.has(url)) return;
     seen.add(url);
@@ -96,6 +98,7 @@ export function readPage() {
     if (v.currentSrc) urls.push(abs(v.currentSrc));
     const url = urls.find((u) => u && !/\.(webm|m3u8|mpd|mov|ogv)(\?|#|$)/i.test(u));
     const poster = abs(v.getAttribute("poster") || v.getAttribute("data-poster"));
+    if (!url) unreachable += 1;
     if (url) add(videos, url, v, { p: poster, t: poster });
     else if (poster) add(images, poster, v, { t: poster });
     // A clip's cover is the clip, not a second picture.
@@ -174,5 +177,6 @@ export function readPage() {
     by,
     images: images.sort(work).slice(0, MAX_IMAGES),
     videos: videos.sort(work).slice(0, MAX_VIDEOS),
+    unreachable,
   };
 }

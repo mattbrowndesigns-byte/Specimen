@@ -2451,7 +2451,9 @@ downstream can untick them. Kivli never fetches the page itself, which is the
 point. It does fetch the image files, so a site that guards those too still fails,
 and says so. A clip among them goes to the picker, because frames need a decoder.
 An image still waiting to lazy-load is its placeholder's size, so size says nothing
-about it. "Let Kivli Read the Page" is the old route, and better for X's clips.
+about it. Having Kivli read the page instead is offered only for a clip in an X or
+LinkedIn post; as a standing second button it failed on exactly the pages the panel
+exists for.
 
 Component photographs the visible tab and uploads it the way an uploaded component
 goes, with `pageUrl`: a capture with a url AND a `file_name`, which is how the crop
@@ -2464,6 +2466,11 @@ also means a demo pass is refused and the panel asks you to sign in.
 A resource that already has a folder before its first description was filed by a
 person, so `runResourceEnrichment` leaves its folders alone; Regenerate doesn't.
 It is queued ten minutes out at save, the same net an uploaded component has.
+
+Chrome serves an unpacked panel off the disk but keeps running the old manifest and
+worker until a reload. 0.2.0 met that as a missing `chrome.scripting` and said the
+page was at fault, so the panel compares the two versions first and offers Finish
+Updating. That is why the version has to go up with every change.
 
 After changing anything in `extension/`: raise the manifest version, run
 `node scripts/pack-extension.mjs` and commit the zip, or `/extension` hands out

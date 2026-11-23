@@ -1,0 +1,248 @@
+{
+  "url": "https://www.wolffolins.com/work/uber",
+  "domain": "wolffolins.com",
+  "title": "Uber",
+  "agency_name": "Wolff Olins",
+  "summary": "Wolff Olins developed a flexible global identity system for Uber designed to unite its expanding suite of mobility and logistics services. Built around typographic clarity, bold framing, and functional iconography, the design adapts seamlessly across digital products, out-of-home campaigns, and physical fleet signage.",
+  "favicon_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE%2CSIZE%2CURL&size=128&url=https%3A%2F%2Fwww.wolffolins.com%2Fwork%2Fuber",
+  "favicon_fills": true,
+  "vertical": [
+    "saas"
+  ],
+  "candidates": [
+    {
+      "key": "00-880ffb9d",
+      "order": 163,
+      "position": 0,
+      "image": "demo/uber/00-880ffb9d.webp",
+      "thumb": "demo/uber/00-880ffb9d-t.webp",
+      "source_url": "https://www.wolffolins.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F4rnblstkg79m%2F4mVkY4nRXNsK3V2jvKgu96%2F44e59281e5f219c826b88aedcd5e1157%2FWO_Uber_Case_Study_03.png&w=3840&q=75",
+      "width": 2400,
+      "height": 1413,
+      "alt": null,
+      "keep": true,
+      "reason": "Shows Uber decal branding applied to a vehicle windshield.",
+      "title": "Windshield decal on blue car",
+      "description": "A close-up shot of a dark blue vehicle windshield displaying a white rectangular Uber sticker in the corner.",
+      "tags": {
+        "medium": [
+          "identity-system",
+          "signage"
+        ],
+        "aesthetic": [
+          "minimal",
+          "type-led"
+        ]
+      }
+    },
+    {
+      "key": "v00-80da782d",
+      "order": 166,
+      "position": 1,
+      "kind": "video",
+      "image": "demo/uber/v00-80da782d.webp",
+      "thumb": "demo/uber/v00-80da782d-t.webp",
+      "video": "demo/uber/v00-80da782d.mp4",
+      "source_url": "https://videos.ctfassets.net/4rnblstkg79m/7vT6nLTzXviu4UVYVb18U7/667d96d870ddf7dfa3c617dfbb2a07ba/04F_Scooter_Mockup.mp4",
+      "width": 1706,
+      "height": 1920,
+      "alt": null,
+      "keep": true,
+      "reason": "Shows the mobile app user interface design in dark mode.",
+      "title": "Mobile app interface layout",
+      "description": "A dark smartphone screen showing ride-hailing options, navigation search bars, and service selection cards.",
+      "tags": {
+        "medium": [
+          "digital",
+          "identity-system"
+        ],
+        "aesthetic": [
+          "minimal",
+          "type-led"
+        ]
+      }
+    },
+    {
+      "key": "01-4274a5c6",
+      "order": 169,
+      "position": 2,
+      "image": "demo/uber/01-4274a5c6.webp",
+      "thumb": "demo/uber/01-4274a5c6-t.webp",
+      "source_url": "https://www.wolffolins.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F4rnblstkg79m%2F5knLCATX5DVoz6tVaqeGMX%2Ff7d036c56e026bed0faa4e998f3919d7%2FWO_Uber_Case_Study_17.png&w=3840&q=75",
+      "width": 1706,
+      "height": 1920,
+      "alt": null,
+      "keep": true,
+      "reason": "Shows brand messaging layout and typographic structure.",
+      "title": "Editorial design and UI layout",
+      "description": "A clean white visual composition featuring bold typography, tropical palm tree imagery, and ride-selection interface elements.",
+      "tags": {
+        "medium": [
+          "identity-system",
+          "digital"
+        ],
+        "aesthetic": [
+          "editorial",
+          "type-led"
+        ]
+      }
+    },
+    {
+      "key": "02-cbd80a60",
+      "order": 210,
+      "position": 3,
+      "image": "demo/uber/02-cbd80a60.webp",
+      "thumb": "demo/uber/02-cbd80a60-t.webp",
+      "source_url": "https://www.wolffolins.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F4rnblstkg79m%2F1H9PNpPflJiKImgcJICGEr%2F6221f5ba0ad975af0ca41adf5e83bd20%2FWO_Uber_Case_Study_11.png&w=3840&q=75",
+      "width": 2400,
+      "height": 1350,
+      "alt": null,
+      "keep": true,
+      "reason": "Shows dynamic out-of-home billboard installations in an urban setting.",
+      "title": "Urban billboard campaign grid",
+      "description": "Multiple large digital billboards on city buildings displaying photographic portraits and bold typography with Uber branding.",
+      "tags": {
+        "medium": [
+          "out-of-home",
+          "poster"
+        ],
+        "aesthetic": [
+          "image-led",
+          "type-led"
+        ]
+      }
+    },
+    {
+      "key": "03-2845778e",
+      "order": 236,
+      "position": 4,
+      "image": "demo/uber/03-2845778e.webp",
+      "thumb": "demo/uber/03-2845778e-t.webp",
+      "source_url": "https://www.wolffolins.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F4rnblstkg79m%2F2vreDE3SBPi4ci6obUtaaP%2Feda5490f54d6ed962e7d33cf81de00b4%2FUBTC_BoatSide_Option02.png&w=3840&q=75",
+      "width": 2400,
+      "height": 1365,
+      "alt": null,
+      "keep": true,
+      "reason": "Shows vehicle livery applied to a public river passenger boat.",
+      "title": "Uber Boat ferry livery",
+      "description": "A black and white passenger boat branded with Uber Boat lettering floating on a river in front of a dome structure.",
+      "tags": {
+        "medium": [
+          "signage",
+          "environmental"
+        ],
+        "aesthetic": [
+          "minimal",
+          "type-led"
+        ]
+      }
+    },
+    {
+      "key": "04-83de10db",
+      "order": 252,
+      "position": 5,
+      "image": "demo/uber/04-83de10db.webp",
+      "thumb": "demo/uber/04-83de10db-t.webp",
+      "source_url": "https://www.wolffolins.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F4rnblstkg79m%2F1t989dZoo8HNiP147EObQE%2F91df39d7883f93fefe80355f172663e0%2F01.00__1_.png&w=3840&q=75",
+      "width": 1675,
+      "height": 2400,
+      "alt": null,
+      "keep": true,
+      "reason": "Shows directional signage system using brand typography and icons.",
+      "title": "Wayfinding post directional sign",
+      "description": "A tall black rectangular metal post sign with white arrow icons, bus illustration, and directional typography against a blue sky.",
+      "tags": {
+        "medium": [
+          "signage",
+          "iconography"
+        ],
+        "aesthetic": [
+          "minimal",
+          "type-led"
+        ]
+      }
+    },
+    {
+      "key": "05-f996d9f3",
+      "order": 273,
+      "position": 6,
+      "image": "demo/uber/05-f996d9f3.webp",
+      "thumb": "demo/uber/05-f996d9f3-t.webp",
+      "source_url": "https://www.wolffolins.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F4rnblstkg79m%2F7BsDIshhBkJph5PIW9220n%2F518bc9e90df9e5e4d68fe79f7bc54d9f%2FUber_-_US_flags_v2.png&w=3840&q=75",
+      "width": 1080,
+      "height": 607,
+      "alt": null,
+      "keep": true,
+      "reason": "Shows massive building facade banner with brand wordmark.",
+      "title": "Facade building banner",
+      "description": "A giant black banner featuring a large white Uber wordmark hanging on classical stone building columns alongside American flags.",
+      "tags": {
+        "medium": [
+          "environmental",
+          "out-of-home"
+        ],
+        "aesthetic": [
+          "minimal",
+          "type-led"
+        ]
+      }
+    },
+    {
+      "key": "06-6be4372a",
+      "order": 277,
+      "position": 7,
+      "image": "demo/uber/06-6be4372a.webp",
+      "thumb": "demo/uber/06-6be4372a-t.webp",
+      "source_url": "https://www.wolffolins.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F4rnblstkg79m%2F1RzWR5M8pSfgKN8x4cJc4R%2F6d1c565b593c521ad77e813fe982bc3c%2FWO_Uber_Case_Study_04.jpg&w=3840&q=75",
+      "width": 2136,
+      "height": 2400,
+      "alt": null,
+      "keep": true,
+      "reason": "Shows 3D architectural signage mounted on a glass facade.",
+      "title": "Architectural glass building logo",
+      "description": "A white dimensional Uber wordmark mounted on the exterior glass window facade of a modern corporate building.",
+      "tags": {
+        "medium": [
+          "environmental",
+          "signage"
+        ],
+        "aesthetic": [
+          "minimal",
+          "corporate"
+        ]
+      }
+    },
+    {
+      "key": "07-3b538583",
+      "order": 315,
+      "position": 8,
+      "image": "demo/uber/07-3b538583.webp",
+      "thumb": "demo/uber/07-3b538583-t.webp",
+      "source_url": "https://www.wolffolins.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F4rnblstkg79m%2FwXUFiCPUJRP7ggjg0KKrG%2F4e7e48c1b82edbd299fce47956eed2bb%2FGSK_CS_01_HEADER.gif&w=3840&q=75",
+      "width": 1280,
+      "height": 720,
+      "alt": null,
+      "keep": false,
+      "reason": "Thumbnail linking to a different case study (GSK).",
+      "title": null,
+      "description": null,
+      "tags": null
+    },
+    {
+      "key": "08-bf2c5c6b",
+      "order": 328,
+      "position": 9,
+      "image": "demo/uber/08-bf2c5c6b.webp",
+      "thumb": "demo/uber/08-bf2c5c6b-t.webp",
+      "source_url": "https://www.wolffolins.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2F4rnblstkg79m%2F6AaQs5gyLjzI9rXcUn50c5%2F9519295df98fa8b7e3a6efa0494d0d2c%2FLG_Collector_Hero_Image.jpg&w=3840&q=75",
+      "width": 2400,
+      "height": 1600,
+      "alt": null,
+      "keep": false,
+      "reason": "Thumbnail linking to a different case study (LG Electronics).",
+      "title": null,
+      "description": null,
+      "tags": null
+    }
+  ]
+}

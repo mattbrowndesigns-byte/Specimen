@@ -8,6 +8,7 @@ import { useAnnounceWork } from "../../../_ui/workInFlight";
 import FeatureRotator from "../../../_ui/FeatureRotator";
 import { GAP, MasonrySkeleton, layout, useColumns } from "../../../_ui/masonry";
 import VisualMedia from "../../../_ui/VisualMedia";
+import { DEMO_SAVES, addDemoPicks, isDemoBrowser, readDemoPicks } from "../../../_ui/demoState";
 import { grabFrame } from "@/lib/videoFrame";
 import { MAX_LOOP_BYTES, toMB } from "@/lib/uploadLimits";
 
@@ -35,7 +36,17 @@ const MAX_PAGE_MB = 40;
 // Finding the images is ~4s and the AI sort ~12s on a real case study.
 const ESTIMATE_SECONDS = 18;
 
-function Loading({ phase }) {
+// In the demo the page has already been read and sorted -- for real, once, and
+// kept on the demo's project -- so the wait is the only part replayed, at about
+// half its length. Choosing and saving work as they do for an owner, except
+// that what's ticked is remembered in this browser rather than written.
+const DEMO_READ_MS = 4000;
+const DEMO_SORT_MS = 5000;
+const DEMO_SAVE_MS = 800;
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const isStaged = (id) => isDemoBrowser() && id === DEMO_SAVES.visual.projectId;
+
+function Loading({ phase, seconds }) {
   const [elapsed, setElapsed] = useState(0);
   useAnnounceWork(true);
   useEffect(() => {
@@ -48,7 +59,7 @@ function Loading({ phase }) {
       <div className="capture-status-bar">
         <div
           className="capture-status-fill"
-          style={{ width: `${Math.min(95, (elapsed / ESTIMATE_SECONDS) * 100)}%` }}
+          style={{ width: `${Math.min(95, (elapsed / seconds) * 100)}%` }}
         />
       </div>
       <div className="capture-status-row">
@@ -58,7 +69,7 @@ function Loading({ phase }) {
             : phase === "posters"
               ? "Taking a still from each video"
               : "Finding the images and videos on the page"}
-          {elapsed < ESTIMATE_SECONDS ? `: about ${Math.ceil(ESTIMATE_SECONDS - elapsed)}s remaining.` : ": finishing up."}
+          {elapsed < seconds ? `: about ${Math.ceil(seconds - elapsed)}s remaining.` : ": finishing up."}
         </p>
         {/* The same aside the capture bar carries, so a visuals save reads as
             the same kind of wait as every other save. */}
@@ -119,6 +130,7 @@ export default function PickProjectPage({ params }) {
   const [project, setProject] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [phase, setPhase] = useState("loading");
+  const [staged, setStaged] = useState(false);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const started = useRef(false);
@@ -191,8 +203,23 @@ export default function PickProjectPage({ params }) {
     if (started.current) return;
     started.current = true;
     (async () => {
+      const demo = isStaged(id);
+      setStaged(demo);
       const p = await load();
       if (!p) return;
+      if (demo) {
+        setPhase("extracting");
+        await wait(DEMO_READ_MS);
+        setPhase("sorting");
+        await wait(DEMO_SORT_MS);
+        const picked = readDemoPicks();
+        show({
+          ...p,
+          state: "picking",
+          candidates: (p.candidates || []).map((c) => ({ ...c, saved: picked.has(c.image_url) })),
+        });
+        return;
+      }
       if (p.state === "saved") {
         window.location.href = "/?tab=visuals";
         return;
@@ -203,7 +230,7 @@ export default function PickProjectPage({ params }) {
       }
       run(p);
     })();
-  }, [load, run, show]);
+  }, [id, load, run, show]);
 
   function toggle(key) {
     setSelected((prev) => {
@@ -217,6 +244,12 @@ export default function PickProjectPage({ params }) {
   async function save() {
     setSaving(true);
     setError(null);
+    if (staged) {
+      await wait(DEMO_SAVE_MS);
+      addDemoPicks(fresh.filter((c) => selected.has(c.key)).map((c) => c.image_url));
+      window.location.href = "/?tab=visuals";
+      return;
+    }
     const res = await fetch(`/api/visuals/projects/${id}/save`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -236,6 +269,10 @@ export default function PickProjectPage({ params }) {
   // are and only the new finds are thrown away -- the server decides which.
   async function cancel({ confirm = true } = {}) {
     if (confirm && !hasSaved && !window.confirm("Leave without saving? The images found on this page will be deleted.")) return;
+    if (staged) {
+      window.location.href = "/?tab=visuals";
+      return;
+    }
     const res = await fetch(`/api/visuals/projects/${id}`, { method: "DELETE" });
     if (res.ok) window.location.href = "/?tab=visuals";
   }
@@ -259,7 +296,7 @@ export default function PickProjectPage({ params }) {
 
         {loading && (
           <>
-            <Loading phase={phase} />
+            <Loading phase={phase} seconds={staged ? (DEMO_READ_MS + DEMO_SORT_MS) / 1000 : ESTIMATE_SECONDS} />
             <MasonrySkeleton label="Finding images" />
           </>
         )}

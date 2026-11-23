@@ -42,7 +42,15 @@ const TOKEN = env.NEXT_PUBLIC_SHOWCASE_SHARE;
 // The site the demo's staged Add replays. Its saved_at is set to now so it
 // lands first in a newest-first grid when the visitor "saves" it.
 const DEMO_DOMAIN = "ramp.com";
-const DEMO_VISUALS_URL = "https://www.wolffolins.com/work/uber";
+
+// The page the demo's visuals Add replays. It isn't copied from the library,
+// because a library keeps only what was picked and the picker has to offer
+// the rest: this is one real run of the extraction and the AI sort, kept in a
+// file, with its images under demo/ in Storage. The id is fixed because
+// app/_ui/demoState.js sends the visitor to it.
+const PICKER = require("./demo-picker.json");
+const PICKER_PROJECT_ID = "70c46619-69d6-45b3-859e-1b039f7ed879";
+const VISUAL_FACETS = ["medium", "aesthetic"];
 
 const SKIP = new Set(
   (env.DEMO_SKIP_DOMAINS || "")
@@ -163,7 +171,8 @@ async function main() {
   const resources = allResources.filter(wanted);
   const projects = allProjects.filter((p) => p.url && wanted(p));
   const projectIds = new Set(projects.map((p) => p.id));
-  const visuals = allVisuals.filter((v) => v.url && projectIds.has(v.project_id));
+  const isPicker = (row) => row.url === PICKER.url;
+  const visuals = allVisuals.filter((v) => v.url && projectIds.has(v.project_id) && !isPicker(v));
   const siteIds = sites.map((site) => site.id);
   const [captures, pages] = await Promise.all([
     rowsIn("capture", "site_id", siteIds),
@@ -188,9 +197,6 @@ async function main() {
   if (!resources.some((r) => r.domain === "lucide.dev")) {
     console.warn("Warning: no lucide.dev resource in the library, so the demo's resource Add will have nothing to replay.");
   }
-  if (!visuals.some((v) => v.url === DEMO_VISUALS_URL)) {
-    console.warn(`Warning: no visuals from ${DEMO_VISUALS_URL}, so the demo's visuals Add will have nothing to replay.`);
-  }
   if (!WRITE) {
     console.log("Dry run. Re-run with --write to replace the demo account's library.");
     return;
@@ -211,6 +217,7 @@ async function main() {
   }
 
   const now = new Date().toISOString();
+  const pickerTwin = new Map();
   const newTags = tags.map((tag) => copy(tag, { id: remap(tag.id) }));
   const newSites = sites.map((site) =>
     copy(site, {
@@ -225,10 +232,74 @@ async function main() {
     copy(c, { id: remap(c.id), site_id: ids.get(c.site_id) || null, is_favorite: false }),
   );
   const newResources = resources.map((r) => copy(r, { id: remap(r.id), is_favorite: false }));
-  const newProjects = projects.map((p) => copy(p, { id: remap(p.id), candidates: [] }));
+  const newProjects = projects.filter((p) => !isPicker(p)).map((p) => copy(p, { id: remap(p.id), candidates: [] }));
   const newVisuals = visuals.map((v) =>
     copy(v, { id: remap(v.id), project_id: ids.get(v.project_id), is_favorite: false }),
   );
+  // The picker's project and a visual for everything it offers.
+  const fileUrl = (path) => (path ? db.storage.from("Captures").getPublicUrl(path).data.publicUrl : null);
+  const pickerCandidates = PICKER.candidates.map(({ image, thumb, video, ...c }) => ({
+    ...c,
+    image_url: fileUrl(image),
+    thumb_url: fileUrl(thumb),
+    video_url: fileUrl(video),
+    vertical: PICKER.vertical,
+  }));
+  const pickerProject = {
+    id: PICKER_PROJECT_ID,
+    user_id: TARGET,
+    url: PICKER.url,
+    domain: PICKER.domain,
+    title: PICKER.title,
+    agency_name: PICKER.agency_name,
+    summary: PICKER.summary,
+    favicon_url: PICKER.favicon_url,
+    favicon_fills: PICKER.favicon_fills,
+    state: "saved",
+    ai_state: "done",
+    candidates: pickerCandidates,
+  };
+  const pickerVisuals = [];
+  const tagId = new Map(newTags.map((t) => [`${t.facet}:${t.slug}`, t.id]));
+  const pickerLinks = [];
+  for (const c of pickerCandidates) {
+    const id = crypto.randomUUID();
+    pickerVisuals.push({
+      id,
+      user_id: TARGET,
+      project_id: PICKER_PROJECT_ID,
+      url: PICKER.url,
+      domain: PICKER.domain,
+      agency_name: PICKER.agency_name,
+      title: c.title || PICKER.title,
+      summary: c.description || PICKER.summary,
+      image_url: c.image_url,
+      thumb_url: c.thumb_url,
+      video_url: c.video_url,
+      source_image_url: c.source_url,
+      width: c.width,
+      height: c.height,
+      position: c.position,
+      needs_review: false,
+      saved_at: now,
+    });
+    const slugs = [
+      ...VISUAL_FACETS.flatMap((facet) => (c.tags?.[facet] || []).map((slug) => `${facet}:${slug}`)),
+      ...PICKER.vertical.map((slug) => `vertical:${slug}`),
+    ];
+    for (const key of slugs) {
+      if (tagId.has(key)) {
+        pickerLinks.push({ id: crypto.randomUUID(), tag_id: tagId.get(key), target_type: "visual", target_id: id });
+      }
+    }
+    // A collection holding one of these in the library holds the same picture
+    // here. The content hash in the file name says which it is.
+    const hash = c.key.split("-").pop();
+    for (const own of allVisuals) {
+      if (isPicker(own) && own.image_url.includes(`-${hash}.webp`)) pickerTwin.set(own.id, id);
+    }
+  }
+
   const newCollections = collections.map((c) => copy(c, { id: remap(c.id) }));
 
   // A link survives only if both ends were copied: a tag on a hidden site, or
@@ -237,9 +308,10 @@ async function main() {
     .filter((t) => ids.has(t.tag_id) && ids.has(t.target_id))
     .map((t) => copy(t, { id: crypto.randomUUID(), tag_id: ids.get(t.tag_id), target_id: ids.get(t.target_id) }));
   const newItems = items
-    .filter((i) => ids.has(i.target_id))
+    .map((i) => ({ ...i, target_id: ids.get(i.target_id) || pickerTwin.get(i.target_id) }))
+    .filter((i) => i.target_id)
     .map((i) =>
-      copy(i, { id: crypto.randomUUID(), collection_id: ids.get(i.collection_id), target_id: ids.get(i.target_id) }),
+      copy(i, { id: crypto.randomUUID(), collection_id: ids.get(i.collection_id) }),
     );
 
   await insert("tag", newTags);
@@ -250,14 +322,19 @@ async function main() {
   await insert("resource", newResources);
   await insert("visual_project", newProjects);
   await insert("visual", newVisuals);
+  // Their own inserts: rows in one batch share their columns, so a hand-built
+  // row beside copied ones would have nulls written over its defaults.
+  await insert("visual_project", [pickerProject]);
+  await insert("visual", pickerVisuals);
   await insert("taggable", newTaggables);
+  await insert("taggable", pickerLinks);
   await insert("collection", newCollections);
   await insert("collection_item", newItems);
 
   console.log(
     `Copied to ${TARGET}: ${newSites.length} sites, ${newCaptures.length} captures, ${newPages.length} pages, ` +
-      `${newComponents.length} components, ${newResources.length} resources, ${newVisuals.length} visuals, ` +
-      `${newTags.length} tags, ${newTaggables.length} tag links, ${newCollections.length} collections, ${newItems.length} collection items`,
+      `${newComponents.length} components, ${newResources.length} resources, ${newVisuals.length + pickerVisuals.length} visuals, ` +
+      `${newTags.length} tags, ${newTaggables.length + pickerLinks.length} tag links, ${newCollections.length} collections, ${newItems.length} collection items`,
   );
 }
 

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, ChevronLeft, ChevronRight, Info, Maximize2, Minimize2, Sparkles, X } from "lucide-react";
 import CopyForAI from "./CopyForAI";
 import ModalShell from "./ModalShell";
+import { useIsDemo } from "./demoState";
 import SaveActions from "./SaveActions";
 import TagCombobox from "./TagCombobox";
 import VisualMedia from "./VisualMedia";
@@ -141,6 +142,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
   const [aiFailure, setAiFailure] = useState(null);
   const [failedField, setFailedField] = useState(null);
   const [order, setOrder] = useState(sequence);
+  const demo = useIsDemo();
   // The panel outlives detailsOpen by one transition: mounted while it slides
   // out, unmounted once it has. `panelShown` is what the CSS animates on,
   // set a frame after mounting so the opening has a "from" to start at.
@@ -201,7 +203,10 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
   // (siblings, project, fresh tags) replaces it when it lands.
   const visual = detail?.visual?.id === id ? detail.visual : byId.get(id);
   const project = detail?.visual?.id === id ? detail.project : null;
-  const siblings = detail?.visual?.id === id ? detail.siblings : [];
+  // In the demo, a project's images that weren't picked aren't in the library
+  // as far as a visitor can see, so they aren't siblings either.
+  const allSiblings = detail?.visual?.id === id ? detail.siblings : [];
+  const siblings = demo ? allSiblings.filter((s) => byId.has(s.id)) : allSiblings;
 
   const loadDetail = useCallback(async (target) => {
     const res = await fetch(`/api/visuals/${target}`);

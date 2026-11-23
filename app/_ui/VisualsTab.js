@@ -13,7 +13,7 @@ import SaveActions from "./SaveActions";
 import VisualMedia, { ClipBadge } from "./VisualMedia";
 import useFileDrop, { DropOverlay } from "./useFileDrop";
 import { startVisualUpload, useUploads } from "./uploads";
-import { useDemoHold, useIsDemo } from "./demoState";
+import { useDemoVisuals, useIsDemo } from "./demoState";
 
 // The three questions a visual's tags answer, in the order the filter
 // modal lists them.
@@ -75,14 +75,9 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
   const [boardEl, setBoardEl] = useState(null);
   const columns = useColumns(boardEl, SIZES[size]);
 
-  // In the demo, the project the staged Add replays arrives all at once when
-  // the save lands: there is nothing to show of an image before it has been
-  // picked. The board is in the server's order, so what lands goes to the top.
-  const held = useDemoHold("visual", loadedVisuals, { dateField: "saved_at", inFlight: () => null });
-  const visuals = useMemo(
-    () => (held === loadedVisuals ? held : [...held].sort((a, b) => b.saved_at.localeCompare(a.saved_at))),
-    [held, loadedVisuals]
-  );
+  // In the demo, the project the Add replays is on the board only as far as
+  // it has been picked; outside it, this is the list as it came.
+  const visuals = useDemoVisuals(loadedVisuals);
 
   // A per-browser preference, like the other tabs' view switches.
   useEffect(() => {

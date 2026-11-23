@@ -1981,8 +1981,12 @@ owner's library used to pull the picture out of the demo. Deletes go through
 row names, and nothing at all if that check fails.
 
 Add is staged (`DemoAdd.js`), one replayed save per kind in `DEMO_SAVES`: Ramp,
-a Stripe pricing block, Lucide, and Wolff Olins' Uber project (three images and
-a loop that land together). Each replays a row the seed has to contain. The component one
+a Stripe pricing block, Lucide, and Wolff Olins' Uber page. Visuals go to the
+real picker (`/visuals/projects/[id]`), which replays the wait and then works:
+ticks are kept in the browser (`specimen.demo.picks`) and the board shows the
+ticked ones. A library keeps only what was picked, so the rest can't be copied
+from it: `scripts/demo-picker.json` is one real extraction and AI sort of that
+page, images under `demo/` in Storage, and the seed makes a row for all ten. Each replays a row the seed has to contain. The component one
 outlived its row: it was a ramp.com block no longer in the library, so the bar
 ran, said saved, and nothing arrived. The URL is locked, Ramp is held out of the grid until Submit, and the dashboard plays a
 twelve-second bar before the card lands. A real save from strangers would spend

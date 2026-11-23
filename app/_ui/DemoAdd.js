@@ -30,14 +30,12 @@ const RUNNING_LINES = {
   website: (label, left) => `Capturing ${label}: about ${left}s remaining. Safe to leave this page.`,
   component: (label, left) => `Capturing ${label}: about ${left}s remaining. Safe to leave this page.`,
   resource: (label) => `Reading ${label} and asking what it’s for…`,
-  visual: (label, left) => `Finding the images and videos on the page: about ${left}s remaining.`,
 };
 
 const DONE_LINES = {
   website: (label) => `${label} captured and tagged.`,
   component: (label) => `${label} captured and cropped.`,
   resource: (label) => `${label} saved and described.`,
-  visual: (label) => `${label} saved and tagged.`,
 };
 
 export default function DemoAdd() {
@@ -76,6 +74,12 @@ export default function DemoAdd() {
   function submit(e) {
     e.preventDefault();
     close();
+    // Visuals go to the picker, the same as the real Add: the next thing that
+    // happens is you choosing.
+    if (save.projectId) {
+      window.location.href = `/visuals/projects/${save.projectId}`;
+      return;
+    }
     setDemoPhase(form, "capturing");
     if (window.location.pathname !== "/") window.location.href = "/";
   }

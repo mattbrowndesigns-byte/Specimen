@@ -1,5 +1,5 @@
 "use client";
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 
 // What the browser knows about the demo, which is two things: whether this is
 // one, and how far the visitor's save has got.
@@ -32,12 +32,14 @@ export const DEMO_SAVES = {
     match: (resource) => resource.domain === "lucide.dev",
   },
   // A whole project rather than one image, because that is what a visuals
-  // save is: one page in, several cards out.
+  // save is: one page in, several cards out. It goes to the real picker
+  // (app/visuals/projects/[id]), so there is no bar to run on the dashboard;
+  // what lands is whatever was ticked. The id is fixed by scripts/seed-demo.js.
   visual: {
     url: "https://www.wolffolins.com/work/uber",
     label: "Uber",
-    seconds: 8,
-    match: (visual) => visual.url === "https://www.wolffolins.com/work/uber",
+    projectId: "70c46619-69d6-45b3-859e-1b039f7ed879",
+    match: (visual) => visual.project_id === "70c46619-69d6-45b3-859e-1b039f7ed879",
   },
 };
 
@@ -145,8 +147,6 @@ export function useDemoPhase(kind) {
 // that was there all along. While the save runs it is shown as a real save in
 // flight looks -- `inFlight` strips what hasn't "arrived" yet -- and once
 // saved it takes the newest date, since it is the newest thing in the library.
-// An `inFlight` that answers null keeps it out until then, for a kind with
-// nothing to show part-way.
 export function useDemoHold(kind, items, { inFlight, dateField }) {
   const demo = useIsDemo();
   const phase = useDemoPhase(kind);
@@ -157,8 +157,59 @@ export function useDemoHold(kind, items, { inFlight, dateField }) {
     if (!match(item)) return [item];
     if (phase === "idle") return [];
     const landed = { ...item, [dateField]: now };
-    if (phase !== "capturing") return [landed];
-    const arriving = inFlight(landed);
-    return arriving ? [arriving] : [];
+    return [phase === "capturing" ? inFlight(landed) : landed];
   });
+}
+
+// The visuals ticked in the demo's picker, as their image addresses, kept per
+// browser. The demo account holds a row for every image the picker offers, so
+// whichever are ticked can be opened like any other; the rest stay off the
+// board.
+const PICKS_KEY = "specimen.demo.picks";
+
+function readPicksRaw() {
+  try {
+    return localStorage.getItem(PICKS_KEY) || "[]";
+  } catch {
+    return "[]";
+  }
+}
+
+export function readDemoPicks() {
+  try {
+    const picks = JSON.parse(readPicksRaw());
+    return new Set(Array.isArray(picks) ? picks : []);
+  } catch {
+    return new Set();
+  }
+}
+
+export function addDemoPicks(urls) {
+  try {
+    localStorage.setItem(PICKS_KEY, JSON.stringify([...new Set([...readDemoPicks(), ...urls])]));
+  } catch {
+    // A blocked store means nothing lands, the same as any refused save.
+  }
+  for (const notify of listeners) notify();
+}
+
+// The board without the images nobody picked, newest picks first. Browser
+// only; everything is returned untouched outside the demo.
+export function holdDemoVisuals(visuals) {
+  if (!isDemoBrowser()) return visuals;
+  const picks = readDemoPicks();
+  const now = new Date().toISOString();
+  const landed = [];
+  const rest = [];
+  for (const v of visuals) {
+    if (!DEMO_SAVES.visual.match(v)) rest.push(v);
+    else if (picks.has(v.image_url)) landed.push({ ...v, saved_at: now });
+  }
+  return [...landed, ...rest];
+}
+
+export function useDemoVisuals(visuals) {
+  const demo = useIsDemo();
+  const picks = useSyncExternalStore(subscribe, readPicksRaw, () => "[]");
+  return useMemo(() => (demo ? holdDemoVisuals(visuals) : visuals), [demo, picks, visuals]);
 }

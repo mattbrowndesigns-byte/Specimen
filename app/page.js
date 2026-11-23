@@ -64,7 +64,6 @@ export default function Home() {
     website: useDemoPhase("website"),
     component: useDemoPhase("component"),
     resource: useDemoPhase("resource"),
-    visual: useDemoPhase("visual"),
   };
   const [demoPanels, setDemoPanels] = useState([]);
   const demoStarted = Object.keys(demoPhases).find((kind) => demoPhases[kind] === "capturing");

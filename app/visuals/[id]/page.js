@@ -3,6 +3,7 @@ import { useEffect, useState, use as usePromise } from "react";
 import UtilityBar from "../../_ui/UtilityBar";
 import Lightbox from "../../_ui/Lightbox";
 import { SEQUENCE_KEY } from "../../_ui/masonry";
+import { holdDemoVisuals } from "../../_ui/demoState";
 
 // A visual's own address. From the board, a card opens the lightbox in
 // place and only borrows this URL; this page is what a refresh, a pasted
@@ -37,7 +38,11 @@ export default function VisualPage({ params }) {
         setError("Couldn't load your visuals");
         return;
       }
-      const visuals = (await res.json()).visuals || [];
+      const all = (await res.json()).visuals || [];
+      // The demo's board leaves out images nobody picked, but a collection
+      // can still point at one.
+      const shown = holdDemoVisuals(all);
+      const visuals = shown.some((v) => v.id === id) ? shown : all;
       setLibrary(visuals);
       setFound(visuals.some((v) => v.id === id));
     })();

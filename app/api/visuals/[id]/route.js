@@ -56,6 +56,14 @@ export async function PATCH(request, { params }) {
   if (typeof body.notes === "string") update.notes = body.notes;
   if (typeof body.needs_review === "boolean") update.needs_review = body.needs_review;
   if (typeof body.is_favorite === "boolean") update.is_favorite = body.is_favorite;
+  if (typeof body.agency_name === "string") update.agency_name = body.agency_name.trim().slice(0, 120) || null;
+  if (typeof body.creator_url === "string") {
+    const link = creatorLink(body.creator_url);
+    if (link === undefined) {
+      return NextResponse.json({ error: "That link doesn't look like a valid URL" }, { status: 400 });
+    }
+    update.creator_url = link;
+  }
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }
@@ -75,7 +83,35 @@ export async function PATCH(request, { params }) {
     .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NOT_FOUND();
+
+  // Who made it is a fact about the page, so every image off that page takes
+  // it. A batch of uploads has no page and may be by several people, so there
+  // the credit stays on the one it was typed on.
+  const credit = {};
+  if ("agency_name" in update) credit.agency_name = update.agency_name;
+  if ("creator_url" in update) credit.creator_url = update.creator_url;
+  if (data.url && Object.keys(credit).length) {
+    const results = await Promise.all([
+      supabaseAdmin().from("visual").update(credit).eq("project_id", data.project_id).eq("user_id", user.id),
+      supabaseAdmin().from("visual_project").update(credit).eq("id", data.project_id).eq("user_id", user.id),
+    ]);
+    const failed = results.find((r) => r.error);
+    if (failed) return NextResponse.json({ error: failed.error.message }, { status: 500 });
+  }
   return NextResponse.json({ visual: data });
+}
+
+// A typed link, made absolute: null when cleared, undefined when it isn't one.
+function creatorLink(value) {
+  const raw = value.trim();
+  if (!raw) return null;
+  try {
+    const u = new URL(/^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : `https://${raw}`);
+    if (!/^https?:$/.test(u.protocol) || !u.hostname.includes(".")) return undefined;
+    return u.toString();
+  } catch {
+    return undefined;
+  }
 }
 
 // Deleting the last visual of a project deletes the project too, or its URL

@@ -8454,9 +8454,44 @@ a.card {
 /* Who made it leads; the original file follows at the same size in grey.
    It used to be 12px against the credit's 14, which read as small print
    rather than as the second half of the same line. */
-.lightbox-panel .lightbox-caption-credit a:first-child {
+.lightbox-panel .lightbox-caption-credit a:first-child,
+.lightbox-panel .lightbox-credit-name {
   color: var(--text);
   font-weight: 600;
+}
+
+.lightbox-panel-credit .link-btn.link-btn {
+  margin-left: 10px;
+  font-size: 13px;
+}
+
+.lightbox-credit-form.lightbox-credit-form {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0 14px;
+  padding: 0;
+  border: none;
+}
+
+.lightbox-credit-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.lightbox-credit-form label span {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.lightbox-credit-form input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
 }
 
 /* The project's paragraph under the image's own description: same voice,

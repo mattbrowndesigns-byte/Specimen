@@ -7,6 +7,7 @@ import { useIsDemo } from "./demoState";
 import SaveActions from "./SaveActions";
 import TagCombobox from "./TagCombobox";
 import VisualMedia from "./VisualMedia";
+import { platformOf, sourceLabel } from "@/lib/platforms";
 import { rankRelated } from "@/lib/related";
 
 // A saved visual, opened the way images are meant to be opened: over the
@@ -33,27 +34,41 @@ const PANEL_EXIT_MS = 380;
 // full record loads), `sequence` the ids to walk, `startId` the one opened.
 // `onChange(id)` lets the host keep the address bar in step; `onDeleted(id)`
 // and `onUpdated(visual)` keep the board in step with edits made here.
-// "By Favor the Brave · favorthebrave.com", the same line in the caption and
-// at the top of Details: who made it, and the page it came from.
+// Who made it, the same line in the caption and at the top of Details. The
+// name goes to the person where that's known (a LinkedIn post), and otherwise
+// to the page, which for a case study is the agency's own.
 //
-// An upload has no page and no maker on record, so there's no link to make
-// and nothing to say "By" in front of -- it says where it came from instead,
-// quietly, so the missing credit reads as a fact and not as an omission.
-function Credit({ credit, visual, withOriginal = false }) {
-  if (!visual.url) {
-    return (
-      <span className="lightbox-caption-credit">
-        {credit ? <span>By {credit}</span> : <span className="lightbox-uploaded">Uploaded from your files</span>}
-      </span>
-    );
-  }
+// An upload has no page and may have no maker on record; it says where it came
+// from instead, quietly, so the missing credit reads as a fact and not as an
+// omission.
+function Credit({ visual, withOriginal = false }) {
+  const name = visual.agency_name;
+  const href = visual.creator_url || visual.url;
+  // A page with no maker on record is where it's from, never who it's by.
+  const label = name ? `By ${name}` : visual.url ? `From ${platformOf(visual.url)?.name || visual.domain}` : null;
   return (
     <span className="lightbox-caption-credit">
-      <a href={visual.url} target="_blank" rel="noopener noreferrer">
-        By {credit}
-        <ArrowUpRight size={12} />
-      </a>
-      {/* The agency's own file, often larger than the copy kept here: the
+      {!label ? (
+        <span className="lightbox-uploaded">Uploaded from your files</span>
+      ) : href ? (
+        <a href={href} target="_blank" rel="noopener noreferrer">
+          {label}
+          <ArrowUpRight size={12} />
+        </a>
+      ) : (
+        <span className="lightbox-credit-name">{label}</span>
+      )}
+      {/* When the name goes to the person, the page needs its own way back. */}
+      {withOriginal && visual.url && href !== visual.url && (
+        <>
+          {" · "}
+          <a className="lightbox-original" href={visual.url} target="_blank" rel="noopener noreferrer">
+            {sourceLabel(visual.url)}
+            <ArrowUpRight size={12} />
+          </a>
+        </>
+      )}
+      {/* The maker's own file, often larger than the copy kept here: the
           way to the best version of the image, so it stays, but quietly --
           the same size as the credit and in grey, so the two read as one
           line with the maker first rather than as a footnote beside it. */}
@@ -67,6 +82,43 @@ function Credit({ credit, visual, withOriginal = false }) {
         </>
       )}
     </span>
+  );
+}
+
+// Who made it, by hand: for a post Kivli couldn't read, a recording of one, or
+// a name the page got wrong. The link is optional.
+function CreditForm({ visual, onSave, onClose }) {
+  const [name, setName] = useState(visual.agency_name || "");
+  const [link, setLink] = useState(visual.creator_url || "");
+  const [saving, setSaving] = useState(false);
+  return (
+    <form
+      className="lightbox-credit-form detail-section"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        const ok = await onSave({ agency_name: name, creator_url: link });
+        setSaving(false);
+        if (ok) onClose();
+      }}
+    >
+      <label>
+        <span>Made by</span>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Person or studio" autoFocus />
+      </label>
+      <label>
+        <span>Their link</span>
+        <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="Profile or portfolio" inputMode="url" />
+      </label>
+      <div className="section-head-actions">
+        <button className="primary" disabled={saving}>
+          {saving ? "Saving…" : "Save"}
+        </button>
+        <button type="button" onClick={onClose}>
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -134,6 +186,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
   const [summaryDraft, setSummaryDraft] = useState("");
   const [notesDraft, setNotesDraft] = useState("");
   const [editingSummary, setEditingSummary] = useState(false);
+  const [editingCredit, setEditingCredit] = useState(false);
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
   // What the AI is doing right now (a sentence), and why the last request
@@ -220,6 +273,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
     let cancelled = false;
     setError(null);
     setEditingSummary(false);
+    setEditingCredit(false);
     loadDetail(id).then((data) => {
       if (cancelled || !data) return;
       setTitleDraft(data.visual.title || "");
@@ -310,21 +364,25 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
     if (data) onUpdated?.(data.visual);
   }
 
-  async function saveField(field, value) {
-    setBusy(field);
+  async function saveFields(fields, label) {
+    setBusy(label);
     setError(null);
     const res = await fetch(`/api/visuals/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [field]: value }),
+      body: JSON.stringify(fields),
     });
     setBusy(null);
     if (!res.ok) {
       setError((await res.json().catch(() => ({}))).error || "Save failed");
-      return;
+      return false;
     }
     await refresh();
+    return true;
   }
+
+  const saveField = (field, value) => saveFields({ [field]: value }, field);
+  const saveCredit = (fields) => saveFields(fields, "credit");
 
   async function addTag(tagId) {
     if (!tagId) return;
@@ -414,7 +472,6 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
 
   if (!visual) return null;
 
-  const credit = visual.agency_name || visual.domain;
   const tagsByFacet = FACETS.map((facet) => ({
     facet,
     assigned: (visual.tags || []).filter((t) => t.facet === facet),
@@ -482,7 +539,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
             />
             <figcaption className="lightbox-caption">
               <span className="lightbox-caption-title">{visual.title || "Untitled"}</span>
-              <Credit credit={credit} visual={visual} />
+              <Credit visual={visual} />
             </figcaption>
           </figure>
 
@@ -537,9 +594,16 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
               onBlur={() => titleDraft !== (visual.title || "") && saveField("title", titleDraft)}
               onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
             />
-            <p className="lightbox-panel-credit">
-              <Credit credit={credit} visual={visual} withOriginal />
-            </p>
+            {editingCredit ? (
+              <CreditForm key={visual.id} visual={visual} onSave={saveCredit} onClose={() => setEditingCredit(false)} />
+            ) : (
+              <p className="lightbox-panel-credit">
+                <Credit visual={visual} withOriginal />
+                <button type="button" className="link-btn" onClick={() => setEditingCredit(true)}>
+                  {visual.agency_name ? "Edit Credit" : "Add Credit"}
+                </button>
+              </p>
+            )}
             {/* What you do with the picture rather than to its record: keep
                 it, file it, carry it into an AI. Copy for AI lived on the
                 dark bar over the image, where it was one more unlabelled

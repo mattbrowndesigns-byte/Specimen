@@ -2293,6 +2293,29 @@ write replaces the whole candidates jsonb -- before the AI sort, since the
 model can only look at a still. Every delete goes through `mediaFiles()`, or
 the MP4 is left in storage.
 
+**A social post is read as a post, and the platform is never the credit.**
+`lib/platforms.js` knows the hosts, `lib/postSource.js` reads them. The author
+comes from the page's JSON-LD and goes in `agency_name`, their profile in
+`creator_url` (`schema_m28`, on the project and each visual). Not from JSON-LD
+on an agency's own site: there the "author" is whoever posted the blog entry,
+and not asked of the model either, which answers "LinkedIn". Short links
+(`lnkd.in`) are followed at save, and the query string goes, because LinkedIn's
+names whoever copied the link.
+
+LinkedIn's signed-out page is one post followed by other people's, so
+everything outside the first `main-feed-activity-card` is removed before the
+images are read. Its videos are in `data-sources`, and its share image is the
+video's cover with a play button painted on -- which is what got saved the
+first time, looking exactly like a clip that won't play. So a post's share
+image is only used when the post offered nothing else. X is read from the
+endpoint its own embeds use. Instagram, Dribbble and Behance refuse outright;
+the error says to upload it and use Edit Credit, which applies to the whole
+page's images, or to the one image if it was uploaded.
+
+An image the AI passes over gets no tags, so keeping it anyway used to leave
+it bare. Posts are sorted with `describeOnly`, and anything else kept without
+tags is queued for them; a whole-project describe only tags what has none.
+
 **The lightbox's Details panel is a drawer, kept mounted to close.**
 `.lightbox-panel-holder` animates its width from 0 to 400px with the panel
 pinned to its right edge, so the picture resizes continuously and the panel

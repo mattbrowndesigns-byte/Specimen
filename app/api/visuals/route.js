@@ -4,6 +4,7 @@ import { attachTags } from "@/lib/tagAttach";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED } from "@/lib/ownership";
 import { VISUAL_COLUMNS } from "@/lib/visuals";
+import { resolvePostUrl } from "@/lib/postSource";
 
 export const dynamic = "force-dynamic";
 
@@ -59,8 +60,10 @@ export async function POST(request) {
     return NextResponse.json({ error: "That doesn't look like a valid URL" }, { status: 400 });
   }
   parsed.hash = "";
-  const url = parsed.toString();
-  const domain = parsed.hostname.replace(/^www\./, "");
+  // Before the check below, so a post shared twice by two short links is one
+  // save, and the library holds the post's address rather than a redirect.
+  const url = await resolvePostUrl(parsed.toString());
+  const domain = new URL(url).hostname.replace(/^www\./, "");
 
   const supabase = supabaseAdmin();
   const { data: existing } = await supabase

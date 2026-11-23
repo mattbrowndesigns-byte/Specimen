@@ -221,11 +221,7 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
               <span className="visual-pending-name">
                 <strong>{p.title || p.domain}</strong>
                 <small>
-                  {p.state === "failed"
-                    ? "Couldn't read that page"
-                    : p.state === "extracting"
-                      ? "Not finished finding images"
-                      : `${p.agency_name || p.domain} · ready to pick`}
+                  {pendingLabel(p)}
                 </small>
               </span>
               <ArrowRight size={16} />
@@ -382,4 +378,18 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
       )}
     </>
   );
+}
+
+// What a project not yet picked from is waiting for. An imported one has two
+// states a project saved from the Add menu never sits in: queued behind the
+// five-ahead ceiling, and read but not yet sorted because the day's AI
+// allowance ran out. Both are still openable -- opening one reads it now, or
+// shows the piles unsorted -- so the label says what is pending, not "wait".
+function pendingLabel(p) {
+  const who = p.agency_name || p.domain;
+  if (p.state === "failed") return "Couldn't read that page";
+  if (p.state === "queued") return "Waiting its turn to be read · open to read it now";
+  if (p.state === "extracting") return "Not finished finding images";
+  if (p.ai_state === "queued") return `${who} · ready to pick, AI sort still to come`;
+  return `${who} · ready to pick`;
 }

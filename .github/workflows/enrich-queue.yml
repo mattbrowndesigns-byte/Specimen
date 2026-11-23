@@ -60,3 +60,17 @@ jobs:
           URL="${CALLBACK_URL%/*}/visuals-queue"
           echo "Draining $URL"
           curl -fsS -X POST "$URL" -H "x-callback-secret: $CALLBACK_SECRET"
+
+      # Imported visuals projects, read a few at a time. No AI in this step:
+      # reading a page is downloads and encodes, rationed by storage rather
+      # than by the daily allowance, so it stops five projects ahead of the
+      # owner's picking. The AI sort that follows is the step above.
+      - name: Read imported visuals
+        if: always()
+        env:
+          CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
+          CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET }}
+        run: |
+          URL="${CALLBACK_URL%/*}/visuals-import-queue"
+          echo "Draining $URL"
+          curl -fsS -X POST "$URL" -H "x-callback-secret: $CALLBACK_SECRET"

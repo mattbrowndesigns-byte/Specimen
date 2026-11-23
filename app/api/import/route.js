@@ -4,6 +4,7 @@ import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, SAVE_LIMIT, remainingSaves } from "@/lib/ownership";
 import { parseLinks, normalizeForCompare } from "@/lib/importLinks";
 import { quotaExhaustedUntil } from "@/lib/quotaState";
+import { CROP_AHEAD, PICK_AHEAD } from "@/lib/importAhead";
 
 export const dynamic = "force-dynamic";
 
@@ -48,29 +49,65 @@ export async function GET() {
     maxPerImport: MAX_PER_IMPORT,
     batch,
     quotaUntil: quotaUntil ? quotaUntil.toISOString() : null,
+    cropAhead: CROP_AHEAD,
+    pickAhead: PICK_AHEAD,
   });
 }
 
 const STATE_COLUMNS =
   "id, imported_at, enrichment_state, enrichment_next_at, enriched_at, needs_review";
 
+// Read on their own and allowed to fail: before schema_m23 the component and
+// visual columns don't exist, and a page that can't describe those batches
+// must still describe the websites and resources it always could. Logged
+// rather than swallowed, because an empty array is otherwise exactly what
+// "you imported none" looks like.
+async function importedRows(query, label) {
+  const { data, error } = await query;
+  if (error) {
+    console.error(`Import: couldn't read imported ${label}`, error.message);
+    return [];
+  }
+  return data || [];
+}
+
 async function latestBatch(supabase, userId) {
-  const [siteRows, resourceRows] = await Promise.all([
-    supabase
-      .from("site")
-      .select(`${STATE_COLUMNS}, capture_state, capture_next_at`)
-      .eq("user_id", userId)
-      .not("imported_at", "is", null),
-    supabase
-      .from("resource")
-      .select(STATE_COLUMNS)
-      .eq("user_id", userId)
-      .not("imported_at", "is", null),
+  const [siteRows, resourceRows, componentRows, visualRows] = await Promise.all([
+    importedRows(
+      supabase
+        .from("site")
+        .select(`${STATE_COLUMNS}, capture_state, capture_next_at`)
+        .eq("user_id", userId)
+        .not("imported_at", "is", null),
+      "sites"
+    ),
+    importedRows(
+      supabase.from("resource").select(STATE_COLUMNS).eq("user_id", userId).not("imported_at", "is", null),
+      "resources"
+    ),
+    importedRows(
+      supabase
+        .from("component_capture")
+        .select("id, imported_at, status, capture_state, capture_next_at, cropped_at")
+        .eq("user_id", userId)
+        .not("imported_at", "is", null),
+      "components"
+    ),
+    importedRows(
+      supabase
+        .from("visual_project")
+        .select("id, imported_at, state, ai_state, ai_next_at, extract_next_at")
+        .eq("user_id", userId)
+        .not("imported_at", "is", null),
+      "visuals"
+    ),
   ]);
 
   const all = [
-    ...(siteRows.data || []).map((r) => ({ ...r, kind: "site" })),
-    ...(resourceRows.data || []).map((r) => ({ ...r, kind: "resource" })),
+    ...siteRows.map((r) => ({ ...r, kind: "site" })),
+    ...resourceRows.map((r) => ({ ...r, kind: "resource" })),
+    ...componentRows.map((r) => ({ ...r, kind: "component" })),
+    ...visualRows.map((r) => ({ ...r, kind: "visual" })),
   ];
   if (!all.length) return null;
 
@@ -78,6 +115,10 @@ async function latestBatch(supabase, userId) {
   // older stays countable but is not what the page is watching.
   const importedAt = all.reduce((latest, r) => (r.imported_at > latest ? r.imported_at : latest), "");
   const rows = all.filter((r) => r.imported_at === importedAt);
+  const kind = rows[0].kind;
+
+  if (kind === "component") return componentBatch(supabase, userId, importedAt, rows);
+  if (kind === "visual") return visualBatch(supabase, userId, importedAt, rows);
 
   const waits = rows
     .flatMap((r) => [r.capture_next_at, r.enrichment_next_at])
@@ -86,7 +127,7 @@ async function latestBatch(supabase, userId) {
 
   return {
     importedAt,
-    kind: rows[0].kind,
+    kind,
     total: rows.length,
     // Nothing has been sent to a runner yet.
     awaitingCapture: rows.filter((r) => r.capture_state === "queued").length,
@@ -105,12 +146,87 @@ async function latestBatch(supabase, userId) {
   };
 }
 
+// A component import ends at the crop tool, so its status has a third state
+// the other kinds don't: done by the machine, waiting on you. `waitingOnYou`
+// counts captures from ANY import, not just this one -- the capture queue's
+// twelve-ahead ceiling is about what is sitting in storage, and that doesn't
+// care which paste it came from.
+async function componentBatch(supabase, userId, importedAt, rows) {
+  const { count: waitingOnYou } = await supabase
+    .from("component_capture")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .not("imported_at", "is", null)
+    .is("cropped_at", null)
+    .is("capture_state", null)
+    .in("status", ["ready", "pending"]);
+
+  const queued = rows.filter((r) => r.capture_state === "queued");
+  return {
+    importedAt,
+    kind: "component",
+    total: rows.length,
+    awaitingCapture: queued.length,
+    capturing: rows.filter((r) => !r.capture_state && r.status === "pending").length,
+    readyToCrop: rows.filter((r) => r.status === "ready" && !r.cropped_at).length,
+    cropped: rows.filter((r) => Boolean(r.cropped_at)).length,
+    stuck: rows.filter((r) => r.capture_state === "failed" || r.status === "failed").length,
+    held: (waitingOnYou || 0) >= CROP_AHEAD,
+    nextDue: queued.map((r) => r.capture_next_at).filter(Boolean).sort()[0] || null,
+  };
+}
+
+// A visuals import has two machine steps with different rations -- reading
+// the page costs function seconds and storage, sorting it costs one of the
+// day's twenty AI requests -- and then the owner's step, picking.
+async function visualBatch(supabase, userId, importedAt, rows) {
+  const { count: picking } = await supabase
+    .from("visual_project")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("state", "picking");
+
+  const read = rows.filter((r) => r.state === "picking" || r.state === "saved");
+  const sortQueued = rows.filter((r) => r.state === "picking" && r.ai_state === "queued");
+  return {
+    importedAt,
+    kind: "visual",
+    total: rows.length,
+    awaitingRead: rows.filter((r) => r.state === "queued").length,
+    reading: rows.filter((r) => r.state === "extracting").length,
+    read: read.length,
+    awaitingSort: sortQueued.length,
+    sorted: read.filter((r) => r.state === "saved" || r.ai_state === "done" || r.ai_state === "failed").length,
+    readyToPick: rows.filter((r) => r.state === "picking").length,
+    picked: rows.filter((r) => r.state === "saved").length,
+    stuck: rows.filter((r) => r.state === "failed").length,
+    held: (picking || 0) >= PICK_AHEAD,
+    nextDue: sortQueued.map((r) => r.ai_next_at).filter(Boolean).sort()[0] || null,
+  };
+}
+
+// Where each kind lands, and how "already in your library" is decided for it.
+//
+// Components dedupe only against captures still waiting to be cropped. A page
+// can rightly give up several components, so a URL you have cropped from
+// before is not a duplicate -- but the same page parked twice in the crop list
+// is.
+const TABLES = {
+  site: { table: "site", existing: (q) => q },
+  resource: { table: "resource", existing: (q) => q },
+  component: {
+    table: "component_capture",
+    existing: (q) => q.not("imported_at", "is", null).is("cropped_at", null),
+  },
+  visual: { table: "visual_project", existing: (q) => q },
+};
+
 export async function POST(request) {
   const user = await currentUser();
   if (!user) return UNAUTHORIZED();
 
   const body = await request.json();
-  const kind = body.kind === "resource" ? "resource" : "site";
+  const kind = TABLES[body.kind] ? body.kind : "site";
   const text = typeof body.text === "string" ? body.text : "";
   // An empty array and a missing key mean different things: no folders chosen
   // at all is "import everything", which is what a paste with no folders in it
@@ -129,19 +245,29 @@ export async function POST(request) {
   }
 
   const supabase = supabaseAdmin();
-  const table = kind === "resource" ? "resource" : "site";
+  const { table, existing: scopeExisting } = TABLES[kind];
 
   // Everything already saved, compared on the normalised form so a trailing
   // slash or a www doesn't import a second copy of a site you already have.
-  const { data: existingRows, error: existingError } = await supabase
-    .from(table)
-    .select("url")
-    .eq("user_id", user.id);
+  const { data: existingRows, error: existingError } = await scopeExisting(
+    supabase.from(table).select("url").eq("user_id", user.id)
+  );
   if (existingError) {
-    return NextResponse.json({ error: existingError.message }, { status: 500 });
+    // The one failure worth translating: before schema_m23 the component
+    // columns don't exist, and the raw message names a column nobody here
+    // has heard of.
+    const missing = /imported_at|cropped_at|column/i.test(existingError.message);
+    return NextResponse.json(
+      {
+        error:
+          missing && (kind === "component" || kind === "visual")
+            ? "Importing this kind needs a database update that hasn't been applied yet (schema_m23.sql)."
+            : existingError.message,
+      },
+      { status: 500 }
+    );
   }
   const existing = new Set((existingRows || []).map((row) => normalizeForCompare(row.url)));
-
   const fresh = items.filter((item) => !existing.has(item.key));
   const alreadySaved = items.length - fresh.length;
 
@@ -166,6 +292,7 @@ export async function POST(request) {
   if (!toInsert.length) {
     return NextResponse.json({
       created: 0,
+      kind,
       alreadySaved,
       duplicates: parsed.duplicates,
       unreadable: parsed.skipped,
@@ -179,33 +306,7 @@ export async function POST(request) {
   const importedAt = new Date().toISOString();
   const domainOf = (url) => new URL(url).hostname.replace(/^www\./, "");
 
-  const rows = toInsert.map((item) => {
-    const base = {
-      user_id: user.id,
-      url: item.url,
-      domain: domainOf(item.url),
-      notes: item.note || null,
-      imported_at: importedAt,
-    };
-    return kind === "resource"
-      ? {
-          ...base,
-          // The domain is the honest fallback AND the signal enrichment reads
-          // to know it should propose a real title, so a bookmark with no
-          // title of its own gets one later rather than keeping a bad one.
-          title: item.title || domainOf(item.url),
-          enrichment_state: "queued",
-          enrichment_next_at: importedAt,
-        }
-      : {
-          ...base,
-          name: item.title || domainOf(item.url),
-          // The capture queue picks these up a batch at a time and does the
-          // page fetch, the favicon and the dispatch at that moment.
-          capture_state: "queued",
-          capture_next_at: importedAt,
-        };
-  });
+  const rows = toInsert.map((item) => rowFor(kind, item, user.id, importedAt, domainOf));
 
   // Chunked: one statement with five hundred rows is a statement that can time
   // out, and a partial import you can run again is better than a failed one.
@@ -234,4 +335,70 @@ export async function POST(request) {
     unreadable: parsed.skipped,
     limited: limitedBy,
   });
+}
+
+function rowFor(kind, item, userId, importedAt, domainOf) {
+  const domain = domainOf(item.url);
+
+  if (kind === "component") {
+    // No title and no note: a capture is a staging row for a crop, and the
+    // component that comes out of it gets its name from the AI at crop time.
+    return {
+      user_id: userId,
+      url: item.url,
+      domain,
+      imported_at: importedAt,
+      // The capture queue dispatches these beside the sites, a few at a time,
+      // and stops a dozen ahead of whatever is waiting to be cropped.
+      capture_state: "queued",
+      capture_next_at: importedAt,
+    };
+  }
+
+  if (kind === "visual") {
+    // The picker strips the fragment from a URL before it saves one, and the
+    // project table is unique on (user, url), so the import does the same.
+    const url = new URL(item.url);
+    url.hash = "";
+    return {
+      user_id: userId,
+      url: url.toString(),
+      domain,
+      // A bookmark's own name is a fine placeholder; the AI sort replaces it
+      // with the case study's real one when it answers.
+      title: item.title || null,
+      imported_at: importedAt,
+      // Not 'extracting': that state means "the picker is reading this right
+      // now". Queued ones are read by /api/visuals-import-queue, five ahead
+      // of your picking.
+      state: "queued",
+      extract_next_at: importedAt,
+    };
+  }
+
+  const base = {
+    user_id: userId,
+    url: item.url,
+    domain,
+    notes: item.note || null,
+    imported_at: importedAt,
+  };
+  return kind === "resource"
+    ? {
+        ...base,
+        // The domain is the honest fallback AND the signal enrichment reads
+        // to know it should propose a real title, so a bookmark with no
+        // title of its own gets one later rather than keeping a bad one.
+        title: item.title || domain,
+        enrichment_state: "queued",
+        enrichment_next_at: importedAt,
+      }
+    : {
+        ...base,
+        name: item.title || domain,
+        // The capture queue picks these up a batch at a time and does the
+        // page fetch, the favicon and the dispatch at that moment.
+        capture_state: "queued",
+        capture_next_at: importedAt,
+      };
 }

@@ -16,6 +16,7 @@ const PUBLIC_PATHS = [
   "/api/analyze-callback",
   "/api/enrich-queue",
   "/api/visuals-queue",
+  "/api/visuals-import-queue",
   "/api/capture-queue",
   // A share link is meant to be opened by someone without an account, so the
   // page and the read behind it are both public. The token is the whole of the

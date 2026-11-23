@@ -1,11 +1,12 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Upload } from "lucide-react";
-import { KIND } from "../_ui/kinds";
+import { KINDS as ALL_KINDS } from "../_ui/kinds";
 import UtilityBar from "../_ui/UtilityBar";
 import SiteFooter from "../_ui/SiteFooter";
 import ImportStatus from "../_ui/ImportStatus";
 import { parseLinks } from "@/lib/importLinks";
+import { CROP_AHEAD, PICK_AHEAD } from "@/lib/importAhead";
 
 // Bringing a bookmarking app's worth of links across in one paste.
 //
@@ -18,24 +19,28 @@ import { parseLinks } from "@/lib/importLinks";
 // allows sixty a day, so this cannot say "importing" and show a spinner --
 // it finishes over days, not minutes. What it says instead is exactly where
 // each pile is, and that closing the tab changes nothing.
-const KINDS = [
-  // Labels and icons from the dashboard's own list, so a Resource is the same
-  // link icon here as on its tab rather than a wrench of its own.
-  {
-    id: "site",
-    label: KIND.site.label,
-    Icon: KIND.site.Icon,
-    note: "Each one gets a full page screenshot, a summary and tags.",
-  },
-  {
-    id: "resource",
-    label: KIND.resource.label,
-    Icon: KIND.resource.Icon,
-    note: "Links saved for what they do. No screenshot, so these land fast.",
-  },
-];
+//
+// Four kinds, in the dashboard's order and with its icons. Two of them finish
+// on their own; two end at a step only you can take -- drawing a crop, picking
+// images -- so those say up front that they wait for you, and why they only
+// prepare a few at a time.
+const NOTES = {
+  site: "Each one gets a full page screenshot, a summary and tags.",
+  component: `Each page is captured, then waits on the Components tab for you to crop. Kivli keeps ${CROP_AHEAD} ready at a time, since an uncropped capture takes up storage.`,
+  resource: "Links saved for what they do. No screenshot, so these land fast.",
+  visual: `Each page's images are pulled and sorted by the AI, then wait on the Visuals tab for you to pick. Kivli reads ${PICK_AHEAD} ahead of you, since unpicked images take up storage.`,
+};
+
+const KINDS = ALL_KINDS.map(({ id, label, Icon }) => ({ id, label, Icon, note: NOTES[id] }));
 
 const MAX_CHARS = 2_000_000;
+
+const RESULT_NEXT = {
+  site: "They will fill in on their own from here, and the panel above tracks them.",
+  resource: "They will fill in on their own from here, and the panel above tracks them.",
+  component: "They will be captured a few at a time and wait on the Components tab for you to crop. The panel above tracks them.",
+  visual: "Their images will be pulled a few at a time and wait on the Visuals tab for you to pick. The panel above tracks them.",
+};
 
 export default function ImportPage() {
   const [kind, setKind] = useState("site");
@@ -130,8 +135,8 @@ export default function ImportPage() {
 
         <p className="tag-page-note">
           Paste a list of URLs, or drop the file your bookmarking app exported. Kivli reads Raindrop
-          CSV, bookmark HTML and a plain list of links. Everything is captured and tagged in the
-          background, so you can close this tab.
+          CSV, bookmark HTML and a plain list of links. Everything is prepared in the background, so
+          you can close this tab.
         </p>
 
         {error && <p className="error">{error}</p>}
@@ -246,7 +251,7 @@ export default function ImportPage() {
             <div className="import-preview">
               <p className="import-preview-count">
                 <strong>{items.length}</strong> {items.length === 1 ? "link" : "links"} ready to
-                import as {kind === "site" ? "websites" : "resources"}.
+                import as {kindInfo.label.toLowerCase()}.
               </p>
               <ul className="import-preview-notes">
                 {parsed.duplicates > 0 && (
@@ -268,8 +273,9 @@ export default function ImportPage() {
                   </li>
                 )}
                 <li>
-                  Anything already in your library is skipped when the import runs, so bringing the
-                  same file across twice is safe.
+                  {kind === "component"
+                    ? "A page already waiting to be cropped is skipped, so bringing the same file across twice is safe. One you've cropped from before comes across again, since a page can give up more than one component."
+                    : "Anything already in your library is skipped when the import runs, so bringing the same file across twice is safe."}
                 </li>
               </ul>
             </div>
@@ -287,16 +293,24 @@ export default function ImportPage() {
             <div className="import-result">
               <p>
                 <strong>{result.created}</strong>{" "}
-                {result.created === 1 ? "link is" : "links are"} in. They will fill in on their own
-                from here, and the panel above tracks them.
+                {result.created === 1 ? "link is" : "links are"} in.{" "}
+                {RESULT_NEXT[result.kind] || RESULT_NEXT.site}
               </p>
               <ul className="import-preview-notes">
                 {result.alreadySaved > 0 && (
-                  <li>{result.alreadySaved} were already in your library.</li>
+                  <li>
+                    {result.alreadySaved}{" "}
+                    {result.kind === "component"
+                      ? "were already waiting to be cropped."
+                      : "were already in your library."}
+                  </li>
                 )}
                 {result.limited > 0 && (
                   <li className="import-preview-warn">
-                    {result.limited} were left out because the account is full.
+                    {result.limited} were left out{" "}
+                    {result.kind === "site"
+                      ? "because the account is full."
+                      : `because one import takes at most ${account?.maxPerImport || 500}.`}
                   </li>
                 )}
               </ul>

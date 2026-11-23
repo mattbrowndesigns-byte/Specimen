@@ -1710,6 +1710,34 @@ styles it through its own container, so a new button wearing it alone renders
 at the browser's default -- 2px outset, 21px tall, which is what this one did
 first.
 
+**Components and visuals import too, and both stop a few ahead of you.**
+Websites and resources finish on their own; these two end at a step only the
+owner can take -- drawing a crop, picking images -- and until then the work
+sits in the free 1 GB bucket: a component capture is two full-page
+screenshots, an unpicked visuals project up to forty full-size candidates. So
+`lib/importAhead.js` sets `CROP_AHEAD` (12) and `PICK_AHEAD` (5), and the
+queues prepare that many and wait. The import page and the crop list say
+which reason a number isn't moving -- "being captured" or "waiting until you
+crop" -- because those are different news.
+
+`schema_m23` gives `component_capture` the site's queue columns plus
+`imported_at` and `cropped_at`, and `visual_project` `imported_at` and an
+`extract_*` pair; `state` gains 'queued'. Component captures drain from
+`/api/capture-queue` after the sites, inside the same eight. Visuals take two
+steps on two queues, because they ration two things: `/api/visuals-import-queue`
+reads the page (storage, no AI) and hands it to `/api/visuals-queue` with
+`ai_state = 'queued'`, where `selectProject(..., { queue: true })` sorts it on
+the shared ladder -- a busy or spent free tier re-queues rather than settling
+for the heuristic piles, since nobody is watching. Every sort write is guarded
+on `state = 'picking'`, because the owner can save mid-sort.
+
+Only *imported* captures appear in the Components tab's "Ready to crop" list.
+Captures from the Add menu were never marked cropped, so listing every
+uncropped one would resurrect every page anyone ever cropped from. Discard
+deletes the row and its files, which is safe only because an imported,
+uncropped capture is referenced by nothing. A queued visuals project opened
+early is simply read on the spot.
+
 **A `<ul>` that is a flex column loses its bullets.** Flex items are blockified
 and the markers go with it, except the first one survived, which reads as a
 stray bullet rather than as a list. Use block flow and `li + li { margin-top }`

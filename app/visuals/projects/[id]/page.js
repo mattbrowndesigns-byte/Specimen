@@ -143,7 +143,9 @@ export default function PickProjectPage({ params }) {
 
   const run = useCallback(
     async (p) => {
-      if (p.state === "extracting" || p.state === "failed") {
+      // 'queued' is an imported project the background reader hasn't got to
+      // yet. Opening it is asking for it now, so it's read here instead.
+      if (p.state === "extracting" || p.state === "queued" || p.state === "failed") {
         setPhase("extracting");
         await fetch(`/api/visuals/projects/${id}/extract`, { method: "POST" });
         p = await load();
@@ -261,6 +263,16 @@ export default function PickProjectPage({ params }) {
               />
               <div className="pick-head-text">
                 <h1>{project.title || project.domain}</h1>
+                {/* An imported project opened before its turn with the AI:
+                    the piles are the size-and-position guess, and saying so
+                    is the difference between "the AI chose badly" and "the
+                    AI hasn't chosen". */}
+                {project.ai_state === "queued" && (
+                  <p className="pick-note">
+                    Sorted by size and position for now. {project.error || "The AI hasn't looked at these yet."} Pick
+                    by hand, or come back once it has.
+                  </p>
+                )}
               </div>
             </div>
 

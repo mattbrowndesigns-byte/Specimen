@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { describeProject } from "@/lib/visuals";
+import { describeProject, selectProject } from "@/lib/visuals";
 
 // Drained by enrich-queue.yml every fifteen minutes, beside the sites' and
 // resources' queues: visual projects saved before the AI answered, or whose
-// describe pass failed on a slow or busy free tier. Authenticated with the
+// describe pass failed on a slow or busy free tier -- and imported projects
+// waiting for their sort, which is the same one request asked before the
+// picking rather than after it. Authenticated with the
 // same shared secret the other Actions-facing routes use.
 //
 // Its own request, not a step inside /api/enrich-queue, because a visuals
@@ -27,8 +29,8 @@ export async function POST(request) {
   const supabase = supabaseAdmin();
   const { data: due, error } = await supabase
     .from("visual_project")
-    .select("id, user_id, title")
-    .eq("state", "saved")
+    .select("id, user_id, title, state")
+    .in("state", ["saved", "picking"])
     .eq("ai_state", "queued")
     .lte("ai_next_at", new Date().toISOString())
     .order("ai_next_at", { ascending: true })
@@ -46,7 +48,13 @@ export async function POST(request) {
   for (const project of due || []) {
     if (Date.now() - startedAt > START_BY_MS) break;
     try {
-      const { ok, error: why } = await describeProject(project.id, project.user_id);
+      // A project still being picked from gets the sort, which marks which
+      // images are the work; a saved one gets the describe, which fills in
+      // what the save had to leave empty. One Gemini request either way.
+      const { ok, error: why } =
+        project.state === "picking"
+          ? await selectProject(project.id, project.user_id, { queue: true })
+          : await describeProject(project.id, project.user_id);
       results.push({ title: project.title, ok, error: why || null });
     } catch (err) {
       console.error(`Visuals queue: ${project.title} threw`, err.message);

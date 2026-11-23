@@ -3,6 +3,62 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { dispatchCapture } from "@/lib/github";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
+import { CROP_AHEAD } from "@/lib/importAhead";
+
+export const dynamic = "force-dynamic";
+
+// The Components tab's crop list: imported pages, captured and waiting for a
+// crop, plus the ones that couldn't be captured, so they can be dismissed
+// rather than vanishing. Everything still in the queue is a count, not a row:
+// a five-hundred-link import would otherwise be five hundred rows reading
+// "waiting" above the library.
+//
+// Only imported captures. One started from the Add menu goes straight to the
+// crop tool and never needed a list; old ones were never marked cropped, so
+// listing them would resurrect every page anyone ever cropped from.
+export async function GET() {
+  const user = await currentUser();
+  if (!user) return UNAUTHORIZED();
+
+  const supabase = supabaseAdmin();
+  const imported = () =>
+    supabase
+      .from("component_capture")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .not("imported_at", "is", null)
+      .is("cropped_at", null);
+
+  const [listRes, queuedRes, capturingRes] = await Promise.all([
+    supabase
+      .from("component_capture")
+      .select("id, url, domain, status, full_url, page_height, capture_error, capture_state, imported_at")
+      .eq("user_id", user.id)
+      .not("imported_at", "is", null)
+      .is("cropped_at", null)
+      .or("status.eq.ready,status.eq.failed,capture_state.eq.failed")
+      .order("imported_at", { ascending: true })
+      .order("created_at", { ascending: true }),
+    imported().eq("capture_state", "queued"),
+    imported().is("capture_state", null).eq("status", "pending"),
+  ]);
+
+  // Before schema_m23 the columns don't exist. The tab must still work, so
+  // this answers "nothing waiting" -- and logs, because that answer would
+  // otherwise be indistinguishable from the truth.
+  const failed = [listRes, queuedRes, capturingRes].find((r) => r.error);
+  if (failed) {
+    console.error("Crop list: couldn't read imported captures", failed.error.message);
+    return NextResponse.json({ captures: [], queued: 0, capturing: 0, cropAhead: CROP_AHEAD });
+  }
+
+  return NextResponse.json({
+    captures: listRes.data || [],
+    queued: queuedRes.count || 0,
+    capturing: capturingRes.count || 0,
+    cropAhead: CROP_AHEAD,
+  });
+}
 
 // Starts a one-off screenshot of a page so a component can be cropped
 // out of it. Doesn't touch the site table at all.

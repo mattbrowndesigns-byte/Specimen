@@ -80,6 +80,17 @@ export async function POST(request) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
+  // Takes an imported page off the crop list, and frees a place in the
+  // capture queue's twelve. Its own write, and allowed to fail: before
+  // schema_m23 the column doesn't exist, and that is no reason to lose a crop.
+  if (capture.imported_at !== undefined) {
+    const { error: croppedError } = await supabase
+      .from("component_capture")
+      .update({ cropped_at: new Date().toISOString() })
+      .eq("id", capture.id);
+    if (croppedError) console.error("Component: couldn't mark the capture cropped", croppedError.message);
+  }
+
   let croppedBuffer;
   try {
     const cropped = await cropAndUpload({

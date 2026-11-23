@@ -1514,3 +1514,108 @@
     opacity: 1;
   }
 }
+
+/* Importing components and visuals (schema_m23)
+   ---------------------------------------------------------------------------
+   Two kinds of import end at a step only the owner can take, so the status
+   panel gains a line pointing at it, and the Components tab gains a list of
+   imported pages waiting for a crop -- built from the visuals tab's pending
+   list, because it is the same object: work held in storage until you act. */
+:root[data-variant="refined"] {
+  & .import-status-next {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  & .import-status-next a {
+    margin-left: 4px;
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  & .crop-queue-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  & .crop-queue-row + .crop-queue-row {
+    margin-top: 2px;
+  }
+
+  /* The row is one button, like a visuals row is one link: the whole width
+     opens the crop tool. The pending row's own -10px side margin is kept on
+     the left only, so Discard sits on the panel's padding rather than in it. */
+  & button.visual-pending-row.crop-queue-open {
+    flex: 1;
+    min-width: 0;
+    margin-right: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  & button.visual-pending-row.crop-queue-open:hover {
+    background: var(--surface-hover);
+  }
+
+  & .crop-queue-failed {
+    flex: 1;
+    min-width: 0;
+    margin-right: 0;
+  }
+
+  & .crop-queue-failed:hover {
+    background: transparent;
+  }
+
+  & .crop-queue-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  & .danger-btn.crop-queue-discard {
+    flex-shrink: 0;
+    padding: 6px 12px;
+  }
+
+  & .crop-queue-note {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* Four kinds don't fit across a phone, and a switch that runs off the
+     edge hides the one you might have come for. Two by two instead: same
+     track, same held pill, each half the width. */
+  @media (max-width: 700px) {
+    & .import-kind .view-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: auto;
+      width: 100%;
+    }
+
+    & .import-kind .view-switch button {
+      justify-content: center;
+      height: calc(var(--control-h) - 4px);
+    }
+  }
+
+  & .pick-note {
+    margin: 6px 0 0;
+    max-width: 38em;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+}

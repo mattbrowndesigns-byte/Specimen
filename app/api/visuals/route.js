@@ -19,7 +19,7 @@ export async function GET() {
     supabase.from("visual").select(VISUAL_COLUMNS).eq("user_id", user.id).order("saved_at", { ascending: false }).order("position"),
     supabase
       .from("visual_project")
-      .select("id, url, domain, title, agency_name, favicon_url, favicon_fills, state, created_at")
+      .select("id, url, domain, title, agency_name, favicon_url, favicon_fills, state, ai_state, created_at")
       .eq("user_id", user.id)
       .neq("state", "saved")
       .order("created_at", { ascending: false }),

@@ -519,13 +519,20 @@
   }
 
   /* The strip under the search -- tags on most tabs, folders on Resources --
-     sits with the same 12px above and below it: the search field's foot to
-     the strip, the strip to the count and the view controls. It measured 12
-     above and 8 below on Websites and 18 below on Resources, so the strip sat
-     off-centre in its own band, differently on each tab. The results bar's
-     top margin goes to zero so the strip's 12 is the only gap. */
-  & main.page > :is(.chip-strip, .folder-bar) {
-    margin-bottom: 12px;
+     sits with 12px of air above and below the PILLS: from the search field's
+     foot to the top of the pills, and from the bottom of the pills to the
+     view controls. Measure the pills, not the strip. Each strip carries
+     padding under its pills so a scrolling row doesn't clip them (8px on the
+     tag strip, 4px on the folder strip), and the first version of this rule
+     set 12px on the strip's box -- correct by the box, 20px by the eye, which
+     is what anyone looks at. So each margin is 12 less its strip's padding.
+     The results bar's top margin is zero so this is the only gap. */
+  & main.page > .chip-strip {
+    margin-bottom: 4px;
+  }
+
+  & main.page > .folder-bar {
+    margin-bottom: 8px;
   }
 
   & .results-bar {
@@ -1178,6 +1185,15 @@
   & .facet-row {
     gap: 7px;
     padding-bottom: 16px;
+  }
+
+  /* A Regenerate under the last tag field sits 12px below it, the same
+     distance the summary's Edit / Regenerate sit below the summary. With the
+     row's own 16 on top it was 28, which read as a gap rather than as the
+     section's action. It still reads as the whole section's, not Industry's:
+     it is outside the field boxes, at the section's edge. */
+  & .facet-row:has(+ .section-actions-below) {
+    padding-bottom: 0;
   }
 
   & .facet-name {

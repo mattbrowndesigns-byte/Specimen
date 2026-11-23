@@ -42,7 +42,7 @@ const LINKS = [
   { href: "/import", label: "Import Links", Icon: Import },
   // Set up once per AI app, then used from inside that app, so it sits with
   // the other things you do once rather than in the bar.
-  { href: "/connect", label: "Connect an AI", Icon: Plug },
+  { href: "/connect", label: "MCP Server", Icon: Plug },
 ];
 
 const SECONDARY = [

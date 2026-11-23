@@ -24,7 +24,7 @@ const LINKS = [
   { href: "/tags", label: "Manage Tags", Icon: Tag },
   { href: "/review", label: "Review Queue", Icon: ListChecks, badge: true },
   { href: "/import", label: "Import Links", Icon: Import },
-  { href: "/connect", label: "Connect an AI", Icon: Plug },
+  { href: "/connect", label: "MCP Server", Icon: Plug },
   { href: "/features", label: "Features", Icon: Sparkles },
   { href: "/about", label: "About", Icon: Info },
   { href: "/faq", label: "FAQ", Icon: CircleQuestionMark },

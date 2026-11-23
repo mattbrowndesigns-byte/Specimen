@@ -360,9 +360,9 @@ None of these is a story on its own. Together they are most of the difference be
 
 **One tooltip, drawn above everything.** Some controls had a styled grey pill and most had the browser's own label, which waits a second and a half and looks different on every screen. The pill could not simply be copied everywhere: on a card it was clipped by the card's rounded edge. It is now one piece that draws on top of the whole page, used by about forty controls.
 
-**Copy and download are one control.** Every save and collection had Copy for AI and, beside it, a bare download icon with nothing holding it. They are one capsule now: the label copies in one click, the arrow beside it opens both options.
+**Copy and download are one control.** Every save and collection had Copy for AI and, beside it, a bare download icon with nothing holding it. The first fix made them one capsule with two targets inside it, the label copying and an arrow opening a menu, and two things to press in one shape was one too many. It is a single button now, Export for AI, opening a menu with Copy and Download, and no tooltip, because the menu says what each does.
 
-**A strip that sat off-centre by four pixels.** The tag strip under the search measured 12 pixels above and 8 below on Websites, and 12 above and 18 below on Resources, whose view controls also lived on a different line from every other tab's. Both are 12 and 12 now, on every tab.
+**A strip that sat off-centre by four pixels.** The tag strip under the search measured 12 pixels above and 8 below on Websites, and 12 above and 18 below on Resources, whose view controls also lived on a different line from every other tab's. The first fix set both to 12 and was still wrong to the eye: I had measured to the strip, which carries 8 pixels of padding under its pills so a scrolling row is never clipped. Measured to the pills, the gap below was 20. It is 12 above and below the pills now, on every tab, and the rule says measure what you can see.
 
 **Descenders lost to an animation.** The rolling line on the home page is clipped to its row so the incoming line can't swing through the one below. The clip cut the tails off every y and p. Measured, those tails end 0.05em past the line box, so the clip now allows 0.08em.
 

@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Grid3x3, LayoutGrid, Play, SlidersHorizontal, Square, Upload } from "lucide-react";
 import SearchField from "./SearchField";
 import ResultCount from "./ResultCount";
@@ -11,8 +11,8 @@ import Lightbox from "./Lightbox";
 import FilterModal from "./FilterModal";
 import SaveActions from "./SaveActions";
 import VisualMedia from "./VisualMedia";
-import { useAnnounceWork } from "./workInFlight";
-import { UPLOAD_HINT, UPLOAD_PROBLEMS_KEY, describeUpload, sortFiles, uploadVisualFiles } from "@/lib/visualUploadClient";
+import { startVisualUpload, useVisualUploads } from "./visualUploads";
+import { UPLOAD_HINT, hasFiles } from "@/lib/visualUploadClient";
 
 // The three questions a visual's tags answer, in the order the filter
 // modal lists them.
@@ -53,6 +53,12 @@ function matches(visual, term) {
     .toLowerCase()
     .split(/\s+/)
     .every((word) => haystack.includes(word));
+}
+
+// A fresh read of the board, plus any upload that landed after it was sent.
+function keepLanded(rows, prev, landed) {
+  const ids = new Set(rows.map((v) => v.id));
+  return [...prev.filter((v) => landed.has(v.id) && !ids.has(v.id)), ...rows];
 }
 
 export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onSearchElsewhere }) {
@@ -128,7 +134,8 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
         setError(data.error || "Couldn't load your visuals");
         return;
       }
-      setVisuals(data.visuals || []);
+      // An upload can land while this first read is out; keep what it brought.
+      setVisuals((prev) => keepLanded(data.visuals || [], prev, seen.current));
       setPending(data.pending || []);
       setLoaded(true);
     })();
@@ -143,25 +150,9 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
   // dashboard's direct children and a wrapping div would take it apart --
   // and because a drop target the size of the window is one nobody misses.
   const [dragging, setDragging] = useState(false);
-  const [upload, setUpload] = useState(null);
   const dragDepth = useRef(0);
-  useAnnounceWork(Boolean(upload && !upload.finished));
-  const dismissUpload = useCallback(() => setUpload(null), []);
-
-  // Files an upload from the Add menu couldn't take, carried across its
-  // redirect to this tab.
-  useEffect(() => {
-    try {
-      const problems = JSON.parse(sessionStorage.getItem(UPLOAD_PROBLEMS_KEY) || "null");
-      sessionStorage.removeItem(UPLOAD_PROBLEMS_KEY);
-      if (problems?.length) setUpload({ finished: true, partial: true, done: 0, total: 0, failed: problems, added: 0 });
-    } catch {
-      // Nothing to carry over.
-    }
-  }, []);
 
   useEffect(() => {
-    const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
     function onEnter(e) {
       if (!hasFiles(e)) return;
       e.preventDefault();
@@ -171,7 +162,6 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
     function onOver(e) {
       if (!hasFiles(e)) return;
       e.preventDefault();
-      e.dataTransfer.dropEffect = "copy";
     }
     function onLeave(e) {
       if (!hasFiles(e)) return;
@@ -183,7 +173,9 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
       e.preventDefault();
       dragDepth.current = 0;
       setDragging(false);
-      uploadFiles(e.dataTransfer.files);
+      // The Add popover's drop box takes its own.
+      if (e.target.closest?.("[data-drop-box]")) return;
+      startVisualUpload(e.dataTransfer.files);
     }
     window.addEventListener("dragenter", onEnter);
     window.addEventListener("dragover", onOver);
@@ -195,43 +187,39 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
       window.removeEventListener("dragleave", onLeave);
       window.removeEventListener("drop", onDrop);
     };
-    // uploadFiles reads only setters and the current upload through refs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const uploading = useRef(false);
-  async function uploadFiles(fileList) {
-    if (uploading.current) return;
-    const { ok, skipped } = sortFiles(fileList);
-    if (!ok.length) {
-      setUpload({ finished: true, done: 0, total: 0, failed: skipped, added: 0 });
-      return;
-    }
-    uploading.current = true;
-    setUpload({ finished: false, done: 0, total: ok.length, failed: skipped, added: 0 });
-    try {
-      const result = await uploadVisualFiles(ok, {
-        onProgress: ({ done, total }) => setUpload((u) => ({ ...u, done, total })),
-        // Each lands on the board the moment it's encoded, untitled, so the
-        // drop has an answer before the AI does.
-        onVisual: (visual) => setVisuals((prev) => [visual, ...prev]),
-      });
-      const added = result.visuals.length;
-      setUpload((u) => ({ ...u, failed: [...u.failed, ...result.failed], added, describing: added > 0 }));
-      if (added) {
-        await describeUpload(result.projectId);
-        // Titles, descriptions and tags, whether the describe answered or
-        // queued: a reload shows whichever is true.
-        const res = await fetch("/api/visuals");
-        if (res.ok) setVisuals((await res.json()).visuals || []);
-      }
-      setUpload((u) => ({ ...u, finished: true, describing: false }));
-    } catch (err) {
-      setUpload((u) => ({ ...u, finished: true, failed: [...(u?.failed || []), err.message] }));
-    } finally {
-      uploading.current = false;
-    }
-  }
+  // Each uploaded image lands on the board the moment it's encoded, untitled,
+  // so a drop has an answer before the AI does. `seen` is what stops one you
+  // delete while its batch is still going from being put back.
+  const uploads = useVisualUploads();
+  const seen = useRef(new Set());
+  useEffect(() => {
+    const landed = uploads.flatMap((u) => u.visuals).filter((v) => !seen.current.has(v.id));
+    if (!landed.length) return;
+    landed.forEach((v) => seen.current.add(v.id));
+    setVisuals((prev) => {
+      const ids = new Set(prev.map((v) => v.id));
+      return [...landed.filter((v) => !ids.has(v.id)).reverse(), ...prev];
+    });
+  }, [uploads]);
+
+  // Then the titles, descriptions and tags, whether the AI answered or queued:
+  // a reload shows whichever is true.
+  const finished = uploads.filter((u) => u.phase === "done" && u.visuals.length).length;
+  useEffect(() => {
+    if (!finished) return undefined;
+    let cancelled = false;
+    (async () => {
+      const res = await fetch("/api/visuals");
+      if (!res.ok || cancelled) return;
+      const rows = (await res.json()).visuals || [];
+      if (!cancelled) setVisuals((prev) => keepLanded(rows, prev, seen.current));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [finished]);
 
   // Medium chips, counted over visuals rather than over the whole account --
   // the tags endpoint counts every kind of record, and a chip promising 4
@@ -320,8 +308,6 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
           </div>
         </div>
       )}
-
-      {upload && <UploadStatus upload={upload} onDismiss={dismissUpload} />}
 
       {pending.length > 0 && (
         <div className="visual-pending">
@@ -504,53 +490,4 @@ function pendingLabel(p) {
   if (p.state === "extracting") return "Not finished finding images";
   if (p.ai_state === "queued") return `${who} · ready to pick, AI sort still to come`;
   return `${who} · ready to pick`;
-}
-
-// The drop's progress, then its outcome, in the capture bar's own shape so an
-// upload reads as the same kind of wait as every other save. It stays after
-// finishing only if something needs saying -- files that were skipped or
-// failed -- and otherwise takes itself away.
-function UploadStatus({ upload, onDismiss }) {
-  const { finished, done, total, failed, added, describing, partial } = upload;
-  useEffect(() => {
-    if (!finished || failed.length) return undefined;
-    const timer = setTimeout(onDismiss, 4000);
-    return () => clearTimeout(timer);
-  }, [finished, failed.length, onDismiss]);
-
-  const pct = total ? Math.round((done / total) * 100) : 100;
-  const message = !finished
-    ? describing
-      ? `Writing titles, descriptions and tags for ${added === 1 ? "it" : `all ${added}`}…`
-      : `Uploading ${Math.min(done + 1, total)} of ${total}…`
-    : added
-      ? `Added ${added} visual${added === 1 ? "" : "s"}.`
-      : partial
-        ? "Some files weren't added."
-        : "Nothing was added.";
-
-  return (
-    <div className="capture-status capture-status-quick visual-upload-status" role="status">
-      {!finished && (
-        <div className="capture-status-bar">
-          <div className="capture-status-fill" style={{ width: `${describing ? 100 : pct}%` }} />
-        </div>
-      )}
-      <div className="capture-status-row">
-        <p>{message}</p>
-        {finished && (
-          <button type="button" className="link-btn" onClick={onDismiss}>
-            Dismiss
-          </button>
-        )}
-      </div>
-      {failed.length > 0 && (
-        <ul className="visual-upload-skipped">
-          {failed.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
 }

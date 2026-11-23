@@ -384,7 +384,9 @@ None of these is a story on its own. Together they are most of the difference be
 
 **A finished job that looked unfinished.** The import panel was still showing a batch from weeks earlier, two full bars under a gradient band that read as a third bar. A finished batch now stays for the day it finishes and then goes.
 
-Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Uploading an image that doesn't live online and keeping a case study's looping videos are being built next, and so is importing all four kinds of save from a bookmarks file.
+**A drop target that refused the drop.** The Add menu offered Upload Images for a visual, in a pill 32 pixels tall, and a screenshot dragged onto it was not taken. Nothing was closing the menu. The button had never been told to accept a drop: a browser refuses a file anywhere the page doesn't claim it, and only the board behind the menu did, only while that tab was open. It is a box now, 168 pixels tall, that takes the drop and lights up as a file crosses it, and a near miss no longer opens the file in place of the app. The progress moved as well. It sat inside the menu, the one save that kept its menu open, so an upload now closes it and reports in the same panel every other save does. The bar there is the bytes actually sent, and once there is no figure to give it stops giving one.
+
+Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file still has to be proven there.
 
 ## What I deliberately did not build
 

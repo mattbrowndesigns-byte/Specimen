@@ -667,8 +667,12 @@ export default function CaseStudyPage() {
             <p>
               The import panel was still showing a batch from weeks earlier, two full bars under a gradient band that read as a third bar. A finished batch now stays for the day it finishes and then goes.
             </p>
+            <h3>A drop target that refused the drop</h3>
             <p>
-              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Uploading an image that doesn&rsquo;t live online and keeping a case study&rsquo;s looping videos are being built next, and so is importing all four kinds of save from a bookmarks file.
+              The Add menu offered Upload Images for a visual, in a pill 32 pixels tall, and a screenshot dragged onto it was not taken. Nothing was closing the menu. The button had never been told to accept a drop: a browser refuses a file anywhere the page doesn&rsquo;t claim it, and only the board behind the menu did, only while that tab was open. It is a box now, 168 pixels tall, that takes the drop and lights up as a file crosses it, and a near miss no longer opens the file in place of the app. The progress moved as well. It sat inside the menu, the one save that kept its menu open, so an upload now closes it and reports in the same panel every other save does. The bar there is the bytes actually sent, and once there is no figure to give it stops giving one.
+            </p>
+            <p>
+              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file still has to be proven there.
             </p>
           </div>
         </section>

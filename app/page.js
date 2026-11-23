@@ -7,6 +7,8 @@ import VisualsTab from "./_ui/VisualsTab";
 import UtilityBar from "./_ui/UtilityBar";
 import { KINDS } from "./_ui/kinds";
 import CaptureProgress from "./_ui/CaptureProgress";
+import VisualUploadProgress from "./_ui/VisualUploadProgress";
+import { useVisualUploads } from "./_ui/visualUploads";
 import Arcade from "./_ui/Arcade";
 import { DemoProgress } from "./_ui/DemoAdd";
 import DemoTour from "./_ui/DemoTour";
@@ -15,6 +17,11 @@ import SiteFooter from "./_ui/SiteFooter";
 import HeroRotator from "./_ui/HeroRotator";
 import ConnectNote from "./_ui/ConnectNote";
 import { addItem, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
+
+// The last upload that brought the Visuals tab forward. Outside the component,
+// because a panel can outlive a visit to another page, and coming back to the
+// dashboard for something else shouldn't switch tabs a second time.
+let lastUploadShown = 0;
 
 export default function Home() {
   const [tab, setTab] = useState("websites");
@@ -60,6 +67,17 @@ export default function Home() {
     setDemoPanels((prev) => (prev.includes(demoStarted) ? prev : [...prev, demoStarted]));
     setTab(KINDS.find((k) => k.add === demoStarted).tab);
   }, [demoStarted]);
+
+  // An upload is watched from here however it was started -- the Add popover
+  // on this page or another, or a drop on the board -- so a new one brings the
+  // Visuals tab forward, the way any other save brings its own.
+  const uploads = useVisualUploads();
+  const newestUpload = uploads.length ? uploads[uploads.length - 1].id : null;
+  useEffect(() => {
+    if (!newestUpload || newestUpload <= lastUploadShown) return;
+    lastUploadShown = newestUpload;
+    setTab("visuals");
+  }, [newestUpload]);
 
   const loadTags = useCallback(async () => {
     const res = await fetch("/api/tags");
@@ -184,6 +202,10 @@ export default function Home() {
             kind={kind}
             onHidden={() => setDemoPanels((prev) => prev.filter((k) => k !== kind))}
           />
+        ))}
+
+        {uploads.map((upload) => (
+          <VisualUploadProgress key={upload.id} upload={upload} />
         ))}
 
         {jobs.map((job) => (

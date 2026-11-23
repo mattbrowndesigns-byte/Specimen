@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Upload } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ImageUp, Plus } from "lucide-react";
 import { KINDS } from "./kinds";
-import { ACCEPT_ATTR, UPLOAD_HINT } from "@/lib/visualUploadClient";
+import { startVisualUpload } from "./visualUploads";
+import { ACCEPT_ATTR, UPLOAD_HINT, hasFiles } from "@/lib/visualUploadClient";
 
 // Lives in the page header so saving never depends on which tab is open.
 // Three kinds: a website (full record, appears in the grid), a component
@@ -16,15 +18,17 @@ const URL_LABELS = {
   visual: "Page with images",
 };
 
-// `onUpload(files, onProgress)` takes images from the visual's file picker --
-// a screenshot that doesn't live on any page -- and resolves true when the
-// menu can close. Without it the Upload button isn't offered.
-export default function AddMenu({ onSubmit, onUpload, variant }) {
+// A visual's form has a second way in: a file that never lived on a page. It
+// hands the files to the upload store and closes, the way submitting a link
+// does -- the panel at the top of the dashboard reports it from there.
+export default function AddMenu({ onSubmit, variant }) {
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState(null);
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
   const wrapRef = useRef(null);
   const inputRef = useRef(null);
   const fileRef = useRef(null);
@@ -52,18 +56,60 @@ export default function AddMenu({ onSubmit, onUpload, variant }) {
     setOpen(false);
     setKind(null);
     setUrl("");
-    setProgress(null);
+    setDragOver(false);
   }
 
-  async function chooseFiles(e) {
+  // While this is open, a file dropped beside the box goes nowhere instead of
+  // replacing the page with itself, which is what a browser does with a file
+  // nothing has claimed. Anything that has claimed it -- the box, or the
+  // Visuals tab, which takes a drop anywhere -- has already said so by the
+  // time a drag reaches the window.
+  useEffect(() => {
+    if (!open) return undefined;
+    function guard(e) {
+      if (!hasFiles(e) || e.defaultPrevented) return;
+      e.preventDefault();
+      if (e.type === "dragover") e.dataTransfer.dropEffect = "none";
+    }
+    window.addEventListener("dragover", guard);
+    window.addEventListener("drop", guard);
+    return () => {
+      window.removeEventListener("dragover", guard);
+      window.removeEventListener("drop", guard);
+    };
+  }, [open]);
+
+  function upload(files) {
+    if (!files.length) return;
+    startVisualUpload(files);
+    close();
+    // The dashboard switches to Visuals itself when an upload starts. From
+    // anywhere else, go there with the router and not the address bar: a full
+    // page load would throw away the files on their way up.
+    if (pathname !== "/") router.push("/?tab=visuals");
+  }
+
+  function chooseFiles(e) {
+    // Copied before the input is cleared: clearing it empties the same list.
     const files = [...(e.target.files || [])];
     e.target.value = "";
-    if (!files.length || busy) return;
-    setBusy(true);
-    const ok = await onUpload(files, setProgress);
-    setBusy(false);
-    setProgress(null);
-    if (ok) close();
+    upload(files);
+  }
+
+  // dragover has to be cancelled on every event, not just the first: that is
+  // how a page tells the browser it will take the drop, and an element that
+  // doesn't is refused however much it looks like a target.
+  function onBoxDrag(e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    setDragOver(true);
+  }
+
+  function onBoxDrop(e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    setDragOver(false);
+    upload([...e.dataTransfer.files]);
   }
 
   async function submit(e) {
@@ -116,30 +162,34 @@ export default function AddMenu({ onSubmit, onUpload, variant }) {
               Cancel
             </button>
             <button type="submit" className="primary" disabled={busy}>
-              {busy && !progress ? "Starting…" : "Submit"}
+              {busy ? "Starting…" : "Submit"}
             </button>
           </div>
 
-          {/* The other way in for a visual: a file that never lived on a
-              page. Below the URL rather than beside it, because pasting a
-              link is still the common case and this is the alternative to
-              it, not a second field to fill in. */}
-          {kind === "visual" && onUpload && (
+          {kind === "visual" && (
             <div className="add-pop-upload">
               <span className="add-pop-or">or</span>
-              <button type="button" onClick={() => fileRef.current?.click()} disabled={busy}>
-                <Upload size={15} />
-                {progress ? progress : "Upload Images"}
+              {/* data-drop-box tells the Visuals tab's own drop handler that
+                  this drop is taken, or a file would be uploaded twice. */}
+              <button
+                type="button"
+                className={`drop-box${dragOver ? " drop-box-over" : ""}`}
+                data-drop-box
+                onClick={() => fileRef.current?.click()}
+                onDragEnter={onBoxDrag}
+                onDragOver={onBoxDrag}
+                onDragLeave={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(false);
+                }}
+                onDrop={onBoxDrop}
+                disabled={busy}
+              >
+                <ImageUp size={24} />
+                <strong>{dragOver ? "Drop to upload" : "Drop images here"}</strong>
+                <span>{dragOver ? "Let go to add them to Visuals" : "or click to choose files"}</span>
+                <small>{UPLOAD_HINT}</small>
               </button>
-              <small>{UPLOAD_HINT}. Or drop them on the Visuals tab.</small>
-              <input
-                ref={fileRef}
-                type="file"
-                accept={ACCEPT_ATTR}
-                multiple
-                hidden
-                onChange={chooseFiles}
-              />
+              <input ref={fileRef} type="file" accept={ACCEPT_ATTR} multiple hidden onChange={chooseFiles} />
             </div>
           )}
         </form>

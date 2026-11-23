@@ -1509,6 +1509,15 @@
   }
 }
 
+@keyframes refined-unknown {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(334%);
+  }
+}
+
 @keyframes refined-fade {
   from {
     opacity: 0;
@@ -1677,8 +1686,8 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.5);
-    color: #fff;
+    background: var(--tip-bg);
+    color: var(--tip-text);
     pointer-events: none;
   }
 
@@ -1706,7 +1715,7 @@
   /* The lightbox's video carries the browser's own controls; its corners
      match the still's. */
   & video.lightbox-image {
-    background: #000;
+    background: var(--stage, var(--surface-sunken));
   }
 
   /* The window-sized drop target. A scrim the overlay colour, and one card
@@ -1715,7 +1724,8 @@
   & .visual-drop {
     position: fixed;
     inset: 0;
-    z-index: 90;
+    /* Under the bar, so an open Add popover keeps its own drop box in view. */
+    z-index: 29;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1752,64 +1762,122 @@
     }
   }
 
-  & .visual-upload-status {
-    margin-top: 4px;
+  /* An upload's panel is the capture panel. Two things of its own: a bar
+     that says work is going on without claiming how much is left -- a short
+     length travelling the track, never a fill that could be read as a figure;
+     still and faint for anyone who asked for less motion -- and the files
+     that didn't make it. */
+  & .capture-status-fill.capture-status-fill-unknown {
+    width: 30%;
+    transition: none;
+    animation: refined-unknown 1.6s ease-in-out infinite;
 
-    & .capture-status-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+    @media (prefers-reduced-motion: reduce) {
+      width: 100%;
+      opacity: 0.35;
+      animation: none;
     }
   }
 
-  & .visual-upload-skipped {
+  /* The done panel's green is declared after the queued amber and the failed
+     red it shares an element with, at the same weight, so it won: a failure's
+     own sentence was green inside a red box, on a capture as much as here. */
+  & .capture-status-done.capture-status-queued p {
+    color: var(--warn-text);
+  }
+
+  & .capture-status-done.capture-status-failed p {
+    color: var(--danger);
+  }
+
+  & .visual-upload-failed {
     margin: 8px 0 0;
     padding-left: 18px;
     font-size: 13px;
-    color: var(--text-muted);
+    line-height: 1.5;
+    color: var(--danger);
   }
 
-  /* The Add menu's other way in for a visual. A word on a rule, then one
-     filled button, then the formats -- the alternative to the URL above it,
-     not a second form. */
+  & .capture-status-done .visual-upload-dismiss.visual-upload-dismiss {
+    flex-shrink: 0;
+    margin: -6px -6px -6px 0;
+    color: var(--danger);
+  }
+
+  /* The Add menu's other way in for a visual. A word on a rule, then a box
+     that looks like somewhere to put something: dashed like the board's own
+     drop card, tall enough to hit without aiming, and the whole of it clicks
+     through to the file picker. */
   & .add-pop-upload {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     margin-top: 14px;
+  }
 
-    & button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      height: var(--control-h, 32px);
-      padding: 0 14px;
-      border: none;
-      border-radius: 999px;
-      background: var(--field-bg);
-      color: var(--text);
-      font: inherit;
+  & .drop-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    min-height: 168px;
+    padding: 16px;
+    border: 2px dashed var(--border-strong);
+    border-radius: 14px;
+    background: var(--field-bg);
+    color: var(--text);
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition:
+      background 0.12s ease,
+      border-color 0.12s ease;
+
+    /* The words are scenery: a drag crossing from one to the next must not
+       read as leaving the box. */
+    & > * {
+      pointer-events: none;
+    }
+
+    & svg {
+      margin-bottom: 6px;
+      color: var(--accent);
+    }
+
+    & strong {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    & span {
       font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    & button:hover:not(:disabled) {
-      background: var(--surface-hover);
-    }
-
-    & button:disabled {
-      cursor: default;
-      color: var(--text-muted);
+      color: var(--text-secondary);
     }
 
     & small {
+      margin-top: 8px;
       font-size: 12px;
       line-height: 1.4;
       color: var(--text-muted);
+      text-wrap: balance;
     }
+
+    &:hover:not(:disabled) {
+      border-color: var(--text-muted);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--brand-ink);
+      outline-offset: 2px;
+    }
+  }
+
+  & .drop-box.drop-box-over {
+    border-style: solid;
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.12);
   }
 
   & .add-pop-or {

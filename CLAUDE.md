@@ -2237,6 +2237,12 @@ thumbnails). Only a collection reaches visuals from a share link: no tab-level
 scope covers them yet, so a library share still leaves them out -- on purpose,
 and the next thing to decide if visuals ever get a share scope of their own.
 
+**A visual is found by its project's name too.** Its own title says what is in
+the picture ("Bus stop wayfinding sign") and the client is on the project, so
+"Uber" found none of the Uber work. The board matches `project_title`
+(attached by `/api/visuals`), and search-counts and the MCP use
+`lib/visualSearch.js`; all three have to agree or the cross-tab nudge lies.
+
 **A visual can come from your own files, and then it has no url.**
 `schema_m24.sql` makes `url` and `domain` nullable on `visual` and
 `visual_project`; one upload batch is one project, described in one request.

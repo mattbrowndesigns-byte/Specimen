@@ -16,7 +16,7 @@ export async function GET() {
 
   const supabase = supabaseAdmin();
   const [visualsRes, projectsRes] = await Promise.all([
-    supabase.from("visual").select(VISUAL_COLUMNS).eq("user_id", user.id).order("saved_at", { ascending: false }).order("position"),
+    supabase.from("visual").select(`${VISUAL_COLUMNS}, project:visual_project(title)`).eq("user_id", user.id).order("saved_at", { ascending: false }).order("position"),
     supabase
       .from("visual_project")
       .select("id, url, domain, title, agency_name, favicon_url, favicon_fills, state, ai_state, created_at")
@@ -30,7 +30,10 @@ export async function GET() {
   if (projectsRes.error) return NextResponse.json({ error: projectsRes.error.message }, { status: 500 });
 
   try {
-    const visuals = await attachTags(supabase, visualsRes.data, "visual");
+    // The project's name comes along because it is what you'd search for: the
+    // client is on the project, not on any one image.
+    const rows = visualsRes.data.map(({ project, ...v }) => ({ ...v, project_title: project?.title || null }));
+    const visuals = await attachTags(supabase, rows, "visual");
     return NextResponse.json({ visuals, pending: projectsRes.data });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });

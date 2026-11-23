@@ -42,9 +42,11 @@ function matches(visual, term) {
   if (!term) return true;
   const haystack = [
     visual.title,
+    visual.project_title,
     visual.agency_name,
     visual.domain,
     visual.summary,
+    visual.notes,
     ...(visual.tags || []).map((t) => t.label),
   ]
     .filter(Boolean)
@@ -220,6 +222,7 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
     const words = [
       ...chips.map((c) => c.label),
       ...allTags.filter((t) => t.facet !== "medium").map((t) => t.label),
+      ...visuals.map((v) => v.project_title),
       ...visuals.map((v) => v.agency_name),
       ...visuals.map((v) => v.title),
     ].filter(Boolean);
@@ -289,7 +292,7 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
 
       <div className="toolbar">
         <SearchField
-          placeholder="Search visuals, agencies, tags"
+          placeholder="Search visuals, projects, agencies, tags"
           value={query}
           onChange={setQuery}
           historyKey="specimen.recent.visuals"

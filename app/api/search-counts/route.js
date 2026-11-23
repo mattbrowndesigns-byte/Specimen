@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED } from "@/lib/ownership";
 import { allRows, allRowsIn } from "@/lib/paging";
+import { visualIdsByProject } from "@/lib/visualSearch";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ function quoted(query) {
 async function countMatches(supabase, userId, { table, columns, targetType, query }) {
   const value = quoted(query);
 
-  const [direct, tags] = await Promise.all([
+  const [direct, tags, byProject] = await Promise.all([
     allRows(
       () =>
         supabase
@@ -52,9 +53,10 @@ async function countMatches(supabase, userId, { table, columns, targetType, quer
       () => supabase.from("tag").select("id").eq("user_id", userId).ilike("label", `%${query}%`),
       "matching tags"
     ),
+    table === "visual" ? visualIdsByProject(supabase, userId, `%${query}%`) : [],
   ]);
 
-  const ids = new Set(direct.map((row) => row.id));
+  const ids = new Set([...direct.map((row) => row.id), ...byProject]);
 
   // A two-letter search can match a good part of the vocabulary, and the
   // links under that many tags run past Supabase's silent 1,000-row cap.
@@ -113,8 +115,8 @@ export async function GET(request) {
         query,
       }),
       // The fourth library. Its text is the image's own title and sentence,
-      // who made it and where it lives; the project's paragraph is on another
-      // table and isn't searched by the tab either.
+      // who made it, where it lives and what its project is called; the
+      // project's paragraph isn't searched by the tab either.
       countMatches(supabase, user.id, {
         table: "visual",
         columns: ["title", "summary", "notes", "agency_name", "domain"],

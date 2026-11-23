@@ -270,7 +270,7 @@ export default function PickProjectPage({ params }) {
         )}
 
         {phase === "failed" && project && (
-          <div className="empty-state empty-state-search">
+          <div className="empty-state empty-state-search page-drop-panel">
             <h2 className="empty-state-headline">Kivli couldn’t read this page.</h2>
             <p className="empty-state-body">
               {project.error || "That page couldn't be read."} You can add its images yourself, and they'll be saved

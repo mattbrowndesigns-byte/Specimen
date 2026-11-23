@@ -8078,6 +8078,26 @@ a.card {
 
 /* Adding a page's images by hand, inside the panel that said it couldn't be
    read (app/_ui/PageDrop.js). */
+.page-drop-panel.page-drop-panel {
+  --panel-pad: 44px;
+  box-sizing: border-box;
+  width: min(calc(560px + 2 * var(--panel-pad)), 100%);
+  margin-inline: auto;
+  padding: var(--panel-pad);
+}
+
+/* Three classes deep, to outrank the height a search's panel stands in for a
+   grid with: this one is as tall as what's in it. */
+.page-drop-panel.page-drop-panel.page-drop-panel {
+  min-height: 0;
+}
+
+@media (max-width: 520px) {
+  .page-drop-panel.page-drop-panel {
+    --panel-pad: 24px;
+  }
+}
+
 .page-drop {
   width: 100%;
   max-width: 560px;

@@ -16,7 +16,7 @@ import { DEMO_SAVES, setDemoPhase, useDemoPhase } from "./demoState";
 // screenshot, tag and colour on the page it opens is real output, and the
 // field says plainly that every save in the demo is that one. The same goes
 // for a component (a block from Stripe), a resource (Lucide) and visuals (one
-// Netflix project) -- one replayed save per kind, listed in DEMO_SAVES.
+// Uber project) -- one replayed save per kind, listed in DEMO_SAVES.
 //
 // It stands in for AddMenu in the utility bar. From any page but the
 // dashboard it starts the save and goes there, the same way a real Add hands
@@ -37,14 +37,14 @@ const RUNNING_LINES = {
     `Capturing ${label} and cropping a block: about ${left}s remaining. Sped up for the demo; in the real app you crop it yourself once the capture lands.`,
   resource: (label, left) => `Saving ${label} and sorting it into a folder: about ${left}s remaining.`,
   visual: (label, left) =>
-    `Finding the images on the ${label} project: about ${left}s remaining. In the real app you pick which ones to keep.`,
+    `Finding the images and clips on the ${label} project: about ${left}s remaining. In the real app you pick which ones to keep.`,
 };
 
 const DONE_LINES = {
   website: (label) => `${label} captured and tagged. Open its card to see what Kivli read from it.`,
   component: (label) => `A block from ${label} saved and described. Open its card to see it.`,
   resource: (label) => `${label} saved, summarised and filed.`,
-  visual: (label) => `The images from ${label} saved, each one described and tagged. Open one to see it full screen.`,
+  visual: (label) => `${label} saved, each image and clip described and tagged. Open one to see it full screen.`,
 };
 
 export default function DemoAdd() {

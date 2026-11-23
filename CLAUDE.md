@@ -1981,8 +1981,8 @@ owner's library used to pull the picture out of the demo. Deletes go through
 row names, and nothing at all if that check fails.
 
 Add is staged (`DemoAdd.js`), one replayed save per kind in `DEMO_SAVES`: Ramp,
-a Stripe pricing block, Lucide, and Gretel's Netflix project (eight images that
-land together). Each replays a row the seed has to contain. The component one
+a Stripe pricing block, Lucide, and Wolff Olins' Uber project (three images and
+a loop that land together). Each replays a row the seed has to contain. The component one
 outlived its row: it was a ramp.com block no longer in the library, so the bar
 ran, said saved, and nothing arrived. The URL is locked and the field says
 so, Ramp is held out of the grid until Submit, and the dashboard plays a

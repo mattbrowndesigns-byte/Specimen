@@ -1898,6 +1898,39 @@
     color: var(--danger);
   }
 
+  /* The address field in Add, every kind and the demo's locked one. The same
+     fill and edge as the drop box under it, so the two ways in read as one
+     set. It had no background at all, so dark mode got the browser's own grey
+     -- the lightest thing in the menu -- inside a full-strength border that
+     was the same focused or not. Now: a hairline, a step up on hover, and a
+     tint of the ink on focus, the search field's own indicator. */
+  & .add-pop-form input {
+    height: 44px;
+    margin-bottom: 12px;
+    padding: 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: var(--field-bg);
+    color: var(--text);
+    transition: border-color 0.12s ease;
+
+    &::placeholder {
+      color: var(--text-faint);
+    }
+
+    &:hover {
+      border-color: var(--border-strong-hover);
+    }
+
+    &:focus {
+      border-color: rgba(var(--brand-ink-rgb), 0.5);
+    }
+
+    &[readonly] {
+      color: var(--text-secondary);
+    }
+  }
+
   /* The Add menu's other way in for a visual. A word on a rule, then a box
      that looks like somewhere to put something: dashed like the board's own
      drop card, tall enough to hit without aiming, and the whole of it clicks

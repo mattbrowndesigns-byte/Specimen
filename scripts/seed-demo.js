@@ -42,7 +42,7 @@ const TOKEN = env.NEXT_PUBLIC_SHOWCASE_SHARE;
 // The site the demo's staged Add replays. Its saved_at is set to now so it
 // lands first in a newest-first grid when the visitor "saves" it.
 const DEMO_DOMAIN = "ramp.com";
-const DEMO_VISUALS_URL = "https://gretelny.com/netflix";
+const DEMO_VISUALS_URL = "https://www.wolffolins.com/work/uber";
 
 const SKIP = new Set(
   (env.DEMO_SKIP_DOMAINS || "")

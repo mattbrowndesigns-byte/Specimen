@@ -404,6 +404,8 @@ The limit is 25 MB, which is about a minute of a recorded window or 24 seconds o
 
 **A demo that promised a save it didn't have.** The demo is a copy of my library, so it goes stale quietly. Its component Add replayed a block I no longer had: the bar ran, said it was saved, and nothing appeared. Visuals had never been turned on there at all. The demo now has all four kinds, each with its own staged save, and the script that fills it says so when one has nothing to replay. Filling it showed me something worse. The copy shares its image files with my library, so deleting a site would have taken its screenshots out of the demo too. A file is now only deleted once nothing else uses it.
 
+**A field wearing the browser's clothes.** The address field in Add looked heavier than everything around it. It had never been given a background, so in dark mode the browser filled it with its own grey, inside a border at full strength that looked the same whether you were in it or not. It now wears the drop box's fill and edge, with a lighter line when you click in.
+
 Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component or a clip, still have to be proven there.
 
 ## What I deliberately did not build

@@ -39,11 +39,11 @@ export const DEMO_SAVES = {
   // A whole project rather than one image, because that is what a visuals
   // save is: one page in, several cards out.
   visual: {
-    url: "https://gretelny.com/netflix",
-    label: "Netflix",
-    note: "In the demo, every visuals save is Gretel’s Netflix project.",
+    url: "https://www.wolffolins.com/work/uber",
+    label: "Uber",
+    note: "In the demo, every visuals save is Wolff Olins’ Uber project.",
     seconds: 8,
-    match: (visual) => visual.url === "https://gretelny.com/netflix",
+    match: (visual) => visual.url === "https://www.wolffolins.com/work/uber",
   },
 };
 

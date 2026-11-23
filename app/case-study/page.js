@@ -231,6 +231,46 @@ export default function CaseStudyPage() {
 
         <section className="prose-row">
           <div className="prose-section prose-row-aside">
+            <h2>Images are a library of their own</h2>
+          </div>
+          <div className="prose-section">
+            <p>
+              Half of what I save from a studio&rsquo;s site is not the site. It is the work on it: the identity system on a bus shelter, the packaging, the poster series. Saving the page as a website photographed the case study&rsquo;s layout and lost the pictures I actually came for.
+            </p>
+            <p>
+              So images became a fourth library. Paste a project page and Kivli pulls every image off it, guesses which ones are the work with a free heuristic, then spends one AI request sorting and describing the lot. A picker shows its choices and I make the final call; anything left out is deleted from storage, so a page only ever costs space for what I chose.
+            </p>
+            <p className="case-point">
+              A logo and that logo on a bus are two findings.
+            </p>
+            <p>
+              That is why each image is its own card on a board rather than one card per project. Grouping still happens, on the image&rsquo;s own page, where the rest of the project sits underneath it. The project&rsquo;s paragraph is written once and shown there, instead of being copied onto every image it came with.
+            </p>
+            <p>
+              The vocabulary is three facets. Industry and aesthetic are shared with websites, because Brutalist means the same thing on a billboard as on a homepage. Medium is its own: poster, packaging, signage, identity system. Words a designer would search for, from a closed list, for the same reason the block vocabulary is one.
+            </p>
+            <dl className="measure-grid">
+              <div>
+                <dt>Requests to sort and describe a page</dt>
+                <dd>
+                  1<span>however many images it has</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Facets on every image</dt>
+                <dd>
+                  3<span>medium, industry, aesthetic</span>
+                </dd>
+              </div>
+            </dl>
+            <p>
+              Two guards came from running it for real. A title is two to six words by instruction, and one came back as hundreds of words of looping filler, so anything past eight words is treated as that and replaced. And files are named by their content and cached for a year, because the free plan&rsquo;s limit on what a board of images can serve is the first one a library like this would hit.
+            </p>
+          </div>
+        </section>
+
+        <section className="prose-row">
+          <div className="prose-section prose-row-aside">
             <h2>Two progress bars, not one percentage</h2>
           </div>
           <div className="prose-section">
@@ -557,6 +597,52 @@ export default function CaseStudyPage() {
               The demo library still has its own address with no sign-in, so anyone can point their
               own AI at it and try. It stays read-only because the four tools that write are only
               given to a signed-in owner.
+            </p>
+          </div>
+        </section>
+
+        <section className="prose-row">
+          <div className="prose-section prose-row-aside">
+            <h2>The details I&rsquo;m still pushing on</h2>
+          </div>
+          <div className="prose-section">
+            <p>
+              None of these is a story on its own. Together they are most of the difference between a tool that works and one that feels finished, so I keep them written down: what looked wrong, what was actually wrong, and what changed.
+            </p>
+            <h3>A blurry logo was a rule, not a file</h3>
+            <p>
+              Intercom&rsquo;s mark looked soft in the header. It wasn&rsquo;t a bad image: Kivli picked a site&rsquo;s icon by whether it loaded, and Google&rsquo;s only Intercom icon is 48 pixels, drawn here at 88 on a sharp screen. Asking for a bigger one changes nothing, because Google quietly sends the size it has. Now every candidate is measured and the first one big enough wins, a site with no large icon anywhere keeps its sharpest, a round mark is scaled to meet its circle, and a site with no icon at all gets its initial on a colour of its own. A script re-asks for every save whenever the rule changes.
+            </p>
+            <h3>One tooltip, drawn above everything</h3>
+            <p>
+              Some controls had a styled grey pill and most had the browser&rsquo;s own label, which waits a second and a half and looks different on every screen. The pill could not simply be copied everywhere: on a card it was clipped by the card&rsquo;s rounded edge. It is now one piece that draws on top of the whole page, used by about forty controls.
+            </p>
+            <h3>Copy and download are one control</h3>
+            <p>
+              Every save and collection had Copy for AI and, beside it, a bare download icon with nothing holding it. They are one capsule now: the label copies in one click, the arrow beside it opens both options.
+            </p>
+            <h3>A strip that sat off-centre by four pixels</h3>
+            <p>
+              The tag strip under the search measured 12 pixels above and 8 below on Websites, and 12 above and 18 below on Resources, whose view controls also lived on a different line from every other tab&rsquo;s. Both are 12 and 12 now, on every tab.
+            </p>
+            <h3>Descenders lost to an animation</h3>
+            <p>
+              The rolling line on the home page is clipped to its row so the incoming line can&rsquo;t swing through the one below. The clip cut the tails off every y and p. Measured, those tails end 0.05em past the line box, so the clip now allows 0.08em.
+            </p>
+            <h3>Filters that could only narrow to nothing</h3>
+            <p>
+              On the image board, picking Signage and then Editorial returned nothing, because it asked for images tagged both. The convention, and what the other libraries already did, is any of the chosen tags within one group and all of the groups together.
+            </p>
+            <h3>Labels that changed width</h3>
+            <p>
+              The selected tab went bold, which made its label wider and nudged every tab after it sideways. They all share one weight now; the fill says which one you are in.
+            </p>
+            <h3>A finished job that looked unfinished</h3>
+            <p>
+              The import panel was still showing a batch from weeks earlier, two full bars under a gradient band that read as a third bar. A finished batch now stays for the day it finishes and then goes.
+            </p>
+            <p>
+              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Uploading an image that doesn&rsquo;t live online and keeping a case study&rsquo;s looping videos are being built next, and so is importing all four kinds of save from a bookmarks file.
             </p>
           </div>
         </section>

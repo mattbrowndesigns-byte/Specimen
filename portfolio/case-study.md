@@ -274,6 +274,8 @@ It used to say so everywhere: a banner, a note under the field, a disclaimer in
 the progress bar, a card for a save you had already used. Each was honest, and
 together they kept pulling you out of the thing you had come to see.
 
+Visuals were the odd one out: the demo dropped the images straight on the board and skipped the choosing, which is most of what that save is. It opens the real picker now, with the ten images one real read of an Uber case study found. The AI ticked eight and left two thumbnails for other projects alone, and whatever a visitor ticks is what lands.
+
 First-time visitors get a seven-stop tour that ends by opening Add, and their
 visits are counted under their own path, so I can tell a stranger from myself.
 

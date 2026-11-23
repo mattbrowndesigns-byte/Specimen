@@ -54,6 +54,15 @@ export default function ImportStatus({ account, onRefresh }) {
 
   if (!batch) return null;
 
+  // A finished batch is news the day it finishes and furniture after that. An
+  // import from weeks ago was still sitting at the top of the page with two
+  // full bars, which read as something still loading. Once nothing is left to
+  // do it stays for the rest of the day it was imported, then goes; anything
+  // that needs a look is in the review queue, which is where it belongs.
+  const finishedLongAgo =
+    !working && new Date(batch.importedAt).toDateString() !== new Date().toDateString();
+  if (finishedLongAgo) return null;
+
   const isSites = batch.kind === "site";
   const captured = batch.total - batch.awaitingCapture - batch.capturing;
   const tagged = batch.done;

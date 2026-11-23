@@ -80,7 +80,7 @@ export async function GET(request) {
 
   const query = (request.nextUrl.searchParams.get("q") || "").trim();
   if (query.length < 2) {
-    return NextResponse.json({ counts: { site: 0, component: 0, resource: 0 } });
+    return NextResponse.json({ counts: { site: 0, component: 0, resource: 0, visual: 0 } });
   }
 
   const supabase = supabaseAdmin();
@@ -96,9 +96,9 @@ export async function GET(request) {
   // give. A few hundred rows, once, on a search that already found nothing.
   // A failed count throws and answers 500, which the nudge reads as "no
   // nudge" -- never as a zero it would then report.
-  let sites, component, resource;
+  let sites, component, resource, visual;
   try {
-    [sites, component, resource] = await Promise.all([
+    [sites, component, resource, visual] = await Promise.all([
       supabase.rpc("search_sites", { search_query: query, owner: user.id }),
       countMatches(supabase, user.id, {
         table: "component",
@@ -112,6 +112,15 @@ export async function GET(request) {
         targetType: "resource",
         query,
       }),
+      // The fourth library. Its text is the image's own title and sentence,
+      // who made it and where it lives; the project's paragraph is on another
+      // table and isn't searched by the tab either.
+      countMatches(supabase, user.id, {
+        table: "visual",
+        columns: ["title", "summary", "notes", "agency_name", "domain"],
+        targetType: "visual",
+        query,
+      }),
     ]);
   } catch (error) {
     console.error("Search counts failed:", error.message);
@@ -123,6 +132,6 @@ export async function GET(request) {
   }
 
   return NextResponse.json({
-    counts: { site: (sites.data || []).length, component, resource },
+    counts: { site: (sites.data || []).length, component, resource, visual },
   });
 }

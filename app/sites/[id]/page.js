@@ -448,7 +448,7 @@ export default function SiteDetailPage({ params }) {
                           key={run.capturedAt}
                           className={run.capturedAt === activeRun?.capturedAt ? "active" : ""}
                           onClick={() => setSelectedRun(run.capturedAt)}
-                          title={new Date(run.capturedAt).toLocaleString()}
+                          data-tip={new Date(run.capturedAt).toLocaleString()}
                         >
                           {formatCaptureDate(run.capturedAt)}
                           {isLatest && <span className="timeline-latest">Latest</span>}
@@ -460,7 +460,14 @@ export default function SiteDetailPage({ params }) {
 
               {activeRun && (
                 <p className="capture-meta">
-                  Captured {formatCaptureDate(activeRun.capturedAt)} ·{" "}
+                  {/* The date only when it says something the title's "Saved"
+                      line doesn't: a capture taken the day the site was saved
+                      repeated the same date twice, a few lines apart. A
+                      re-capture, or an older one picked in the timeline, is a
+                      different day and keeps its date. */}
+                  {formatCaptureDate(activeRun.capturedAt) !== formatCaptureDate(site.saved_at) && (
+                    <>Captured {formatCaptureDate(activeRun.capturedAt)} · </>
+                  )}
                   {wayback.state === "found" ? (
                     <a href={wayback.url} target="_blank" rel="noopener noreferrer">
                       View on the Wayback Machine
@@ -468,7 +475,7 @@ export default function SiteDetailPage({ params }) {
                   ) : wayback.state === "loading" ? (
                     <span>Checking the Wayback Machine…</span>
                   ) : (
-                    <span title="archive.org has no snapshot near this date">No Wayback snapshot</span>
+                    <span data-tip="archive.org has no snapshot near this date">No Wayback snapshot</span>
                   )}{" "}
                   ·{" "}
                   <button

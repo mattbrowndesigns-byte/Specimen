@@ -10,6 +10,13 @@
 :root {
   color-scheme: light;
 
+  /* The tooltip pill. Dark in both themes on purpose -- see .app-tip. */
+  --tip-bg: #2c2c30;
+  --tip-text: #f2f2f3;
+  /* The letter in a site badge that has no icon: white on a mid-tone colour
+     in both themes, since the colour behind it doesn't flip. */
+  --letter-text: #fff;
+
   --bg: #f7f7f8;
   --surface: #fff;
   --surface-rgb: 255, 255, 255;
@@ -2042,6 +2049,17 @@ h1 {
 .row-item .card-tags {
   padding: 0;
   margin: auto 0 0;
+}
+
+/* The review queue borrows the card's tag row but not its job. The card's
+   12px inset lines chips up with a card's edge, and here pushed them in from
+   the summary they sit under; and the card's nowrap exists so TagRow can
+   measure and trim, which the queue doesn't do -- so the last chip was simply
+   cut off at the edge. Here they start on the text's left edge and wrap. */
+.review-info .card-tags {
+  flex-wrap: wrap;
+  padding: 0;
+  margin-bottom: 0;
 }
 
 /* Headlines view */
@@ -5332,6 +5350,36 @@ a.card {
   object-fit: cover;
 }
 
+/* A filled mark bleeds a little past the circle. Plenty of brand marks are a
+   disc drawn just inside their own square (Intercom's), and at cover-fit that
+   left a thin ring of the badge's surface between the disc and the border --
+   the mark looking like it didn't fit its frame. 8% more is enough to put the
+   disc's edge under the border, and a square tile loses only what the circle
+   was already cropping. */
+.favicon-badge:not(.favicon-badge-mark) .favicon {
+  transform: scale(1.08);
+}
+
+/* No icon anywhere: the name's first letter, white on a colour derived from
+   the name itself, so the same site is the same colour on every screen. The
+   lightness is held where white type clears AA on every hue. */
+.favicon-badge-letter {
+  border-color: transparent;
+  background: hsl(var(--letter-hue, 260) 42% 40%);
+  color: var(--letter-text);
+  font-size: calc(var(--favicon-size) * 0.5);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  user-select: none;
+}
+
+/* The header's badge is 44px against a card's 24, and the letter scales with
+   it rather than staying card-sized in the middle of a bigger circle. */
+.detail-header .favicon-badge-letter {
+  font-size: 20px;
+}
+
 /* A mark on transparency has to be inset instead. Filling would crop whatever
    reaches the corners of its frame (Recess's cloud) and push marks that
    already fill their frame hard against the circle (IBM's). `contain` also
@@ -7389,7 +7437,16 @@ a.card {
 /* The drop target is the whole field rather than a separate dashed rectangle
    beside it. A second target is a second thing to aim at for the same result,
    and a page with one input should have one place to put things. */
+/* The whole field resizes, not the textarea inside it. The grip belongs to
+   the box you see, and the textarea is only its top part -- with the file row
+   under it, the textarea's own grip floated in the middle of the field, above
+   "Choose a file". `resize` needs an overflow other than visible, which
+   this already had for its rounded corners. */
 .import-drop {
+  display: flex;
+  flex-direction: column;
+  min-height: 240px;
+  resize: vertical;
   border: 1px solid var(--border-soft);
   border-radius: 10px;
   background: var(--field-bg);
@@ -7409,9 +7466,10 @@ a.card {
 
 .import-textarea {
   display: block;
+  flex: 1;
   width: 100%;
   min-height: 190px;
-  resize: vertical;
+  resize: none;
   border: 0;
   background: none;
   padding: 14px;
@@ -7560,9 +7618,10 @@ a.card {
   margin: 0;
 }
 
-/* The status panel wears the call to action's band, because it is the same
-   idea: the ramp along the top edge at the progress bar's own thickness,
-   saying this object belongs to the loading bar family. */
+/* The status panel is a plain panel. It used to wear the call to action's
+   ramp along its top edge as well, which put two gradients on one object --
+   the band and the bars inside it -- and the band read as a third progress
+   bar that never moved. The bars are what this panel is about. */
 .import-status {
   position: relative;
   background: var(--surface);
@@ -7574,22 +7633,6 @@ a.card {
   display: flex;
   flex-direction: column;
   gap: 18px;
-}
-
-.import-status::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: var(--ramp-h);
-  background: linear-gradient(
-    90deg,
-    var(--ramp-deep) 0%,
-    var(--ramp-mid) 26%,
-    var(--ramp-warm) 52%,
-    var(--ramp-lit) 68%,
-    var(--ramp-mid) 88%,
-    var(--ramp-deep) 100%
-  );
 }
 
 .import-status-head {
@@ -8646,44 +8689,59 @@ a.card {
   background: var(--surface-hover);
 }
 
-/* Tooltips for the two icons that need naming -- Details and full screen.
-   A grey pill that drops in under the button after a beat, so passing over
-   them doesn't flash both names. The close buttons have none: an X says
-   what it does. */
-.lightbox-icon[data-tip] {
-  position: relative;
-}
-
-.lightbox-icon[data-tip]::after {
-  content: attr(data-tip);
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  z-index: 2;
+/* The app's one tooltip (app/_ui/Tooltips.js): a grey pill under the control,
+   after a beat. It started as the lightbox icons' own ::after and is now drawn
+   into <body> at a fixed position, so a card's overflow can't clip it and the
+   controls' own ::after stays free. It is dark in both themes, as tooltips
+   are, so it reads as a label laid over the page rather than part of it. */
+.app-tip {
+  position: fixed;
+  z-index: 1000;
+  max-width: 280px;
   padding: 5px 11px;
   border-radius: 999px;
-  background: #2c2c30;
-  color: #f2f2f3;
+  background: var(--tip-bg);
+  color: var(--tip-text);
   font-size: 12px;
   font-weight: 500;
-  line-height: 1.2;
-  white-space: nowrap;
+  line-height: 1.3;
+  text-align: center;
+  text-wrap: balance;
   pointer-events: none;
-  opacity: 0;
-  transform: translate(-50%, -4px);
-  transition: opacity 0.14s ease, transform 0.14s ease;
+  transform: translate(-50%, 0);
+  animation: app-tip-in 0.14s ease;
 }
 
-.lightbox-icon[data-tip]:hover::after,
-.lightbox-icon[data-tip]:focus-visible::after {
-  opacity: 1;
-  transform: translate(-50%, 0);
-  transition-delay: 0.25s;
+/* A wrapped tip -- a card's summary -- reads as a small note, not a capsule. */
+.app-tip-multi {
+  border-radius: 10px;
+  padding: 7px 11px;
+  text-align: left;
+}
+
+.app-tip-above {
+  transform: translate(-50%, -100%);
+  animation-name: app-tip-in-above;
+}
+
+@keyframes app-tip-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+}
+
+@keyframes app-tip-in-above {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% + 4px));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lightbox-icon[data-tip]::after {
-    transition: opacity 0.14s ease;
+  .app-tip,
+  .app-tip-above {
+    animation: none;
   }
 }
 
@@ -8768,21 +8826,115 @@ a.card {
   }
 }
 
-/* Copy for AI: a labelled button and a download beside it. The button takes
-   whatever row it sits in -- `.detail-actions button` sizes it in a header --
-   and only needs its icon laid out; doubled to beat that (0,1,1) rule on
-   display, which it otherwise leaves as inline-block. */
+/* Copy for AI: one capsule in two parts -- the label copies, the arrow opens
+   a menu with copy and download. Every rule here is doubled because the rows
+   it sits in style bare buttons at (0,1,1) (`.detail-actions button`), and a
+   single class loses to that on border, background and padding. */
 .copy-ai {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
 }
 
-.copy-ai-btn.copy-ai-btn {
+.copy-ai-split.copy-ai-split {
+  display: inline-flex;
+  align-items: stretch;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--field-bg);
+}
+
+.copy-ai-split .copy-ai-btn.copy-ai-btn,
+.copy-ai-split .copy-ai-more.copy-ai-more {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  height: 100%;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.copy-ai-split .copy-ai-btn.copy-ai-btn {
+  gap: 6px;
+  padding: 0 10px 0 16px;
+  border-radius: 999px 0 0 999px;
+}
+
+/* The arrow's half, with a hairline between the two so it reads as a second
+   part of the same control rather than the end of the label. */
+.copy-ai-split .copy-ai-more.copy-ai-more {
+  position: relative;
+  justify-content: center;
+  width: 36px;
+  padding: 0 4px 0 0;
+  border-radius: 0 999px 999px 0;
+  color: var(--text-muted);
+}
+
+.copy-ai-split .copy-ai-more.copy-ai-more::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+  background: var(--border-strong);
+}
+
+.copy-ai-split .copy-ai-btn.copy-ai-btn:hover:not(:disabled),
+.copy-ai-split .copy-ai-more.copy-ai-more:hover,
+.copy-ai-split .copy-ai-more.copy-ai-more[aria-expanded="true"] {
+  background: var(--chip-strong-bg);
+  color: var(--text);
+}
+
+/* The menu is the app's own (.more-pop / .more-item), opened under the arrow
+   and held to the right edge of the control. Each option says what it does in
+   one short line, since "download" alone doesn't say what you'd get. */
+.copy-ai-menu.copy-ai-menu {
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 270px;
+}
+
+.copy-ai-menu .more-item.more-item {
+  align-items: flex-start;
+  width: 100%;
+  height: auto;
+  padding: 9px 10px;
+  border: none;
+  background: none;
+  color: var(--text);
+  text-align: left;
+}
+
+.copy-ai-menu .more-item.more-item:hover {
+  background: var(--surface-hover);
+}
+
+.copy-ai-menu .more-item svg {
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+
+.copy-ai-menu strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.copy-ai-menu small {
+  display: block;
+  margin-top: 1px;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 /* A shared page has no header row of its own to sit in, so the export gets
@@ -8822,6 +8974,165 @@ a.card {
 
 .consent-section li + li {
   margin-top: 2px;
+}
+
+/* The Connect page, top to bottom: a line of what this is for, "What is
+   MCP?" in a panel of its own, a grid of what your AI can do with a request on
+   each card, then setup as three numbered steps. Built for someone who has
+   never heard of MCP, which is most people who open it. */
+.connect-lede {
+  max-width: 40em;
+  margin: 0 0 24px;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.connect-explain {
+  max-width: 52em;
+  margin-bottom: 36px;
+  padding: 20px 22px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+}
+
+.connect-explain h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.connect-explain p {
+  margin: 0;
+  max-width: 44em;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.connect-heading {
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Six cards, so the minimum is set to come out three by two on a laptop
+   rather than four and a stray two; narrower, it drops to two and then one. */
+.connect-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
+  gap: 14px;
+  margin-bottom: 40px;
+}
+
+.connect-cards-pairs {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 700px) {
+  .connect-cards-pairs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.connect-card {
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+}
+
+.connect-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 14px;
+  border-radius: 999px;
+  background: var(--field-bg);
+  color: var(--text);
+}
+
+.connect-card h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.connect-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* The request, set as something you'd type: last in the card and pushed to
+   its foot, so a row of cards lines their examples up. */
+.connect-card .connect-card-example {
+  margin-top: auto;
+  padding-top: 14px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+/* Steps are a real <ol> for a screen reader, numbered by hand for the eye:
+   a circle per step reads as a sequence at a glance, where list numbers in a
+   margin are easy to miss. */
+.connect-setup {
+  margin: 0 0 40px;
+  padding: 0;
+  list-style: none;
+}
+
+.connect-step {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+}
+
+.connect-step + .connect-step {
+  margin-top: 12px;
+}
+
+.connect-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.connect-step-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.connect-step-body h3 {
+  margin: 4px 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.connect-step-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
 }
 
 .connect-panel {
@@ -8899,6 +9210,8 @@ a.card {
 }
 
 .connect-switch {
+  width: fit-content;
+  max-width: 100%;
   margin-bottom: 14px;
 }
 

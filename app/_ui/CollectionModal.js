@@ -145,7 +145,7 @@ export default function CollectionModal({ kind, id, name, onClose }) {
         <button
           onClick={createAndAdd}
           disabled={exactExists || creating}
-          title={exactExists ? "You already have a collection with that name" : undefined}
+          data-tip={exactExists ? "You already have a collection with that name" : undefined}
         >
           <Plus size={14} />
           {needle && !exactExists ? `Create “${filter.trim()}”` : "Create a new collection"}

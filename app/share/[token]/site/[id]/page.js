@@ -135,7 +135,7 @@ export default function SharedSitePage({ params }) {
                           key={run.capturedAt}
                           className={run.capturedAt === activeRun?.capturedAt ? "active" : ""}
                           onClick={() => setSelectedRun(run.capturedAt)}
-                          title={new Date(run.capturedAt).toLocaleString()}
+                          data-tip={new Date(run.capturedAt).toLocaleString()}
                         >
                           {formatCaptureDate(run.capturedAt)}
                           {isLatest && <span className="timeline-latest">Latest</span>}
@@ -148,7 +148,11 @@ export default function SharedSitePage({ params }) {
               {/* No Wayback link and no delete. The first needs a route that
                   takes a session; the second is the owner's to press. */}
               {activeRun && (
-                <p className="capture-meta">Captured {formatCaptureDate(activeRun.capturedAt)}</p>
+                // Same rule as the owner's page: no second copy of the date
+                // already under the title.
+                formatCaptureDate(activeRun.capturedAt) !== formatCaptureDate(site.saved_at) && (
+                  <p className="capture-meta">Captured {formatCaptureDate(activeRun.capturedAt)}</p>
+                )
               )}
 
               {hasMobile && (

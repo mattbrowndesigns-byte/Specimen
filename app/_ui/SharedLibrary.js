@@ -330,7 +330,7 @@ function SharedCard({
           href={visit}
           target="_blank"
           rel="noopener noreferrer nofollow"
-          title={visitTitle}
+          data-tip={visitTitle}
         >
           <ArrowUpRight size={17} />
         </a>

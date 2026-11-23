@@ -295,7 +295,7 @@ export default function SearchField({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => forget(row.label)}
                   aria-label={`Forget "${row.label}"`}
-                  title="Forget this search"
+                  data-tip="Forget this search"
                 >
                   <Trash2 size={15} />
                 </button>

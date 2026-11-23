@@ -4,6 +4,7 @@ import { ArrowRight, Grid3x3, LayoutGrid, SlidersHorizontal, Square } from "luci
 import SearchField from "./SearchField";
 import ResultCount from "./ResultCount";
 import NoMatches from "./NoMatches";
+import SearchElsewhere from "./SearchElsewhere";
 import Favicon from "./Favicon";
 import useEdgeFade from "./useEdgeFade";
 import Lightbox from "./Lightbox";
@@ -51,7 +52,7 @@ function matches(visual, term) {
     .every((word) => haystack.includes(word));
 }
 
-export default function VisualsTab({ allTags }) {
+export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onSearchElsewhere }) {
   const [visuals, setVisuals] = useState([]);
   const [pending, setPending] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -170,15 +171,30 @@ export default function VisualsTab({ allTags }) {
     return [...new Set(words)];
   }, [chips, allTags, visuals]);
 
-  const visible = useMemo(
-    () =>
-      visuals.filter(
-        (v) =>
-          matches(v, query.trim()) &&
-          [...selected].every((id) => (v.tags || []).some((t) => t.id === id))
-      ),
-    [visuals, query, selected]
-  );
+  // Within one facet the chosen tags are alternatives, across facets they all
+  // have to hold -- Signage or Editorial, and Minimal -- which is how the
+  // Websites and Components filters already work. This used to require every
+  // chosen tag at once, so picking a second medium could only ever narrow to
+  // the few images that were somehow both, and usually to nothing.
+  const visible = useMemo(() => {
+    const byFacet = {};
+    for (const tag of allTags) {
+      if (selected.has(tag.id)) (byFacet[tag.facet] ||= new Set()).add(tag.id);
+    }
+    const groups = Object.values(byFacet);
+    return visuals.filter((v) => {
+      if (!matches(v, query.trim())) return false;
+      const ids = new Set((v.tags || []).map((t) => t.id));
+      return groups.every((group) => [...group].some((id) => ids.has(id)));
+    });
+  }, [visuals, query, selected, allTags]);
+
+  // A search carried over from another tab's empty result.
+  useEffect(() => {
+    if (incomingQuery == null) return;
+    setQuery(incomingQuery);
+    onIncomingUsed?.();
+  }, [incomingQuery, onIncomingUsed]);
 
   const laidOut = useMemo(() => layout(visible, columns), [visible, columns]);
   const searching = Boolean(query.trim()) || selected.size > 0;
@@ -265,7 +281,7 @@ export default function VisualsTab({ allTags }) {
                 key={id}
                 className={size === id ? "active" : ""}
                 onClick={() => chooseSize(id)}
-                title={label}
+                data-tip={label}
                 aria-label={`${label} tiles`}
                 aria-pressed={size === id}
               >
@@ -288,7 +304,13 @@ export default function VisualsTab({ allTags }) {
         </div>
       )}
 
-      {loaded && searching && visible.length === 0 && <NoMatches noun="visual" query={query} />}
+      {loaded && searching && visible.length === 0 && (
+        <NoMatches noun="visual" query={query}>
+          {onSearchElsewhere && query.trim() && (
+            <SearchElsewhere query={query} kind="visual" onGo={onSearchElsewhere} />
+          )}
+        </NoMatches>
+      )}
 
       <div className="visual-board" ref={setBoardEl} style={{ "--board-gap": `${GAP}px` }}>
         {laidOut.map((column, i) => (

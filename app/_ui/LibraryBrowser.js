@@ -317,7 +317,7 @@ export default function LibraryBrowser({
                   key={id}
                   className={size === id ? "active" : ""}
                   onClick={() => chooseSize(id)}
-                  title={label}
+                  data-tip={label}
                   aria-label={label}
                   aria-pressed={size === id}
                 >
@@ -333,7 +333,7 @@ export default function LibraryBrowser({
                 key={id}
                 className={view === id ? "active" : ""}
                 onClick={() => chooseView(id)}
-                title={label}
+                data-tip={label}
                 aria-label={label}
               >
                 <Icon size={15} />
@@ -431,7 +431,7 @@ export default function LibraryBrowser({
                     fills={item.favicon_fills !== false}
                     alt={adapter.name(item)}
                   />
-                  <a className="name" href={adapter.href(item)} title={item.summary || undefined}>
+                  <a className="name" href={adapter.href(item)} data-tip={item.summary || undefined}>
                     {adapter.name(item)}
                   </a>
                 </span>
@@ -440,7 +440,7 @@ export default function LibraryBrowser({
                   href={adapter.externalUrl(item)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title="Launch site"
+                  data-tip="Launch site"
                 >
                   <ArrowUpRight size={17} />
                 </a>
@@ -495,7 +495,7 @@ export default function LibraryBrowser({
                   href={adapter.externalUrl(item)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title="Launch site"
+                  data-tip="Launch site"
                 >
                   <ArrowUpRight size={17} />
                 </a>
@@ -524,7 +524,7 @@ export default function LibraryBrowser({
                 href={adapter.externalUrl(item)}
                 target="_blank"
                 rel="noopener noreferrer"
-                title="Launch site"
+                data-tip="Launch site"
               >
                 <ArrowUpRight size={17} />
               </a>

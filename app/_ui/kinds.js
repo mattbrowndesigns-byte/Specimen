@@ -46,7 +46,7 @@ export const KINDS = [
     tab: "visuals",
     add: "visual",
     label: "Visuals",
-    one: "Visuals",
+    one: "Visual",
     blurb: "Save the images from any page",
     Icon: Images,
     demo: false,

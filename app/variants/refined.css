@@ -341,16 +341,19 @@
   /* Clipped to its own row, so a line rolls up out of the row's bottom edge
      and away over its top. Unclipped, the arriving line swung down through
      the grey line beneath it mid-turn -- measured in a paused frame, the two
-     were drawn over each other. Figtree's descenders already sit inside a
-     1.02 line box, so the clip needs only a hair of room; a 0.16em allowance
-     tried first left a strip between the two lines where the arriving one
-     showed through. The negative margins keep it out of the layout. */
+     were drawn over each other. The bottom allowance is measured, and was
+     wrong once: Figtree 800's content area is 0.953em up and 0.256em down,
+     so in a 1.02 line box the baseline sits 0.8585em from the top and a "y"
+     or "p" -- 0.212em of descender -- ends at 1.0705em, 0.05em past the box.
+     0.03em of room cut every descender off. 0.08em clears them; 0.16em was
+     tried before that and left a strip between the lines where the arriving
+     line showed through. The negative margins keep it out of the layout. */
   & .hero-rotator {
     color: var(--brand-ink);
     perspective: 900px;
     overflow: hidden;
-    padding: 0.04em 0.05em 0.03em;
-    margin: -0.04em -0.05em -0.03em;
+    padding: 0.04em 0.05em 0.08em;
+    margin: -0.04em -0.05em -0.08em;
   }
 
   & .page-hero-rest {
@@ -404,18 +407,20 @@
     margin-bottom: 18px;
   }
 
+  /* One weight for every tab, held or not. The held one used to step up to
+     600, which made its label wider the moment it was chosen and nudged the
+     tabs after it sideways; the fill already says which one you're in. 600 for
+     all of them is a touch heavier than the old resting 500, which read thin
+     beside the hero above it. */
   & .tab-switcher button {
     height: 36px;
     padding: 0 16px;
+    font-weight: 600;
     letter-spacing: -0.005em;
   }
 
   & .tab-switcher button:hover:not(.active) {
     color: var(--text);
-  }
-
-  & .tab-switcher button.active {
-    font-weight: 600;
   }
 
   & .search-input {
@@ -488,6 +493,15 @@
     background: var(--chip-strong-bg);
   }
 
+  /* A resource's tag chips. The original rule inverts them on hover -- dark
+     fill, light text -- and the line above repaints only the fill, so in this
+     design a hovered chip was dark text on a dark grey. Say both halves here,
+     doubled to beat the original's (0,2,0). */
+  & .resource-tags .chip-filter.chip-filter:hover {
+    background: var(--chip-strong-bg);
+    color: var(--text);
+  }
+
   /* A count is a plain number beside its label, not a second pill inside the
      first. Two nested holding shapes in every chip was most of the strip's
      visual noise, and the count reads as belonging to its word without one.
@@ -504,8 +518,18 @@
     color: rgba(var(--invert-text-rgb), 0.65);
   }
 
+  /* The strip under the search -- tags on most tabs, folders on Resources --
+     sits with the same 12px above and below it: the search field's foot to
+     the strip, the strip to the count and the view controls. It measured 12
+     above and 8 below on Websites and 18 below on Resources, so the strip sat
+     off-centre in its own band, differently on each tab. The results bar's
+     top margin goes to zero so the strip's 12 is the only gap. */
+  & main.page > :is(.chip-strip, .folder-bar) {
+    margin-bottom: 12px;
+  }
+
   & .results-bar {
-    margin: 6px 0 18px;
+    margin: 0 0 18px;
   }
 
   & .result-count {
@@ -583,6 +607,13 @@
     margin-bottom: 14px;
   }
 
+  /* The card's inset is for a card's edge; in a review row the chips start
+     under the summary (see .review-info .card-tags in globals.css). */
+  & .review-info .card-tags {
+    padding: 0;
+    margin-bottom: 0;
+  }
+
   & .chip {
     font-weight: 500;
   }
@@ -633,6 +664,13 @@
     font-family: var(--display);
     font-weight: 800;
     letter-spacing: -0.03em;
+  }
+
+  /* A search that found nothing is still a panel standing in for the grid, so
+     it takes a good share of the window. At its own height it was a strip near
+     the top with more empty page under it than panel. */
+  & .empty-state-search {
+    min-height: clamp(300px, 46vh, 520px);
   }
 
   /* Modals
@@ -826,7 +864,7 @@
 
   /* Every button in a header row, Re-capture and Edit Collection alike -- but
      not Delete Collection, which lives in the same row and must stay red. */
-  & .detail-actions button:not(.icon-btn):not(.danger-btn),
+  & .detail-actions button:not(.icon-btn):not(.danger-btn):not(.copy-ai button),
   & .visit-btn {
     height: 36px;
     padding: 0 16px;
@@ -835,13 +873,13 @@
     letter-spacing: -0.005em;
   }
 
-  & .detail-actions button:not(.icon-btn):not(.danger-btn) {
+  & .detail-actions button:not(.icon-btn):not(.danger-btn):not(.copy-ai button) {
     border-color: transparent;
     background: var(--field-bg);
     color: var(--text);
   }
 
-  & .detail-actions button:not(.icon-btn):not(.danger-btn):hover:not(:disabled) {
+  & .detail-actions button:not(.icon-btn):not(.danger-btn):not(.copy-ai button):hover:not(:disabled) {
     background: var(--chip-strong-bg);
   }
 
@@ -874,6 +912,20 @@
   }
 
   & .detail-save-actions.detail-save-actions .icon-btn.icon-btn:hover {
+    background: var(--chip-strong-bg);
+  }
+
+  /* A lone icon in a header row -- Share on a collection -- sits in the same
+     filled circle, the height of the capsules beside it. Bare, it was the one
+     shape in the row with nothing holding it. */
+  & .detail-actions > .icon-btn.icon-btn {
+    width: 36px;
+    height: 36px;
+    background: var(--field-bg);
+    color: var(--text);
+  }
+
+  & .detail-actions > .icon-btn.icon-btn:hover {
     background: var(--chip-strong-bg);
   }
 

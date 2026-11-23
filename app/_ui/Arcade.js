@@ -162,7 +162,7 @@ export default function Arcade() {
           type="button"
           className="arcade-launch"
           onClick={() => setOpen(true)}
-          title="Shoot some rocks while you wait"
+          data-tip="Shoot some rocks while you wait"
           aria-label="Play a game while this loads"
         >
           <span className="arcade-launch-ship">

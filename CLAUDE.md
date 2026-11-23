@@ -2058,6 +2058,44 @@ down through the grey line beneath it, so the rotator is `overflow: hidden`
 with only a hair of padding (Figtree's descenders already fit a 1.02 line box;
 0.16em of room let it show in the gap). The Original keeps its fade.
 
+**There is one tooltip, and it is drawn in `<body>`.** `app/_ui/Tooltips.js`,
+mounted once in the root layout, shows the grey pill for anything carrying
+`data-tip`, after 250ms, below the control or above it near the window's foot,
+clamped inside the window. Not a CSS `::after` per control, which is what the
+lightbox first had: a card's `overflow: hidden` clipped the pill on the card's
+heart, and the stretched-link rows already spend their `::after`. Controls say
+`data-tip` and keep `aria-label`; nothing uses a native `title` tooltip any
+more (the `title` props left are component settings, like ShareModal's). A tip
+that wraps gets 10px corners instead of a pill. Colours are `--tip-bg` /
+`--tip-text`, dark in both themes.
+
+**Copy for AI is one capsule in two parts.** The label copies in one click; the
+arrow opens the app's own menu (`.more-pop` / `.more-item`) with Copy and
+Download. The download used to be a bare icon beside the button, a shape with
+nothing holding it in every header row. Refined's capsule rule for header
+buttons excludes `.copy-ai button`, or the menu's items become capsules. A lone
+icon button in a header row (Share on a collection) gets a filled 36px circle.
+
+**A site badge never comes up empty.** `Favicon.js` asks gstatic for 128px when
+drawing (stored URLs say 64, soft in the 44px header badge on a 2x screen),
+scales a filled mark 1.08 so a disc drawn inside its square meets the border,
+and with no image at all draws the name's first letter on `hsl(hue 42% 40%)`,
+the hue hashed from the name so a site keeps one colour everywhere.
+
+**Every library's filters are OR within a facet and AND across facets.**
+Signage or Editorial, and Minimal. Websites and Components always were; Visuals
+required every chosen tag at once and so went to nothing on a second medium.
+
+**The strip under the search sits 12 / 12.** Search field to tag or folder
+strip, strip to the count and view controls, on every tab -- measured 12/8 on
+Websites and 12/18 on Resources before. Resources' view and sort controls live
+on the count's row like the other tabs'.
+
+**A finished import is shown the day it finishes, then not at all.** A batch
+from weeks ago sat at the top of /import with two full bars, reading as
+something still loading. The panel also lost the CTA's ramp band: two gradients
+on one object, and the band read as a third bar that never moved.
+
 **`useVariant()` is "original" on the server and the real answer after
 hydration.** Fine for anything that renders after a fetch (the site page's
 panel does); anything in the first paint that differs by variant would visibly

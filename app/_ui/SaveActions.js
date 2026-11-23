@@ -49,13 +49,13 @@ export default function SaveActions({ kind, id, name, isFavorite, onFavoriteChan
       <button
         className={`icon-btn${favorite ? " icon-btn-on" : ""}`}
         onClick={toggleFavorite}
-        title={favorite ? "Remove from favorites" : "Add to favorites"}
+        data-tip={favorite ? "Remove from favorites" : "Add to favorites"}
         aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
         aria-pressed={favorite}
       >
         <Heart size={15} fill={favorite ? "currentColor" : "none"} />
       </button>
-      <button className="icon-btn" onClick={openPicker} title="Add to a collection" aria-label="Add to a collection">
+      <button className="icon-btn" onClick={openPicker} data-tip="Add to a collection" aria-label="Add to a collection">
         <Bookmark size={15} />
       </button>
 

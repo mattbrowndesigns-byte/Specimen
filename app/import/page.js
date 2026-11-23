@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Globe, Wrench, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
+import { KIND } from "../_ui/kinds";
 import UtilityBar from "../_ui/UtilityBar";
 import SiteFooter from "../_ui/SiteFooter";
 import ImportStatus from "../_ui/ImportStatus";
@@ -18,16 +19,18 @@ import { parseLinks } from "@/lib/importLinks";
 // it finishes over days, not minutes. What it says instead is exactly where
 // each pile is, and that closing the tab changes nothing.
 const KINDS = [
+  // Labels and icons from the dashboard's own list, so a Resource is the same
+  // link icon here as on its tab rather than a wrench of its own.
   {
     id: "site",
-    label: "Websites",
-    Icon: Globe,
+    label: KIND.site.label,
+    Icon: KIND.site.Icon,
     note: "Each one gets a full page screenshot, a summary and tags.",
   },
   {
     id: "resource",
-    label: "Resources",
-    Icon: Wrench,
+    label: KIND.resource.label,
+    Icon: KIND.resource.Icon,
     note: "Links saved for what they do. No screenshot, so these land fast.",
   },
 ];

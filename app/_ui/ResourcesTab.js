@@ -402,11 +402,12 @@ export default function ResourcesTab({
         )}
       </div>
 
-      {/* Folders and the controls that act on them share a line. Stacked, the
-          view and sort buttons sat on the count's row -- a caption -- and put
-          two bands of chrome between the search and the first result. The
-          strip takes the room and fades at whichever edge still has folders
-          past it, exactly as the dashboard's tag strip does. */}
+      {/* The folders get their own line, like the tag strip on the other
+          tabs, and the view and sort controls sit on the count's row below it
+          -- the same arrangement Websites, Components and Visuals have. They
+          used to share the folders' line, which made Resources the one tab
+          whose controls moved. The strip fades at whichever edge still has
+          folders past it, exactly as the dashboard's tag strip does. */}
       <div className="folder-bar">
         {(folders.used.length > 0 || folders.unsorted > 0) && (
           <div className={`folder-strip${folderFade}`} ref={folderRef}>
@@ -439,6 +440,19 @@ export default function ResourcesTab({
           </div>
         )}
 
+      </div>
+
+      <div className="results-bar">
+        {loaded ? (
+          <ResultCount
+            count={filtered.length}
+            noun="resource"
+            query={query}
+            onClear={() => setQuery("")}
+          />
+        ) : (
+          <span className="result-count result-count-loading">Loading resources…</span>
+        )}
         <div className="results-controls">
           {/* An icon, not a labelled button: sharing is an occasional aside and
             a third button beside List / Headlines / Newest First competed
@@ -453,7 +467,7 @@ export default function ResourcesTab({
             <button
               className="icon-btn"
               onClick={() => setSharingFolder(openFolder)}
-              title={`Share the ${openFolder.label} folder`}
+              data-tip={`Share the ${openFolder.label} folder`}
               aria-label={`Share the ${openFolder.label} folder`}
             >
               <Share2 size={16} />
@@ -466,7 +480,7 @@ export default function ResourcesTab({
                 key={id}
                 className={view === id ? "active" : ""}
                 onClick={() => chooseView(id)}
-                title={label}
+                data-tip={label}
                 aria-label={label}
                 aria-pressed={view === id}
               >
@@ -504,19 +518,6 @@ export default function ResourcesTab({
             )}
           </div>
         </div>
-      </div>
-
-      <div className="results-bar">
-        {loaded ? (
-          <ResultCount
-            count={filtered.length}
-            noun="resource"
-            query={query}
-            onClear={() => setQuery("")}
-          />
-        ) : (
-          <span className="result-count result-count-loading">Loading resources…</span>
-        )}
       </div>
 
       {/* Same rule as LibraryBrowser: nothing is "empty" before the first
@@ -569,7 +570,7 @@ export default function ResourcesTab({
                   <button
                     className="icon-btn"
                     onClick={() => setEditing(resource)}
-                    title="Edit"
+                    data-tip="Edit"
                     aria-label={`Edit ${resource.title}`}
                   >
                     <Pencil size={15} />
@@ -678,7 +679,7 @@ export default function ResourcesTab({
                 <button
                   className="icon-btn"
                   onClick={() => setEditing(resource)}
-                  title="Edit"
+                  data-tip="Edit"
                   aria-label={`Edit ${resource.title}`}
                 >
                   <Pencil size={15} />
@@ -721,7 +722,7 @@ export default function ResourcesTab({
                 <button
                   className="icon-btn"
                   onClick={() => setEditing(resource)}
-                  title="Edit"
+                  data-tip="Edit"
                   aria-label={`Edit ${resource.title}`}
                 >
                   <Pencil size={15} />

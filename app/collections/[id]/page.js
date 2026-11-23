@@ -126,7 +126,7 @@ export default function CollectionDetailPage({ params }) {
               className="icon-btn"
               onClick={() => setSharing(true)}
               disabled={!collection}
-              title="Share this collection"
+              data-tip="Share this collection"
               aria-label="Share this collection"
             >
               <Share2 size={16} />

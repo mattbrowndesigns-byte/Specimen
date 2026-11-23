@@ -312,7 +312,7 @@ export default function SiteStyle({ site, onRefresh, readOnly = false }) {
                 key={color.hex}
                 className="palette-swatch"
                 style={{ flexGrow: weights[i] / weightTotal, background: color.hex }}
-                title={`${colorName(color.hex)} ${color.hex}, ${pct(color.share)} of the interface · ${
+                data-tip={`${colorName(color.hex)} ${color.hex}, ${pct(color.share)} of the interface · ${
                   ROLE_LABEL[color.role] || color.role
                 }`}
                 onMouseEnter={() => setHovered(color.hex)}
@@ -363,7 +363,7 @@ export default function SiteStyle({ site, onRefresh, readOnly = false }) {
                   <button
                     className="icon-btn palette-copy"
                     onClick={() => copyHex(color.hex)}
-                    title={`Copy ${color.hex}`}
+                    data-tip={`Copy ${color.hex}`}
                     aria-label={`Copy ${color.hex}`}
                   >
                     {copied === color.hex ? <Check size={14} /> : <Copy size={14} />}
@@ -441,7 +441,7 @@ export default function SiteStyle({ site, onRefresh, readOnly = false }) {
                               href={item.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              title={item.note || undefined}
+                              data-tip={item.note || undefined}
                             >
                               <span className="font-match-service">{item.service}</span>
                               {!item.self && <span className="font-match-family">{item.family}</span>}

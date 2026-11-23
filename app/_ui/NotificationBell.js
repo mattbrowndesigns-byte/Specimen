@@ -98,7 +98,7 @@ export default function NotificationBell() {
       <button
         className={`icon-btn bell-btn${items.length > 0 ? " bell-btn-unread" : ""}`}
         onClick={() => setOpen((v) => !v)}
-        title={items.length > 0 ? `${items.length} to review` : "Nothing to review"}
+        data-tip={items.length > 0 ? `${items.length} to review` : "Nothing to review"}
         aria-label={items.length > 0 ? `${items.length} to review` : "Nothing to review"}
       >
         <Bell size={16} />

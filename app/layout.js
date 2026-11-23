@@ -8,6 +8,7 @@ import "./variants/elevated.css";
 import { themeBootScript } from "@/lib/theme";
 import { variantBootScript } from "@/lib/variant";
 import SiteAnalytics from "./_ui/SiteAnalytics";
+import Tooltips from "./_ui/Tooltips";
 
 // The wordmark face, self-hosted by next/font rather than fetched from Google
 // at runtime: no third-party request on every page load, and no flash of a
@@ -51,6 +52,7 @@ export default function RootLayout({ children }) {
       <body>
         {children}
         <SiteAnalytics />
+        <Tooltips />
       </body>
     </html>
   );

@@ -169,14 +169,13 @@ export default function RecordGrid({ entries, emptyMessage, onRemove, removeLabe
                 <a
                   className="name"
                   href={href}
-                  title={item.summary || undefined}
+                  data-tip={item.summary || undefined}
                   target={isResource ? "_blank" : undefined}
                   rel={isResource ? "noopener noreferrer" : undefined}
                 >
                   {name}
                 </a>
               </span>
-              <span className="related-kind">{kind}</span>
             </div>
             {onRemove && (
               <button className="link-btn card-remove" onClick={() => onRemove(kind, item.id)}>

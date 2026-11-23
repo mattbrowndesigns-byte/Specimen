@@ -259,7 +259,7 @@ export default function TagsPage() {
                         <button
                           onClick={() => setMergeSourceId(tag.id)}
                           disabled={facetTags.length < 2}
-                          title={
+                          data-tip={
                             facetTags.length < 2
                               ? "Nothing else in this facet to merge into"
                               : `Move everything tagged "${tag.label}" onto another tag and delete it`

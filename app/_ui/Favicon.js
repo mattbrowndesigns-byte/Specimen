@@ -2,14 +2,47 @@
 import { useState } from "react";
 
 // A site's own icon beside its name, so a grid of screenshots is scannable by
-// brand as well as by thumbnail.
-//
-// Served from the site's own domain rather than through a third-party favicon
-// service: no external dependency, no rate limit, and the library's contents
-// don't get sent anywhere. Two chances, then it gives up and renders nothing
-// — a missing icon should leave no gap.
+// brand as well as by thumbnail. Two chances at an image -- the stored icon,
+// then the site's /favicon.ico -- and then a letter, never an empty space.
+
+// Google's favicon service is asked for 64px when an icon is stored
+// (lib/iconShape.js), which is fine in a 24px card badge and soft in the 44px
+// one at the top of a site's page: on a 2x screen that badge is 88 device
+// pixels, so a 64px file is being stretched. Asking for 128 when drawing fixes
+// every row already stored without re-resolving any of them. Google hands back
+// the largest it has up to that, so a site with only a small icon is no worse.
+function sharpen(src) {
+  if (!src || !src.includes("gstatic.com/faviconV2")) return src;
+  try {
+    const url = new URL(src);
+    url.searchParams.set("size", "128");
+    return url.toString();
+  } catch {
+    return src;
+  }
+}
+
+// A stable hue for a name, so a site with no icon at all keeps the same colour
+// everywhere it appears. A resource has no measured palette to borrow from,
+// and a guess at "the site's colour" that changed between visits would be
+// worse than an honest, consistent one.
+function hueFor(text) {
+  let h = 0;
+  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) % 360;
+  return h;
+}
+
+function letterSource(alt, url) {
+  if (alt && /[a-z0-9]/i.test(alt)) return alt.trim();
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
 export default function Favicon({ url, faviconUrl, fills = true, alt }) {
-  const declared = faviconUrl || null;
+  const declared = sharpen(faviconUrl || null);
   const guessed = (() => {
     try {
       return new URL("/favicon.ico", url).toString();
@@ -20,7 +53,21 @@ export default function Favicon({ url, faviconUrl, fills = true, alt }) {
 
   const [src, setSrc] = useState(declared || guessed);
 
-  if (!src) return null;
+  // No icon anywhere: the first letter of the name on a colour of its own, in
+  // the same circle, so a row of saves never has a gap where a mark should be.
+  if (!src) {
+    const source = letterSource(alt, url);
+    const letter = (source.match(/[a-z0-9]/i)?.[0] || "?").toUpperCase();
+    return (
+      <span
+        className="favicon-badge favicon-badge-letter"
+        style={{ "--letter-hue": hueFor(source.toLowerCase()) }}
+        aria-hidden="true"
+      >
+        {letter}
+      </span>
+    );
+  }
 
   // Every icon sits in the same bordered circle, whatever shape or background
   // the site's own file has. Otherwise a transparent PNG floats loose against

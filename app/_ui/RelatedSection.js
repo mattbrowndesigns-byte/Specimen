@@ -61,7 +61,7 @@ export default function RelatedSection({ kind, item }) {
                 )}
               </a>
               <div className="card-footer">
-                <a className="name" href={href} title={entry.item.summary || undefined}>
+                <a className="name" href={href} data-tip={entry.item.summary || undefined}>
                   {name}
                 </a>
                 <span className="related-kind">{entry.kind}</span>

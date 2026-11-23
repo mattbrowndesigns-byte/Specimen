@@ -121,7 +121,7 @@ export default function MoreMenu() {
         className="icon-btn"
         data-tour="menu"
         onClick={() => setOpen((v) => !v)}
-        title={open ? "Close" : "More"}
+        data-tip={open ? "Close" : "More"}
         aria-label={open ? "Close menu" : "More"}
         aria-expanded={open}
       >

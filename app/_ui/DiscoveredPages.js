@@ -118,7 +118,7 @@ export default function DiscoveredPages({
       <ul className="page-list page-list-compact">
         {preview.map((page) => (
           <li key={page.id}>
-            <a href={page.url} target="_blank" rel="noopener noreferrer" title={page.label || page.url}>
+            <a href={page.url} target="_blank" rel="noopener noreferrer" data-tip={page.label || page.url}>
               {pageName(page)}
             </a>
             {page.tier && <span className={`page-tier page-tier-${page.tier}`}>{page.tier}</span>}
@@ -188,7 +188,7 @@ function PageList({ pages, promoted = {}, promoting, onPromote }) {
     <ul className="page-list">
       {pages.map((page) => (
         <li key={page.id}>
-          <a href={page.url} target="_blank" rel="noopener noreferrer" title={page.label || page.url}>
+          <a href={page.url} target="_blank" rel="noopener noreferrer" data-tip={page.label || page.url}>
             {pageName(page)}
           </a>
           {page.isHome ? (

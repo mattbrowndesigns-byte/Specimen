@@ -25,7 +25,7 @@ export default function ResultCount({ count, noun, query, onClear }) {
             type="button"
             className="result-query"
             onClick={onClear}
-            title={`Stop searching for "${term}"`}
+            data-tip={`Stop searching for "${term}"`}
             aria-label={`Stop searching for "${term}"`}
           >
             {term}

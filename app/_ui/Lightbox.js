@@ -470,7 +470,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
               className="lightbox-nav lightbox-prev"
               onClick={() => setId(prevId)}
               aria-label="Previous visual"
-              title="Previous (←)"
+              data-tip="Previous (←)"
             >
               <ChevronLeft size={24} />
             </button>
@@ -481,7 +481,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
               className="lightbox-nav lightbox-next"
               onClick={() => setId(nextId)}
               aria-label="Next visual"
-              title="Next (→)"
+              data-tip="Next (→)"
             >
               <ChevronRight size={24} />
             </button>
@@ -527,6 +527,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
             <div className="detail-actions lightbox-panel-actions">
               <SaveActions
                 key={visual.id}
+                className="detail-save-actions"
                 kind="visual"
                 id={visual.id}
                 name={visual.title || "Visual"}
@@ -599,19 +600,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
           </section>
 
           <section className="lightbox-panel-section detail-section">
-            <div className="lightbox-section-head">
-              <h2>Tags</h2>
-              {/* Its own Regenerate, so re-picking tags never costs a
-                  description you liked. Replaces this image's tags. */}
-              <button
-                className="link-btn"
-                onClick={() => regenerate("tags")}
-                disabled={Boolean(busy)}
-                title="Replaces this image's medium, aesthetic and industry tags"
-              >
-                {busy === "regenerate-tags" ? "Regenerating…" : "Regenerate"}
-              </button>
-            </div>
+            <h2>Tags</h2>
             {tagsByFacet.map(({ facet, assigned, available }) => (
               <div className="facet-row" key={facet}>
                 <span className="facet-name">{FACET_LABELS[facet]}</span>
@@ -624,6 +613,21 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
                 />
               </div>
             ))}
+            {/* Its own Regenerate, so re-picking tags never costs a
+                description you liked. Under the last field and on the left,
+                where the summary's sits: it was at the right of the heading,
+                which put it a few pixels under the summary's own Regenerate
+                and read as belonging to that section instead. */}
+            <div className="section-head-actions section-actions-below">
+              <button
+                className="link-btn"
+                onClick={() => regenerate("tags")}
+                disabled={Boolean(busy)}
+                data-tip="Replaces this image's medium, aesthetic and industry tags"
+              >
+                {busy === "regenerate-tags" ? "Regenerating…" : "Regenerate"}
+              </button>
+            </div>
           </section>
 
           <section className="lightbox-panel-section detail-section">
@@ -644,7 +648,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
                     href={`/visuals/${s.id}`}
                     className={`lightbox-thumb${s.id === id ? " current" : ""}`}
                     onClick={(e) => thumbClick(e, s.id)}
-                    title={s.title || undefined}
+                    data-tip={s.title || undefined}
                     aria-current={s.id === id ? "true" : undefined}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -665,7 +669,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
                     href={`/visuals/${item.id}`}
                     className="lightbox-thumb"
                     onClick={(e) => thumbClick(e, item.id)}
-                    title={`${item.title || "Untitled"} · ${item.agency_name || item.domain}`}
+                    data-tip={`${item.title || "Untitled"} · ${item.agency_name || item.domain}`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.thumb_url} alt={item.title || "Visual"} loading="lazy" />

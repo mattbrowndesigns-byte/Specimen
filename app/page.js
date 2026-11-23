@@ -256,7 +256,14 @@ export default function Home() {
             onSearchElsewhere={searchElsewhere}
           />
         )}
-        {tab === "visuals" && <VisualsTab allTags={visualTags} />}
+        {tab === "visuals" && (
+          <VisualsTab
+            allTags={visualTags}
+            incomingQuery={incomingFor("visuals")}
+            onIncomingUsed={clearHandoff}
+            onSearchElsewhere={searchElsewhere}
+          />
+        )}
       </main>
       {/* Mounted here rather than inside a progress panel, so a capture
           landing mid-round can't take the round with it. */}

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Check, Copy, Download, Plug, X } from "lucide-react";
+import { Check, ChevronDown, Copy, Download, Plug, X } from "lucide-react";
 import { claimNudge, retireNudge } from "./connectPrompts";
 
 // Puts the Markdown an export route returns on the clipboard.
@@ -98,10 +98,15 @@ export function useCopyState() {
 }
 
 // "Copy for AI" names the job rather than the format: plenty of designers have
-// never heard of Markdown, and everyone knows what an AI chat is. The download
-// beside it is for the other use -- a file dropped into a project folder -- and
-// is a plain link, so the browser saves it under the stable name the route
-// sets rather than whatever a blob URL would be called.
+// never heard of Markdown, and everyone knows what an AI chat is.
+//
+// One capsule with two parts. The label copies, in one click, because that is
+// the common use. The arrow beside it opens a short menu holding both ways out
+// -- copy, or download the same Markdown as a file for a project folder. The
+// download used to be a bare icon beside the button, a second shape in every
+// row it sat in with nothing holding it; now the two are one control. The
+// download is still a plain link, so the browser saves it under the stable name
+// the route sets rather than whatever a blob URL would be called.
 //
 // A successful copy is also the one moment someone is certainly carrying the
 // library into an AI by hand, so it is where they hear that the AI could come
@@ -116,7 +121,25 @@ export default function CopyForAI({ url, label = "Copy for AI", className = "" }
   // collection's, so the card opens away from whichever edge is nearer.
   const [nudgeEnd, setNudgeEnd] = useState(false);
   const join = url.includes("?") ? "&" : "?";
+  const [menuOpen, setMenuOpen] = useState(false);
+  const wrapRef = useRef(null);
   useEffect(() => () => clearTimeout(nudgeTimer.current), []);
+  // The menu closes on a click anywhere else or on Escape, like every menu.
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    function onDown(e) {
+      if (!wrapRef.current?.contains(e.target)) setMenuOpen(false);
+    }
+    function onKey(e) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
   useLayoutEffect(() => {
     if (!nudge || !nudgeRef.current) return;
     const rect = nudgeRef.current.getBoundingClientRect();
@@ -124,6 +147,7 @@ export default function CopyForAI({ url, label = "Copy for AI", className = "" }
   }, [nudge]);
 
   async function copy() {
+    setMenuOpen(false);
     if (!(await run(url)) || nudge || !claimNudge()) return;
     setNudgeEnd(false);
     setNudge(true);
@@ -138,26 +162,48 @@ export default function CopyForAI({ url, label = "Copy for AI", className = "" }
   }
 
   return (
-    <span className={`copy-ai ${className}`.trim()}>
-      <button
-        type="button"
-        className="copy-ai-btn"
-        onClick={copy}
-        disabled={state === "copying"}
-        title="Copies everything Kivli knows about this, ready to paste into ChatGPT, Claude or any other AI"
-      >
-        {state === "copied" ? <Check size={15} /> : <Copy size={15} />}
-        {state === "copied" ? "Copied" : state === "error" ? "Couldn’t copy" : state === "copying" ? "Copying…" : label}
-      </button>
-      <a
-        className="icon-btn copy-ai-download"
-        href={`${url}${join}download=1`}
-        download
-        title="Download as a Markdown file"
-        aria-label="Download as a Markdown file"
-      >
-        <Download size={16} />
-      </a>
+    <span ref={wrapRef} className={`copy-ai ${className}`.trim()}>
+      <span className="copy-ai-split">
+        <button
+          type="button"
+          className="copy-ai-btn"
+          onClick={copy}
+          disabled={state === "copying"}
+          data-tip="Copies everything Kivli knows about this, ready to paste into ChatGPT, Claude or any other AI"
+        >
+          {state === "copied" ? <Check size={15} /> : <Copy size={15} />}
+          {state === "copied" ? "Copied" : state === "error" ? "Couldn’t copy" : state === "copying" ? "Copying…" : label}
+        </button>
+        <button
+          type="button"
+          className="copy-ai-more"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-label="More ways to export"
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          data-tip={menuOpen ? undefined : "Copy or download"}
+        >
+          <ChevronDown size={15} />
+        </button>
+      </span>
+      {menuOpen && (
+        <span className="more-pop copy-ai-menu" role="menu">
+          <button type="button" role="menuitem" className="more-item more-item-button" onClick={copy}>
+            <Copy size={15} />
+            <span>
+              <strong>Copy for AI</strong>
+              <small>Paste into ChatGPT, Claude or any AI</small>
+            </span>
+          </button>
+          <a role="menuitem" className="more-item" href={`${url}${join}download=1`} download onClick={() => setMenuOpen(false)}>
+            <Download size={15} />
+            <span>
+              <strong>Download file</strong>
+              <small>The same, as a Markdown file</small>
+            </span>
+          </a>
+        </span>
+      )}
       <span className="sr-only" role="status">
         {state === "copied" || state === "error" ? message : ""}
       </span>

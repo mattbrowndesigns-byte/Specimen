@@ -2243,7 +2243,7 @@ again -- Supabase skips the consent page for an app it has already approved.
 The consent page now lists what an app can add.
 
 **Nobody finds an MCP server by looking, so two prompts tell them, and both
-run out.** `Connect an AI` sits in the menu and footer, which serves people
+run out.** `MCP Server` (it was "Connect an AI"; the page is titled after the word every AI app uses and explains it underneath) sits in the menu and footer, which serves people
 who already know. The rest hear it at the moment it is true: after a
 successful Copy for AI -- that person is carrying the library into an AI by
 hand -- a card under the button suggests connecting instead, three times at

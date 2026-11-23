@@ -3,7 +3,7 @@ import Wordmark from "../../_ui/Wordmark";
 import { supabaseSession } from "@/lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Connect an AI · Kivli" };
+export const metadata = { title: "Allow access · Kivli" };
 
 // Where Supabase's OAuth server sends someone whose AI app has asked to read
 // their library. Supabase owns the protocol -- codes, tokens, refresh -- and
@@ -106,7 +106,7 @@ export default async function ConsentPage({ searchParams }) {
 
       <p className="auth-footnote">
         Signed in as {userData.user.email}.{backTo ? ` You'll be sent back to ${backTo}.` : ""} You can disconnect it
-        any time from Connect an AI in the menu.
+        any time from MCP Server in the menu.
       </p>
     </Card>
   );

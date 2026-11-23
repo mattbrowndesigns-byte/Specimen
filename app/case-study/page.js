@@ -619,11 +619,11 @@ export default function CaseStudyPage() {
             </p>
             <h3>Copy and download are one control</h3>
             <p>
-              Every save and collection had Copy for AI and, beside it, a bare download icon with nothing holding it. They are one capsule now: the label copies in one click, the arrow beside it opens both options.
+              Every save and collection had Copy for AI and, beside it, a bare download icon with nothing holding it. The first fix made them one capsule with two targets inside it, the label copying and an arrow opening a menu, and two things to press in one shape was one too many. It is a single button now, Export for AI, opening a menu with Copy and Download, and no tooltip, because the menu says what each does.
             </p>
             <h3>A strip that sat off-centre by four pixels</h3>
             <p>
-              The tag strip under the search measured 12 pixels above and 8 below on Websites, and 12 above and 18 below on Resources, whose view controls also lived on a different line from every other tab&rsquo;s. Both are 12 and 12 now, on every tab.
+              The tag strip under the search measured 12 pixels above and 8 below on Websites, and 12 above and 18 below on Resources, whose view controls also lived on a different line from every other tab&rsquo;s. The first fix set both to 12 and was still wrong to the eye: I had measured to the strip, which carries 8 pixels of padding under its pills so a scrolling row is never clipped. Measured to the pills, the gap below was 20. It is 12 above and below the pills now, on every tab, and the rule says measure what you can see.
             </p>
             <h3>Descenders lost to an animation</h3>
             <p>

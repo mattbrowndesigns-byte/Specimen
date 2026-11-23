@@ -8826,32 +8826,25 @@ a.card {
   }
 }
 
-/* Copy for AI: one capsule in two parts -- the label copies, the arrow opens
-   a menu with copy and download. Every rule here is doubled because the rows
-   it sits in style bare buttons at (0,1,1) (`.detail-actions button`), and a
-   single class loses to that on border, background and padding. */
+/* Export for AI: one capsule that opens a menu. Doubled rules because the
+   rows it sits in style bare buttons at (0,1,1) (`.detail-actions button`),
+   and a single class loses to that on border, background and padding. */
 .copy-ai {
   position: relative;
   display: inline-flex;
   align-items: center;
 }
 
-.copy-ai-split.copy-ai-split {
-  display: inline-flex;
-  align-items: stretch;
-  height: 36px;
-  border-radius: 999px;
-  background: var(--field-bg);
-}
-
-.copy-ai-split .copy-ai-btn.copy-ai-btn,
-.copy-ai-split .copy-ai-more.copy-ai-more {
+.copy-ai .copy-ai-btn.copy-ai-btn {
   display: inline-flex;
   align-items: center;
-  height: 100%;
+  gap: 6px;
+  height: 36px;
   margin: 0;
+  padding: 0 12px 0 16px;
   border: none;
-  background: transparent;
+  border-radius: 999px;
+  background: var(--field-bg);
   color: var(--text);
   font: inherit;
   font-size: 14px;
@@ -8861,38 +8854,21 @@ a.card {
   transition: background-color 0.15s ease;
 }
 
-.copy-ai-split .copy-ai-btn.copy-ai-btn {
-  gap: 6px;
-  padding: 0 10px 0 16px;
-  border-radius: 999px 0 0 999px;
-}
-
-/* The arrow's half, with a hairline between the two so it reads as a second
-   part of the same control rather than the end of the label. */
-.copy-ai-split .copy-ai-more.copy-ai-more {
-  position: relative;
-  justify-content: center;
-  width: 36px;
-  padding: 0 4px 0 0;
-  border-radius: 0 999px 999px 0;
-  color: var(--text-muted);
-}
-
-.copy-ai-split .copy-ai-more.copy-ai-more::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 10px;
-  bottom: 10px;
-  width: 1px;
-  background: var(--border-strong);
-}
-
-.copy-ai-split .copy-ai-btn.copy-ai-btn:hover:not(:disabled),
-.copy-ai-split .copy-ai-more.copy-ai-more:hover,
-.copy-ai-split .copy-ai-more.copy-ai-more[aria-expanded="true"] {
+.copy-ai .copy-ai-btn.copy-ai-btn:hover:not(:disabled),
+.copy-ai .copy-ai-btn.copy-ai-btn[aria-expanded="true"] {
   background: var(--chip-strong-bg);
-  color: var(--text);
+}
+
+/* The arrow says it opens something, in the label's grey, and turns over
+   while the menu is open. */
+.copy-ai-chevron {
+  margin-left: 2px;
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+
+.copy-ai-btn[aria-expanded="true"] .copy-ai-chevron {
+  transform: rotate(180deg);
 }
 
 /* The menu is the app's own (.more-pop / .more-item), opened under the arrow
@@ -9233,6 +9209,11 @@ a.card {
 .connect-examples {
   padding-left: 0;
   list-style: none;
+}
+
+.connect-grants-note.connect-grants-note {
+  max-width: 44em;
+  margin-bottom: 14px;
 }
 
 .connect-grants {

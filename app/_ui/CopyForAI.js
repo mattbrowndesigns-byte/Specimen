@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Check, ChevronDown, Copy, Download, Plug, X } from "lucide-react";
+import { Check, ChevronDown, Copy, Download, FileOutput, Plug, X } from "lucide-react";
 import { claimNudge, retireNudge } from "./connectPrompts";
 
 // Puts the Markdown an export route returns on the clipboard.
@@ -100,19 +100,20 @@ export function useCopyState() {
 // "Copy for AI" names the job rather than the format: plenty of designers have
 // never heard of Markdown, and everyone knows what an AI chat is.
 //
-// One capsule with two parts. The label copies, in one click, because that is
-// the common use. The arrow beside it opens a short menu holding both ways out
-// -- copy, or download the same Markdown as a file for a project folder. The
-// download used to be a bare icon beside the button, a second shape in every
-// row it sat in with nothing holding it; now the two are one control. The
-// download is still a plain link, so the browser saves it under the stable name
-// the route sets rather than whatever a blob URL would be called.
+// One button, one menu. It opens two ways out: copy the Markdown to paste into
+// an AI, or download it as a file for a project folder. It was briefly a split
+// button -- the label copied, an arrow beside it opened the menu -- which put
+// two targets inside one capsule, and the owner's verdict was that a control
+// should be one thing to press. Named "Export for AI" for the same reason: a
+// button called Copy that also downloads is half-named. No tooltip; the menu
+// says what each option does the moment it opens. The download is a plain
+// link, so the browser saves it under the stable name the route sets.
 //
 // A successful copy is also the one moment someone is certainly carrying the
 // library into an AI by hand, so it is where they hear that the AI could come
 // and get it instead (connectPrompts.js says how often). A card under the
 // button rather than a line beside it, so nothing in the row moves.
-export default function CopyForAI({ url, label = "Copy for AI", className = "" }) {
+export default function CopyForAI({ url, label = "Export for AI", className = "" }) {
   const { state, message, run } = useCopyState();
   const [nudge, setNudge] = useState(false);
   const nudgeTimer = useRef(null);
@@ -163,42 +164,31 @@ export default function CopyForAI({ url, label = "Copy for AI", className = "" }
 
   return (
     <span ref={wrapRef} className={`copy-ai ${className}`.trim()}>
-      <span className="copy-ai-split">
-        <button
-          type="button"
-          className="copy-ai-btn"
-          onClick={copy}
-          disabled={state === "copying"}
-          data-tip="Copies everything Kivli knows about this, ready to paste into ChatGPT, Claude or any other AI"
-        >
-          {state === "copied" ? <Check size={15} /> : <Copy size={15} />}
-          {state === "copied" ? "Copied" : state === "error" ? "Couldn’t copy" : state === "copying" ? "Copying…" : label}
-        </button>
-        <button
-          type="button"
-          className="copy-ai-more"
-          onClick={() => setMenuOpen((open) => !open)}
-          aria-label="More ways to export"
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
-          data-tip={menuOpen ? undefined : "Copy or download"}
-        >
-          <ChevronDown size={15} />
-        </button>
-      </span>
+      <button
+        type="button"
+        className="copy-ai-btn"
+        onClick={() => setMenuOpen((open) => !open)}
+        disabled={state === "copying"}
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+      >
+        {state === "copied" ? <Check size={15} /> : <FileOutput size={15} />}
+        {state === "copied" ? "Copied" : state === "error" ? "Couldn’t copy" : state === "copying" ? "Copying…" : label}
+        <ChevronDown size={15} className="copy-ai-chevron" aria-hidden="true" />
+      </button>
       {menuOpen && (
         <span className="more-pop copy-ai-menu" role="menu">
           <button type="button" role="menuitem" className="more-item more-item-button" onClick={copy}>
             <Copy size={15} />
             <span>
-              <strong>Copy for AI</strong>
+              <strong>Copy</strong>
               <small>Paste into ChatGPT, Claude or any AI</small>
             </span>
           </button>
           <a role="menuitem" className="more-item" href={`${url}${join}download=1`} download onClick={() => setMenuOpen(false)}>
             <Download size={15} />
             <span>
-              <strong>Download file</strong>
+              <strong>Download</strong>
               <small>The same, as a Markdown file</small>
             </span>
           </a>

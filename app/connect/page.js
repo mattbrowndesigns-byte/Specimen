@@ -174,12 +174,16 @@ export default function ConnectPage() {
 
       <main className="page page-wide">
         <div className="top-nav">
-          <h1>Connect an AI</h1>
+          <h1>MCP Server</h1>
         </div>
 
+        {/* Named for what it is, MCP, the word every AI app's settings use,
+            and explained straight after. It was "Connect an AI" with a "What
+            is MCP?" panel under it, which named the thing one way and then
+            explained a word the title never used. */}
         <p className="connect-lede">
-          Let Claude, ChatGPT or any AI app that supports MCP into your library, so it works from what
-          you&rsquo;ve saved rather than from memory.
+          Connect Claude, ChatGPT or any AI app that supports MCP to your Kivli library, so it works
+          from what you&rsquo;ve saved rather than from memory.
         </p>
 
         {error && <p className="error">{error}</p>}
@@ -270,13 +274,21 @@ export default function ConnectPage() {
 
         {!demo && (
           <section className="connect-panel">
-            <h2>Connected apps</h2>
+            {/* The one place to take access back. Each time an app is added or
+                re-added it is a separate approval, which is why the same app
+                can be listed more than once; the time tells them apart. */}
+            <h2>Apps with access</h2>
+            <p className="connect-note connect-grants-note">
+              Every AI app you&rsquo;ve allowed into your library. Adding an app again counts as a new
+              approval, so the same one can appear more than once. Disconnect signs that copy out; it
+              would have to ask you again.
+            </p>
             {grants === null ? (
               <p className="connect-note">Checking…</p>
             ) : unavailable ? (
               <p className="connect-note">Connecting apps isn&rsquo;t switched on for this Kivli yet.</p>
             ) : grants.length === 0 ? (
-              <p className="connect-note">Nothing connected yet.</p>
+              <p className="connect-note">None yet. An app appears here once you allow it in step 3.</p>
             ) : (
               <ul className="connect-grants">
                 {grants.map((grant) => (
@@ -285,10 +297,12 @@ export default function ConnectPage() {
                     {grant.grantedAt && (
                       <span className="connect-grant-date">
                         Allowed{" "}
-                        {new Date(grant.grantedAt).toLocaleDateString(undefined, {
+                        {new Date(grant.grantedAt).toLocaleString(undefined, {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
                         })}
                       </span>
                     )}

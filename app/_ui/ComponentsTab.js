@@ -1,11 +1,13 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Crop } from "lucide-react";
 import CropTool from "./CropTool";
 import Favicon from "./Favicon";
 import LibraryBrowser from "./LibraryBrowser";
 import { explainCaptureFailure } from "@/lib/captureFailure";
-import { useDemoHold } from "./demoState";
+import { useDemoHold, useIsDemo } from "./demoState";
+import useFileDrop, { DropOverlay } from "./useFileDrop";
+import { describeComponents, startComponentUpload, useUploads } from "./uploads";
 
 const ADAPTER = {
   kind: "component",
@@ -13,7 +15,9 @@ const ADAPTER = {
   href: (c) => `/components/${c.id}`,
   externalUrl: (c) => c.source_url,
   name: (c) => c.name || "Untitled component",
+  // An upload has no page behind it, so it says where it did come from.
   meta: (c) => {
+    if (!c.source_url) return "Uploaded";
     try {
       return new URL(c.source_url).hostname.replace(/^www\./, "");
     } catch {
@@ -26,6 +30,11 @@ const ADAPTER = {
   pendingLabel: () => "Processing…",
   naturalThumb: true,
 };
+
+// Uploads that have already been opened in the crop tool. Outside the
+// component, because the store keeps an upload's panel for a few seconds after
+// it finishes and leaving the tab and coming back must not reopen it.
+const openedUploads = new Set();
 
 export default function ComponentsTab({
   allTags,
@@ -96,7 +105,70 @@ export default function ComponentsTab({
     onIncomingUsed?.();
   }, [incomingQuery, onIncomingUsed]);
 
+  // Files dropped anywhere on the window while this tab is open.
+  const demo = useIsDemo();
+  const dragging = useFileDrop(demo ? null : startComponentUpload);
+
+  // Uploaded images land on the crop list as they're encoded. One on its own
+  // opens straight in the crop tool, which is where a captured page goes; a
+  // batch waits on the list, where each can be cropped or kept as it is.
+  const uploads = useUploads("component");
+  const landed = uploads.reduce((n, u) => n + u.items.length, 0);
+  useEffect(() => {
+    if (landed) loadCrops();
+  }, [landed, loadCrops]);
+  useEffect(() => {
+    const single = uploads.find(
+      (u) => u.phase === "done" && u.total === 1 && u.items.length === 1 && !openedUploads.has(u.id)
+    );
+    if (!single || pendingCapture) return;
+    openedUploads.add(single.id);
+    setPendingCapture(single.items[0]);
+  }, [uploads, pendingCapture, setPendingCapture]);
+
+  // Names, summaries and tags, as each saved upload gets them. A read rather
+  // than a patch, so one that was queued instead shows that truth too.
+  const described = useUploads("describe").reduce((n, u) => n + u.described, 0);
+  const lastDescribed = useRef(0);
+  useEffect(() => {
+    if (described > lastDescribed.current) loadComponents();
+    lastDescribed.current = described;
+  }, [described]);
+
+  // Saves uploads whole, then has them all described in the background.
+  const [keeping, setKeeping] = useState(null);
+  async function keepAsIs(captures) {
+    if (keeping) return;
+    setKeeping(captures.length > 1 ? "all" : captures[0].id);
+    setError(null);
+    const saved = [];
+    try {
+      for (const capture of captures) {
+        const res = await fetch("/api/components", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ componentCaptureId: capture.id, cropRect: null }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setError(`${capture.file_name || "That image"} couldn't be saved: ${data.error || "the server refused it"}`);
+          continue;
+        }
+        saved.push(data.component);
+        setComponents((prev) => [data.component, ...prev]);
+        setCrops((prev) => prev && { ...prev, captures: prev.captures.filter((c) => c.id !== capture.id) });
+      }
+    } catch {
+      setError("Couldn't reach the server");
+    } finally {
+      setKeeping(null);
+      loadCrops();
+      describeComponents(saved);
+    }
+  }
+
   async function handleSaveCrop(cropRect) {
+    const uploaded = !pendingCapture.url;
     setSaving(true);
     setError(null);
     try {
@@ -119,9 +191,12 @@ export default function ComponentsTab({
       loadCrops();
       if (data.enrichmentError) {
         setError(
-          "Crop saved, but the AI couldn't describe it just now. Open the component and hit Regenerate.",
+          data.enrichmentQueued
+            ? "Crop saved. The AI is at its limit right now, so its description is queued and will fill in on its own."
+            : "Crop saved, but the AI couldn't describe it just now. Open the component and hit Regenerate.",
         );
       }
+      if (uploaded) describeComponents([data.component]);
     } catch {
       setError("Couldn't reach the server");
     } finally {
@@ -158,10 +233,15 @@ export default function ComponentsTab({
     return (
       <>
         {error && <p className="error">{error}</p>}
+        {dragging && <DropOverlay label="Components" />}
+        {/* Keyed, so the next image doesn't open with the last one's box. */}
         <CropTool
+          key={pendingCapture.id}
           imageUrl={pendingCapture.full_url}
           onCancel={() => setPendingCapture(null)}
           onSave={handleSaveCrop}
+          onKeep={pendingCapture.url ? undefined : () => handleSaveCrop(null)}
+          quick={!pendingCapture.url}
           saving={saving}
         />
       </>
@@ -178,7 +258,14 @@ export default function ComponentsTab({
           <button onClick={() => setPendingCapture(null)}>Dismiss</button>
         </p>
       )}
-      <CropQueue crops={crops} onCrop={setPendingCapture} onDiscard={discardCapture} />
+      {dragging && <DropOverlay label="Components" />}
+      <CropQueue
+        crops={crops}
+        onCrop={setPendingCapture}
+        onKeep={keepAsIs}
+        keeping={keeping}
+        onDiscard={discardCapture}
+      />
       <LibraryBrowser
         items={filtered}
         allTags={allTags}
@@ -186,7 +273,7 @@ export default function ComponentsTab({
         onQueryChange={setQuery}
         searchPlaceholder="Search components by name, summary, notes or tag…"
         emptyHeadline="Save the parts, not just the page."
-        emptyMessage="Capture any page, then crop out the one block worth keeping: a pricing table, a nav, a hero."
+        emptyMessage="Capture any page, then crop out the one block worth keeping: a pricing table, a nav, a hero. Or drop a screenshot of one anywhere on this page."
         noun="component"
         adapter={ADAPTER}
         onAdd={onAdd}
@@ -198,38 +285,62 @@ export default function ComponentsTab({
   );
 }
 
-// What an import of component pages left for you: each captured page is a
-// crop you haven't drawn yet. First on the tab for the same reason a visuals
+// What is waiting on you: pages an import captured, and images you uploaded,
+// each one a crop you haven't drawn yet. First on the tab for the same reason a visuals
 // project waiting to be picked is -- it is holding storage until you act on
 // it -- and because cropping one is what lets the queue capture the next.
-function CropQueue({ crops, onCrop, onDiscard }) {
+function CropQueue({ crops, onCrop, onKeep, keeping, onDiscard }) {
   if (!crops) return null;
   const ready = crops.captures.filter((c) => c.status === "ready" && c.capture_state !== "failed");
   const failed = crops.captures.filter((c) => c.status === "failed" || c.capture_state === "failed");
+  const uploads = ready.filter((c) => !c.url);
   const coming = crops.queued + crops.capturing;
   if (!ready.length && !failed.length && !coming) return null;
 
   // The queue stops this many short of what is waiting, so if the list is
   // that long, the reason nothing new is arriving is the list itself.
-  const held = crops.queued > 0 && ready.length + crops.capturing >= crops.cropAhead;
+  // Uploads don't count: they were never part of what it captured ahead.
+  const held = crops.queued > 0 && ready.length - uploads.length + crops.capturing >= crops.cropAhead;
 
   return (
     <div className="visual-pending crop-queue">
-      <h3>Ready to crop</h3>
+      <div className="crop-queue-head">
+        <h3>Ready to crop</h3>
+        {uploads.length > 1 && (
+          <button type="button" onClick={() => onKeep(uploads)} disabled={Boolean(keeping)}>
+            {keeping === "all" ? "Saving…" : `Use All ${uploads.length} As Is`}
+          </button>
+        )}
+      </div>
       {ready.map((capture) => (
         <div key={capture.id} className="crop-queue-row">
           <button type="button" className="visual-pending-row crop-queue-open" onClick={() => onCrop(capture)}>
-            <Favicon url={capture.url} alt={capture.domain} />
+            {capture.url ? (
+              <Favicon url={capture.url} alt={capture.domain} />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="crop-queue-thumb" src={capture.full_url} alt="" loading="lazy" />
+            )}
             <span className="visual-pending-name">
-              <strong>{capture.domain}</strong>
-              <small>{pathOf(capture.url)}</small>
+              <strong>{capture.url ? capture.domain : capture.file_name || "Uploaded image"}</strong>
+              <small>{capture.url ? pathOf(capture.url) : "Uploaded"}</small>
             </span>
             <span className="crop-queue-action">
               <Crop size={15} aria-hidden="true" />
               Crop
             </span>
           </button>
-          <button type="button" className="danger-btn crop-queue-discard" onClick={() => onDiscard(capture)}>
+          {!capture.url && (
+            <button type="button" className="crop-queue-keep" onClick={() => onKeep([capture])} disabled={Boolean(keeping)}>
+              {keeping === capture.id ? "Saving…" : "Use As Is"}
+            </button>
+          )}
+          <button
+            type="button"
+            className="danger-btn crop-queue-discard"
+            onClick={() => onDiscard(capture)}
+            disabled={Boolean(keeping)}
+          >
             Discard
           </button>
         </div>

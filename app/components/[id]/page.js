@@ -178,6 +178,9 @@ export default function ComponentDetailPage({ params }) {
   const activeSource =
     viewport === "mobile" ? component.mobile_source_image_url : component.source_image_url;
   const canCropHere = Boolean(activeSource);
+  // No page behind it: nothing to visit, no mobile shot, and the whole image
+  // is as fair a crop as any part of it.
+  const uploaded = !component.source_url;
 
   const tagsByFacet = FACETS.map((facet) => ({
     facet,
@@ -219,14 +222,16 @@ export default function ComponentDetailPage({ params }) {
             <CopyForAI url={`/api/export/component/${component.id}`} />
             {/* Last, and the only filled control here: going to the real site is
                 what you came for, everything left of it acts on the record. */}
-            <a className="visit-btn" href={component.source_url} target="_blank" rel="noopener noreferrer">
-              Visit Source
-              <ArrowUpRight size={15} />
-            </a>
+            {component.source_url && (
+              <a className="visit-btn" href={component.source_url} target="_blank" rel="noopener noreferrer">
+                Visit Source
+                <ArrowUpRight size={15} />
+              </a>
+            )}
           </div>
         </div>
 
-        <p className="meta-line">Saved {new Date(component.created_at).toLocaleDateString()}</p>
+        <p className="meta-line">{uploaded ? "Uploaded" : "Saved"} {new Date(component.created_at).toLocaleDateString()}</p>
 
         {/* Crop on the left, the record's fields on the right. Cropping drops
             back to one column -- the crop tool needs the full width to draw a
@@ -237,26 +242,28 @@ export default function ComponentDetailPage({ params }) {
               {/* `view-switch` is what gives the site page's switch its track
                   and its held pill. Without it this rendered as two separate
                   outlined buttons. */}
-              <div className="view-switch viewport-toggle">
-                <button
-                  className={viewport === "desktop" ? "active" : ""}
-                  onClick={() => {
-                    setViewport("desktop");
-                    setRecropping(false);
-                  }}
-                >
-                  Desktop
-                </button>
-                <button
-                  className={viewport === "mobile" ? "active" : ""}
-                  onClick={() => {
-                    setViewport("mobile");
-                    setRecropping(false);
-                  }}
-                >
-                  Mobile
-                </button>
-              </div>
+              {!uploaded && (
+                <div className="view-switch viewport-toggle">
+                  <button
+                    className={viewport === "desktop" ? "active" : ""}
+                    onClick={() => {
+                      setViewport("desktop");
+                      setRecropping(false);
+                    }}
+                  >
+                    Desktop
+                  </button>
+                  <button
+                    className={viewport === "mobile" ? "active" : ""}
+                    onClick={() => {
+                      setViewport("mobile");
+                      setRecropping(false);
+                    }}
+                  >
+                    Mobile
+                  </button>
+                </div>
+              )}
 
               {recropping ? (
                 <CropTool
@@ -264,6 +271,7 @@ export default function ComponentDetailPage({ params }) {
                   initialRect={viewport === "mobile" ? component.mobile_crop_rect : component.crop_rect}
                   onCancel={() => setRecropping(false)}
                   onSave={handleRecrop}
+                  onKeep={uploaded && component.crop_rect ? () => handleRecrop(null) : undefined}
                   saving={saving}
                 />
               ) : (
@@ -285,7 +293,13 @@ export default function ComponentDetailPage({ params }) {
 
                   {canCropHere && (
                     <button className="capture-expand" onClick={() => setRecropping(true)}>
-                      {activeImage ? `Edit ${viewport} crop` : `Add ${viewport} crop`}
+                      {uploaded
+                        ? component.crop_rect
+                          ? "Edit crop"
+                          : "Crop image"
+                        : activeImage
+                          ? `Edit ${viewport} crop`
+                          : `Add ${viewport} crop`}
                     </button>
                   )}
                 </>
@@ -331,7 +345,9 @@ export default function ComponentDetailPage({ params }) {
                   <p className="summary-text">
                     {component.summary || (
                       <span className="summary-empty">
-                        No summary yet. Use Regenerate to describe this crop.
+                        {component.enrichment_state === "queued"
+                          ? "Waiting for the AI. This will fill in on its own."
+                          : `No summary yet. Use Regenerate to describe this ${uploaded && !component.crop_rect ? "image" : "crop"}.`}
                       </span>
                     )}
                   </p>

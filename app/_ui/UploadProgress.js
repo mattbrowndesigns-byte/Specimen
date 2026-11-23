@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { X } from "lucide-react";
 import FeatureRotator from "./FeatureRotator";
 import { useAnnounceWork } from "./workInFlight";
-import { dismissVisualUpload } from "./visualUploads";
+import { dismissUpload } from "./uploads";
 
 // An upload's panel: the capture panel's, at the top of the page, for the
 // same reason -- it is the same kind of wait as any other save.
@@ -18,10 +18,40 @@ const QUEUED_HOLD = 9000;
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-export default function VisualUploadProgress({ upload }) {
-  const { id, label, total, sent, phase, visuals, failed, queued } = upload;
+// What a finished one says about the files that made it.
+function outcome({ kind, items, queued }) {
+  const n = items.length;
+  if (kind === "component") {
+    return n === 1 ? "✓ Image uploaded. Crop it, or use it as it is." : `✓ ${n} images uploaded. Crop each one, or use it as it is.`;
+  }
+  const what = kind === "describe" ? (n === 1 ? "Component" : `${n} components`) : n === 1 ? "Image" : `${n} images`;
+  const words = kind === "describe" ? "the name and tags are" : "the title and tags are";
+  return queued
+    ? `✓ ${what} saved. The AI hasn’t answered yet, so ${words} queued and will fill in on their own.`
+    : `✓ ${what} saved and described.`;
+}
+
+function describing({ kind, total, described, items }) {
+  if (kind === "describe") {
+    return total === 1
+      ? "Writing a name, summary and tags. Safe to leave this page."
+      : `Writing names, summaries and tags: ${described} of ${total} done. Safe to leave this page.`;
+  }
+  return `Writing ${items.length === 1 ? "a title, description and tags" : "titles, descriptions and tags"}. Safe to leave this page.`;
+}
+
+// Files that didn't upload, or components the AI couldn't describe.
+function failure({ kind, failed }) {
+  return kind === "describe"
+    ? `${plural(failed.length, "component")} couldn’t be described. Open ${failed.length === 1 ? "it" : "one"} and press Regenerate to try again.`
+    : `${plural(failed.length, "file")} couldn’t be added.`;
+}
+
+export default function UploadProgress({ upload }) {
+  const { id, label, total, sent, phase, items, failed, queued } = upload;
   const done = phase === "done";
-  const added = visuals.length;
+  const added = items.length;
+  const described = upload.kind !== "describe" || failed.length < added;
 
   useAnnounceWork(!done);
 
@@ -29,38 +59,29 @@ export default function VisualUploadProgress({ upload }) {
   // failed stays until it's been read: the file is nowhere else.
   useEffect(() => {
     if (!done || failed.length) return undefined;
-    const timer = setTimeout(() => dismissVisualUpload(id), queued ? QUEUED_HOLD : DONE_HOLD);
+    const timer = setTimeout(() => dismissUpload(id), queued ? QUEUED_HOLD : DONE_HOLD);
     return () => clearTimeout(timer);
   }, [done, failed.length, queued, id]);
 
   if (done) {
     const tone = failed.length ? "capture-status-failed" : queued ? "capture-status-queued" : "";
-    const what = added === 1 ? "Image" : plural(added, "image");
     return (
       <div className={`capture-status capture-status-done ${tone}`.trim()} role={failed.length ? "alert" : "status"}>
         <p>
           <span>
-            {added > 0 &&
-              (queued ? (
-                <>
-                  ✓ {what} saved. The AI hasn&rsquo;t answered yet, so the title and tags are queued and will fill in
-                  on their own.
-                </>
-              ) : (
-                <>✓ {what} saved and described.</>
-              ))}
-            {added > 0 && failed.length > 0 && " "}
-            {failed.length > 0 && `${plural(failed.length, "file")} couldn’t be added.`}
+            {added > 0 && described && outcome(upload)}
+            {added > 0 && described && failed.length > 0 && " "}
+            {failed.length > 0 && failure(upload)}
           </span>
           {failed.length > 0 && (
-            <button type="button" className="icon-btn visual-upload-dismiss" onClick={() => dismissVisualUpload(id)} aria-label="Dismiss">
+            <button type="button" className="icon-btn visual-upload-dismiss" onClick={() => dismissUpload(id)} aria-label="Dismiss">
               <X size={16} />
             </button>
           )}
         </p>
         {failed.length > 0 && (
           <ul className="visual-upload-failed">
-            {failed.map((line) => (
+            {[...new Set(failed)].map((line) => (
               <li key={line}>{line}</li>
             ))}
           </ul>
@@ -75,7 +96,7 @@ export default function VisualUploadProgress({ upload }) {
       <div
         className="capture-status-bar"
         role="progressbar"
-        aria-label={`Uploading ${label}`}
+        aria-label={label ? `Uploading ${label}` : "Describing"}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={known ? Math.round(sent * 100) : undefined}
@@ -89,8 +110,7 @@ export default function VisualUploadProgress({ upload }) {
         <p>
           {phase === "uploading" && `Uploading ${label}: ${Math.floor(sent * 100)}%. Keep this page open.`}
           {phase === "saving" && `Saving ${label}${total > 1 ? `: ${added} of ${total} done` : ""}…`}
-          {phase === "describing" &&
-            `Writing ${added === 1 ? "a title, description and tags" : "titles, descriptions and tags"}. Safe to leave this page.`}
+          {phase === "describing" && describing(upload)}
         </p>
         <span className="capture-status-aside">
           <FeatureRotator className="capture-status-rotator" />

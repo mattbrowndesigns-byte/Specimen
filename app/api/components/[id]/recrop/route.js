@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { cropAndUpload, enrichAndSaveComponent } from "@/lib/componentCrop";
+import { cropAndUpload, describeComponent } from "@/lib/componentCrop";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
 
@@ -17,9 +17,6 @@ export async function POST(request, { params }) {
   const { cropRect, viewport = "desktop" } = await request.json();
   if (!(await ownsComponent(supabaseAdmin(), id, user.id))) return NOT_FOUND();
 
-  if (!cropRect) {
-    return NextResponse.json({ error: "cropRect is required" }, { status: 400 });
-  }
   if (!["desktop", "mobile"].includes(viewport)) {
     return NextResponse.json({ error: "Unknown viewport" }, { status: 400 });
   }
@@ -33,6 +30,13 @@ export async function POST(request, { params }) {
   const sourceImageUrl =
     viewport === "mobile" ? component.mobile_source_image_url : component.source_image_url;
 
+  // No rectangle means the whole image. Only an uploaded component may ask for
+  // that -- a captured one's original is a full page, which is a site.
+  const whole = !cropRect && !component.source_url && viewport === "desktop";
+  if (!cropRect && !whole) {
+    return NextResponse.json({ error: "cropRect is required" }, { status: 400 });
+  }
+
   if (!sourceImageUrl) {
     return NextResponse.json(
       { error: `No ${viewport} screenshot was captured for this component` },
@@ -41,30 +45,26 @@ export async function POST(request, { params }) {
   }
 
   try {
-    const { imageUrl, croppedBuffer } = await cropAndUpload({
-      sourceImageUrl,
-      cropRect,
-      componentId: id,
-    });
+    const { imageUrl, croppedBuffer } = whole
+      ? { imageUrl: sourceImageUrl }
+      : await cropAndUpload({ sourceImageUrl, cropRect, componentId: id });
 
     const update =
       viewport === "mobile"
         ? { mobile_image_url: imageUrl, mobile_crop_rect: cropRect }
-        : { image_url: imageUrl, crop_rect: cropRect };
+        : { image_url: imageUrl, crop_rect: cropRect || null };
 
     await supabase.from("component").update(update).eq("id", id);
 
     // Only the desktop crop drives the AI description -- re-running it for a
     // mobile crop of the same component would just churn the same fields.
     if (viewport === "desktop") {
-      await enrichAndSaveComponent({
-        componentId: id,
-        sourceUrl: component.source_url,
-        croppedBuffer,
-        clearExistingTags: true,
-      });
+      await describeComponent({ componentId: id, croppedBuffer, clearExistingTags: true });
     }
   } catch (err) {
+    // The crop itself is saved by the time anything can be queued, and a
+    // component still waiting for its first description has its retry.
+    if (err.queued) return NextResponse.json({ ok: true, queued: true });
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 

@@ -671,8 +671,15 @@ export default function CaseStudyPage() {
             <p>
               The Add menu offered Upload Images for a visual, in a pill 32 pixels tall, and a screenshot dragged onto it was not taken. Nothing was closing the menu. The button had never been told to accept a drop: a browser refuses a file anywhere the page doesn&rsquo;t claim it, and only the board behind the menu did, only while that tab was open. It is a box now, 168 pixels tall, that takes the drop and lights up as a file crosses it, and a near miss no longer opens the file in place of the app. The progress moved as well. It sat inside the menu, the one save that kept its menu open, so an upload now closes it and reports in the same panel every other save does. The bar there is the bytes actually sent, and once there is no figure to give it stops giving one.
             </p>
+            <h3>Uploading a component</h3>
             <p>
-              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file still has to be proven there.
+              The first real use of image uploads, for Visuals, raised the next question: a screenshot of one good pricing table is a component, and the only way to save one was to capture a whole page and crop it. An uploaded image now joins the same list a captured page waits on, already ready to crop, so the crop tool, the list and Discard needed no second version. What is different is that cropping is optional. A screenshot is often already just the component, so there is a button to use it as it is, and one to keep a whole batch.
+            </p>
+            <p>
+              Doing it turned up a gap. Websites, resources and visuals all wait in line when the AI is too busy to describe them. Components never did: one saved on a busy day stayed untitled until I noticed. They share the same line now, uploaded or not.
+            </p>
+            <p>
+              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, and uploading a component, still have to be proven there.
             </p>
           </div>
         </section>

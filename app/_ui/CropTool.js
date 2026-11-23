@@ -51,7 +51,13 @@ const HANDLE_CURSORS = {
   se: "nwse-resize",
 };
 
-export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRect }) {
+// `onKeep` is the way past cropping for an uploaded image, which is often
+// already just the component. A captured page never gets it: a whole page
+// isn't one.
+//
+// `quick` is a save that doesn't wait for the AI (an upload is described after
+// it lands), so the bar under it must not promise a description.
+export default function CropTool({ imageUrl, onCancel, onSave, onKeep, saving, quick, initialRect }) {
   const containerRef = useRef(null);
   const imgRef = useRef(null);
   const [rect, setRect] = useState(null);
@@ -164,7 +170,9 @@ export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRe
       <p className="crop-hint">
         {rect
           ? "Drag the handles to resize, or drag inside the box to move it."
-          : "Drag a rectangle over the region you want to save as a component."}
+          : onKeep
+            ? "Drag a rectangle over the part you want, or use the whole image as it is."
+            : "Drag a rectangle over the region you want to save as a component."}
       </p>
       <div
         className={`crop-container${rect ? "" : " crop-drawing"}`}
@@ -175,7 +183,7 @@ export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRe
         onMouseLeave={handleMouseUp}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img ref={imgRef} src={imageUrl} alt="Page capture" draggable={false} onLoad={handleImageLoad} />
+        <img ref={imgRef} src={imageUrl} alt={onKeep ? "Uploaded image" : "Page capture"} draggable={false} onLoad={handleImageLoad} />
         {rect && (
           <>
             <div className="crop-mask" style={{ clipPath: maskClipPath(rect, imageBounds) }} />
@@ -205,11 +213,13 @@ export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRe
             <div className="capture-status-bar">
               <div
                 className="capture-status-fill"
-                style={{ width: `${Math.min(95, (saveElapsed / 15) * 100)}%` }}
+                style={{ width: `${Math.min(95, (saveElapsed / (quick ? 3 : 15)) * 100)}%` }}
               />
             </div>
             <span>
-              {saveElapsed < 15
+              {quick
+                ? "Saving the component…"
+                : saveElapsed < 15
                 ? "Cropping and describing it with AI…"
                 : "Still working. The AI service is busy, retrying…"}
             </span>
@@ -227,6 +237,7 @@ export default function CropTool({ imageUrl, onCancel, onSave, saving, initialRe
               </button>
             )}
             <button onClick={onCancel}>Cancel</button>
+            {onKeep && <button onClick={onKeep}>Use As Is</button>}
             <button
               className="crop-save"
               onClick={handleSave}

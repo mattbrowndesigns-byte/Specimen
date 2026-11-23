@@ -2248,6 +2248,33 @@ is deliberately shorter than the slide both ways: a slower one measured as a
 holder 233px open around a panel at 9% opacity, an empty strip arriving
 before its contents.
 
+**An uploaded component is a capture that came through another door, and an
+empty `source_url` is how everything knows.** `schema_m25.sql` makes it nullable
+on `component`, and `url` / `domain` nullable on `component_capture`. A file goes
+straight to Storage the way a visual's does, then becomes a `component_capture`
+row that is already `ready` (`lib/componentUpload.js`), so the crop tool, the
+"Ready to crop" list, Discard and the save route all work on it unchanged and a
+half-finished one survives the tab. Cropping is optional there and only there:
+`cropRect` null means the whole image, refused for anything with a url, because
+a whole captured page is a site. One file opens in the crop tool; a batch waits
+on the list, with Use As Is per row and Use All As Is above.
+
+Things that read a component have to cope with no page: the arrow and Visit
+Source go, the badge is a letter, the Desktop / Mobile switch goes (there is one
+image), and a shared card opens the image with `source={null}`, or its badge
+would be the favicon of the Supabase host the image sits on. The original keeps
+up to 3840px of width, because every crop is cut from it; kept whole, `image_url`
+IS `source_image_url`. Deleting the component deletes those files, unless another
+row points at them, which the demo's copy does.
+
+**Components have the retry queue now.** They never did: a crop saved while
+Gemini was busy stayed unnamed until someone pressed Regenerate. `describeComponent`
+in `lib/componentCrop.js` queues only a component with no summary -- a Regenerate
+or re-crop of a described one reports its failure and changes nothing, because a
+queued version of it would have to clear tags edited by hand since. `enrich-queue`
+drains three, last. An upload is saved at once and described by a second request,
+so its queue entry is ten minutes out: only a tab that closed ever reaches it.
+
 **Clipboard writes have to start inside the click.** Safari ends the click's
 permission while the export is being fetched, so `fetch` then `writeText`
 fails there silently. `copyMarkdown` hands the clipboard a `ClipboardItem`

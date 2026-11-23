@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, Grid3x3, LayoutGrid, Play, SlidersHorizontal, Square, Upload } from "lucide-react";
+import { ArrowRight, Grid3x3, LayoutGrid, Play, SlidersHorizontal, Square } from "lucide-react";
 import SearchField from "./SearchField";
 import ResultCount from "./ResultCount";
 import NoMatches from "./NoMatches";
@@ -11,8 +11,8 @@ import Lightbox from "./Lightbox";
 import FilterModal from "./FilterModal";
 import SaveActions from "./SaveActions";
 import VisualMedia from "./VisualMedia";
-import { startVisualUpload, useVisualUploads } from "./visualUploads";
-import { UPLOAD_HINT, hasFiles } from "@/lib/visualUploadClient";
+import useFileDrop, { DropOverlay } from "./useFileDrop";
+import { startVisualUpload, useUploads } from "./uploads";
 
 // The three questions a visual's tags answer, in the order the filter
 // modal lists them.
@@ -144,58 +144,15 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
     };
   }, []);
 
-  // Dropping files anywhere on the window while this tab is open uploads
-  // them. The listeners go on the window rather than a wrapper, because the
-  // tab renders a fragment -- Elevated's command bar is a grid over the
-  // dashboard's direct children and a wrapping div would take it apart --
-  // and because a drop target the size of the window is one nobody misses.
-  const [dragging, setDragging] = useState(false);
-  const dragDepth = useRef(0);
-
-  useEffect(() => {
-    function onEnter(e) {
-      if (!hasFiles(e)) return;
-      e.preventDefault();
-      dragDepth.current += 1;
-      setDragging(true);
-    }
-    function onOver(e) {
-      if (!hasFiles(e)) return;
-      e.preventDefault();
-    }
-    function onLeave(e) {
-      if (!hasFiles(e)) return;
-      dragDepth.current = Math.max(0, dragDepth.current - 1);
-      if (dragDepth.current === 0) setDragging(false);
-    }
-    function onDrop(e) {
-      if (!hasFiles(e)) return;
-      e.preventDefault();
-      dragDepth.current = 0;
-      setDragging(false);
-      // The Add popover's drop box takes its own.
-      if (e.target.closest?.("[data-drop-box]")) return;
-      startVisualUpload(e.dataTransfer.files);
-    }
-    window.addEventListener("dragenter", onEnter);
-    window.addEventListener("dragover", onOver);
-    window.addEventListener("dragleave", onLeave);
-    window.addEventListener("drop", onDrop);
-    return () => {
-      window.removeEventListener("dragenter", onEnter);
-      window.removeEventListener("dragover", onOver);
-      window.removeEventListener("dragleave", onLeave);
-      window.removeEventListener("drop", onDrop);
-    };
-  }, []);
+  const dragging = useFileDrop(startVisualUpload);
 
   // Each uploaded image lands on the board the moment it's encoded, untitled,
   // so a drop has an answer before the AI does. `seen` is what stops one you
   // delete while its batch is still going from being put back.
-  const uploads = useVisualUploads();
+  const uploads = useUploads("visual");
   const seen = useRef(new Set());
   useEffect(() => {
-    const landed = uploads.flatMap((u) => u.visuals).filter((v) => !seen.current.has(v.id));
+    const landed = uploads.flatMap((u) => u.items).filter((v) => !seen.current.has(v.id));
     if (!landed.length) return;
     landed.forEach((v) => seen.current.add(v.id));
     setVisuals((prev) => {
@@ -206,7 +163,7 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
 
   // Then the titles, descriptions and tags, whether the AI answered or queued:
   // a reload shows whichever is true.
-  const finished = uploads.filter((u) => u.phase === "done" && u.visuals.length).length;
+  const finished = uploads.filter((u) => u.phase === "done" && u.items.length).length;
   useEffect(() => {
     if (!finished) return undefined;
     let cancelled = false;
@@ -299,15 +256,7 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
     <>
       {error && <p className="error">{error}</p>}
 
-      {dragging && (
-        <div className="visual-drop" aria-hidden="true">
-          <div className="visual-drop-card">
-            <Upload size={22} />
-            <strong>Drop to add to Visuals</strong>
-            <small>{UPLOAD_HINT}</small>
-          </div>
-        </div>
-      )}
+      {dragging && <DropOverlay label="Visuals" />}
 
       {pending.length > 0 && (
         <div className="visual-pending">

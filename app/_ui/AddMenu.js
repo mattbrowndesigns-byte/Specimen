@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ImageUp, Plus } from "lucide-react";
 import { KINDS } from "./kinds";
-import { startVisualUpload } from "./visualUploads";
-import { ACCEPT_ATTR, UPLOAD_HINT, hasFiles } from "@/lib/visualUploadClient";
+import { startComponentUpload, startVisualUpload } from "./uploads";
+import { ACCEPT_ATTR, UPLOAD_HINT, hasFiles } from "@/lib/uploadClient";
 
 // Lives in the page header so saving never depends on which tab is open.
 // Three kinds: a website (full record, appears in the grid), a component
@@ -18,8 +18,14 @@ const URL_LABELS = {
   visual: "Page with images",
 };
 
-// A visual's form has a second way in: a file that never lived on a page. It
-// hands the files to the upload store and closes, the way submitting a link
+// The two kinds that are pictures have a second way in: a file that never lived
+// on a page. Where each goes, and what the box says about it.
+const UPLOADS = {
+  component: { start: startComponentUpload, tab: "components", over: "Let go, then crop it or keep it whole" },
+  visual: { start: startVisualUpload, tab: "visuals", over: "Let go to add them to Visuals" },
+};
+
+// It hands the files to the upload store and closes, the way submitting a link
 // does -- the panel at the top of the dashboard reports it from there.
 export default function AddMenu({ onSubmit, variant }) {
   const [open, setOpen] = useState(false);
@@ -61,8 +67,8 @@ export default function AddMenu({ onSubmit, variant }) {
 
   // While this is open, a file dropped beside the box goes nowhere instead of
   // replacing the page with itself, which is what a browser does with a file
-  // nothing has claimed. Anything that has claimed it -- the box, or the
-  // Visuals tab, which takes a drop anywhere -- has already said so by the
+  // nothing has claimed. Anything that has claimed it -- the box, or a tab that
+  // takes a drop anywhere -- has already said so by the
   // time a drag reaches the window.
   useEffect(() => {
     if (!open) return undefined;
@@ -81,12 +87,13 @@ export default function AddMenu({ onSubmit, variant }) {
 
   function upload(files) {
     if (!files.length) return;
-    startVisualUpload(files);
+    const { start, tab } = UPLOADS[kind];
+    start(files);
     close();
-    // The dashboard switches to Visuals itself when an upload starts. From
+    // The dashboard switches tab itself when an upload starts. From
     // anywhere else, go there with the router and not the address bar: a full
     // page load would throw away the files on their way up.
-    if (pathname !== "/") router.push("/?tab=visuals");
+    if (pathname !== "/") router.push(`/?tab=${tab}`);
   }
 
   function chooseFiles(e) {
@@ -166,10 +173,10 @@ export default function AddMenu({ onSubmit, variant }) {
             </button>
           </div>
 
-          {kind === "visual" && (
+          {UPLOADS[kind] && (
             <div className="add-pop-upload">
               <span className="add-pop-or">or</span>
-              {/* data-drop-box tells the Visuals tab's own drop handler that
+              {/* data-drop-box tells a tab's own drop handler that
                   this drop is taken, or a file would be uploaded twice. */}
               <button
                 type="button"
@@ -186,7 +193,7 @@ export default function AddMenu({ onSubmit, variant }) {
               >
                 <ImageUp size={24} />
                 <strong>{dragOver ? "Drop to upload" : "Drop images here"}</strong>
-                <span>{dragOver ? "Let go to add them to Visuals" : "or click to choose files"}</span>
+                <span>{dragOver ? UPLOADS[kind].over : "or click to choose files"}</span>
                 <small>{UPLOAD_HINT}</small>
               </button>
               <input ref={fileRef} type="file" accept={ACCEPT_ATTR} multiple hidden onChange={chooseFiles} />

@@ -13,9 +13,10 @@ export const dynamic = "force-dynamic";
 // a five-hundred-link import would otherwise be five hundred rows reading
 // "waiting" above the library.
 //
-// Only imported captures. One started from the Add menu goes straight to the
-// crop tool and never needed a list; old ones were never marked cropped, so
-// listing them would resurrect every page anyone ever cropped from.
+// Imported captures, and uploaded images (no url). One captured from the Add
+// menu goes straight to the crop tool and never needed a list; old ones were
+// never marked cropped, so listing them would resurrect every page anyone ever
+// cropped from.
 export async function GET() {
   const user = await currentUser();
   if (!user) return UNAUTHORIZED();
@@ -32,12 +33,13 @@ export async function GET() {
   const [listRes, queuedRes, capturingRes] = await Promise.all([
     supabase
       .from("component_capture")
-      .select("id, url, domain, status, full_url, page_height, capture_error, capture_state, imported_at")
+      .select("id, url, domain, status, full_url, page_height, capture_error, capture_state, imported_at, file_name")
       .eq("user_id", user.id)
-      .not("imported_at", "is", null)
+      .or("imported_at.not.is.null,url.is.null")
       .is("cropped_at", null)
       .or("status.eq.ready,status.eq.failed,capture_state.eq.failed")
-      .order("imported_at", { ascending: true })
+      // Uploads first, by having no import date: they were just put there.
+      .order("imported_at", { ascending: true, nullsFirst: true })
       .order("created_at", { ascending: true }),
     imported().eq("capture_state", "queued"),
     imported().is("capture_state", null).eq("status", "pending"),

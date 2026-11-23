@@ -435,15 +435,17 @@ export default function LibraryBrowser({
                     {adapter.name(item)}
                   </a>
                 </span>
-                <a
-                  className="visit"
-                  href={adapter.externalUrl(item)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-tip="Launch site"
-                >
-                  <ArrowUpRight size={17} />
-                </a>
+                {adapter.externalUrl(item) && (
+                  <a
+                    className="visit"
+                    href={adapter.externalUrl(item)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-tip="Launch site"
+                  >
+                    <ArrowUpRight size={17} />
+                  </a>
+                )}
               </div>
               <TagRow tags={item.tags || []} href={adapter.href(item)} />
             </div>
@@ -490,15 +492,17 @@ export default function LibraryBrowser({
                   name={adapter.name(item)}
                   isFavorite={item.is_favorite}
                 />
-                <a
-                  className="visit"
-                  href={adapter.externalUrl(item)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-tip="Launch site"
-                >
-                  <ArrowUpRight size={17} />
-                </a>
+                {adapter.externalUrl(item) && (
+                  <a
+                    className="visit"
+                    href={adapter.externalUrl(item)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-tip="Launch site"
+                  >
+                    <ArrowUpRight size={17} />
+                  </a>
+                )}
               </span>
             </div>
           ))}
@@ -519,15 +523,17 @@ export default function LibraryBrowser({
                 {adapter.name(item)}
               </a>
               <span className="row-domain">{adapter.meta(item)}</span>
-              <a
-                className="visit"
-                href={adapter.externalUrl(item)}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-tip="Launch site"
-              >
-                <ArrowUpRight size={17} />
-              </a>
+              {adapter.externalUrl(item) && (
+                <a
+                  className="visit"
+                  href={adapter.externalUrl(item)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-tip="Launch site"
+                >
+                  <ArrowUpRight size={17} />
+                </a>
+              )}
             </div>
           ))}
         </div>

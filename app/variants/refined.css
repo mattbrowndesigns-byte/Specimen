@@ -1614,6 +1614,76 @@
     padding: 6px 12px;
   }
 
+  /* An uploaded image in the list: the picture itself, since a file has no
+     badge, and a quieter button beside it -- cropping is the row, keeping the
+     whole image is the shortcut. */
+  & .crop-queue-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  & .crop-queue-head h3 {
+    margin: 0;
+  }
+
+  & .crop-queue-head {
+    margin-bottom: 6px;
+  }
+
+  /* Crop, keep and discard beside a file's name don't fit a phone: the name
+     gets the row to itself and the two buttons the line under it, on the
+     name's own left edge. */
+  @media (max-width: 700px) {
+    & .crop-queue-row:has(.crop-queue-keep) {
+      flex-wrap: wrap;
+      row-gap: 4px;
+    }
+
+    & .crop-queue-row:has(.crop-queue-keep) .crop-queue-open {
+      flex-basis: 100%;
+    }
+
+    & .crop-queue-row:has(.crop-queue-keep) .crop-queue-keep {
+      margin-left: 66px;
+    }
+  }
+
+  & .crop-queue-thumb {
+    flex-shrink: 0;
+    width: 56px;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--stage, var(--surface-sunken));
+    object-fit: cover;
+    object-position: top;
+  }
+
+  & .crop-queue-head button,
+  & .crop-queue-keep {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--field-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--surface-hover);
+    }
+
+    &:disabled {
+      color: var(--text-muted);
+      cursor: default;
+    }
+  }
+
   & .crop-queue-note {
     margin: 8px 0 0;
     font-size: 13px;

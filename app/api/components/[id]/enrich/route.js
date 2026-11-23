@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { enrichAndSaveComponent } from "@/lib/componentCrop";
+import { describeComponent } from "@/lib/componentCrop";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
 
 // Re-runs the AI pass over the component's existing desktop crop: name,
 // summary, and tags from the current approved vocabulary. Used by Regenerate,
-// and as the retry when enrichment failed at save time.
+// and as an upload's first description, which the browser asks for once the
+// component is already on the board.
 export async function POST(request, { params }) {
   const user = await currentUser();
   if (!user) return UNAUTHORIZED();
@@ -17,7 +18,7 @@ export async function POST(request, { params }) {
 
   const { data: component, error } = await supabase
     .from("component")
-    .select("id, source_url, image_url")
+    .select("id, image_url")
     .eq("id", id)
     .single();
 
@@ -26,18 +27,12 @@ export async function POST(request, { params }) {
   }
 
   try {
-    const res = await fetch(component.image_url);
-    if (!res.ok) throw new Error(`Couldn't read the stored crop (${res.status})`);
-    const croppedBuffer = Buffer.from(await res.arrayBuffer());
-
-    await enrichAndSaveComponent({
-      componentId: id,
-      sourceUrl: component.source_url,
-      croppedBuffer,
-      clearExistingTags: true,
-    });
+    await describeComponent({ componentId: id, clearExistingTags: true });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 502 });
+    const error = err.queued
+      ? "The AI is busy just now. This component is queued and will be described on its own."
+      : err.message;
+    return NextResponse.json({ error, queued: Boolean(err.queued) }, { status: 502 });
   }
 
   return NextResponse.json({ ok: true });

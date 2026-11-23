@@ -169,7 +169,9 @@ export default function SharedLibrary({ token }) {
             {page.map((component) => (
               <SharedCard
                 key={component.id}
-                href={component.source_url}
+                href={component.source_url || component.image_url}
+                source={component.source_url}
+                visitTitle={component.source_url ? undefined : "Open the image"}
                 thumb={component.image_url}
                 natural
                 name={component.name || "Untitled component"}
@@ -190,7 +192,8 @@ export default function SharedLibrary({ token }) {
               <SharedCard
                 key={visual.id}
                 href={visual.url || visual.image_url}
-                visitTitle="Open the page it came from"
+                source={visual.url}
+                visitTitle={visual.url ? "Open the page it came from" : "Open the image"}
                 thumb={visual.thumb_url || visual.image_url}
                 natural
                 name={visual.title || visual.agency_name || visual.domain || "Untitled image"}
@@ -294,8 +297,13 @@ export default function SharedLibrary({ token }) {
 // -- and the arrow still goes out to the live site, exactly as it does on the
 // owner's dashboard. A component and a resource have no such page, so for them
 // the two stay the same link.
+//
+// `source` is the site the badge belongs to, for the kinds that can come from a
+// file instead: passed as null, the card goes to the image itself and wears a
+// letter, rather than the favicon of wherever the image happens to be stored.
 function SharedCard({
   href,
+  source,
   internal,
   visitHref,
   visitTitle = "Open the live site",
@@ -322,7 +330,7 @@ function SharedCard({
       </div>
       <div className="card-footer">
         <span className="card-title">
-          <Favicon url={visit} faviconUrl={faviconUrl} fills={fills} alt={name} />
+          <Favicon url={source === undefined ? visit : source} faviconUrl={faviconUrl} fills={fills} alt={name} />
           <span className="name">{name}</span>
         </span>
         <a

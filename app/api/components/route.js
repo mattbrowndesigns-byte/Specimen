@@ -4,7 +4,7 @@ import { attachTags } from "@/lib/tagAttach";
 import { attachSiteFavicons } from "@/lib/componentFavicons";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
-import { cropAndUpload, enrichAndSaveComponent } from "@/lib/componentCrop";
+import { cropAndUpload, describeComponent } from "@/lib/componentCrop";
 
 export async function GET(request) {
   const user = await currentUser();
@@ -15,7 +15,7 @@ export async function GET(request) {
   let query = supabase
     .from("component")
     .select(
-      "id, site_id, source_url, name, summary, notes, image_url, crop_rect, created_at, needs_review, is_favorite"
+      "id, site_id, source_url, name, summary, notes, image_url, crop_rect, created_at, needs_review, is_favorite, enrichment_state"
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
@@ -33,15 +33,27 @@ export async function GET(request) {
   return NextResponse.json({ components: withFavicons });
 }
 
-// Creates a component by cropping a region out of a finished component_capture.
+// The describe for an upload is asked for by the browser as soon as this
+// returns, so the queue's first look is ten minutes out -- long enough for twenty
+// in a row, and it only ever sees one the browser walked away from.
+const UPLOAD_GRACE_MS = 10 * 60 * 1000;
+
+// Creates a component from a finished component_capture: a region cropped out
+// of it, or -- for an uploaded image only, which is often already just the
+// component -- the whole of it (`cropRect` null).
+//
+// The two kinds also differ in when the AI runs. A captured page's crop waits
+// for it here, as it always has. An upload is saved and returned at once, and
+// described afterwards (POST /api/components/[id]/enrich), so ten files kept
+// in a row are ten cards immediately rather than two minutes of a busy button.
 export async function POST(request) {
   const user = await currentUser();
   if (!user) return UNAUTHORIZED();
 
   const { componentCaptureId, cropRect } = await request.json();
 
-  if (!componentCaptureId || !cropRect) {
-    return NextResponse.json({ error: "componentCaptureId and cropRect are required" }, { status: 400 });
+  if (!componentCaptureId) {
+    return NextResponse.json({ error: "componentCaptureId is required" }, { status: 400 });
   }
 
   const supabase = supabaseAdmin();
@@ -56,12 +68,23 @@ export async function POST(request) {
     return NextResponse.json({ error: "That capture isn't ready yet" }, { status: 400 });
   }
 
-  const { data: matchingSite } = await supabase
-    .from("site")
-    .select("id")
-    .eq("domain", capture.domain)
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const uploaded = !capture.url;
+  if (!cropRect && !uploaded) {
+    return NextResponse.json({ error: "cropRect is required" }, { status: 400 });
+  }
+  // One upload is one component, and its file goes when that component does.
+  if (uploaded && capture.cropped_at) {
+    return NextResponse.json({ error: "That image has already been saved as a component" }, { status: 409 });
+  }
+
+  const { data: matchingSite } = uploaded
+    ? { data: null }
+    : await supabase
+        .from("site")
+        .select("id")
+        .eq("domain", capture.domain)
+        .eq("user_id", user.id)
+        .maybeSingle();
 
   const { data: component, error: insertError } = await supabase
     .from("component")
@@ -71,7 +94,11 @@ export async function POST(request) {
       source_url: capture.url,
       source_image_url: capture.full_url,
       mobile_source_image_url: capture.mobile_full_url || null,
-      crop_rect: cropRect,
+      crop_rect: cropRect || null,
+      ...(uploaded && {
+        enrichment_state: "queued",
+        enrichment_next_at: new Date(Date.now() + UPLOAD_GRACE_MS).toISOString(),
+      }),
     })
     .select()
     .single();
@@ -80,48 +107,50 @@ export async function POST(request) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
-  // Takes an imported page off the crop list, and frees a place in the
-  // capture queue's twelve. Its own write, and allowed to fail: before
-  // schema_m23 the column doesn't exist, and that is no reason to lose a crop.
-  if (capture.imported_at !== undefined) {
-    const { error: croppedError } = await supabase
-      .from("component_capture")
-      .update({ cropped_at: new Date().toISOString() })
-      .eq("id", capture.id);
-    if (croppedError) console.error("Component: couldn't mark the capture cropped", croppedError.message);
-  }
-
   let croppedBuffer;
+  let croppedUrl;
   try {
-    const cropped = await cropAndUpload({
-      sourceImageUrl: capture.full_url,
-      cropRect,
-      componentId: component.id,
-    });
+    const cropped = cropRect
+      ? await cropAndUpload({ sourceImageUrl: capture.full_url, cropRect, componentId: component.id })
+      : { imageUrl: capture.full_url };
     croppedBuffer = cropped.croppedBuffer;
-    await supabase.from("component").update({ image_url: cropped.imageUrl }).eq("id", component.id);
+    croppedUrl = cropped.imageUrl;
+    await supabase.from("component").update({ image_url: croppedUrl }).eq("id", component.id);
   } catch (err) {
     console.error("Component crop failed:", err);
+    // An upload goes back on the list to be tried again, so the half-made
+    // record must not stay behind as a second, imageless one.
+    if (uploaded) await supabase.from("component").delete().eq("id", component.id);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 
+  // Takes the page off the crop list, and frees a place in the capture queue's
+  // twelve. After the image is in, so a crop that failed is still on the list.
+  const { error: croppedError } = await supabase
+    .from("component_capture")
+    .update({ cropped_at: new Date().toISOString() })
+    .eq("id", capture.id);
+  if (croppedError) console.error("Component: couldn't mark the capture cropped", croppedError.message);
+
+  if (uploaded) {
+    const [withTags] = await attachTags(supabase, [{ ...component, image_url: croppedUrl }], "component");
+    return NextResponse.json({ component: { ...withTags, favicon_url: null, favicon_fills: true } }, { status: 201 });
+  }
+
   // The crop is saved by this point. If the AI pass fails -- Gemini's free tier
-  // throws transient 503s -- keep the component and report it, so the owner can
-  // retry with Regenerate instead of losing the crop they just drew.
+  // throws transient 503s -- keep the component and report it: it is queued to
+  // be described on its own, and Regenerate is there if it can't be.
   let enrichmentError = null;
+  let enrichmentQueued = false;
   try {
-    await enrichAndSaveComponent({
-      componentId: component.id,
-      sourceUrl: capture.url,
-      croppedBuffer,
-      clearExistingTags: false,
-    });
+    await describeComponent({ componentId: component.id, croppedBuffer, clearExistingTags: false });
   } catch (err) {
     console.error("Component enrichment failed:", err);
     enrichmentError = err.message;
+    enrichmentQueued = Boolean(err.queued);
   }
 
   const { data: finalComponent } = await supabase.from("component").select("*").eq("id", component.id).single();
   const [withTags] = await attachTags(supabase, [finalComponent], "component");
-  return NextResponse.json({ component: withTags, enrichmentError }, { status: 201 });
+  return NextResponse.json({ component: withTags, enrichmentError, enrichmentQueued }, { status: 201 });
 }

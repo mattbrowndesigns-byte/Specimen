@@ -7,8 +7,8 @@ import VisualsTab from "./_ui/VisualsTab";
 import UtilityBar from "./_ui/UtilityBar";
 import { KINDS } from "./_ui/kinds";
 import CaptureProgress from "./_ui/CaptureProgress";
-import VisualUploadProgress from "./_ui/VisualUploadProgress";
-import { useVisualUploads } from "./_ui/visualUploads";
+import UploadProgress from "./_ui/UploadProgress";
+import { useUploads } from "./_ui/uploads";
 import Arcade from "./_ui/Arcade";
 import { DemoProgress } from "./_ui/DemoAdd";
 import DemoTour from "./_ui/DemoTour";
@@ -18,7 +18,7 @@ import HeroRotator from "./_ui/HeroRotator";
 import ConnectNote from "./_ui/ConnectNote";
 import { addItem, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
 
-// The last upload that brought the Visuals tab forward. Outside the component,
+// The last upload that brought its tab forward. Outside the component,
 // because a panel can outlive a visit to another page, and coming back to the
 // dashboard for something else shouldn't switch tabs a second time.
 let lastUploadShown = 0;
@@ -69,15 +69,18 @@ export default function Home() {
   }, [demoStarted]);
 
   // An upload is watched from here however it was started -- the Add popover
-  // on this page or another, or a drop on the board -- so a new one brings the
-  // Visuals tab forward, the way any other save brings its own.
-  const uploads = useVisualUploads();
-  const newestUpload = uploads.length ? uploads[uploads.length - 1].id : null;
+  // on this page or another, or a drop on a tab -- so a new one brings its own
+  // tab forward, the way any other save does. Describing components is not a
+  // new save, and whoever walked to another tab meanwhile stays there.
+  const uploads = useUploads();
+  const newest = uploads.findLast((u) => u.kind !== "describe");
+  const newestId = newest?.id;
+  const newestTab = newest?.kind === "component" ? "components" : "visuals";
   useEffect(() => {
-    if (!newestUpload || newestUpload <= lastUploadShown) return;
-    lastUploadShown = newestUpload;
-    setTab("visuals");
-  }, [newestUpload]);
+    if (!newestId || newestId <= lastUploadShown) return;
+    lastUploadShown = newestId;
+    setTab(newestTab);
+  }, [newestId, newestTab]);
 
   const loadTags = useCallback(async () => {
     const res = await fetch("/api/tags");
@@ -205,7 +208,7 @@ export default function Home() {
         ))}
 
         {uploads.map((upload) => (
-          <VisualUploadProgress key={upload.id} upload={upload} />
+          <UploadProgress key={upload.id} upload={upload} />
         ))}
 
         {jobs.map((job) => (

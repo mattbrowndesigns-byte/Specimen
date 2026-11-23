@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { runEnrichment } from "@/lib/enrich";
 import { runResourceEnrichment } from "@/lib/enrichResource";
+import { describeComponent } from "@/lib/componentCrop";
 import { dispatchAnalyze } from "@/lib/github";
 
 // Enrichment has to finish inside this request, same as the two callbacks.
@@ -80,11 +81,44 @@ export async function POST(request) {
   // no budget here at all. It hands the work to a GitHub runner and returns.
   const namingResults = await drainNaming(supabase, outOfTime);
 
-  return NextResponse.json({
-    ok: true,
-    drained: results.length + resourceResults.length + namingResults.length,
-    results: [...results, ...resourceResults, ...namingResults],
-  });
+  // Components last, because theirs is the other expensive call: a picture and
+  // ten seconds or so. Anything there isn't time for is still due next run.
+  const componentResults = await drainComponents(supabase, outOfTime);
+
+  const all = [...results, ...resourceResults, ...namingResults, ...componentResults];
+  return NextResponse.json({ ok: true, drained: all.length, results: all });
+}
+
+// Components saved while the AI was busy, and uploads whose tab was closed
+// before they were described. describeComponent re-queues its own failures on
+// the shared ladder, so nothing is written here.
+async function drainComponents(supabase, outOfTime) {
+  const { data: due, error } = await supabase
+    .from("component")
+    .select("id")
+    .eq("enrichment_state", "queued")
+    .lte("enrichment_next_at", new Date().toISOString())
+    .order("enrichment_next_at", { ascending: true })
+    .limit(BATCH);
+
+  // Before schema_m25 the columns don't exist and nothing is queued.
+  if (error) {
+    console.error("Enrich queue: failed to read component queue", error.message);
+    return [];
+  }
+
+  const results = [];
+  for (const component of due || []) {
+    if (outOfTime()) break;
+    try {
+      await describeComponent({ componentId: component.id, clearExistingTags: false });
+      results.push({ id: component.id, kind: "component", ok: true });
+    } catch (err) {
+      console.error(`Enrich queue: component ${component.id} failed`, err.message);
+      results.push({ id: component.id, kind: "component", ok: false });
+    }
+  }
+  return results;
 }
 
 // Sites whose typefaces were measured but never named.

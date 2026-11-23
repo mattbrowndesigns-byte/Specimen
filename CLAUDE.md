@@ -2332,6 +2332,10 @@ sorts with no browser open, so Regenerate in the lightbox draws them for any
 clip that has none (`/api/visuals/[id]/frames`) -- which is also how clips saved
 before this get theirs.
 
+A site behind Cloudflare's check (wearemotto.com: 403 to the fetch, fine in a
+browser) is not worked around. The picker says it blocks automated visits and
+points at uploading with Add Credit; it used to say "The page answered 403".
+
 An image the AI passes over gets no tags, so keeping it anyway used to leave
 it bare. Posts are sorted with `describeOnly`, and anything else kept without
 tags is queued for them; a whole-project describe only tags what has none.

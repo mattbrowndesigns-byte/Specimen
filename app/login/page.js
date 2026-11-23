@@ -86,7 +86,9 @@ function LoginForm() {
 
       // Full navigation, not router.push: the session cookie was just set and
       // the middleware needs to see it on a fresh request.
-      window.location.href = next;
+      // A page sent by the Save Button is in the address's fragment, which the
+      // redirect here carried along and the server never saw.
+      window.location.href = next === "/save" ? next + window.location.hash : next;
     } catch {
       setError("Couldn't reach the server");
     } finally {

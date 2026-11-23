@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachTags } from "@/lib/tagAttach";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED } from "@/lib/ownership";
-import { VISUAL_COLUMNS } from "@/lib/visuals";
+import { VISUAL_COLUMNS, openProject } from "@/lib/visuals";
 import { resolvePostUrl } from "@/lib/postSource";
 
 export const dynamic = "force-dynamic";
@@ -63,36 +63,10 @@ export async function POST(request) {
   // Before the check below, so a post shared twice by two short links is one
   // save, and the library holds the post's address rather than a redirect.
   const url = await resolvePostUrl(parsed.toString());
-  const domain = new URL(url).hostname.replace(/^www\./, "");
-
-  const supabase = supabaseAdmin();
-  const { data: existing } = await supabase
-    .from("visual_project")
-    .select("id, title, state")
-    .eq("user_id", user.id)
-    .eq("url", url)
-    .maybeSingle();
-  // The same page again reopens it rather than refusing it: the picker pulls
-  // the page afresh and shows what's already in the library greyed out, so a
-  // missed image can be added without starting over. Anything mid-pick or
-  // failed just picks up where it was.
-  if (existing) {
-    if (existing.state === "saved") {
-      const { error } = await supabase
-        .from("visual_project")
-        .update({ state: "extracting", ai_state: "pending", error: null, candidates: [], updated_at: new Date().toISOString() })
-        .eq("id", existing.id)
-        .eq("user_id", user.id);
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-    return NextResponse.json({ project: existing });
+  try {
+    const { project, created } = await openProject(user.id, url);
+    return NextResponse.json({ project }, created ? { status: 201 } : undefined);
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
-
-  const { data: project, error } = await supabase
-    .from("visual_project")
-    .insert({ user_id: user.id, url, domain })
-    .select("id, title, state")
-    .single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ project }, { status: 201 });
 }

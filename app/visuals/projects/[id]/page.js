@@ -4,8 +4,7 @@ import { Check, Play } from "lucide-react";
 import UtilityBar from "../../../_ui/UtilityBar";
 import SiteFooter from "../../../_ui/SiteFooter";
 import Favicon from "../../../_ui/Favicon";
-import { useAnnounceWork } from "../../../_ui/workInFlight";
-import FeatureRotator from "../../../_ui/FeatureRotator";
+import PickLoading from "../../../_ui/PickLoading";
 import { GAP, MasonrySkeleton, layout, useColumns } from "../../../_ui/masonry";
 import VisualMedia from "../../../_ui/VisualMedia";
 import { DEMO_SAVES, addDemoPicks, isDemoBrowser, readDemoPicks } from "../../../_ui/demoState";
@@ -48,44 +47,6 @@ const DEMO_SORT_MS = 5000;
 const DEMO_SAVE_MS = 800;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const isStaged = (id) => isDemoBrowser() && id === DEMO_SAVES.visual.projectId;
-
-function Loading({ phase, seconds }) {
-  const [elapsed, setElapsed] = useState(0);
-  useAnnounceWork(true);
-  useEffect(() => {
-    const tick = setInterval(() => setElapsed((s) => s + 0.25), 250);
-    return () => clearInterval(tick);
-  }, []);
-
-  return (
-    <div className="capture-status capture-status-quick pick-loading">
-      <div className="capture-status-bar">
-        <div
-          className="capture-status-fill"
-          style={{ width: `${Math.min(95, (elapsed / seconds) * 100)}%` }}
-        />
-      </div>
-      <div className="capture-status-row">
-        <p>
-          {phase === "sorting"
-            ? "Picking out the work from the rest of the page"
-            : phase === "posters"
-              ? "Looking through each video"
-              : "Finding the images and videos on the page"}
-          {elapsed < seconds ? `: about ${Math.ceil(seconds - elapsed)}s remaining.` : ": finishing up."}
-        </p>
-        {/* The same aside the capture bar carries, so a visuals save reads as
-            the same kind of wait as every other save. */}
-        <span className="capture-status-aside">
-          <FeatureRotator className="capture-status-rotator" />
-          <a className="feature-rotator-more" href="/features">
-            All features
-          </a>
-        </span>
-      </div>
-    </div>
-  );
-}
 
 function Tile({ candidate, selected, onToggle }) {
   // Already in the library from an earlier pull of this page: shown so you
@@ -302,7 +263,7 @@ export default function PickProjectPage({ params }) {
 
         {loading && (
           <>
-            <Loading phase={phase} seconds={staged ? (DEMO_READ_MS + DEMO_SORT_MS) / 1000 : ESTIMATE_SECONDS} />
+            <PickLoading phase={phase} seconds={staged ? (DEMO_READ_MS + DEMO_SORT_MS) / 1000 : ESTIMATE_SECONDS} />
             <MasonrySkeleton label="Finding images" />
           </>
         )}
@@ -315,6 +276,13 @@ export default function PickProjectPage({ params }) {
               <button className="primary" onClick={() => run(project)}>
                 Try Again
               </button>
+              {/* A page Kivli was turned away from, which the owner's own
+                  browser wasn't. */}
+              {/Save Button/.test(project.error || "") && (
+                <a className="pick-cancel" href="/save">
+                  Get the Save Button
+                </a>
+              )}
               {/* Nothing was found, so there's nothing to lose by leaving --
                   and on a page pulled again, your saved images stay put. */}
               <button className="pick-cancel" onClick={() => cancel({ confirm: false })}>

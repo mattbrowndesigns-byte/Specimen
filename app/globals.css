@@ -8017,6 +8017,36 @@ a.card {
   background: var(--surface-hover);
 }
 
+a.pick-cancel {
+  text-decoration: none;
+}
+
+/* The bookmark itself, dressed as the thing it becomes: a label you pick up,
+   not a button you press. */
+.save-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 999px;
+  background: var(--field-bg);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: grab;
+}
+
+.save-button:hover {
+  border-color: var(--text-muted);
+}
+
+.save-button:active {
+  cursor: grabbing;
+}
+
 /* Already in your library from an earlier pull: present so you can see what
    you have, quiet so it doesn't read as a choice. */
 .pick-tile-saved {

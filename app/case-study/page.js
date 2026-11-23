@@ -682,6 +682,10 @@ export default function CaseStudyPage() {
             <p>
               The list of AI apps with access showed Claude three times, because adding the connector again records a new approval. My first fix added a paragraph explaining that and a time on each row, and two of the three times were the same. Explaining a confusing list is not fixing it. It is one row per app now, with its number of approvals and one Disconnect for all of them, and it stays out of the way until something is connected.
             </p>
+            <h3>A features page telling an old story</h3>
+            <p>
+              The features page still opened with pasting a URL, and filed 37 cards by topic, so components had one and nobody could tell there were four kinds of thing to save. The obvious fix was to group it by kind. I sorted the list first, and 20 of the 37 belonged to no single kind, so they would have been repeated four times or dropped. It leads with the four kinds now, then what each does, then what works across all of them, in 28 cards. One claim had quietly become false on the way: that everything the AI writes waits for review.
+            </p>
             <h3>A component that moves</h3>
             <p>
               The next thing I tried to upload was a screen recording, because some components are only worth saving for how they move. A clip is kept whole, so there is no crop to offer and the page says so rather than showing a control that does nothing. Its card shows one frame with a play mark; its own page plays the clip, muted and looping.

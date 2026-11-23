@@ -208,7 +208,7 @@ export default function SavePage() {
     const read = () => {
       const payload = readFragment();
       const key = saveKey();
-      setArrival(payload ? { payload, trusted: Boolean(key) && payload.k === key } : null);
+      setArrival(payload ? { payload, id: crypto.randomUUID(), trusted: Boolean(key) && payload.k === key } : null);
       // Off the address, so a reload isn't a second save.
       if (payload) window.history.replaceState(window.history.state, "", "/save");
     };
@@ -222,7 +222,7 @@ export default function SavePage() {
     <>
       <UtilityBar />
       <main className="page page-wide">
-        {arrival && <Arriving key={arrival.payload.url} payload={arrival.payload} trusted={arrival.trusted} />}
+        {arrival && <Arriving key={arrival.id} payload={arrival.payload} trusted={arrival.trusted} />}
         {arrival === null && <Install />}
       </main>
       <SiteFooter />

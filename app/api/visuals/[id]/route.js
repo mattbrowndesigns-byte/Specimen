@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { attachTags } from "@/lib/tagAttach";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND } from "@/lib/ownership";
+import { creatorLink } from "@/lib/creatorLink";
 import { VISUAL_COLUMNS, removeMedia } from "@/lib/visuals";
 
 // One visual, its tags, and the rest of the project it came from in page
@@ -99,19 +100,6 @@ export async function PATCH(request, { params }) {
     if (failed) return NextResponse.json({ error: failed.error.message }, { status: 500 });
   }
   return NextResponse.json({ visual: data });
-}
-
-// A typed link, made absolute: null when cleared, undefined when it isn't one.
-function creatorLink(value) {
-  const raw = value.trim();
-  if (!raw) return null;
-  try {
-    const u = new URL(/^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : `https://${raw}`);
-    if (!/^https?:$/.test(u.protocol) || !u.hostname.includes(".")) return undefined;
-    return u.toString();
-  } catch {
-    return undefined;
-  }
 }
 
 // Deleting the last visual of a project deletes the project too, or its URL

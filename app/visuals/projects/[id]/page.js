@@ -4,6 +4,7 @@ import { Check, Play } from "lucide-react";
 import UtilityBar from "../../../_ui/UtilityBar";
 import SiteFooter from "../../../_ui/SiteFooter";
 import Favicon from "../../../_ui/Favicon";
+import PageDrop from "../../../_ui/PageDrop";
 import PickLoading from "../../../_ui/PickLoading";
 import { GAP, MasonrySkeleton, layout, useColumns } from "../../../_ui/masonry";
 import VisualMedia from "../../../_ui/VisualMedia";
@@ -271,8 +272,11 @@ export default function PickProjectPage({ params }) {
         {phase === "failed" && project && (
           <div className="empty-state empty-state-search">
             <h2 className="empty-state-headline">Nothing to choose from.</h2>
-            <p className="empty-state-body">{project.error || "That page couldn't be read."}</p>
-            <div className="pick-failed-actions">
+            <p className="empty-state-body">
+              {project.error || "That page couldn't be read."} You can add its images yourself, and they'll be saved
+              under this link.
+            </p>
+            <PageDrop project={project}>
               <button className="primary" onClick={() => run(project)}>
                 Try Again
               </button>
@@ -281,7 +285,7 @@ export default function PickProjectPage({ params }) {
               <button className="pick-cancel" onClick={() => cancel({ confirm: false })}>
                 Cancel
               </button>
-            </div>
+            </PageDrop>
           </div>
         )}
 

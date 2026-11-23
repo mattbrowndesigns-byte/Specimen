@@ -1134,7 +1134,8 @@
   }
 
   & .detail-section textarea,
-  & .lightbox-credit-form input {
+  & .lightbox-credit-form input,
+  & .page-drop-credit input {
     border: 1px solid transparent;
     border-radius: var(--r-field);
     background: var(--field-bg);
@@ -1144,12 +1145,14 @@
   }
 
   & .detail-section textarea:hover:not(:focus),
-  & .lightbox-credit-form input:hover:not(:focus) {
+  & .lightbox-credit-form input:hover:not(:focus),
+  & .page-drop-credit input:hover:not(:focus) {
     background: var(--chip-strong-bg);
   }
 
   & .detail-section textarea:focus,
-  & .lightbox-credit-form input:focus {
+  & .lightbox-credit-form input:focus,
+  & .page-drop-credit input:focus {
     outline: none;
     background: var(--surface);
     box-shadow: 0 0 0 2px var(--ring);

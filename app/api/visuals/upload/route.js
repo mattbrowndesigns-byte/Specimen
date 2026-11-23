@@ -12,7 +12,7 @@ export async function POST(request) {
   if (!user) return UNAUTHORIZED();
   const body = await request.json().catch(() => ({}));
   try {
-    const result = await startUpload(user.id, body.files);
+    const result = await startUpload(user.id, body.files, { projectId: body.projectId, credit: body.credit });
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
     const status = err instanceof UploadError ? err.status : 500;

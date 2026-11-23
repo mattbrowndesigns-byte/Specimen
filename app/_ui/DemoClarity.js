@@ -8,7 +8,7 @@ import { isDemoBrowser } from "./demoState";
 //
 // The id comes from clarity.microsoft.com and is public once it loads, so it
 // lives here rather than in an environment variable. Empty means it never loads.
-const CLARITY_ID = "";
+const CLARITY_ID = "zi84v7q9e8";
 
 // Pages a demo browser can reach that aren't the demo: signing in, and other
 // people's shared libraries. A recording must not start on either.

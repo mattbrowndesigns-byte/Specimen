@@ -5,6 +5,7 @@ import { attachSiteFavicons } from "@/lib/componentFavicons";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
 import { mediaFiles, removeFiles } from "@/lib/visuals";
+import { removeUnshared } from "@/lib/storage";
 
 export async function GET(request, { params }) {
   const user = await currentUser();
@@ -81,7 +82,9 @@ export async function DELETE(request, { params }) {
   await supabase.from("collection_item").delete().eq("target_type", "component").eq("target_id", id);
 
   // A captured page's screenshot may be the source of several components, so
-  // it stays. An upload -- an image, or a clip with its poster and stills --
+  // it stays. A screen grab is one person's screen and goes with the component
+  // cut from it: a picture that can hold anything must not outlive the save it
+  // was taken for. An upload -- an image, or a clip with its poster and stills --
   // belongs to its one component and goes with it, unless another row points
   // at the same file, which is what the demo's copy of a library does.
   const { data: doomed } = await supabase
@@ -112,6 +115,28 @@ export async function DELETE(request, { params }) {
           .eq("full_url", doomed.source_image_url)
           .eq("user_id", user.id);
       }
+    }
+  }
+
+  if (doomed?.source_url && doomed.source_image_url) {
+    // The file name is what marks a grab (lib/componentUpload.js).
+    const { data: grabs } = await supabase
+      .from("component_capture")
+      .select("id, full_url")
+      .eq("full_url", doomed.source_image_url)
+      .eq("user_id", user.id)
+      .not("file_name", "is", null);
+    if (grabs?.length) {
+      await removeUnshared(supabase, {
+        table: "component",
+        column: "source_image_url",
+        rows: [doomed],
+        filesOf: (row) => [row.source_image_url, row.image_url],
+      });
+      await supabase
+        .from("component_capture")
+        .delete()
+        .in("id", grabs.map((g) => g.id));
     }
   }
   return NextResponse.json({ ok: true });

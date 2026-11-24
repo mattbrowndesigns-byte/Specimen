@@ -69,7 +69,7 @@ Leave the others unticked. Then tick all the certifications under them, once you
 
 **Payments:** free
 **Visibility:** Unlisted
-**Regions:** All regions
+**Regions:** United States only. Kivli's free Gemini plan may not be offered to people in the EEA, UK or Switzerland, so don't choose All regions.
 
 ## Test instructions
 

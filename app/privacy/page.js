@@ -19,8 +19,8 @@ export default function PrivacyPage() {
         </div>
         <div className="prose-section">
           <p>
-            Kivli keeps what you save so you can find it again. It isn&rsquo;t sold, it isn&rsquo;t used for
-            advertising, and nobody else sees your library unless you share it.
+            Kivli keeps what you save so you can find it again. It isn&rsquo;t sold or used for advertising,
+            and other people can&rsquo;t open your library unless you share it. It is for adults, 18 and over.
           </p>
         </div>
       </section>
@@ -94,12 +94,17 @@ export default function PrivacyPage() {
           <p>
             Writes summaries and tags. It is sent the page&rsquo;s address and text, or the saved pictures.
             Kivli uses its free plan, whose terms let Google use what it&rsquo;s sent to improve its own
-            products, and people may review it. Don&rsquo;t save or grab anything confidential.
+            products, and people may review it. Don&rsquo;t save or grab anything personal,
+            sensitive or confidential.
           </p>
           <h3>GitHub</h3>
           <p>Runs the browser that photographs the websites you save, and is given their addresses.</p>
           <h3>Google&rsquo;s icon service</h3>
           <p>Supplies site icons, so it is told which sites an icon is needed for.</p>
+          <h3>The Internet Archive</h3>
+          <p>Asked whether it has an older copy of a website you open in your library.</p>
+          <h3>An AI app, if you connect one</h3>
+          <p>Can read your library and add to it, until you disconnect it on the MCP Server page.</p>
           <h3>Microsoft Clarity</h3>
           <p>Records visits to the public demo, to see where it confuses people. It never runs in an account.</p>
         </div>
@@ -126,8 +131,9 @@ export default function PrivacyPage() {
         </div>
         <div className="prose-section">
           <p>
-            Delete any save in Kivli and it goes from your library with its files, unless another save uses
-            the same file. Turn a share link off and it stops working. Remove the extension from Chrome and it
+            Delete a save in Kivli and it goes from your library with its files, unless another save uses the
+            same file. One exception: a component cut from a full-page capture leaves that capture and the cut
+            piece stored, out of sight. A screen grab goes completely. Turn a share link off and it stops working. Remove the extension from Chrome and it
             can send nothing more.
           </p>
           <p>

@@ -2478,6 +2478,11 @@ every field. `/privacy` is the policy the store checks those answers against, so
 new permission, or anything new sent, is a change in all three. Its host permission
 is the app's address: a new domain is a new version and another review.
 
+Gemini's free plan may not serve an app offered in the EEA, UK or Switzerland, or to
+under-18s, and forbids personal or confidential input: hence US only in the store and
+the warnings on `/privacy`. Deleting a component keeps a page capture's files, since
+others may be cut from it, and removes a screen grab's.
+
 The capture logs are public because the repo is, and they printed every saved
 address. The first step of both workflows masks it.
 

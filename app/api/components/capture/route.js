@@ -13,11 +13,10 @@ export const dynamic = "force-dynamic";
 // a five-hundred-link import would otherwise be five hundred rows reading
 // "waiting" above the library.
 //
-// Imported captures, uploaded images (no url) and screen grabs (a url, and the
-// file name only something uploaded has). One captured from the Add
-// menu goes straight to the crop tool and never needed a list; old ones were
-// never marked cropped, so listing them would resurrect every page anyone ever
-// cropped from.
+// Imported captures, uploaded images (no url), screen grabs and pages captured
+// from Add (a url and a file name). A page captured from Add before 2026-11-24
+// has no file name and was never marked cropped, so it stays out: listing those
+// would resurrect every page anyone ever cropped from.
 export async function GET() {
   const user = await currentUser();
   if (!user) return UNAUTHORIZED();
@@ -91,7 +90,9 @@ export async function POST(request) {
 
   const { data: capture, error } = await supabase
     .from("component_capture")
-    .insert({ url: parsed.toString(), domain, user_id: user.id })
+    // The name is what keeps it on the crop list if you leave before cropping:
+    // the capture used to belong to whichever tab was open when it finished.
+    .insert({ url: parsed.toString(), domain, user_id: user.id, file_name: "Full page" })
     .select()
     .single();
 

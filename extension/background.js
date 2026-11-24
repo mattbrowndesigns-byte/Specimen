@@ -59,7 +59,7 @@ async function grab({ url, windowId }) {
   if (!sent?.ok) return { ok: false, error: "The screen grab didn't upload. Try again." };
   const done = await post("/api/components/upload/process", { path, name: "Screen grab", pageUrl: url });
   if (!done.ok) return done;
-  await open(`/?crop=${done.data.capture.id}`);
+  await open(`/components/crop/${done.data.capture.id}`);
   return { ok: true, opened: true };
 }
 
@@ -69,8 +69,7 @@ async function save({ kind, how, url, title, note, folderId, collectionId, colle
   if (kind === "component") {
     const res = await post("/api/components/capture", { url });
     if (!res.ok) return res;
-    const { id, domain } = res.data.capture;
-    await open(`/?${new URLSearchParams({ job: `component:${id}`, label: domain || "" })}`);
+    await open(`/components/crop/${res.data.capture.id}`);
     return { ok: true, opened: true };
   }
 

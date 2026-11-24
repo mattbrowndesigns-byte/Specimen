@@ -5,6 +5,7 @@ import UtilityBar from "../../../_ui/UtilityBar";
 import SiteFooter from "../../../_ui/SiteFooter";
 import Favicon from "../../../_ui/Favicon";
 import PageDrop from "../../../_ui/PageDrop";
+import SavedVisuals from "../../../_ui/SavedVisuals";
 import PickLoading from "../../../_ui/PickLoading";
 import { GAP, MasonrySkeleton, layout, useColumns } from "../../../_ui/masonry";
 import VisualMedia from "../../../_ui/VisualMedia";
@@ -98,6 +99,7 @@ export default function PickProjectPage({ params }) {
   const [staged, setStaged] = useState(false);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const started = useRef(false);
   const [gridEl, setGridEl] = useState(null);
   const columns = useColumns(gridEl);
@@ -188,8 +190,12 @@ export default function PickProjectPage({ params }) {
         });
         return;
       }
+      // Saved already: what was kept from this page, which is also where the
+      // browser extension sends you to see a save it has just made.
       if (p.state === "saved") {
-        window.location.href = "/?tab=visuals";
+        setProject(p);
+        setJustSaved(new URLSearchParams(window.location.search).has("saved"));
+        setPhase("saved");
         return;
       }
       if (p.state === "failed") {
@@ -215,7 +221,7 @@ export default function PickProjectPage({ params }) {
     if (staged) {
       await wait(DEMO_SAVE_MS);
       addDemoPicks(fresh.filter((c) => selected.has(c.key)).map((c) => c.image_url));
-      window.location.href = "/?tab=visuals";
+      showSaved();
       return;
     }
     const res = await fetch(`/api/visuals/projects/${id}/save`, {
@@ -229,7 +235,17 @@ export default function PickProjectPage({ params }) {
       setSaving(false);
       return;
     }
-    window.location.href = "/?tab=visuals";
+    showSaved();
+  }
+
+  // The same page, showing what was kept. The address says so too, so a refresh
+  // lands here rather than asking a saved project what to pick.
+  function showSaved() {
+    window.history.replaceState(window.history.state, "", `/visuals/projects/${id}?saved=1`);
+    window.scrollTo(0, 0);
+    setJustSaved(true);
+    setSaving(false);
+    setPhase("saved");
   }
 
   // Leaving without saving. On a first pull that deletes what was found; on a
@@ -268,6 +284,8 @@ export default function PickProjectPage({ params }) {
             <MasonrySkeleton label="Finding images" />
           </>
         )}
+
+        {phase === "saved" && project && <SavedVisuals project={project} justSaved={justSaved} />}
 
         {phase === "failed" && project && (
           <div className="empty-state empty-state-search page-drop-panel">

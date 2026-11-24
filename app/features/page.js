@@ -14,7 +14,7 @@ export default function FeaturesPage() {
       <header className="prose-head">
         <h1>Features</h1>
         <p className="prose-lede">
-          Save websites, components, resources and visuals, and find them again in seconds.
+          Save websites, components, visuals and resources, and find them again in seconds.
         </p>
       </header>
 

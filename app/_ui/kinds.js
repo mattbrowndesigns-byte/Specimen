@@ -6,6 +6,10 @@ import { Globe, Crop, Link2, Images } from "lucide-react";
 // list lives in lib/features.js and two surfaces read it rather than each
 // keeping its own copy.
 //
+// The order is the order everywhere: what you look at first, websites then
+// components then visuals, and resources last, which are kept for what they do.
+// Resources came before visuals only because they were built first.
+//
 // Three sets of ids, because three things already named these differently and
 // renaming them would touch far more than it buys. `id` is what the database
 // calls the record and what RecordGrid keys on, `tab` is the dashboard's own
@@ -30,15 +34,6 @@ export const KINDS = [
     Icon: Crop,
   },
   {
-    id: "resource",
-    tab: "resources",
-    add: "resource",
-    label: "Resources",
-    one: "Resource",
-    blurb: "Save a tool or reference",
-    Icon: Link2,
-  },
-  {
     id: "visual",
     tab: "visuals",
     add: "visual",
@@ -46,6 +41,15 @@ export const KINDS = [
     one: "Visual",
     blurb: "Save the images from any page",
     Icon: Images,
+  },
+  {
+    id: "resource",
+    tab: "resources",
+    add: "resource",
+    label: "Resources",
+    one: "Resource",
+    blurb: "Save a tool or reference",
+    Icon: Link2,
   },
 ];
 

@@ -2456,9 +2456,10 @@ LinkedIn post; as a standing second button it failed on exactly the pages the pa
 exists for.
 
 Component photographs the visible tab and uploads it the way an uploaded component
-goes, with `pageUrl`: a capture with a url AND a `file_name`, which is how the crop
-list and Discard know a grab from an abandoned Add capture. `/?crop=<id>` opens the
-crop tool and keeps its id in the address until the grab is read.
+goes, with `pageUrl`: a capture with a url and the file name "Screen grab". It opens
+`/components/crop/<id>`. A page captured from Add is named "Full page", so it waits
+on the crop list too if you leave; one from before 2026-11-24 has no name and stays
+off it. `/?crop=` and `/?job=component:` are what older extensions send, and redirect.
 
 `/api/extension/lookup` is a POST so the page's address stays out of logs, which
 also means a demo pass is refused and the panel asks you to sign in.
@@ -2492,6 +2493,31 @@ the old one. The panel must stay under 600px, which is why its lists float and
 the image grid measures what is left. Tested
 in Chromium against the app and a stand-in database (Playwright, the panel opened
 as a page with `chrome.tabs.query` replaced); a real toolbar click is not.
+
+The panel's kinds are one row, icon beside word, 420px wide to fit them; stacked
+icons were rejected. Picked images wear Kivli's own picker's tick, white in dark and
+near-black in light, never the orange.
+
+**Cropping is a page, `/components/crop/[id]`, with the visuals picker's beats.** Bar
+and grey shapes while it's captured, then the image, then the component's own page. It
+was a panel on the dashboard, under the headline and tabs, and read as the home page.
+The box is fractions of the image, never screen pixels: pixels measured once at load
+went stale on a zoom or a resize, so the dimming missed a side of the picture and the
+box stopped short of its edge. Pointer capture, edge scrolling and four mask panes
+replaced the mouse handlers and the hand-built polygon.
+
+**Seeing a visuals save is `/visuals/projects/[id]`, not the board.** A saved project
+shows what was kept from that page (`SavedVisuals.js`), the newest save first by its
+shared `saved_at`. The picker and the extension's See Them both land there.
+
+**Kinds run Website, Component, Visual, Resource**, from `app/_ui/kinds.js`; the
+extension, `lib/features.js` and the shared page keep their own lists in that order.
+
+**A container's hover rule beats the solid button inside it.** `.crop-actions
+button:hover` outweighed `.crop-save`, so its label went the colour of its own fill
+(1.12:1), and `.modal-foot button:hover` turned Delete grey. A special button in a
+styled container states its own hover. Every control was measured by forcing :hover
+in both themes: nothing under 4.5:1 (2.5 for an icon), no disabled button reacting.
 
 **Clipboard writes have to start inside the click.** Safari ends the click's
 permission while the export is being fetched, so `fetch` then `writeText`

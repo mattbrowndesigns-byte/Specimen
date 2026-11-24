@@ -119,13 +119,13 @@ export async function DELETE(request, { params }) {
   }
 
   if (doomed?.source_url && doomed.source_image_url) {
-    // The file name is what marks a grab (lib/componentUpload.js).
+    // The file name is what marks a grab, and not a captured page.
     const { data: grabs } = await supabase
       .from("component_capture")
       .select("id, full_url")
       .eq("full_url", doomed.source_image_url)
       .eq("user_id", user.id)
-      .not("file_name", "is", null);
+      .eq("file_name", "Screen grab");
     if (grabs?.length) {
       await removeUnshared(supabase, {
         table: "component",

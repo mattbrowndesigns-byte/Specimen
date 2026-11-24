@@ -38,43 +38,32 @@ export default function CaptureProgress({ job, onDone }) {
 
     const poll = setInterval(async () => {
       try {
-        if (job.kind === "website") {
-          const res = await fetch(`/api/sites/${job.id}`);
-          if (!res.ok) return;
-          const data = await res.json();
-          const captures = data.site.capture || [];
-          if (!cancelled && captures.length > 0) {
-            // Any row means the run is over, because the callback writes every
-            // viewport of a run in a single insert. So a run that arrives
-            // without a desktop shot isn't going to produce one -- and the
-            // callback also skips enrichment without one, which is why a
-            // half-delivered save has no summary and no tags either.
-            //
-            // Declaring victory on `captures.length > 0` was the bug behind
-            // "the bar said it was done and the card still says Capturing":
-            // a mobile-only delivery satisfied it.
-            const shot = captures.some((capture) => capture.viewport === "desktop");
-            // The screenshots are in either way; the tagging pass may still be
-            // waiting on the AI's free tier. Saying so is the difference
-            // between "it worked" and "half of it silently didn't".
-            setFailed(!shot);
-            setQueued(shot && data.site.enrichment_state === "queued");
-            setDone(true);
-            clearInterval(poll);
-            setTimeout(
-              () => onDone(null),
-              shot ? queuedHold(data.site.enrichment_state) : FAILED_HOLD,
-            );
-          }
-        } else {
-          const res = await fetch(`/api/components/capture/${job.id}`);
-          if (!res.ok) return;
-          const data = await res.json();
-          if (!cancelled && data.capture.status !== "pending") {
-            setDone(true);
-            clearInterval(poll);
-            setTimeout(() => onDone(data.capture), 1200);
-          }
+        const res = await fetch(`/api/sites/${job.id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const captures = data.site.capture || [];
+        if (!cancelled && captures.length > 0) {
+          // Any row means the run is over, because the callback writes every
+          // viewport of a run in a single insert. So a run that arrives
+          // without a desktop shot isn't going to produce one -- and the
+          // callback also skips enrichment without one, which is why a
+          // half-delivered save has no summary and no tags either.
+          //
+          // Declaring victory on `captures.length > 0` was the bug behind
+          // "the bar said it was done and the card still says Capturing":
+          // a mobile-only delivery satisfied it.
+          const shot = captures.some((capture) => capture.viewport === "desktop");
+          // The screenshots are in either way; the tagging pass may still be
+          // waiting on the AI's free tier. Saying so is the difference
+          // between "it worked" and "half of it silently didn't".
+          setFailed(!shot);
+          setQueued(shot && data.site.enrichment_state === "queued");
+          setDone(true);
+          clearInterval(poll);
+          setTimeout(
+            () => onDone(null),
+            shot ? queuedHold(data.site.enrichment_state) : FAILED_HOLD,
+          );
         }
       } catch {
         // A failed poll just means we try again on the next tick.
@@ -109,8 +98,7 @@ export default function CaptureProgress({ job, onDone }) {
             </>
           ) : (
             <>
-              ✓ {job.label} captured
-              {job.kind === "component" ? ". Ready to crop." : " and tagged."}
+              ✓ {job.label} captured and tagged.
             </>
           )}
         </p>

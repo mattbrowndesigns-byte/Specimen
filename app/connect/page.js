@@ -69,7 +69,7 @@ const ABILITIES = [
   {
     Icon: Search,
     title: "Search your library",
-    body: "By words and tags, across your websites, components, resources and images.",
+    body: "By words and tags, across your websites, components, images and resources.",
     example: "Find the pricing pages in my Kivli library and compare how they lay out the plans.",
   },
   {

@@ -80,7 +80,7 @@ export default async function ConsentPage({ searchParams }) {
       <div className="consent-section">
         <h2>It will be able to</h2>
         <ul>
-          <li>Search your websites, components, resources and visuals</li>
+          <li>Search your websites, components, visuals and resources</li>
           <li>Open any save, with its screenshots, colours, type and notes</li>
           <li>Read your collections and your tags</li>
           <li>Save websites and resources you ask it to, and make and fill collections</li>

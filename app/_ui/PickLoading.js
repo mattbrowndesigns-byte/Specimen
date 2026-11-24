@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import FeatureRotator from "./FeatureRotator";
 import { useAnnounceWork } from "./workInFlight";
 
-// The wait before a page's images can be chosen: the loading bar every other
-// save uses.
-export default function PickLoading({ phase, seconds }) {
+// The wait before there is something to choose from, in the visuals picker and
+// on the crop page: the loading bar every other save uses. `label` and `note`
+// are for a wait that isn't the picker's own.
+export default function PickLoading({ phase, seconds, label, note }) {
   const [elapsed, setElapsed] = useState(0);
   useAnnounceWork(true);
   useEffect(() => {
@@ -23,12 +24,15 @@ export default function PickLoading({ phase, seconds }) {
       </div>
       <div className="capture-status-row">
         <p>
-          {phase === "sorting"
+          {label
+            ? label
+            : phase === "sorting"
             ? "Picking out the work from the rest of the page"
             : phase === "posters"
               ? "Looking through each video"
               : "Finding the images and videos on the page"}
           {elapsed < seconds ? `: about ${Math.ceil(seconds - elapsed)}s remaining.` : ": finishing up."}
+          {note && ` ${note}`}
         </p>
         {/* The same aside the capture bar carries, so a visuals save reads as
             the same kind of wait as every other save. */}

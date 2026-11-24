@@ -27,8 +27,8 @@ import { ClipBadge } from "./VisualMedia";
 const TABS = {
   sites: KIND.site,
   components: KIND.component,
-  resources: KIND.resource,
   visuals: KIND.visual,
+  resources: KIND.resource,
 };
 
 // The same first screenful the dashboard shows. A library of 150 sites should

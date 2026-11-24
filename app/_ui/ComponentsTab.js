@@ -1,10 +1,11 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Crop } from "lucide-react";
-import CropTool from "./CropTool";
 import Favicon from "./Favicon";
 import LibraryBrowser from "./LibraryBrowser";
 import { explainCaptureFailure } from "@/lib/captureFailure";
+import { cropUrl } from "@/lib/addItem";
 import { useDemoHold, useIsDemo } from "./demoState";
 import useFileDrop, { DropOverlay } from "./useFileDrop";
 import { describeComponents, startComponentUpload, useUploads } from "./uploads";
@@ -38,8 +39,6 @@ const openedUploads = new Set();
 
 export default function ComponentsTab({
   allTags,
-  pendingCapture,
-  setPendingCapture,
   refreshKey,
   onAdd,
   incomingQuery,
@@ -49,7 +48,7 @@ export default function ComponentsTab({
   const [components, setComponents] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState("");
-  const [saving, setSaving] = useState(false);
+  const router = useRouter();
   const [error, setError] = useState(null);
 
   async function loadComponents() {
@@ -92,7 +91,6 @@ export default function ComponentsTab({
       const data = await res.json().catch(() => ({}));
       setError(data.error || "Couldn't discard that page");
     }
-    if (pendingCapture?.id === capture.id) setPendingCapture(null);
     loadCrops();
   }
 
@@ -110,8 +108,7 @@ export default function ComponentsTab({
   const dragging = useFileDrop(demo ? null : startComponentUpload);
 
   // Uploaded images land on the crop list as they're encoded. One on its own
-  // opens straight in the crop tool, which is where a captured page goes; a
-  // batch waits on the list, where each can be cropped or kept as it is.
+  // opens the crop page, which is where a captured page goes; a batch waits on the list, where each can be cropped or kept as it is.
   const uploads = useUploads("component");
   // A clip has nothing to crop and is on the board as soon as it lands.
   const landed = uploads.reduce((n, u) => n + u.items.length, 0);
@@ -129,10 +126,10 @@ export default function ComponentsTab({
         !u.items[0].video_url &&
         !openedUploads.has(u.id)
     );
-    if (!single || pendingCapture) return;
+    if (!single) return;
     openedUploads.add(single.id);
-    setPendingCapture(single.items[0]);
-  }, [uploads, pendingCapture, setPendingCapture]);
+    router.push(cropUrl(single.items[0].id));
+  }, [uploads, router]);
 
   // Names, summaries and tags, as each saved upload gets them. A read rather
   // than a patch, so one that was queued instead shows that truth too.
@@ -175,43 +172,6 @@ export default function ComponentsTab({
     }
   }
 
-  async function handleSaveCrop(cropRect) {
-    const uploaded = !pendingCapture.url;
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/components", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          componentCaptureId: pendingCapture.id,
-          cropRect,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Failed to save component");
-        return;
-      }
-      setPendingCapture(null);
-      setComponents((prev) => [data.component, ...prev]);
-      // A crop from the list takes that page off it.
-      loadCrops();
-      if (data.enrichmentError) {
-        setError(
-          data.enrichmentQueued
-            ? "Crop saved. The AI is at its limit right now, so its description is queued and will fill in on its own."
-            : "Crop saved, but the AI couldn't describe it just now. Open the component and hit Regenerate.",
-        );
-      }
-      if (uploaded) describeComponents([data.component]);
-    } catch {
-      setError("Couldn't reach the server");
-    } finally {
-      setSaving(false);
-    }
-  }
-
   // In the demo, the Ramp block the staged Add replays arrives as a new card,
   // with no image while it runs -- the card's "Processing…" state.
   const held = useDemoHold("component", components, {
@@ -237,40 +197,13 @@ export default function ComponentsTab({
     );
   }, [held, query]);
 
-  if (pendingCapture?.status === "ready") {
-    return (
-      <>
-        {error && <p className="error">{error}</p>}
-        {dragging && <DropOverlay label="Components" />}
-        {/* Keyed, so the next image doesn't open with the last one's box. */}
-        <CropTool
-          key={pendingCapture.id}
-          imageUrl={pendingCapture.full_url}
-          onCancel={() => setPendingCapture(null)}
-          onSave={handleSaveCrop}
-          onKeep={pendingCapture.url ? undefined : () => handleSaveCrop(null)}
-          quick={!pendingCapture.url}
-          saving={saving}
-        />
-      </>
-    );
-  }
-
   return (
     <>
       {error && <p className="error">{error}</p>}
-      {pendingCapture?.status === "failed" && (
-        <p className="error">
-          <strong>{pendingCapture.domain} couldn&rsquo;t be captured.</strong>{" "}
-          {explainCaptureFailure(pendingCapture.capture_error)}{" "}
-          <button onClick={() => setPendingCapture(null)}>Dismiss</button>
-        </p>
-      )}
       {dragging && <DropOverlay label="Components" />}
       <CropQueue
         crops={crops}
-        onCrop={setPendingCapture}
-        onKeep={keepAsIs}
+                onKeep={keepAsIs}
         keeping={keeping}
         onDiscard={discardCapture}
       />
@@ -297,7 +230,7 @@ export default function ComponentsTab({
 // each one a crop you haven't drawn yet. First on the tab for the same reason a visuals
 // project waiting to be picked is -- it is holding storage until you act on
 // it -- and because cropping one is what lets the queue capture the next.
-function CropQueue({ crops, onCrop, onKeep, keeping, onDiscard }) {
+function CropQueue({ crops, onKeep, keeping, onDiscard }) {
   if (!crops) return null;
   const ready = crops.captures.filter((c) => c.status === "ready" && c.capture_state !== "failed");
   const failed = crops.captures.filter((c) => c.status === "failed" || c.capture_state === "failed");
@@ -322,7 +255,7 @@ function CropQueue({ crops, onCrop, onKeep, keeping, onDiscard }) {
       </div>
       {ready.map((capture) => (
         <div key={capture.id} className="crop-queue-row">
-          <button type="button" className="visual-pending-row crop-queue-open" onClick={() => onCrop(capture)}>
+          <a className="visual-pending-row crop-queue-open" href={cropUrl(capture.id)}>
             {capture.url ? (
               <Favicon url={capture.url} alt={capture.domain} />
             ) : (
@@ -337,7 +270,7 @@ function CropQueue({ crops, onCrop, onKeep, keeping, onDiscard }) {
               <Crop size={15} aria-hidden="true" />
               Crop
             </span>
-          </button>
+          </a>
           {!capture.url && (
             <button type="button" className="crop-queue-keep" onClick={() => onKeep([capture])} disabled={Boolean(keeping)}>
               {keeping === capture.id ? "Saving…" : "Use As Is"}

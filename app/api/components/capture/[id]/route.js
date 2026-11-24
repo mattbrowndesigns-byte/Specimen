@@ -20,8 +20,8 @@ export async function GET(request, { params }) {
   return NextResponse.json({ capture: data });
 }
 
-// Discarding something from the crop list. Only an imported capture, an upload
-// or a screen grab nobody has cropped from: that is the one case where the screenshots belong to nothing
+// Discarding something from the crop list: an imported capture, an upload, a
+// screen grab or a page captured from Add that nobody has cropped from: that is the one case where the screenshots belong to nothing
 // else, so they can go with the row and give their storage back -- which is
 // also what lets the capture queue send the next page. A cropped capture's
 // file is a component's source image and must outlive it.

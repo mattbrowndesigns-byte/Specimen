@@ -718,7 +718,7 @@
     font-weight: 500;
   }
 
-  & .modal-foot button:hover:not(:disabled) {
+  & .modal-foot button:not(.danger-btn):hover:not(:disabled) {
     background: var(--chip-strong-bg);
   }
 
@@ -1358,7 +1358,7 @@
     font-weight: 500;
   }
 
-  & .tag-actions button:not(.danger-btn):hover {
+  & .tag-actions button:not(.danger-btn):hover:not(:disabled) {
     background: var(--chip-strong-bg);
   }
 
@@ -1587,7 +1587,7 @@
   /* The row is one button, like a visuals row is one link: the whole width
      opens the crop tool. The pending row's own -10px side margin is kept on
      the left only, so Discard sits on the panel's padding rather than in it. */
-  & button.visual-pending-row.crop-queue-open {
+  & .visual-pending-row.crop-queue-open {
     flex: 1;
     min-width: 0;
     margin-right: 0;
@@ -1598,7 +1598,7 @@
     cursor: pointer;
   }
 
-  & button.visual-pending-row.crop-queue-open:hover {
+  & .visual-pending-row.crop-queue-open:hover {
     background: var(--surface-hover);
   }
 
@@ -2039,5 +2039,118 @@
     margin: 4px 0 0;
     font-size: 13px;
     color: var(--text-muted);
+  }
+}
+
+/* Cropping (app/_ui/CropTool.js), as a page of its own and inside a component's.
+   The bar's buttons are the app's capsules: the container's hover rule used to
+   outrank the solid button's own fill and leave its label the colour of what was
+   behind it, so each button here says its own rest and hover. */
+:root[data-variant="refined"] {
+  & .crop-page .crop-container {
+    border-color: var(--border);
+    background: var(--stage);
+  }
+
+  & .crop-hint {
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+
+  & .crop-actions button {
+    height: 38px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--chip-strong-bg);
+    color: var(--text);
+    font-weight: 500;
+    transition: background-color 0.18s var(--ease), transform 0.18s var(--ease);
+  }
+
+  & .crop-actions button:hover:not(:disabled) {
+    background: var(--border-strong);
+  }
+
+  & .crop-actions button:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  & .crop-actions button.crop-save {
+    background: var(--invert-bg);
+    color: var(--invert-text);
+    font-weight: 600;
+  }
+
+  & .crop-actions button.crop-save:hover:not(:disabled) {
+    background: var(--invert-bg-hover);
+    color: var(--invert-text);
+  }
+
+  & .saved-head .saved-all {
+    margin-left: auto;
+  }
+
+  & .saved-earlier {
+    margin: 40px 0 16px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+
+  /* A container's own hover must never take the red off the one thing in it
+     that can't be undone, whatever its selector weighs. */
+  & .danger-btn.danger-btn.danger-btn.danger-btn:hover:not(:disabled) {
+    border-color: var(--danger-border);
+    background: var(--danger-bg-hover);
+    color: var(--danger);
+  }
+
+  & .tag-actions button:disabled {
+    color: var(--text);
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  /* Controls that had no hover at all. */
+  & .review-row > button:not(.icon-btn):not(.danger-btn) {
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--field-bg);
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  & .review-row > button:not(.icon-btn):not(.danger-btn):hover:not(:disabled) {
+    background: var(--chip-strong-bg);
+  }
+
+  & .save-form button:hover:not(:disabled) {
+    background: var(--invert-bg-hover);
+  }
+
+  & .resource-modal-link:hover {
+    color: var(--text);
+  }
+
+  & .modal-foot .modal-apply:hover:not(:disabled) {
+    background: var(--accent-solid-hover) !important;
+    border-color: var(--accent-solid-hover) !important;
+  }
+
+  & .auth-switch button:hover:not(.active) {
+    color: var(--text);
+  }
+
+  & .faq-q:hover .faq-chevron {
+    background: var(--surface-hover);
+  }
+
+  & .lightbox-thumb:not(.current):hover {
+    border-color: var(--border-strong-hover);
+  }
+
+  & .pick-tile-selected:hover .pick-check {
+    transform: scale(1.08);
   }
 }

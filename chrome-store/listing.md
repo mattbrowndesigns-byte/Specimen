@@ -1,6 +1,6 @@
 # Chrome Web Store: what to paste where
 
-Upload `kivli-0.2.2.zip` from this folder. Everything below is in the order of the dashboard's left-hand menu.
+Upload `kivli-0.3.0.zip` from this folder. Everything below is in the order of the dashboard's left-hand menu.
 
 ## Store listing
 

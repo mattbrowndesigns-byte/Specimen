@@ -26,17 +26,17 @@ const KINDS = [
     other: "Capture Full Page",
   },
   {
+    id: "visual",
+    one: "Visual",
+    tab: "Visuals",
+  },
+  {
     id: "resource",
     one: "Resource",
     tab: "Resources",
     blurb: "Described and filed in a few seconds.",
     action: "Save Resource",
     done: "Kivli is describing it now.",
-  },
-  {
-    id: "visual",
-    one: "Visual",
-    tab: "Visuals",
   },
 ];
 const KIND = Object.fromEntries(KINDS.map((k) => [k.id, k]));
@@ -415,7 +415,7 @@ function render(tab, found, firstKind) {
       chrome.storage.local.set({ [LAST_KIND]: kind });
       update();
     });
-    return el("label", { className: "kind" }, input, el("span", {}, icon(k.id, 18), k.one));
+    return el("label", { className: "kind" }, input, el("span", {}, icon(k.id, 15), k.one));
   });
   const kinds = el("div", { className: "kinds", attrs: { role: "radiogroup", "aria-label": "Save as" } }, ...radios);
   const blurb = el("p", { className: "blurb" });
@@ -565,7 +565,9 @@ function finished(data, kind, chosen) {
     done({
       title: data.saved ? `Saved ${plural(data.saved, "image")}` : "Already in Visuals",
       lines: [data.saved && "Kivli is describing and tagging them now.", where && `They’re in ${where}.`, data.warning],
-      href: "/?tab=visuals",
+      // Just these, rather than the whole board to find them on.
+      href: `/visuals/projects/${data.projectId}${data.saved ? "?saved=1" : ""}`,
+      see: data.saved === 1 ? "See It" : "See Them",
     });
     return;
   }
@@ -580,10 +582,16 @@ function finished(data, kind, chosen) {
   if (!data.existing && where) lines.push(`It’s in ${where}.`);
   if (data.warning) lines.push(data.warning);
 
-  done({ title, name: data.name, lines, href: kind === "site" ? `/sites/${data.id}` : "/?tab=resources" });
+  done({
+    title,
+    name: data.name,
+    lines,
+    href: kind === "site" ? `/sites/${data.id}` : "/?tab=resources",
+    see: kind === "site" ? "See It" : "See Resources",
+  });
 }
 
-function done({ title, name, lines, href }) {
+function done({ title, name, lines, href, see }) {
   const said = lines.filter(Boolean).join(" ");
   const close = el("button", { type: "button", className: "primary", textContent: "Done", onclick: () => window.close() });
   main.replaceChildren(
@@ -600,7 +608,7 @@ function done({ title, name, lines, href }) {
         el("button", {
           type: "button",
           className: "secondary",
-          textContent: "Open in Kivli",
+          textContent: see,
           onclick: () => openKivli(href),
         }),
         close

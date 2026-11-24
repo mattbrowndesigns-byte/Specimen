@@ -16,7 +16,7 @@ import { useDemoPhase } from "./_ui/demoState";
 import SiteFooter from "./_ui/SiteFooter";
 import HeroRotator from "./_ui/HeroRotator";
 import ConnectNote from "./_ui/ConnectNote";
-import { addItem, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
+import { addItem, cropFromSearch, cropUrl, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
 
 // The last upload that brought its tab forward. Outside the component,
 // because a panel can outlive a visit to another page, and coming back to the
@@ -33,7 +33,6 @@ function clearSearch() {
 export default function Home() {
   const [tab, setTab] = useState("websites");
   const [allTags, setAllTags] = useState([]);
-  const [pendingCapture, setPendingCapture] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [newResource, setNewResource] = useState(null);
   const [describeId, setDescribeId] = useState(null);
@@ -144,33 +143,22 @@ export default function Home() {
       return;
     }
 
-    // A screen grab from the extension: already here, so straight into the
-    // crop tool. The address keeps its id until the grab has been read, so a
-    // reload on the way asks again; one that can't be read is still on the
-    // tab's crop list.
-    const cropId = new URLSearchParams(window.location.search).get("crop");
+    const cropId = cropFromSearch(window.location.search);
     if (cropId) {
-      setTab("components");
-      fetch(`/api/components/capture/${cropId}`)
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data?.capture?.status === "ready" && !data.capture.cropped_at) setPendingCapture(data.capture);
-          clearSearch();
-        })
-        .catch(() => {});
+      window.location.replace(cropUrl(cropId));
       return;
     }
 
     const job = jobFromSearch(window.location.search);
     if (!job) return;
-    setTab(job.kind === "component" ? "components" : "websites");
+    setTab("websites");
     setJobs((prev) => (prev.some((j) => j.key === job.key) ? prev : [...prev, job]));
     clearSearch();
   }, []);
 
   // Add is in the utility bar rather than inside a tab, so saving never depends
-  // on which tab happens to be open. A component save switches you to that tab,
-  // since cropping is the next thing you'll do.
+  // on which tab happens to be open. A component or a visual goes to a page of
+  // its own, since choosing is the next thing you'll do.
   async function handleAdd(kind, url) {
     setError(null);
     try {
@@ -189,8 +177,7 @@ export default function Home() {
         setDescribeId(result.resource.id);
         return true;
       }
-      setTab(kind === "website" ? "websites" : "components");
-      if (result.capture) setPendingCapture(result.capture);
+      setTab("websites");
       if (result.site) setRefreshKey((k) => k + 1);
       setJobs((prev) => [...prev, result.job]);
       return true;
@@ -200,10 +187,9 @@ export default function Home() {
     }
   }
 
-  function finishJob(job, result) {
+  function finishJob(job) {
     setJobs((prev) => prev.filter((j) => j.key !== job.key));
     setRefreshKey((k) => k + 1);
-    if (job.kind === "component" && result) setPendingCapture(result);
   }
 
   // Clearing both is what stops the describe effect firing twice, and the tag
@@ -234,7 +220,7 @@ export default function Home() {
         ))}
 
         {jobs.map((job) => (
-          <CaptureProgress key={job.key} job={job} onDone={(result) => finishJob(job, result)} />
+          <CaptureProgress key={job.key} job={job} onDone={() => finishJob(job)} />
         ))}
 
         <ConnectNote />
@@ -281,8 +267,6 @@ export default function Home() {
         {tab === "components" && (
           <ComponentsTab
             allTags={designTags}
-            pendingCapture={pendingCapture}
-            setPendingCapture={setPendingCapture}
             refreshKey={refreshKey}
             onAdd={handleAdd}
             incomingQuery={incomingFor("components")}

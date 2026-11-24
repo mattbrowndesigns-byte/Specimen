@@ -766,6 +766,14 @@ export default function CaseStudyPage() {
             <p>
               Checking the page line by line against the code found a claim that wasn&rsquo;t true: deleting a component left its screen grab stored. It goes now.
             </p>
+            <h3>Cropping looked like the home page</h3>
+            <p>
+              Cropping a component happened on the dashboard, under the headline and the tabs, so a step in saving something looked like going home. It has its own page now, with the same three beats as picking images: a loading bar over grey shapes, the thing to choose from, then the result. The box had a fault too. It was measured in screen pixels once, when the image loaded, so zooming or resizing left it working to a size the image no longer was. It is kept as a share of the image now, which is right at any size.
+            </p>
+            <h3>Every button, hovered on purpose</h3>
+            <p>
+              The Save button went white on white when you pointed at it, and it wasn&rsquo;t the first. Instead of looking for the next one, I had a script force the hover state on every control it could reach, on every page and dialog, in both themes, and measure the contrast. It found that one at 1.12 to 1, a Delete that turned grey, a disabled Merge that reacted, and a handful with no hover at all. After the fixes it finds nothing under 4.5 to 1.
+            </p>
             <p>
               Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, and the browser button still have to be proven there.
             </p>

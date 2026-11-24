@@ -272,6 +272,7 @@ export default function ComponentDetailPage({ params }) {
                   initialRect={viewport === "mobile" ? component.mobile_crop_rect : component.crop_rect}
                   onCancel={() => setRecropping(false)}
                   onSave={handleRecrop}
+                  saveLabel="Save Crop"
                   onKeep={uploaded && component.crop_rect ? () => handleRecrop(null) : undefined}
                   saving={saving}
                 />

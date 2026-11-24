@@ -2472,6 +2472,15 @@ worker until a reload. 0.2.0 met that as a missing `chrome.scripting` and said t
 page was at fault, so the panel compares the two versions first and offers Finish
 Updating. That is why the version has to go up with every change.
 
+`chrome-store/` holds the Web Store listing: the zip (gitignored, built by the pack
+script with the manifest at its root), images, and `listing.md` with the answer to
+every field. `/privacy` is the policy the store checks those answers against, so a
+new permission, or anything new sent, is a change in all three. Its host permission
+is the app's address: a new domain is a new version and another review.
+
+The capture logs are public because the repo is, and they printed every saved
+address. The first step of both workflows masks it.
+
 After changing anything in `extension/`: raise the manifest version, run
 `node scripts/pack-extension.mjs` and commit the zip, or `/extension` hands out
 the old one. The panel must stay under 600px, which is why its lists float and

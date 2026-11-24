@@ -5,7 +5,7 @@
 //   node scripts/pack-extension.mjs
 //
 // The version goes in the manifest by hand: Chrome only tells people an
-// extension changed by its number.
+// extension changed by its number, and the store refuses a number it has seen.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -26,4 +26,12 @@ if (!manifest.host_permissions.includes(`${KIVLI}/*`)) {
 mkdirSync(dirname(out), { recursive: true });
 rmSync(out, { force: true });
 execFileSync("zip", ["-rqX", out, "extension", "-x", "*.DS_Store"], { cwd: root });
-console.log(`Packed ${manifest.name} ${manifest.version} into public/kivli-extension.zip`);
+
+// And the same files for the Chrome Web Store, which wants the manifest at the
+// top of the zip rather than inside a folder.
+const store = join(root, "chrome-store", `kivli-${manifest.version}.zip`);
+rmSync(store, { force: true });
+mkdirSync(dirname(store), { recursive: true });
+execFileSync("zip", ["-rqX", store, ".", "-x", "*.DS_Store"], { cwd: join(root, "extension") });
+
+console.log(`Packed ${manifest.name} ${manifest.version} into public/kivli-extension.zip and chrome-store/`);

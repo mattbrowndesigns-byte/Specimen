@@ -14,6 +14,7 @@ const LINKS = [
   // a share link wants to know how the thing works, and "Case Study" is a word
   // aimed at a different audience entirely.
   { href: "/case-study", label: "How it was built" },
+  { href: "/privacy", label: "Privacy" },
 ];
 
 export default function SharedFooter() {

@@ -19,3 +19,6 @@ _handoff/
 video/public/rec/
 video/public/music.wav
 video/out/
+
+# Built by scripts/pack-extension.mjs and uploaded by hand.
+chrome-store/*.zip

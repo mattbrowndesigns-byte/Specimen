@@ -134,7 +134,10 @@ export default function ExtensionPage() {
                 Only the page you press the button on, and only then. Its address goes to Kivli when the panel
                 opens, to check whether you already have it. It looks through the page for images when you
                 choose Visual and sends the ones you tick, and it photographs the screen when you press Grab
-                This Screen. It can&rsquo;t see other tabs or your history.
+                This Screen. It can&rsquo;t see other tabs or your history.{" "}
+                <a className="prose-link" href="/privacy">
+                  The whole privacy page
+                </a>
               </p>
             </section>
           </>

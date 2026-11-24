@@ -34,6 +34,8 @@ const PUBLIC_PATHS = [
   // Written about the project rather than for the people using it, and the
   // one page meant to be linked to from outside.
   "/case-study",
+  // The Chrome Web Store links to it, and its reviewers have no account.
+  "/privacy",
   // Hands out the demo pass. Everything past it is the real app, let through
   // below by the pass rather than by this list.
   "/demo",

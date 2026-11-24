@@ -12,6 +12,12 @@ jobs:
   analyze:
     runs-on: ubuntu-latest
     steps:
+      # The repository is public, so its logs are too, and what someone saves is
+      # theirs. Read from the event file rather than an expression, which would
+      # print the address it is there to hide. Never worth failing a capture for.
+      - name: Keep the address out of the log
+        run: echo "::add-mask::$(jq -r '.client_payload.url // empty' "$GITHUB_EVENT_PATH")" || true
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4

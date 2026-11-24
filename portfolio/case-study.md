@@ -435,6 +435,8 @@ Testing that found an image that loads as you scroll being thrown away for its s
 
 The first time I used it, the button was gray and the panel said Chrome wouldn't allow it on that page. It was nothing to do with the page. Chrome had picked up the new panel and gone on running the old permissions, and my error message blamed the only thing it could see. The panel checks its own version first now and offers to finish updating. I also took out a second button that asked Kivli to read the page instead, because it failed on exactly the pages the first one was for.
 
+**Writing down what it does with people's data.** The Chrome Web Store needs a privacy policy, and writing an honest one was a review in itself. Websites are photographed by a free job on a public code repository, and its public log printed the address of everything anyone saved. The address is hidden from the log now. The free AI plan also lets Google learn from what it's sent, so the page says so and says not to save anything confidential.
+
 Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, and the browser button still have to be proven there.
 
 ## What I deliberately did not build

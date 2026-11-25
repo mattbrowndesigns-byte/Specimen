@@ -84,7 +84,7 @@ export function MergeDialog({ tags, onMerge, onClose }) {
           <button onClick={onClose} disabled={busy}>
             Cancel
           </button>
-          <button className="modal-apply" onClick={submit} disabled={busy}>
+          <button className="modal-apply" onClick={submit} disabled={busy} aria-busy={busy}>
             {busy ? "Merging…" : "Merge"}
           </button>
         </>
@@ -109,6 +109,7 @@ export function MergeDialog({ tags, onMerge, onClose }) {
         <input
           value={name}
           maxLength={60}
+          aria-invalid={Boolean(error) && !name.trim()}
           aria-label="Name to keep"
           onChange={(e) => {
             setName(e.target.value);
@@ -146,7 +147,7 @@ export function RenameDialog({ tag, onRename, onClose }) {
           <button onClick={onClose} disabled={busy}>
             Cancel
           </button>
-          <button className="modal-apply" onClick={submit} disabled={busy}>
+          <button className="modal-apply" onClick={submit} disabled={busy} aria-busy={busy}>
             {busy ? "Saving…" : "Save"}
           </button>
         </>
@@ -158,6 +159,7 @@ export function RenameDialog({ tag, onRename, onClose }) {
         <input
           value={name}
           maxLength={60}
+          aria-invalid={Boolean(error) && !name.trim()}
           autoFocus
           onChange={(e) => {
             setName(e.target.value);
@@ -191,7 +193,12 @@ export function ConfirmDialog({ title, children, action, working, danger, extra,
                 {alternative.label}
               </button>
             )}
-            <button className={danger ? "danger-btn" : "modal-apply"} onClick={() => run(onConfirm)} disabled={busy}>
+            <button
+              className={danger ? "danger-btn" : "modal-apply"}
+              onClick={() => run(onConfirm)}
+              disabled={busy}
+              aria-busy={busy}
+            >
               {busy ? working : action}
             </button>
           </div>
@@ -216,7 +223,7 @@ function withWords(words, text) {
 
 // Words as pills: type one, press Enter, and it's a thing you can see and take
 // off. A line of commas was a format to follow, and nothing said it had worked.
-function PillInput({ words, typing, onWords, onTyping, placeholder }) {
+function PillInput({ words, typing, onWords, onTyping, placeholder, invalid }) {
   const inputRef = useRef(null);
 
   function add() {
@@ -248,6 +255,7 @@ function PillInput({ words, typing, onWords, onTyping, placeholder }) {
           value={typing}
           placeholder={placeholder}
           aria-label="Add a tag"
+          aria-invalid={invalid}
           onChange={(e) => {
             const value = e.target.value;
             if (!/[,\n]/.test(value)) return onTyping(value);
@@ -328,7 +336,7 @@ export function GroupDialog({ group, groups, sizes, startOn, onSave, onDelete, o
               Cancel
             </button>
           )}
-          <button className="modal-apply" onClick={submit} disabled={busy}>
+          <button className="modal-apply" onClick={submit} disabled={busy} aria-busy={busy}>
             {busy ? "Saving…" : group ? "Save" : "Create Group"}
           </button>
         </>
@@ -341,6 +349,7 @@ export function GroupDialog({ group, groups, sizes, startOn, onSave, onDelete, o
         <input
           value={label}
           maxLength={LABEL_MAX}
+          aria-invalid={Boolean(error) && !label.trim()}
           placeholder="Platform"
           autoFocus={!group}
           onChange={(e) => change(setLabel)(e.target.value)}
@@ -356,6 +365,7 @@ export function GroupDialog({ group, groups, sizes, startOn, onSave, onDelete, o
             onWords={change(setWords)}
             onTyping={change(setTyping)}
             placeholder={words.length ? "Add another" : "iOS"}
+            invalid={Boolean(error) && Boolean(label.trim()) && ai && starting.length < 2}
           />
           <small className="field-hint">Press Enter after each one. You can add more any time.</small>
         </div>

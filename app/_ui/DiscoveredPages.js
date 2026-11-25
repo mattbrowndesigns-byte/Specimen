@@ -134,7 +134,7 @@ export default function DiscoveredPages({
           {hasMore ? `Show All ${total} Pages` : "Open All Pages"}
         </button>
         {onRefresh && (
-          <button className="link-btn" onClick={onRefresh} disabled={refreshing}>
+          <button className="link-btn" onClick={onRefresh} disabled={refreshing} aria-busy={refreshing}>
             {refreshing ? "Re-reading…" : "Re-read Pages"}
           </button>
         )}
@@ -206,6 +206,7 @@ function PageList({ pages, promoted = {}, promoting, onPromote }) {
             <button
               className="promote-btn"
               disabled={promoting === page.id}
+              aria-busy={promoting === page.id}
               onClick={() => onPromote(page)}
             >
               {promoting === page.id ? "Capturing…" : "Promote To Full Capture"}

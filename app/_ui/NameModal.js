@@ -92,7 +92,7 @@ export default function NameModal({ onClose, onSaved }) {
         <button onClick={onClose} disabled={busy}>
           Cancel
         </button>
-        <button className="modal-apply" onClick={save} disabled={busy}>
+        <button className="modal-apply" onClick={save} disabled={busy} aria-busy={busy}>
           {busy ? "Saving…" : "Save"}
         </button>
       </div>

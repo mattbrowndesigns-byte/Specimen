@@ -367,7 +367,7 @@ export default function PickProjectPage({ params }) {
                   {count === fresh.length ? "Select none" : "Select all"}
                 </button>
               )}
-              <button className="primary" onClick={save} disabled={saving || count === 0}>
+              <button className="primary" onClick={save} disabled={saving || count === 0} aria-busy={saving}>
                 {saving ? "Saving…" : `Save ${count} Visual${count === 1 ? "" : "s"}`}
               </button>
             </div>

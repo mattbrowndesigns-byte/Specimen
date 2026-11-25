@@ -181,7 +181,7 @@ export default function PageDrop({ project, children }) {
 
       <div className="pick-failed-actions">
         {items.length > 0 ? (
-          <button type="button" className="primary" onClick={done} disabled={leaving || waiting > 0}>
+          <button type="button" className="primary" onClick={done} disabled={leaving || waiting > 0} aria-busy={leaving || waiting > 0}>
             {waiting > 0 ? "Adding…" : leaving ? "Saving…" : `Save ${items.length} Visual${items.length === 1 ? "" : "s"}`}
           </button>
         ) : (

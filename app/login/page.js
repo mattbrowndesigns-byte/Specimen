@@ -132,6 +132,7 @@ function LoginForm() {
             <input
               type="email"
               value={email}
+              aria-invalid={Boolean(error) && !email.trim()}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               required
@@ -185,7 +186,7 @@ function LoginForm() {
             {mode === "invite" && <small className="field-hint">At least 8 characters.</small>}
           </label>
 
-          <button className="auth-submit" type="submit" disabled={busy}>
+          <button className="auth-submit" type="submit" disabled={busy} aria-busy={busy}>
             {busy ? "Working…" : mode === "invite" ? "Create account" : "Sign in"}
           </button>
           {mode === "signin" && (

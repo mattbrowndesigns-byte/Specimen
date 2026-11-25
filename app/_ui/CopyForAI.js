@@ -219,6 +219,7 @@ export default function CopyForAI({ url, label = "Export for AI", className = ""
         className="copy-ai-btn"
         onClick={() => setMenuOpen((open) => !open)}
         disabled={state === "copying"}
+        aria-busy={state === "copying"}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
       >

@@ -250,7 +250,7 @@ function CropQueue({ crops, onKeep, keeping, onDiscard }) {
       <div className="crop-queue-head">
         <h3>Ready to crop</h3>
         {uploads.length > 1 && (
-          <button type="button" onClick={() => onKeep(uploads)} disabled={Boolean(keeping)}>
+          <button type="button" onClick={() => onKeep(uploads)} disabled={Boolean(keeping)} aria-busy={keeping === "all"}>
             {keeping === "all" ? "Saving…" : `Use All ${uploads.length} As Is`}
           </button>
         )}
@@ -274,7 +274,13 @@ function CropQueue({ crops, onKeep, keeping, onDiscard }) {
             </span>
           </a>
           {!capture.url && (
-            <button type="button" className="crop-queue-keep" onClick={() => onKeep([capture])} disabled={Boolean(keeping)}>
+            <button
+              type="button"
+              className="crop-queue-keep"
+              onClick={() => onKeep([capture])}
+              disabled={Boolean(keeping)}
+              aria-busy={keeping === capture.id}
+            >
               {keeping === capture.id ? "Saving…" : "Use As Is"}
             </button>
           )}

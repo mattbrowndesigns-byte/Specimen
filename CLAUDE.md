@@ -2599,6 +2599,14 @@ layout, puts them on every page of that one browser. They're a way to try things
 stylesheet stays the source. Values are checked before they reach a `<style>`, and a hex
 edit moves its `-rgb` twin.
 
+**Unavailable and working are two states, and every control has both.** The end of
+`refined.css` holds them: anything `:disabled` is at half strength, and a disabled button
+with `aria-busy` keeps its label readable and breathes. So a button whose label turns into
+"Saving…" needs `aria-busy` beside its `disabled`. A field is marked wrong with
+`aria-invalid`, only where the form itself checked it: a server error isn't the field's
+fault. Every hover needs `:not(:disabled)` or it answers on a dead button. A held tab has
+no hover on purpose.
+
 **Clipboard writes have to start inside the click.** Safari ends the click's
 permission while the export is being fetched, so `fetch` then `writeText`
 fails there silently. `copyMarkdown` hands the clipboard a `ClipboardItem`

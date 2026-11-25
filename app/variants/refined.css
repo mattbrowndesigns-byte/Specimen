@@ -2088,7 +2088,7 @@
       color: var(--text-faint);
     }
 
-    &:hover {
+    &:hover:not(:disabled) {
       border-color: var(--border-strong-hover);
     }
 
@@ -2311,4 +2311,158 @@
   & .pick-tile-selected:hover .pick-check {
     transform: scale(1.08);
   }
+}
+
+/* Every state a control can be in
+   ===========================================================================
+   One answer each, for whatever the control is, after /design showed which
+   ones had none. */
+:root[data-variant="refined"] {
+  /* Can't be used. Half strength, and nothing on it answers the pointer: the
+     hovers that weren't already guarded are put back to rest further down. */
+  & :is(button, input, textarea, select):disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  & .combobox-field:has(input:disabled) {
+    opacity: 0.5;
+  }
+
+  & .combobox-field input:disabled {
+    opacity: 1;
+  }
+
+  /* Working is not the same as unavailable. The label is the progress --
+     "Re-capturing…" can stand for a minute -- so it stays readable and breathes
+     instead of fading. */
+  & button[aria-busy="true"]:disabled {
+    opacity: 1;
+    cursor: progress;
+    animation: control-busy 1.6s var(--ease) infinite alternate;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    & button[aria-busy="true"]:disabled {
+      animation: none;
+    }
+  }
+
+  & .add-btn:hover:disabled {
+    background: var(--accent-solid);
+  }
+
+  & :is(.filters-btn, .sort-btn, .load-more):disabled,
+  & :is(.filters-btn, .sort-btn, .load-more):hover:disabled {
+    border-color: var(--border);
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  & .tag-rail .tag-rail-new:hover:disabled,
+  & .tag-rail-new:hover:disabled {
+    background: none;
+  }
+
+  & .link-btn.link-btn:hover:disabled {
+    color: var(--text-muted);
+  }
+
+  & .icon-btn.icon-btn:hover:disabled {
+    background: transparent;
+    color: var(--text-muted);
+  }
+
+  & .icon-btn.icon-btn:active:disabled {
+    transform: none;
+  }
+
+  /* Text fields. The edge answers the pointer rather than the fill: a filled
+     field that gets darker under it reads as a button. */
+  & :is(.field, .save-form) :is(input:not([type="checkbox"], [type="file"]), textarea, select):hover:not(:focus, :disabled),
+  & .field .combobox-field:hover:not(:focus-within),
+  & .tag-add-input:hover:not(:focus) {
+    border-color: var(--border-strong-hover);
+  }
+
+  & .field .combobox-field input:hover:not(:focus, :disabled) {
+    border: none;
+  }
+
+  & :is(.field, .save-form) select:focus-visible {
+    outline: none;
+    border-color: transparent;
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  & .tag-add-input:focus {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  /* The sentence at the top of a form says what's wrong; this says where. */
+  & .field input[aria-invalid="true"]:not([type="checkbox"], [type="file"]),
+  & .field .combobox-field:has([aria-invalid="true"]) {
+    border-color: var(--danger);
+    background: var(--danger-bg);
+  }
+
+  & .field input[aria-invalid="true"]:not([type="checkbox"], [type="file"]):focus,
+  & .field .combobox-field:has([aria-invalid="true"]):focus-within {
+    box-shadow: 0 0 0 1px var(--danger);
+  }
+
+  & .field .combobox-field input[aria-invalid="true"]:not([type="checkbox"], [type="file"]),
+  & .field .combobox-field input[aria-invalid="true"]:not([type="checkbox"], [type="file"]):focus {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* Ticks. The browser draws the review queue's, and an edge can't be put on
+     those, so they get a halo. */
+  & .select-box {
+    border-radius: 4px;
+  }
+
+  & .select-box:hover:not(:disabled) {
+    box-shadow: 0 0 0 4px var(--chip-strong-bg);
+  }
+
+  & .select-box:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  & .tag-dialog .select-box {
+    border-radius: 6px;
+  }
+
+  & .tag-dialog .select-box:hover:not(:disabled),
+  & label:hover > .select-box:not(:disabled, :checked) {
+    border-color: var(--text-muted);
+  }
+
+  & .tag-dialog .select-box:hover:not(:disabled, :focus-visible) {
+    box-shadow: none;
+  }
+
+  /* An open folder closes when it's pressed, so it answers the pointer. A held
+     tab doesn't: pressing it does nothing, and it shouldn't look as if it would. */
+  & .folder.folder-on:hover {
+    border-color: var(--invert-bg-hover);
+    background: var(--invert-bg-hover);
+  }
+}
+
+@keyframes control-busy {
+  to {
+    opacity: 0.6;
+  }
+}
+
+/* A button nobody gave a colour takes the browser's grey when it's disabled, so
+   it was faded twice. Weighs nothing: any colour a button does have wins. */
+:where(:root[data-variant="refined"] :is(button, select):disabled) {
+  color: var(--text);
 }

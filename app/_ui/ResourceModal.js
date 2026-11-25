@@ -181,7 +181,7 @@ export default function ResourceModal({ resource, allTags, groups, onSaved, onDe
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
         </label>
 
-        <button className="link-btn" onClick={regenerate} disabled={regenerating}>
+        <button className="link-btn" onClick={regenerate} disabled={regenerating} aria-busy={regenerating}>
           <Sparkles size={14} />
           {regenerating ? "Asking…" : "Regenerate summary and type"}
         </button>
@@ -193,7 +193,7 @@ export default function ResourceModal({ resource, allTags, groups, onSaved, onDe
             <button onClick={() => setConfirmDelete(false)} disabled={busy}>
               Cancel
             </button>
-            <button className="danger-btn" onClick={remove} disabled={busy}>
+            <button className="danger-btn" onClick={remove} disabled={busy} aria-busy={busy}>
               {busy ? "Deleting…" : "Delete for good"}
             </button>
           </>
@@ -203,7 +203,7 @@ export default function ResourceModal({ resource, allTags, groups, onSaved, onDe
               <Trash2 size={14} />
               Delete
             </button>
-            <button className="modal-apply" onClick={save} disabled={busy}>
+            <button className="modal-apply" onClick={save} disabled={busy} aria-busy={busy}>
               {busy ? "Saving…" : "Save"}
             </button>
           </>

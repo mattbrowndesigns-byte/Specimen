@@ -7,9 +7,11 @@ import Wordmark from "../_ui/Wordmark";
 // Every part the app is made of, drawn with its real classes inside the
 // container that styles it. `t(base)` gives the part its class and whichever
 // state is being shown; the page compares each state with rest, and one that
-// looks the same is marked as a gap.
+// looks the same is marked as a gap. The state itself comes second, for the few
+// whose words change with it.
 
 const BUTTON = ["rest", "hover", "focus", "active", "disabled"];
+const WORKS = [...BUTTON, "busy"];
 const LINK = ["rest", "hover", "focus", "active"];
 const FIELD = ["rest", "hover", "focus", "disabled"];
 
@@ -20,11 +22,11 @@ export const COMPONENTS = [
     note: "One orange button on a screen. Everything else is grey, outlined, inverted or a word.",
     items: [
       { name: "Add", note: "The one action the app exists for", states: BUTTON, render: (t) => <button {...t("add-btn")}><Plus size={16} /> Add</button> },
-      { name: "Primary", note: "The answer in a dialog", states: BUTTON, render: (t) => <div className="modal-foot ds-bare"><button {...t("modal-apply")}>Save</button></div> },
+      { name: "Primary", note: "The answer in a dialog", states: WORKS, render: (t, s) => <div className="modal-foot ds-bare"><button {...t("modal-apply")}>{s === "busy" ? "Saving…" : "Save"}</button></div> },
       { name: "Secondary", note: "The other answer", states: BUTTON, render: (t) => <div className="modal-foot ds-bare"><button {...t("")}>Cancel</button></div> },
-      { name: "Destructive", note: "What can’t be undone", states: BUTTON, render: (t) => <div className="modal-foot ds-bare"><button {...t("danger-btn")}>Delete</button></div> },
-      { name: "Inverted", note: "Solid, without spending the orange", states: BUTTON, render: (t) => <div className="bulk-actions"><button {...t("primary")}>Approve</button></div> },
-      { name: "Page action", note: "Beside a record’s name", states: BUTTON, render: (t) => <div className="detail-actions"><button {...t("")}>Re-capture</button></div> },
+      { name: "Destructive", note: "What can’t be undone", states: WORKS, render: (t, s) => <div className="modal-foot ds-bare"><button {...t("danger-btn")}>{s === "busy" ? "Deleting…" : "Delete"}</button></div> },
+      { name: "Inverted", note: "Solid, without spending the orange", states: WORKS, render: (t, s) => <div className="bulk-actions"><button {...t("primary")}>{s === "busy" ? "Working…" : "Approve"}</button></div> },
+      { name: "Page action", note: "Beside a record’s name", states: WORKS, render: (t, s) => <div className="detail-actions"><button {...t("")}>{s === "busy" ? "Re-capturing…" : "Re-capture"}</button></div> },
       { name: "Visit", note: "Out to the real site", states: LINK, render: (t) => <a {...t("visit-btn")} href="#buttons">Visit site <ArrowUpRight size={15} /></a> },
       { name: "Small", note: "In a row or a panel’s head", states: BUTTON, render: (t) => <div className="tag-panel-title"><div className="tag-actions"><button {...t("")}><Pencil size={14} /> Edit</button></div></div> },
       { name: "Outline", note: "A quiet way to add", states: BUTTON, render: (t) => <div className="ds-narrow"><button {...t("tag-rail-new")}><Plus size={15} /> New Group</button></div> },
@@ -32,7 +34,7 @@ export const COMPONENTS = [
       { name: "Sort", states: BUTTON, render: (t) => <button {...t("sort-btn")}><ArrowDownUp size={14} /> Newest First</button> },
       { name: "Load more", states: BUTTON, render: (t) => <div className="load-more-row"><button {...t("load-more")}>Load More</button></div> },
       { name: "Icon", note: "32px. Always with a tooltip", states: BUTTON, render: (t) => <button {...t("icon-btn")} aria-label="More"><MoreHorizontal size={16} /></button> },
-      { name: "Word", note: "An action that isn’t a button", states: BUTTON, render: (t) => <button {...t("link-btn")}>Regenerate</button> },
+      { name: "Word", note: "An action that isn’t a button", states: WORKS, render: (t, s) => <button {...t("link-btn")}>{s === "busy" ? "Regenerating…" : "Regenerate"}</button> },
     ],
   },
   {
@@ -45,7 +47,7 @@ export const COMPONENTS = [
       ) },
       { name: "Text", states: FIELD, render: (t) => <label className="field ds-wide"><span>Name</span><input {...t("")} placeholder="Platform" readOnly /></label> },
       { name: "Text, filled in", states: ["rest"], render: (t) => <label className="field ds-wide"><span>Name</span><input {...t("")} value="Platform" readOnly /></label> },
-      { name: "Text, wrong", note: "No field says it is wrong. The dialog does, above", states: ["error"], render: (t) => <div className="ds-wide"><p className="error">Give the group a name.</p><label className="field"><span>Name</span><input {...t("")} aria-invalid="true" readOnly /></label></div> },
+      { name: "Text, wrong", note: "The sentence says what, the edge says where", states: ["rest", "focus"], render: (t) => <div className="ds-wide"><p className="error">Give the group a name.</p><label className="field"><span>Name</span><input {...t("")} aria-invalid="true" placeholder="Platform" readOnly /></label></div> },
       { name: "Long text", states: FIELD, render: (t) => <label className="field ds-wide"><span>Notes</span><textarea {...t("")} rows={2} placeholder="What you want to remember" readOnly /></label> },
       { name: "Tags", states: ["rest", "hover", "focus"], render: (t) => (
         <div className="combobox ds-wide"><div {...t("combobox-field")}><span className="combobox-chip">Editorial<button tabIndex={-1} aria-label="Remove">×</button></span><span className="combobox-chip chip-pending">Reference<button tabIndex={-1} aria-label="Remove">×</button></span><input placeholder="Add tags…" readOnly tabIndex={-1} /></div></div>
@@ -54,7 +56,9 @@ export const COMPONENTS = [
       { name: "Tick, on", states: ["rest", "disabled"], render: (t) => <input {...t("select-box")} type="checkbox" checked readOnly /> },
       { name: "Tick in a dialog", states: ["rest", "focus"], render: (t) => <div className="tag-dialog"><input {...t("select-box")} type="checkbox" checked readOnly /></div> },
       { name: "Drop box", note: "Files", states: ["rest", "hover"], render: (t) => <div {...t("drop-box ds-wide")}>Drop images or clips here</div> },
-      { name: "Select", note: "Only on Invites", states: FIELD, render: (t) => <label className="field ds-wide"><span>How many</span><select {...t("")}><option>1</option></select></label> },
+      { name: "Select", note: "Only on Invites", states: FIELD, render: (t) => <form className="save-form ds-wide"><select {...t("")}><option>1 code</option></select></form> },
+      { name: "One-line form", note: "A new collection, a new invite", states: FIELD, render: (t) => <form className="save-form ds-wide"><input {...t("")} placeholder="Name a collection" readOnly /></form> },
+      { name: "Add’s address", states: FIELD, render: (t) => <div className="add-pop-form ds-wide"><input {...t("")} placeholder="https://" defaultValue="" /></div> },
     ],
   },
   {
@@ -63,7 +67,7 @@ export const COMPONENTS = [
     note: "Sets of options where one is held, and chips where several can be.",
     items: [
       { name: "Tabs", note: "The app’s top level", states: LINK, render: (t) => <div className="tab-switcher"><button {...t("")}><span className="tab-label" data-label="Visuals">Visuals</span></button></div> },
-      { name: "Tab, held", states: ["rest", "hover"], render: (t) => <div className="tab-switcher"><button {...t("active")}><span className="tab-label" data-label="Websites">Websites</span></button></div> },
+      { name: "Tab, held", note: "Pressing it does nothing, so it doesn’t answer the pointer", states: ["rest"], render: (t) => <div className="tab-switcher"><button {...t("active")}><span className="tab-label" data-label="Websites">Websites</span></button></div> },
       { name: "Switch", states: ["rest", "hover", "focus"], render: (t) => <div className="view-switch"><button className="active" tabIndex={-1}><LayoutGrid size={15} /><span>Cards</span></button><button {...t("")}><List size={15} /><span>List</span></button></div> },
       { name: "Size switch", states: ["rest", "hover", "focus"], render: (t) => <div className="size-switch"><button {...t("")} aria-label="Small"><Grid3x3 size={15} /></button><button className="active" tabIndex={-1} aria-label="Medium"><LayoutGrid size={15} /></button><button tabIndex={-1} aria-label="Large"><Square size={15} /></button></div> },
       { name: "Filter chip", states: LINK, render: (t) => <div className="chip-strip ds-bare"><button {...t("chip chip-filter")}>Editorial<span className="chip-count">21</span></button></div> },

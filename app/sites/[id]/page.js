@@ -345,7 +345,7 @@ export default function SiteDetailPage({ params }) {
           <div className="detail-actions">
             <SaveActions className="detail-save-actions" kind="site" id={site.id} name={site.name || site.domain} isFavorite={site.is_favorite} />
             {site.needs_review && <button onClick={markReviewed}>Mark Reviewed</button>}
-            <button onClick={recapture} disabled={recapturing}>
+            <button onClick={recapture} disabled={recapturing} aria-busy={recapturing}>
               {recapturing ? "Re-capturing…" : "Re-capture"}
             </button>
             <CopyForAI url={`/api/export/site/${site.id}`} />
@@ -471,6 +471,7 @@ export default function SiteDetailPage({ params }) {
                     className="danger-btn capture-delete"
                     onClick={() => deleteCaptureRun(activeRun)}
                     disabled={deletingCapture}
+                    aria-busy={deletingCapture}
                   >
                     {deletingCapture ? "Deleting…" : "Delete This Capture"}
                   </button>
@@ -531,6 +532,7 @@ export default function SiteDetailPage({ params }) {
                     <button
                       className="primary"
                       disabled={savingField === "summary"}
+                      aria-busy={savingField === "summary"}
                       onClick={async () => {
                         await saveField("summary", summaryDraft);
                         setEditingSummary(false);
@@ -560,7 +562,7 @@ export default function SiteDetailPage({ params }) {
                       whole thing away and paying for a new one is not. */}
                   <div className="section-head-actions section-actions-below">
                     <button onClick={() => setEditingSummary(true)}>Edit</button>
-                    <button className="link-btn" onClick={regenerateSummary} disabled={regenerating}>
+                    <button className="link-btn" onClick={regenerateSummary} disabled={regenerating} aria-busy={regenerating}>
                       {regenerating ? "Regenerating…" : "Regenerate"}
                     </button>
                     {site.enriched_at && !regenerating && (
@@ -596,7 +598,7 @@ export default function SiteDetailPage({ params }) {
             <section className="detail-section">
               <h2>Notes</h2>
               <textarea value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} rows={4} />
-              <button disabled={savingField === "notes"} onClick={() => saveField("notes", notesDraft)}>
+              <button disabled={savingField === "notes"} aria-busy={savingField === "notes"} onClick={() => saveField("notes", notesDraft)}>
                 {savingField === "notes" ? "Saving…" : "Save Notes"}
               </button>
             </section>

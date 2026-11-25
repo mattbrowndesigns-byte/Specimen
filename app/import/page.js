@@ -271,7 +271,7 @@ export default function ImportPage() {
           )}
 
           <div className="import-actions">
-            <button className="primary" disabled={!items.length || busy} onClick={runImport}>
+            <button className="primary" disabled={!items.length || busy} aria-busy={busy} onClick={runImport}>
               {busy
                 ? "Importing..."
                 : `Import ${items.length || ""} ${items.length === 1 ? "link" : "links"}`.trim()}

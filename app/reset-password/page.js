@@ -111,6 +111,7 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
                 minLength={8}
+                aria-invalid={Boolean(error) && password.length < 8}
                 required
                 autoFocus
               />
@@ -122,11 +123,12 @@ export default function ResetPasswordPage() {
                 type="password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
+                aria-invalid={Boolean(error) && password !== confirm}
                 autoComplete="new-password"
                 required
               />
             </label>
-            <button className="auth-submit" type="submit" disabled={busy}>
+            <button className="auth-submit" type="submit" disabled={busy} aria-busy={busy}>
               {busy ? "Saving…" : "Save password and sign in"}
             </button>
           </form>

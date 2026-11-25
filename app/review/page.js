@@ -394,6 +394,7 @@ function BulkBar({ title, total, selection, actions, busy }) {
               className={action.danger ? "danger-btn" : action.primary ? "primary" : ""}
               onClick={action.onClick}
               disabled={busy}
+              aria-busy={busy}
             >
               {busy ? "Working…" : action.label}
             </button>

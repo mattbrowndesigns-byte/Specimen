@@ -2,12 +2,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Gap, Pane, Section } from "./ui";
 
-const STATE_NAMES = { rest: "Rest", hover: "Hover", focus: "Focus", active: "Pressed", disabled: "Disabled", error: "Wrong" };
+const STATE_NAMES = { rest: "Rest", hover: "Hover", focus: "Focus", active: "Pressed", disabled: "Disabled", busy: "Working", error: "Wrong" };
 const STATE_CLASS = { hover: "ds-hover", focus: "ds-focus", active: "ds-active ds-hover" };
 
 const part = (state) => (base) => ({
   className: [base, STATE_CLASS[state]].filter(Boolean).join(" ") || undefined,
-  disabled: state === "disabled" || undefined,
+  disabled: state === "disabled" || state === "busy" || undefined,
+  "aria-busy": state === "busy" || undefined,
   tabIndex: -1,
   "data-part": "",
 });
@@ -65,7 +66,7 @@ export default function ComponentSection({ component, themes, live, onGaps }) {
                     <div className={`ds-states${item.wide ? " ds-states-wide" : ""}`}>
                       {item.states.map((state) => (
                         <div className="ds-state" key={state} data-cell={`${i}:${state}`}>
-                          <div className="ds-state-part">{item.render(part(state))}</div>
+                          <div className="ds-state-part">{item.render(part(state), state)}</div>
                           {item.states.length > 1 && (
                             <span className="ds-state-name">
                               {STATE_NAMES[state]}

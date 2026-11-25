@@ -111,7 +111,7 @@ function CreditForm({ visual, onSave, onClose }) {
         <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="Profile or portfolio" inputMode="url" />
       </label>
       <div className="section-head-actions">
-        <button className="primary" disabled={saving}>
+        <button className="primary" disabled={saving} aria-busy={saving}>
           {saving ? "Saving…" : "Save"}
         </button>
         <button type="button" onClick={onClose}>
@@ -652,6 +652,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
                   <button
                     className="primary"
                     disabled={busy === "summary"}
+                    aria-busy={busy === "summary"}
                     onClick={async () => {
                       await saveField("summary", summaryDraft);
                       setEditingSummary(false);
@@ -728,7 +729,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
           <section className="lightbox-panel-section detail-section">
             <h2>Notes</h2>
             <textarea value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} rows={3} />
-            <button disabled={busy === "notes"} onClick={() => saveField("notes", notesDraft)}>
+            <button disabled={busy === "notes"} aria-busy={busy === "notes"} onClick={() => saveField("notes", notesDraft)}>
               {busy === "notes" ? "Saving…" : "Save Notes"}
             </button>
           </section>

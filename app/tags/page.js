@@ -342,7 +342,7 @@ export default function TagsPage() {
               Merged <strong>{undo.from.join(", ")}</strong> into <strong>{undo.into}</strong>.{" "}
               {undo.moved ? `${plural(undo.moved, "save")} moved.` : "No saves needed moving."}
             </span>
-            <button className="link-btn" onClick={undoMerge} disabled={undoing}>
+            <button className="link-btn" onClick={undoMerge} disabled={undoing} aria-busy={undoing}>
               {undoing ? "Undoing…" : "Undo"}
             </button>
           </div>

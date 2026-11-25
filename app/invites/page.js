@@ -105,7 +105,7 @@ export default function InvitesPage() {
               </option>
             ))}
           </select>
-          <button type="submit" disabled={busy}>
+          <button type="submit" disabled={busy} aria-busy={busy}>
             {busy ? "Generating…" : "Generate"}
           </button>
         </form>

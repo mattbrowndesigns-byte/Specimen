@@ -496,7 +496,7 @@ export default function SiteStyle({ site, onRefresh, readOnly = false }) {
         )}
         {error && !readOnly && <p className="error">{error}</p>}
         {!readOnly && (
-          <button className="link-btn" onClick={analyze} disabled={analyzing}>
+          <button className="link-btn" onClick={analyze} disabled={analyzing} aria-busy={analyzing}>
             {analyzing ? "Reading the Page…" : analyzed ? "Re-read Colours & Type" : "Read Colours & Type"}
           </button>
         )}

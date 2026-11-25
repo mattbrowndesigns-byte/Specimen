@@ -168,7 +168,7 @@ export default function AddMenu({ onSubmit, variant }) {
             <button type="button" onClick={close} disabled={busy}>
               Cancel
             </button>
-            <button type="submit" className="primary" disabled={busy}>
+            <button type="submit" className="primary" disabled={busy} aria-busy={busy}>
               {busy ? "Starting…" : "Submit"}
             </button>
           </div>

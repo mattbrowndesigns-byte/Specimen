@@ -233,7 +233,7 @@ function EditCollectionModal({ collection, onClose, onSaved, onError }) {
           <button type="button" onClick={onClose} disabled={busy}>
             Cancel
           </button>
-          <button type="submit" className="modal-apply" disabled={busy || !name.trim()}>
+          <button type="submit" className="modal-apply" disabled={busy || !name.trim()} aria-busy={busy}>
             {busy ? "Saving…" : "Update"}
           </button>
         </div>

@@ -106,7 +106,7 @@ export default function CollectionsPage() {
             placeholder="New collection name…"
             disabled={busy}
           />
-          <button type="submit" disabled={busy || !name.trim()}>
+          <button type="submit" disabled={busy || !name.trim()} aria-busy={busy}>
             {busy ? "Creating…" : "Create"}
           </button>
         </form>

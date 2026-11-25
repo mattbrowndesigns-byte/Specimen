@@ -325,6 +325,7 @@ export default function ComponentDetailPage({ params }) {
                     <button
                       className="primary"
                       disabled={savingField === "summary"}
+                      aria-busy={savingField === "summary"}
                       onClick={async () => {
                         await saveField("summary", summaryDraft);
                         setEditingSummary(false);
@@ -360,7 +361,7 @@ export default function ComponentDetailPage({ params }) {
                       one is not. */}
                   <div className="section-head-actions section-actions-below">
                     <button onClick={() => setEditingSummary(true)}>Edit</button>
-                    <button className="link-btn" onClick={regenerateSummary} disabled={regenerating}>
+                    <button className="link-btn" onClick={regenerateSummary} disabled={regenerating} aria-busy={regenerating}>
                       {regenerating ? "Regenerating…" : "Regenerate"}
                     </button>
                   </div>
@@ -387,7 +388,7 @@ export default function ComponentDetailPage({ params }) {
             <section className="detail-section">
               <h2>Notes</h2>
               <textarea value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} rows={4} />
-              <button disabled={savingField === "notes"} onClick={() => saveField("notes", notesDraft)}>
+              <button disabled={savingField === "notes"} aria-busy={savingField === "notes"} onClick={() => saveField("notes", notesDraft)}>
                 {savingField === "notes" ? "Saving…" : "Save Notes"}
               </button>
             </section>

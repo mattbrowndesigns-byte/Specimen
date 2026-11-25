@@ -20,6 +20,7 @@ import {
   LogOut,
   UserRound,
   Compass,
+  Palette,
 } from "lucide-react";
 import ShareModal from "./ShareModal";
 import NameModal from "./NameModal";
@@ -142,6 +143,12 @@ export default function MoreMenu() {
             <a className="more-item" href="/invites">
               <UserPlus size={15} />
               Invites
+            </a>
+          )}
+          {isOwner && (
+            <a className="more-item" href="/design">
+              <Palette size={15} />
+              Design System
             </a>
           )}
           <div className="more-divider" />

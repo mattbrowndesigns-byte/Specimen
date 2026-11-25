@@ -2579,6 +2579,26 @@ button:hover` outweighed `.crop-save`, so its label went the colour of its own f
 styled container states its own hover. Every control was measured by forcing :hover
 in both themes: nothing under 4.5:1 (2.5 for an icon), no disabled button reacting.
 
+**`/design` is the design system, for the owner's account only.** `isOwner`
+(`lib/owner.js`, `OWNER_EMAIL`, the same gate as Invites); anyone else gets a 404. It
+reads the live stylesheets (`app/design/readStyles.js`), so a token added tomorrow is on
+it tomorrow. Only two lists are by hand: what each token and text style is *for*
+(`tokens.js`) and which components to draw (`components.js`). A new control goes in the
+second, wearing its real classes. Its own classes all start `ds-`, and the reader skips
+`.ds-` and Elevated, so the page never counts itself. Icons are generated:
+`node scripts/design-icons.mjs`.
+
+A state can't be put on an element, so every `:hover` / `:focus` / `:active` rule is
+written again with a class in its place. A gap is a state whose computed style equals
+rest; nobody marks them. A pane wears a theme by carrying its raw tokens inline. Shadow
+samples skip `vmax`: the tour's spotlight was one of them and dimmed the whole page. The
+production build adds `--lightningcss-*` tokens, skipped too.
+
+Edits live in `localStorage` (`specimen.design`) and `DesignOverrides`, in the root
+layout, puts them on every page of that one browser. They're a way to try things; the
+stylesheet stays the source. Values are checked before they reach a `<style>`, and a hex
+edit moves its `-rgb` twin.
+
 **Clipboard writes have to start inside the click.** Safari ends the click's
 permission while the export is being fetched, so `fetch` then `writeText`
 fails there silently. `copyMarkdown` hands the clipboard a `ClipboardItem`

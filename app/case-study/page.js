@@ -807,8 +807,15 @@ export default function CaseStudyPage() {
             <p>
               The Save button went white on white when you pointed at it, and it wasn&rsquo;t the first. Instead of looking for the next one, I had a script force the hover state on every control it could reach, on every page and dialog, in both themes, and measure the contrast. It found that one at 1.12 to 1, a Delete that turned grey, a disabled Merge that reacted, and a handful with no hover at all. After the fixes it finds nothing under 4.5 to 1.
             </p>
+            <h3>A design system that reads the app</h3>
             <p>
-              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, the browser button, and tag groups of your own still have to be proven there.
+              Changing a grey meant finding it. I wanted the whole design in one place, the way Figma variables do it, but a Figma file would have been a second copy of the truth and the first one to go stale. So it&rsquo;s a private page inside the app that reads the app&rsquo;s own styles as it opens. Every color, text style, corner and shadow is on it with how often it&rsquo;s used, and every control in every state, light beside dark. Changing a value there changes the whole app, in my browser only, until I copy the changes out or reset them.
+            </p>
+            <p>
+              It found its own gaps, because it compares each state with the one at rest. There are 19 that look the same: most buttons have no disabled style, and text fields don&rsquo;t react to the pointer. It also counted 29 text sizes and 20 pairs of colors you couldn&rsquo;t tell apart. Nothing has been fixed yet. The page came first so the fixes can be decided together instead of one screen at a time.
+            </p>
+            <p>
+              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, the browser button, tag groups of your own and the design system page still have to be proven there.
             </p>
           </div>
         </section>

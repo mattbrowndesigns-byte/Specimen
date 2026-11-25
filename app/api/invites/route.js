@@ -2,13 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED } from "@/lib/ownership";
-
-// Only the owner hands out invites. There's no roles table for one person and
-// a handful of friends -- the owner is whoever's email matches OWNER_EMAIL.
-function isOwner(user) {
-  const owner = (process.env.OWNER_EMAIL || "").trim().toLowerCase();
-  return Boolean(owner) && user.email?.toLowerCase() === owner;
-}
+import { isOwner } from "@/lib/owner";
 
 // Unambiguous alphabet: no O/0, no I/1/L. These get read aloud and retyped.
 const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";

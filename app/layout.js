@@ -10,6 +10,7 @@ import { variantBootScript } from "@/lib/variant";
 import DemoClarity from "./_ui/DemoClarity";
 import SiteAnalytics from "./_ui/SiteAnalytics";
 import Tooltips from "./_ui/Tooltips";
+import DesignOverrides from "./_ui/DesignOverrides";
 
 // The wordmark face, self-hosted by next/font rather than fetched from Google
 // at runtime: no third-party request on every page load, and no flash of a
@@ -55,6 +56,7 @@ export default function RootLayout({ children }) {
         <SiteAnalytics />
         <DemoClarity />
         <Tooltips />
+        <DesignOverrides />
       </body>
     </html>
   );

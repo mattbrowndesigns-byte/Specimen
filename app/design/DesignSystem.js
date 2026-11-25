@@ -37,6 +37,7 @@ export default function DesignSystem() {
   const [view, setView] = useState("both");
   const [gaps, setGaps] = useState({});
   const [copied, setCopied] = useState(false);
+  const [resets, setResets] = useState(0);
 
   useEffect(() => {
     const rules = readRules();
@@ -88,6 +89,18 @@ export default function DesignSystem() {
     keep({ ...overrides, [theme]: themed });
   }
 
+  // A size is the same in both themes.
+  function setTypeToken(name, value) {
+    const next = { ...overrides };
+    for (const theme of ["light", "dark"]) {
+      const themed = { ...next[theme] };
+      if (value === styles.tokens[theme][name]) delete themed[name];
+      else themed[name] = value;
+      next[theme] = themed;
+    }
+    keep(next);
+  }
+
   function setType(role, prop, value) {
     const props = { ...overrides.type[role] };
     if (value) props[prop] = value;
@@ -99,8 +112,11 @@ export default function DesignSystem() {
 
   function changesAsText() {
     const out = ["Design changes to apply:"];
+    const sizes = Object.entries(overrides.light).filter(([name]) => name.startsWith("--type-"));
+    if (sizes.length) out.push("", "Text sizes");
+    for (const [name, value] of sizes) out.push(`  ${name}: ${styles.tokens.light[name]} -> ${value}`);
     for (const theme of ["light", "dark"]) {
-      const rows = Object.entries(overrides[theme]).filter(([name]) => !name.endsWith("-rgb"));
+      const rows = Object.entries(overrides[theme]).filter(([name]) => !name.endsWith("-rgb") && !name.startsWith("--type-"));
       if (rows.length) out.push("", theme === "light" ? "Light" : "Dark");
       for (const [name, value] of rows) out.push(`  ${name}: ${styles.tokens[theme][name]} -> ${value}`);
     }
@@ -125,7 +141,7 @@ export default function DesignSystem() {
 
   const changed = countOverrides(overrides);
   const themes = view === "both" ? ["light", "dark"] : [view];
-  const shared = styles && { ...styles, live: tokens, colours, overrides, themes, setToken, setType };
+  const shared = styles && { ...styles, live: tokens, colours, overrides, themes, setToken, setType, setTypeToken, resets };
 
   return (
     <>
@@ -212,7 +228,12 @@ export default function DesignSystem() {
                 {copied ? <Check size={14} /> : <Copy size={14} />}
                 {copied ? "Copied" : "Copy Changes"}
               </button>
-              <button onClick={() => keep(EMPTY)}>
+              <button
+                onClick={() => {
+                  keep(EMPTY);
+                  setResets((n) => n + 1);
+                }}
+              >
                 <RotateCcw size={14} /> Reset
               </button>
             </div>

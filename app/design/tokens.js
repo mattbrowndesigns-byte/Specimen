@@ -182,7 +182,7 @@ export const TYPE_ROLES = [
   },
   {
     id: "side",
-    as: "Label",
+    as: "Small",
     name: "Side panel heading",
     selectors: ".detail-section h2",
     sample: (t) => (
@@ -193,7 +193,7 @@ export const TYPE_ROLES = [
   },
   {
     id: "section",
-    as: "Label",
+    as: "Small",
     name: "List heading",
     selectors: ".tag-section h2",
     sample: (t) => (
@@ -204,7 +204,7 @@ export const TYPE_ROLES = [
   },
   {
     id: "lead",
-    as: "Body large",
+    as: "Lead",
     name: "Page introduction",
     selectors: ".tag-page-note",
     sample: (t) => <p className="tag-page-note" {...t}>Tags appear as you save things.</p>,
@@ -282,19 +282,20 @@ export const TYPE_ROLES = [
   },
 ];
 
-// A whole set, sizes included, whether or not the app uses each one yet.
-export const PROPOSED_TYPE = [
-  { name: "Display", size: "clamp(40, 4.2vw, 60)", weight: 800, family: "Figtree", job: "The dashboard headline" },
-  { name: "Title", size: 36, weight: 800, family: "Figtree", job: "A page or a record" },
-  { name: "Heading", size: 28, weight: 800, family: "Figtree", job: "A panel" },
-  { name: "Subheading", size: 20, weight: 700, family: "System", job: "A dialog, a band" },
-  { name: "Body large", size: 17, weight: 400, family: "System", job: "An introduction" },
-  { name: "Body", size: 15, weight: 400, family: "System", job: "Copy" },
-  { name: "Control", size: 14, weight: 500, family: "System", job: "Buttons, fields, rows" },
-  { name: "Label", size: 13, weight: 500, family: "System", job: "Small headings, chips" },
-  { name: "Caption", size: 12, weight: 400, family: "System", job: "Hints, counts, dates" },
-  { name: "Overline", size: 11, weight: 600, family: "System", job: "Not used yet" },
-  { name: "Code", size: 13, weight: 400, family: "Mono", job: "Not used yet" },
+// The scale, largest first. Sizes come from the stylesheet. Two steps have no
+// size yet because nothing in the app needs them.
+export const TYPE_SCALE = [
+  { token: "--type-display", name: "Display", weight: 800, family: "Figtree", job: "The dashboard headline" },
+  { token: "--type-title", name: "Title", weight: 800, family: "Figtree", job: "A page or a record" },
+  { token: "--type-heading", name: "Heading", weight: 800, family: "Figtree", job: "A panel, or a section of a page" },
+  { token: "--type-subheading", name: "Subheading", weight: 700, family: "System", job: "A dialog, a group of steps" },
+  { token: "--type-lead", name: "Lead", weight: 400, family: "System", job: "The line under a page’s title" },
+  { token: "--type-body", name: "Body", weight: 400, family: "System", job: "Copy, the name of a save" },
+  { token: "--type-control", name: "Control", weight: 500, family: "System", job: "Buttons, fields, dialog copy" },
+  { token: "--type-small", name: "Small", weight: 500, family: "System", job: "Chips, panel labels, supporting copy" },
+  { token: "--type-caption", name: "Caption", weight: 400, family: "System", job: "Hints, counts, dates" },
+  { name: "Overline", weight: 600, family: "System", job: "A label above a heading" },
+  { name: "Code", weight: 400, family: "Mono", job: "A value to copy" },
 ];
 export const PROPOSED_SPACE = [2, 4, 8, 12, 16, 20, 24, 32, 40, 64];
 export const PROPOSED_RADIUS = [6, 10, 14, 20, 999];

@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { safeValue } from "@/lib/designOverrides";
 import { contrast, countValues, distance, over, rawColours, toHex } from "./readStyles";
-import { PAIRS, PROPOSED_RADIUS, PROPOSED_SPACE, PROPOSED_TYPE, TOKEN_GROUPS, TYPE_ROLES } from "./tokens";
+import { PAIRS, PROPOSED_RADIUS, PROPOSED_SPACE, TOKEN_GROUPS, TYPE_ROLES, TYPE_SCALE } from "./tokens";
 import { ICONS } from "./icons.generated";
 import { Gap, Panes, Section, ValueBars } from "./ui";
 
@@ -10,7 +10,8 @@ const px = (value) => (/^-?[\d.]+px$/.test(value) ? parseFloat(value) : null);
 
 const radii = (rules) => countValues(rules, ["border-top-left-radius"]);
 const shadows = (rules) => countValues(rules, ["box-shadow"]);
-const sizes = (rules) => countValues(rules, ["font-size"]);
+// Sizes written as numbers, which is what a named size is there to stop.
+const sizes = (rules) => countValues(rules, ["font-size"]).filter((r) => !/^(var|calc)\(/.test(r.value));
 
 // ---- overview ---------------------------------------------------------------
 
@@ -21,7 +22,7 @@ export function Overview({ rules, tokens, colours, gaps }) {
       { n: Object.keys(colours.light).length, label: "named colors" },
       { n: near, label: "pairs you couldn’t tell apart", bad: near > 0 },
       { n: rawColours(rules).length, label: "colors typed by hand", bad: true },
-      { n: sizes(rules).length, label: "text sizes", bad: true },
+      { n: sizes(rules).length, label: "text sizes typed by hand", bad: true },
       { n: radii(rules).length, label: "corner sizes", bad: true },
       { n: shadows(rules).length, label: "shadows", bad: true },
     ];
@@ -42,7 +43,7 @@ export function Overview({ rules, tokens, colours, gaps }) {
         </div>
       </div>
       <p className="ds-note">
-        {Object.keys(tokens.light).length} values have a name today. Color mostly does. Type, spacing and corners mostly
+        {Object.keys(tokens.light).length} values have a name today. Color and text sizes mostly do. Spacing and corners mostly
         don&rsquo;t, so those are where a change means finding every place by hand.
       </p>
     </Section>
@@ -350,8 +351,7 @@ function TypeRow({ role, overrides, setType }) {
 export function Type(props) {
   const { rules } = props;
   const used = useMemo(() => sizes(rules), [rules]);
-  const scale = new Set(PROPOSED_TYPE.map((t) => t.size).filter((n) => typeof n === "number"));
-  const covered = new Set(TYPE_ROLES.map((r) => r.as));
+  const { live, uses, overrides, setTypeToken, resets } = props;
   return (
     <Section id="type" title="Type" note="Text by the job it does, measured off the real thing. A heading’s level (H1 to H6) says where it sits in the page, not how big it is.">
       <div className="ds-type">
@@ -361,31 +361,53 @@ export function Type(props) {
       </div>
 
       <div className="ds-group">
-        <h3>A whole scale</h3>
-        <p className="ds-note">
-          <Gap>Proposed</Gap> Eleven steps in place of the {used.length} sizes written today, with a place kept for what isn’t
-          used yet.
-        </p>
+        <h3>The scale</h3>
+        <p className="ds-note">Change one and every place that wears it follows, in both themes.</p>
         <table className="ds-table ds-scale">
           <tbody>
-            {PROPOSED_TYPE.map((t) => (
-              <tr key={t.name}>
-                <td style={{ fontSize: typeof t.size === "number" ? Math.min(t.size, 44) : 44, fontWeight: t.weight, fontFamily: t.family === "Figtree" ? "var(--display)" : t.family === "Mono" ? "ui-monospace, monospace" : undefined, lineHeight: 1.15 }}>
-                  {t.name}
-                </td>
-                <td className="ds-num">{t.size}</td>
-                <td className="ds-num">{t.weight}</td>
-                <td>{t.job}</td>
-                <td>{covered.has(t.name) ? <span className="ds-pass">In the app</span> : <Gap>Not in the app</Gap>}</td>
-              </tr>
-            ))}
+            {TYPE_SCALE.map((t) => {
+              const value = t.token && live.light[t.token];
+              return (
+                <tr key={t.name} className={t.token && overrides.light[t.token] ? "ds-swatch-changed" : undefined}>
+                  <td
+                    style={{
+                      fontSize: value ? `min(${value}, 44px)` : 13,
+                      fontWeight: t.weight,
+                      fontFamily: t.family === "Figtree" ? "var(--display)" : t.family === "Mono" ? "ui-monospace, monospace" : undefined,
+                      lineHeight: 1.15,
+                    }}
+                  >
+                    {t.name}
+                  </td>
+                  <td>
+                    {t.token && (
+                      <input
+                        key={`${t.token}${resets}`}
+                        className="ds-text"
+                        defaultValue={value}
+                        aria-label={`Size of ${t.name}`}
+                        spellCheck={false}
+                        onChange={(e) => {
+                          const typed = e.target.value.trim();
+                          if (safeValue(typed) && CSS.supports("font-size", typed)) setTypeToken(t.token, typed);
+                        }}
+                      />
+                    )}
+                  </td>
+                  <td className="ds-num">{t.weight}</td>
+                  <td>{t.job}</td>
+                  <td>{t.token ? <span className="ds-pass">{uses[t.token] || 0} {uses[t.token] === 1 ? "use" : "uses"}</span> : <Gap>Not used yet</Gap>}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       <div className="ds-group">
-        <h3>Sizes written today</h3>
-        <ValueBars rows={used} limit={30} fits={(v) => scale.has(px(v)) || /clamp|calc|var/.test(v)} />
+        <h3>Typed by hand</h3>
+        <p className="ds-note">The written pages, the logo, the game, and sizes the current design has since replaced.</p>
+        <ValueBars rows={used} limit={30} fits={() => false} />
       </div>
     </Section>
   );

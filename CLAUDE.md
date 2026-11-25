@@ -2606,6 +2606,14 @@ layout, puts them on every page of that one browser. They're a way to try things
 stylesheet stays the source. Values are checked before they reach a `<style>`, and a hex
 edit moves its `-rgb` twin.
 
+**Text sizes are nine names, `--type-display` to `--type-caption`, set in `refined.css`.**
+Never a number. `globals.css` uses the same names with the Original's numbers, which stay
+frozen, so a size in a shared rule can be a name without moving the Original; `--type-micro`
+(11px there) is the caption here. The last block in `refined.css` holds jobs that were set
+at two sizes on different screens. The written pages (`.prose-page`) keep their own reading
+scale in numbers. Checked by reading every text node on 32 screens at two widths, so
+compare rendered text, not the stylesheet: the stylesheet said 29 sizes, the screen 13.
+
 **Unavailable and working are two states, and every control has both.** The end of
 `refined.css` holds them: anything `:disabled` is at half strength, and a disabled button
 with `aria-busy` keeps its label readable and breathes. So a button whose label turns into

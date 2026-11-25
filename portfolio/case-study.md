@@ -469,6 +469,10 @@ The missing states went first, because adding them changes nothing at rest. Fill
 
 **List rows that stopped lining up.** In list view the tags sat a little to the right of the text and short of the picture's bottom edge, with the empty space left underneath them. A rule I'd written for cards was outweighing the one for rows. The tags now start where the summary starts and end where the picture ends, so the loose space falls between them. Checking it on a phone turned up something worse: the buttons sat on top of the titles, and the four tabs ran the page off the side. Both have their own phone layout now.
 
+**Twenty-nine text sizes that were thirteen.** The page said 29 text sizes. A script that opened every screen and read what was drawn said 13. The rest belonged to the two older designs and the written pages, which keep a reading scale of their own. Thirteen was still too many. An introduction under a page's title was 14, 15 or 17 pixels depending on the page, a main button was 13, 14 or 15, and a site's name was two pixels bigger than every other title.
+
+There are nine now, each named for its job, and the names are what the styles use. 276 hand-typed sizes point at one. Eleven pixels went altogether, which is where every tag on a card was set, so those are easier to read. The frozen designs use the same names with their old numbers, and a check of every piece of text in the Original, before and after, found none that moved.
+
 Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, the browser button, tag groups of your own and the design system page still have to be proven there.
 
 ## What I deliberately did not build

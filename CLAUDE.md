@@ -1201,6 +1201,13 @@ page opens the merge. It used to leave two tags with one name.
 the enrich queue and only on a run with nothing else to do. Progress is a cursor
 on the group, so it survives anything. A save already in the group is skipped.
 
+**The Tags page lists groups by tab, so a shared one is under several.** A
+"Shared" heading was tried and nobody looked under it. Counts are that tab's, so
+every dialog that changes a tag says where else it reaches (`countsByKind`), and
+Hide asks whether it means this tab (`kinds`) or all of them. Unused tags are
+folded, never removed: the AI picks from a closed list, so deleting them decides
+it may never use them. Roughly a third of a starter vocabulary is unused.
+
 **The board is dragged with pointer events, not HTML5 drag.** A finger never
 drags, because it has to scroll; it selects. Never more than four tiles across,
 at any width, and never a full-width row: a drag only works if both ends are on

@@ -1419,9 +1419,8 @@
     border-radius: 12px;
   }
 
-  & .tag-ghost {
-    border-radius: 999px;
-    box-shadow: var(--pop-shadow);
+  & .tag-ghost-tile {
+    border-radius: 12px;
   }
 
   & .tag-bar {

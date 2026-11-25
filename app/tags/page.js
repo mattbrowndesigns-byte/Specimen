@@ -5,7 +5,8 @@ import UtilityBar from "../_ui/UtilityBar";
 import SiteFooter from "../_ui/SiteFooter";
 import TagBoard, { familiesOf } from "../_ui/TagBoard";
 import { ConfirmDialog, GroupDialog, LimitDialog, MergeDialog, RenameDialog, plural } from "../_ui/TagDialogs";
-import { CUSTOM_LIMIT, GROUP_KINDS, customInUse, kindList } from "@/lib/tagGroups";
+import { KINDS } from "../_ui/kinds";
+import { CUSTOM_LIMIT, countsByKind, customInUse, groupsFor, kindLabel, kindList } from "@/lib/tagGroups";
 
 // The vocabulary, and the one place it's tidied.
 //
@@ -13,9 +14,11 @@ import { CUSTOM_LIMIT, GROUP_KINDS, customInUse, kindList } from "@/lib/tagGroup
 // library as a full-width row: 158 of them, three buttons each, 9,830 pixels,
 // and nothing saying which library a group was for or how often a tag was used.
 //
-// The groups are sorted by where they're used rather than put behind a tab per
-// library, because Industry and Aesthetic are shared. Merging Minimal under a
-// tab called Websites would have changed three hundred visuals and not said so.
+// The list is the dashboard's own tabs, and a group used on three of them is
+// under all three. It was a "Shared" heading first, which was truer and which
+// nobody looking for their website tags looks under. What keeps that safe is
+// everything that changes a shared tag saying where else it reaches: merging
+// Minimal under Websites also merges it on three hundred visuals.
 //
 // There is still no moving a tag between groups. A group is the question its
 // tags answer, and what the AI reads; a tag under the wrong one is deleted and
@@ -28,23 +31,31 @@ const send = (url, method, body) =>
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
 
-// The rail's headings: everything used on more than one library is Shared, and
-// the rest is under the library it's for.
+// What the list shows: each tab's groups, then what's been hidden. A built-in
+// group taken off one tab is hidden there and nowhere else; one the owner made
+// was never on the tabs it isn't on, so it has nothing to bring back.
 function railSections(groups) {
-  const shown = groups.filter((g) => !g.hidden);
-  const web = (g) => g.kinds.every((k) => k === "site" || k === "component");
-  const title = (g) => (g.kinds.length === 1 ? kindList(g.kinds, "label") : web(g) ? "Websites and Components" : "Shared");
-  const order = ["Shared", "Websites and Components", ...GROUP_KINDS.map((k) => k.label)];
-  return [
-    ...order.map((name) => ({ name, groups: shown.filter((g) => title(g) === name) })),
-    { name: "Hidden", groups: groups.filter((g) => g.hidden) },
-  ].filter((section) => section.groups.length);
+  const sections = KINDS.map(({ id, label, Icon }) => ({
+    id,
+    label,
+    Icon,
+    items: groupsFor(groups, id).map((g) => ({ group: g, kind: id })),
+  }));
+  const hidden = groups.flatMap((g) => {
+    if (g.hidden) return [{ group: g, kind: null }];
+    if (!g.built_in) return [];
+    return g.all_kinds.filter((k) => !g.kinds.includes(k)).map((k) => ({ group: g, kind: k, off: true }));
+  });
+  return [...sections, { id: "hidden", label: "Hidden", Icon: EyeOff, items: hidden }].filter((s) => s.items.length);
 }
 
 export default function TagsPage() {
   const [data, setData] = useState(null); // { groups, tags, sizes }
   const [error, setError] = useState(null);
-  const [current, setCurrent] = useState(null);
+  const [current, setCurrent] = useState(null); // { key, kind }
+  const [showUnused, setShowUnused] = useState(false);
+  // Added on this visit, so a tag you've just typed isn't folded away.
+  const [fresh, setFresh] = useState(() => new Set());
   const [selected, setSelected] = useState(() => new Set());
   const [dialog, setDialog] = useState(null);
   // What the last merge would take to put back. Held here rather than in a
@@ -80,20 +91,49 @@ export default function TagsPage() {
   const groups = useMemo(() => data?.groups || [], [data]);
   const tags = useMemo(() => data?.tags || [], [data]);
   const sections = useMemo(() => railSections(groups), [groups]);
-  const group = groups.find((g) => g.key === current) || sections[0]?.groups[0];
+  const all = sections.flatMap((section) => section.items.map((item) => ({ ...item, section: section.id })));
+  const place =
+    all.find((i) => i.group.key === current?.key && i.kind === current.kind) ||
+    all.find((i) => i.group.key === current?.key) ||
+    all[0];
+  const group = place?.group;
+  const kind = place?.kind || null;
+  const hiddenHere = place?.section === "hidden";
+
   // Sorted here as well as in the query, where the database's alphabet puts
-  // CTA before Card.
+  // CTA before Card. `here` is the count on this tab, which is the number that
+  // means something beside the tab's name.
   const groupTags = useMemo(
-    () => tags.filter((t) => t.facet === group?.key).sort((a, b) => a.label.localeCompare(b.label)),
-    [tags, group]
+    () =>
+      tags
+        .filter((t) => t.facet === group?.key)
+        .map((t) => ({ ...t, here: kind ? t.counts?.[kind] || 0 : t.usage_count || 0 }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [tags, group, kind]
   );
+  // A tag nothing wears isn't a mistake to clean up: the AI only picks from
+  // tags that exist, so deleting the unused ones is deciding it may never use
+  // them. It's just not worth looking at, so it's folded away. A group with no
+  // use anywhere yet has nothing to fold them behind.
+  const isUsed = (t) => t.here > 0 || !t.is_approved || fresh.has(t.id);
+  const anyUsed = groupTags.some((t) => t.usage_count > 0);
+  const usedTags = anyUsed ? groupTags.filter(isUsed) : groupTags;
+  const unusedTags = anyUsed ? groupTags.filter((t) => !isUsed(t)) : [];
   const pending = tags.filter((t) => !t.is_approved && groups.some((g) => g.key === t.facet && !g.hidden));
   const picked = groupTags.filter((t) => selected.has(t.id));
   const close = useCallback(() => setDialog(null), []);
 
-  function open(key) {
-    setCurrent(key);
+  function open(key, nextKind) {
+    setCurrent({ key, kind: nextKind });
     setSelected(new Set());
+    setShowUnused(false);
+  }
+
+  // The number beside a group: the tags you'll see when you open it.
+  function tagsOn({ group: g, kind: k }) {
+    const list = tags.filter((t) => t.facet === g.key);
+    const used = list.filter((t) => (k ? t.counts?.[k] : t.usage_count) || !t.is_approved);
+    return list.some((t) => t.usage_count) ? used.length : list.length;
   }
 
   function toggle(id) {
@@ -126,7 +166,10 @@ export default function TagsPage() {
 
   async function addTag(label) {
     setError(null);
-    const problem = await act(send("/api/tags", "POST", { facet: group.key, label }), { failure: "Couldn't add that tag" });
+    const problem = await act(send("/api/tags", "POST", { facet: group.key, label }), {
+      failure: "Couldn't add that tag",
+      done: (body) => body.tag && setFresh((prev) => new Set(prev).add(body.tag.id)),
+    });
     if (problem) setError(problem);
     return !problem;
   }
@@ -198,7 +241,7 @@ export default function TagsPage() {
       failure: "Couldn't save that group",
       done: (answer) => {
         setDialog(null);
-        if (answer.key) open(answer.key);
+        if (answer.key) open(answer.key, body.kinds[0]);
         if (answer.fillError) setError(`The group was made, but your saves couldn't be lined up for tagging: ${answer.fillError}`);
       },
     });
@@ -206,10 +249,23 @@ export default function TagsPage() {
   const setHidden = (target, hidden, done = close) =>
     act(send(`/api/tag-groups/${target.key}`, "PATCH", { hidden }), { failure: "Couldn't change that group", done });
 
-  async function show(target) {
-    if (!target.built_in && full) return setDialog({ type: "limit" });
+  // Off one tab, or off all of them.
+  const hideOn = (target, k) =>
+    k && target.kinds.length > 1
+      ? act(send(`/api/tag-groups/${target.key}`, "PATCH", { kinds: target.kinds.filter((x) => x !== k) }), {
+          failure: "Couldn't change that group",
+          done: close,
+        })
+      : setHidden(target, true);
+
+  async function show(target, k) {
+    if (target.hidden && !target.built_in && full) return setDialog({ type: "limit" });
     setError(null);
-    const problem = await setHidden(target, false);
+    const problem = target.hidden
+      ? await setHidden(target, false)
+      : await act(send(`/api/tag-groups/${target.key}`, "PATCH", { kinds: [...target.kinds, k] }), {
+          failure: "Couldn't change that group",
+        });
     if (problem) setError(problem);
   }
 
@@ -280,20 +336,46 @@ export default function TagsPage() {
         {group && (
           <div className="tag-layout">
             <nav className="tag-rail" aria-label="Tag groups">
+              {/* A phone gets the tabs as tabs: one strip of every group would
+                  say Industry three times with nothing to tell them apart. */}
+              <div className="tag-rail-tabs">
+                {sections.map((section) => (
+                  <button
+                    key={section.id}
+                    className={section.id === place.section ? "active" : ""}
+                    aria-pressed={section.id === place.section}
+                    onClick={() => open(section.items[0].group.key, section.items[0].kind)}
+                  >
+                    {section.label}
+                  </button>
+                ))}
+              </div>
               {sections.map((section) => (
-                <div className="tag-rail-section" key={section.name}>
-                  <h2>{section.name}</h2>
-                  {section.groups.map((g) => (
-                    <button
-                      key={g.key}
-                      className={`tag-rail-item${g.key === group.key ? " active" : ""}`}
-                      aria-current={g.key === group.key ? "true" : undefined}
-                      onClick={() => open(g.key)}
-                    >
-                      <span>{g.label}</span>
-                      <span className="tag-rail-count">{tags.filter((t) => t.facet === g.key).length}</span>
-                    </button>
-                  ))}
+                <div
+                  className={`tag-rail-section${section.id === place.section ? " current" : ""}`}
+                  key={section.id}
+                >
+                  <h2>
+                    <section.Icon size={14} aria-hidden="true" />
+                    {section.label}
+                  </h2>
+                  {section.items.map((item) => {
+                    const here = section.id === place.section && item.group.key === group.key && item.kind === place.kind;
+                    return (
+                      <button
+                        key={`${item.group.key}:${item.kind}`}
+                        className={`tag-rail-item${here ? " active" : ""}`}
+                        aria-current={here ? "true" : undefined}
+                        onClick={() => open(item.group.key, item.kind)}
+                      >
+                        <span>
+                          {item.group.label}
+                          {item.off && <small> on {kindLabel(item.kind)}</small>}
+                        </span>
+                        <span className="tag-rail-count">{tagsOn(item)}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               ))}
               <div className="tag-rail-foot">
@@ -315,8 +397,8 @@ export default function TagsPage() {
                       <button onClick={() => setDialog({ type: "group", group })}>
                         <Pencil size={14} /> Edit
                       </button>
-                      {group.hidden ? (
-                        <button onClick={() => show(group)}>
+                      {hiddenHere ? (
+                        <button onClick={() => show(group, kind)}>
                           <Eye size={14} /> Show Again
                         </button>
                       ) : (
@@ -327,16 +409,12 @@ export default function TagsPage() {
                     </div>
                   )}
                 </div>
-                <p>
-                  {group.question && <>{group.question} </>}
-                  Used on {kindList(group.kinds)}.
-                  {group.filled_by === "me" && " You fill this one in."}
-                </p>
               </header>
 
-              {group.hidden && (
+              {hiddenHere && (
                 <p className="tag-panel-state">
-                  Hidden. It isn&rsquo;t in your filters or on your saves, and the AI leaves it alone. Its tags are kept.
+                  {place.off ? `Hidden on ${kindLabel(kind)}.` : "Hidden."} It isn&rsquo;t in the filters or on your saves
+                  there, and the AI leaves it alone. Its tags are kept.
                 </p>
               )}
               {group.fill?.state === "queued" && !group.hidden && (
@@ -359,12 +437,21 @@ export default function TagsPage() {
               )}
 
               <TagBoard
-                tags={groupTags}
-                families={familiesOf(groupTags, group)}
+                key={`${place.section}:${group.key}`}
+                families={familiesOf(usedTags, group)}
+                empty={groupTags.length === 0}
                 selected={selected}
                 onToggle={toggle}
                 onMerge={(ids, targetId) => merge([...ids, targetId].map(byId).filter(Boolean))}
                 onAdd={addTag}
+                unused={unusedTags}
+                unusedLabel={kind ? `Not used on ${kindList([kind])} yet` : "Not used yet"}
+                showUnused={showUnused}
+                onShowUnused={() => {
+                  // A selection you can't see is one you'd delete by accident.
+                  if (showUnused) setSelected((prev) => new Set([...prev].filter((id) => !unusedTags.some((t) => t.id === id))));
+                  setShowUnused(!showUnused);
+                }}
               />
 
               {picked.length > 0 && (
@@ -415,26 +502,34 @@ export default function TagsPage() {
           onClose={close}
         >
           <p className="tag-dialog-note">
-            {uses(dialog.tags)
-              ? `${dialog.tags.length === 1 ? "It comes" : "They come"} off ${plural(uses(dialog.tags), "save")}, which keep everything else they're tagged with. This can't be undone.`
-              : `Nothing is tagged with ${dialog.tags.length === 1 ? "it" : "them"}. This can't be undone.`}
+            {!uses(dialog.tags)
+              ? `Nothing is tagged with ${dialog.tags.length === 1 ? "it" : "them"}.`
+              : dialog.tags.length === 1
+                ? `It comes off ${countsByKind(dialog.tags[0].counts)}, which keep everything else they're tagged with.`
+                : `They're used ${plural(uses(dialog.tags), "time")} across your library. Those saves keep everything else they're tagged with.`}{" "}
+            This can&rsquo;t be undone.
           </p>
         </ConfirmDialog>
       )}
       {dialog?.type === "hide" && group && (
         <ConfirmDialog
           title={`Hide ${group.label}?`}
-          action="Hide Group"
+          action={kind && group.kinds.length > 1 ? `Hide on ${kindLabel(kind)}` : "Hide Group"}
           working="Hiding…"
-          onConfirm={() => setHidden(group, true)}
+          alternative={
+            kind && group.kinds.length > 1
+              ? { label: "Hide Everywhere", run: () => setHidden(group, true) }
+              : null
+          }
+          onConfirm={() => hideOn(group, kind)}
           onClose={close}
         >
           <p className="tag-dialog-note">
-            It leaves the filters and the detail pages of your {kindList(group.kinds)}, and the AI stops filling it in.
+            It leaves the filters and the saves there, and the AI stops filling it in.
+            {kind && group.kinds.length > 1 && ` It's also on ${kindList(group.kinds.filter((k) => k !== kind))}.`}
           </p>
           <p className="tag-dialog-note">
-            Nothing is deleted. {plural(groupTags.length, "tag")} and {plural(uses(groupTags), "use")} of them are kept,
-            and you can show the group again whenever you like.
+            Nothing is deleted. Its tags stay on everything they&rsquo;re on, and you can show it again whenever you like.
           </p>
         </ConfirmDialog>
       )}
@@ -462,6 +557,7 @@ export default function TagsPage() {
           group={dialog.group}
           groups={groups}
           sizes={data.sizes}
+          startOn={kind}
           onSave={saveGroup(dialog.group)}
           onDelete={() => setDialog({ type: "deleteGroup", group: dialog.group })}
           onClose={close}

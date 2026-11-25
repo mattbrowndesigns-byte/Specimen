@@ -7,6 +7,7 @@ import {
   GROUP_KINDS,
   LABEL_MAX,
   QUESTION_MAX,
+  countsByKind,
   customInUse,
   fillEstimate,
   kindList,
@@ -68,10 +69,6 @@ export function MergeDialog({ tags, onMerge, onClose }) {
     };
   }, [ids]);
 
-  const where = preview
-    ? GROUP_KINDS.filter((k) => preview.byKind[k.id]).map((k) => plural(preview.byKind[k.id], k.one, k.many))
-    : [];
-
   function submit() {
     const label = name.trim();
     if (!label) return setError("Give it a name.");
@@ -126,7 +123,7 @@ export function MergeDialog({ tags, onMerge, onClose }) {
         {!preview
           ? "Counting the saves…"
           : preview.total
-            ? `${where.length === 1 ? where[0] : plural(preview.total, "save")} will wear this one tag${where.length > 1 ? `: ${where.join(", ")}` : ""}.`
+            ? `${countsByKind(preview.byKind)} will wear this one tag.`
             : "Nothing is tagged with these yet."}{" "}
         If the AI suggests a word you merged away, it uses this tag instead.
       </p>
@@ -170,14 +167,14 @@ export function RenameDialog({ tag, onRename, onClose }) {
           onKeyDown={(e) => e.key === "Enter" && submit()}
         />
         <small className="field-hint">
-          {tag.usage_count ? `${plural(tag.usage_count, "save")} will follow.` : "Nothing is tagged with it yet."}
+          {tag.usage_count ? `It changes on ${countsByKind(tag.counts)}.` : "Nothing is tagged with it yet."}
         </small>
       </label>
     </Dialog>
   );
 }
 
-export function ConfirmDialog({ title, children, action, working, danger, extra, onConfirm, onClose }) {
+export function ConfirmDialog({ title, children, action, working, danger, extra, alternative, onConfirm, onClose }) {
   const { busy, error, run } = useAction();
   return (
     <Dialog
@@ -190,6 +187,11 @@ export function ConfirmDialog({ title, children, action, working, danger, extra,
           </button>
           <div className="tag-dialog-actions">
             {extra}
+            {alternative && (
+              <button onClick={() => run(alternative.run)} disabled={busy}>
+                {alternative.label}
+              </button>
+            )}
             <button className={danger ? "danger-btn" : "modal-apply"} onClick={() => run(onConfirm)} disabled={busy}>
               {busy ? working : action}
             </button>
@@ -204,10 +206,10 @@ export function ConfirmDialog({ title, children, action, working, danger, extra,
 }
 
 // Making a group, or changing one. `group` is the one being changed.
-export function GroupDialog({ group, groups, sizes, onSave, onDelete, onClose }) {
+export function GroupDialog({ group, groups, sizes, startOn, onSave, onDelete, onClose }) {
   const [label, setLabel] = useState(group?.label || "");
   const [question, setQuestion] = useState(group?.question || "");
-  const [kinds, setKinds] = useState(new Set(group?.kinds || []));
+  const [kinds, setKinds] = useState(new Set(group?.kinds || (startOn ? [startOn] : [])));
   const [filledBy, setFilledBy] = useState(group?.filled_by || "ai");
   const [words, setWords] = useState("");
   const [fill, setFill] = useState(false);

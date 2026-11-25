@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { GripVertical, Plus } from "lucide-react";
+import { ChevronDown, GripVertical, Plus } from "lucide-react";
 
 // One group's tags, small enough that a big group fits on a screen or two.
 // That is what makes dragging one onto another possible at all: as full-width
@@ -17,7 +17,18 @@ const DRAG_PX = 6;
 const EDGE_PX = 70;
 const SCROLL_PX = 14;
 
-export default function TagBoard({ tags, families, selected, onToggle, onMerge, onAdd }) {
+export default function TagBoard({
+  families,
+  empty,
+  selected,
+  onToggle,
+  onMerge,
+  onAdd,
+  unused,
+  unusedLabel,
+  showUnused,
+  onShowUnused,
+}) {
   const [drag, setDrag] = useState(null); // { ids, label }
   const [over, setOver] = useState(null);
   const ghostRef = useRef(null);
@@ -27,7 +38,7 @@ export default function TagBoard({ tags, families, selected, onToggle, onMerge, 
 
   const place = useCallback(() => {
     const el = ghostRef.current;
-    if (el) el.style.transform = `translate(${pointer.current.x + 10}px, ${pointer.current.y + 10}px)`;
+    if (el) el.style.transform = `translate(${pointer.current.x + 12}px, ${pointer.current.y + 8}px)`;
   }, []);
 
   function start(event, tag) {
@@ -58,7 +69,7 @@ export default function TagBoard({ tags, families, selected, onToggle, onMerge, 
       if (!dragging) {
         if (Math.hypot(e.clientX - from.x, e.clientY - from.y) < DRAG_PX) return;
         dragging = true;
-        setDrag({ ids, label: ids.length > 1 ? `${ids.length} tags` : tag.label });
+        setDrag({ ids, label: tag.label, count: tag.here });
         frame = requestAnimationFrame(scroll);
       }
       place();
@@ -102,7 +113,7 @@ export default function TagBoard({ tags, families, selected, onToggle, onMerge, 
       className={[
         "tag-tile",
         selected.has(tag.id) && "tag-tile-on",
-        !tag.usage_count && "tag-tile-unused",
+        !tag.here && "tag-tile-unused",
         !tag.is_approved && "tag-tile-pending",
         drag?.ids.includes(tag.id) && "tag-tile-lifted",
         over === tag.id && "tag-tile-over",
@@ -115,7 +126,7 @@ export default function TagBoard({ tags, families, selected, onToggle, onMerge, 
     >
       <GripVertical className="tag-tile-grip" size={14} aria-hidden="true" />
       <span className="tag-tile-name">{tag.label}</span>
-      <span className="tag-tile-count">{tag.usage_count || 0}</span>
+      {tag.here > 0 && <span className="tag-tile-count">{tag.here}</span>}
     </button>
   );
 
@@ -137,12 +148,36 @@ export default function TagBoard({ tags, families, selected, onToggle, onMerge, 
           </div>
         </div>
       )}
-      {tags.length === 0 && <p className="empty-small">No tags here yet. Add the first one.</p>}
+      {unused.length > 0 && (
+        <div className="tag-unused">
+          <button type="button" className="tag-unused-toggle" aria-expanded={showUnused} onClick={onShowUnused}>
+            <ChevronDown size={16} aria-hidden="true" />
+            {unusedLabel} ({unused.length})
+          </button>
+          {showUnused && (
+            <>
+              <p className="tag-hint">The AI can still pick these. Delete one to stop it.</p>
+              <div className="tag-tiles">{unused.map(tile)}</div>
+            </>
+          )}
+        </div>
+      )}
+      {empty && <p className="empty-small">No tags here yet. Add the first one.</p>}
 
       {drag &&
         createPortal(
           <div className="tag-ghost" ref={ghostRef} aria-hidden="true">
-            {drag.label}
+            {/* The tile itself, tilted, small enough and far enough off the
+                pointer that the one underneath can still be read. Its own
+                element, because the outer one's transform is the pointer. */}
+            <div className={`tag-ghost-tile${drag.ids.length > 1 ? " tag-ghost-stack" : ""}`}>
+              <span className="tag-tile-name">{drag.label}</span>
+              {drag.ids.length > 1 ? (
+                <span className="tag-ghost-more">+{drag.ids.length - 1}</span>
+              ) : (
+                drag.count > 0 && <span className="tag-tile-count">{drag.count}</span>
+              )}
+            </div>
           </div>,
           document.body
         )}

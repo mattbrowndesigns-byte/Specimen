@@ -1217,6 +1217,17 @@ has seen. `lib/tagStarters.js`, and it falls back to showing them before m30.
 Seeds must go through `upsertStarters`. A tag can now arrive between page loads,
 so the dashboard re-reads tags on a tab change and an upload.
 
+**An industry or a medium can be proposed too, and only where none fitted.** A
+site's is `proposed_vertical` (its own field, so it doesn't compete with the one
+`proposed_tag`); a visual project's industry and each image's `proposed_medium`
+likewise, at most two new mediums a project, held on the candidate until the save
+says which images were kept. All arrive unapproved, through `proposedTagId`. The
+code drops one beside a match, and `cleanProposal` drops anything longer than a
+few words. The prompt names what's already waiting, or the next save spells it
+differently. It asks for a *sector*: asked for an industry, a fish shop came back
+Seafood Market. An example in the prompt is also a suggestion: Uniforms, given as
+one, was used on a vest that Merchandise fits.
+
 **The prompts list tag names, not slugs (`tagging.values`).** A rename keeps the
 slug, so the AI went on reading the old word and filing by it.
 

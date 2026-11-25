@@ -1172,6 +1172,14 @@ use `groupsFor` / `tagRows`; AI passes use `loadVocabulary`
 (`lib/tagGroupsData.js`), whose `tagId()` is the only way an answer becomes a
 tag, because it refuses a hidden group and one kept by hand.
 
+**The New Group form asks for a name, tags, libraries and whether the AI helps.**
+It asked for the question a group answers and "who fills it in" too, and the owner
+froze at both. Same sixteen sites without the question: thirteen answers the same, three close
+calls, so it's gone from the form; `tag_group.question` still reaches the prompt on a group
+made before. Tags are typed as pills, which take a comma as well as Enter.
+Text fields in `.field` state their own fill: left to the browser they are #3b3b3b
+in dark, and every dialog had that.
+
 **Hidden means filtered where tags are read, not where they're drawn.**
 `visibleLinks` runs inside `attachTags` and `attachCapturesAndTags`, so cards,
 shares, exports and the MCP all follow. Links are never deleted, so showing a

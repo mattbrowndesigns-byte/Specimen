@@ -1,12 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import ModalShell from "./ModalShell";
 import {
   CUSTOM_LIMIT,
   GROUP_KINDS,
   LABEL_MAX,
-  QUESTION_MAX,
   countsByKind,
   customInUse,
   fillEstimate,
@@ -205,21 +204,92 @@ export function ConfirmDialog({ title, children, action, working, danger, extra,
   );
 }
 
+// One spelling each, in the order they were typed. A paste can hold several.
+function withWords(words, text) {
+  const out = [...words];
+  for (const part of text.split(/[,\n]/)) {
+    const word = part.trim().slice(0, 60);
+    if (slugify(word) && !out.some((w) => slugify(w) === slugify(word))) out.push(word);
+  }
+  return out;
+}
+
+// Words as pills: type one, press Enter, and it's a thing you can see and take
+// off. A line of commas was a format to follow, and nothing said it had worked.
+function PillInput({ words, typing, onWords, onTyping, placeholder }) {
+  const inputRef = useRef(null);
+
+  function add() {
+    onWords(withWords(words, typing));
+    onTyping("");
+    inputRef.current?.focus();
+  }
+
+  return (
+    <div className="combobox">
+      <div className="combobox-field" onClick={() => inputRef.current?.focus()}>
+        {words.map((word) => (
+          <span className="combobox-chip" key={word}>
+            {word}
+            <button
+              type="button"
+              aria-label={`Remove ${word}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onWords(words.filter((w) => w !== word));
+              }}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        <input
+          ref={inputRef}
+          value={typing}
+          placeholder={placeholder}
+          aria-label="Add a tag"
+          onChange={(e) => {
+            const value = e.target.value;
+            if (!/[,\n]/.test(value)) return onTyping(value);
+            onWords(withWords(words, value));
+            onTyping("");
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            } else if (e.key === "Backspace" && !typing && words.length) {
+              onWords(words.slice(0, -1));
+            }
+          }}
+        />
+        {typing.trim() && (
+          <button type="button" className="pill-add" onClick={add}>
+            Add
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Making a group, or changing one. `group` is the one being changed.
 export function GroupDialog({ group, groups, sizes, startOn, onSave, onDelete, onClose }) {
   const [label, setLabel] = useState(group?.label || "");
-  const [question, setQuestion] = useState(group?.question || "");
   const [kinds, setKinds] = useState(new Set(group?.kinds || (startOn ? [startOn] : [])));
   const [filledBy, setFilledBy] = useState(group?.filled_by || "ai");
-  const [words, setWords] = useState("");
+  const [words, setWords] = useState([]);
+  // Typed and not yet a pill. Pressing Create means it too.
+  const [typing, setTyping] = useState("");
   const [fill, setFill] = useState(false);
   const { busy, error, setError, run } = useAction();
 
   const own = !group?.built_in;
   const offered = GROUP_KINDS.filter((k) => !group || group.all_kinds.includes(k.id));
   const chosen = offered.filter((k) => kinds.has(k.id)).map((k) => k.id);
-  const starting = words.split(/[,\n]/).map((w) => w.trim()).filter(Boolean);
+  const starting = withWords(words, typing);
   const saved = chosen.reduce((n, k) => n + (sizes[k] || 0), 0);
+  const savedOf = Object.fromEntries(chosen.map((k) => [k, sizes[k] || 0]));
   const ai = filledBy === "ai";
 
   const change = (set) => (value) => {
@@ -230,14 +300,14 @@ export function GroupDialog({ group, groups, sizes, startOn, onSave, onDelete, o
   function submit() {
     if (!label.trim()) return setError("Give the group a name.");
     if (!chosen.length) return setError("Pick at least one library to use it on.");
-    if (!group && ai && new Set(starting.map(slugify)).size < 2) {
+    if (!group && ai && starting.length < 2) {
       return setError("Add at least two tags, so the AI has something to choose between.");
     }
     run(() =>
       onSave({
         label: label.trim(),
         kinds: chosen,
-        ...(own ? { question: question.trim(), filled_by: filledBy } : {}),
+        ...(own ? { filled_by: filledBy } : {}),
         ...(group ? {} : { tags: starting, fill: ai && fill && saved > 0 }),
       })
     );
@@ -277,17 +347,18 @@ export function GroupDialog({ group, groups, sizes, startOn, onSave, onDelete, o
         />
       </label>
 
-      {own && (
-        <label className="field">
-          <span>The question it answers</span>
-          <input
-            value={question}
-            maxLength={QUESTION_MAX}
-            placeholder="What device is this designed for?"
-            onChange={(e) => setQuestion(e.target.value)}
+      {!group && (
+        <div className="field">
+          <span>Tags</span>
+          <PillInput
+            words={words}
+            typing={typing}
+            onWords={change(setWords)}
+            onTyping={change(setTyping)}
+            placeholder={words.length ? "Add another" : "iOS"}
           />
-          {ai && <small className="field-hint">The AI reads this when it tags something.</small>}
-        </label>
+          <small className="field-hint">Press Enter after each one. You can add more any time.</small>
+        </div>
       )}
 
       {offered.length > 1 && (
@@ -323,59 +394,41 @@ export function GroupDialog({ group, groups, sizes, startOn, onSave, onDelete, o
       )}
 
       {own && (
-        <div className="field">
-          <span>Who fills it in</span>
-          <div className="view-switch tag-who">
-            <button type="button" className={ai ? "active" : ""} aria-pressed={ai} onClick={() => change(setFilledBy)("ai")}>
-              AI
-            </button>
-            <button type="button" className={ai ? "" : "active"} aria-pressed={!ai} onClick={() => change(setFilledBy)("me")}>
-              Only Me
-            </button>
-          </div>
-          <small className="field-hint">
-            {ai
-              ? "The AI picks from this group's tags on each new save."
-              : "For what the AI can't know, like a client. Kept off your share links, the way notes are."}
-          </small>
+        <div className="tag-ai-choices">
+          <label className="tag-fill-choice">
+            <input
+              type="checkbox"
+              className="select-box"
+              checked={ai}
+              onChange={(e) => change(setFilledBy)(e.target.checked ? "ai" : "me")}
+            />
+            <span>
+              Let the AI tag new saves
+              <small className="field-hint">
+                {ai
+                  ? "It uses one of these tags when it fits, and skips the save when none do."
+                  : "You’ll add these tags yourself. They stay off your share links, like notes."}
+              </small>
+            </span>
+          </label>
+
+          {!group && ai && saved > 0 && (
+            <label className="tag-fill-choice">
+              <input type="checkbox" className="select-box" checked={fill} onChange={(e) => setFill(e.target.checked)} />
+              <span>
+                Check the {countsByKind(savedOf)} I already have
+                <small className="field-hint">
+                  Only the ones that fit get a tag. It happens in the background {fillEstimate(chosen, sizes)}.
+                </small>
+              </span>
+            </label>
+          )}
         </div>
       )}
 
       {!group && (
-        <label className="field">
-          <span>Tags to start with</span>
-          <textarea
-            rows={2}
-            value={words}
-            placeholder="iOS, Android, Web, Desktop"
-            onChange={(e) => change(setWords)(e.target.value)}
-          />
-          <small className="field-hint">Separate them with commas. You can add more any time.</small>
-        </label>
-      )}
-
-      {!group && ai && saved > 0 && (
-        <label className="tag-fill-choice">
-          <input type="checkbox" className="select-box" checked={fill} onChange={(e) => setFill(e.target.checked)} />
-          <span>
-            Also tag the {plural(saved, "save")} I already have
-            <small className="field-hint">
-              Done in the background {fillEstimate(chosen, sizes)}, so there&rsquo;s still room in the AI&rsquo;s free
-              allowance for new saves.
-            </small>
-          </span>
-        </label>
-      )}
-
-      {!group && chosen.length > 0 && (
-        <p className="tag-dialog-note">
-          {label.trim() || "This group"} will show up on all of your {kindList(chosen)} and in their filters. You can hide
-          it again any time without losing its tags.
-        </p>
-      )}
-      {!group && (
         <p className="tag-dialog-count">
-          {customInUse(groups).length} of {CUSTOM_LIMIT} groups of your own in use
+          You can hide a group any time without losing its tags. {customInUse(groups).length} of {CUSTOM_LIMIT} used.
         </p>
       )}
     </Dialog>

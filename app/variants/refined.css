@@ -804,6 +804,72 @@
     border-radius: var(--r-field);
   }
 
+  /* A fill of its own. Left to the browser it was #3b3b3b on a #161618 dialog
+     in dark, the heaviest thing on it and empty. */
+  & .field input:not([type="checkbox"], [type="file"]),
+  & .field textarea,
+  & .field .combobox-field {
+    border: 1px solid var(--border);
+    background: var(--chip-bg);
+    color: var(--text);
+  }
+
+  & .field input::placeholder,
+  & .field textarea::placeholder {
+    color: var(--text-faint);
+  }
+
+  & .field input:focus,
+  & .field textarea:focus,
+  & .field .combobox-field:focus-within {
+    border-color: transparent;
+    background: var(--surface);
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  & .field .combobox-field:hover:not(:focus-within) {
+    background: var(--chip-bg);
+  }
+
+  & .field .combobox-field input:not([type="checkbox"], [type="file"]),
+  & .field .combobox-field input:focus {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* The same grey box, as a tick. */
+  & .tag-dialog .select-box {
+    appearance: none;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--border-strong-hover);
+    border-radius: 6px;
+    background: var(--chip-bg);
+  }
+
+  & .tag-dialog .select-box:checked {
+    border-color: var(--invert-bg);
+    background: var(--invert-bg);
+  }
+
+  & .tag-dialog .select-box:checked::after {
+    content: "";
+    width: 5px;
+    height: 10px;
+    margin-top: -2px;
+    border: solid var(--invert-text);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  & .tag-dialog .select-box:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
   /* Site page
      ------------------------------------------------------------------------- */
   & .detail-header {

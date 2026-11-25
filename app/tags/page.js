@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronDown, Eye, EyeOff, Pencil, Plus } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, Pencil, Plus, X } from "lucide-react";
 import UtilityBar from "../_ui/UtilityBar";
 import SiteFooter from "../_ui/SiteFooter";
 import TagBoard, { familiesOf } from "../_ui/TagBoard";
@@ -333,7 +333,7 @@ export default function TagsPage() {
 
         {error && <p className="error">{error}</p>}
 
-        {/* Stays until you undo it or leave the page. A toast that fades after
+        {/* Stays until you undo it, close it or leave the page. A toast that fades after
             five seconds is no use for a change you only notice was wrong once
             you go looking for the word. */}
         {undo && (
@@ -342,9 +342,16 @@ export default function TagsPage() {
               Merged <strong>{undo.from.join(", ")}</strong> into <strong>{undo.into}</strong>.{" "}
               {undo.moved ? `${plural(undo.moved, "save")} moved.` : "No saves needed moving."}
             </span>
-            <button className="link-btn" onClick={undoMerge} disabled={undoing} aria-busy={undoing}>
-              {undoing ? "Undoing…" : "Undo"}
-            </button>
+            <span className="tag-undo-actions">
+              <button className="link-btn" onClick={undoMerge} disabled={undoing} aria-busy={undoing}>
+                {undoing ? "Undoing…" : "Undo"}
+              </button>
+              {/* Closing gives up the way back, which is what being fine with
+                  it means. */}
+              <button className="icon-btn" onClick={() => setUndo(null)} disabled={undoing} aria-label="Close">
+                <X size={16} />
+              </button>
+            </span>
           </div>
         )}
 

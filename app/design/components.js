@@ -118,7 +118,7 @@ export const COMPONENTS = [
     note: "What the app says back.",
     items: [
       { name: "Error", states: ["rest"], wide: true, render: (t) => <p {...t("error ds-row")}>Couldn’t reach the server</p> },
-      { name: "With a way back", states: ["rest"], wide: true, render: (t) => <div className="ds-row"><div {...t("tag-undo")}><span>Merged <strong>Minimalist</strong> into <strong>Minimal</strong>.</span><button className="link-btn" tabIndex={-1}>Undo</button></div></div> },
+      { name: "With a way back", states: ["rest"], wide: true, render: (t) => <div className="ds-row"><div {...t("tag-undo")}><span>Merged <strong>Minimalist</strong> into <strong>Minimal</strong>.</span><span className="tag-undo-actions"><button className="link-btn" tabIndex={-1}>Undo</button><button className="icon-btn" tabIndex={-1} aria-label="Close"><X size={16} /></button></span></div></div> },
       { name: "State of a panel", states: ["rest"], wide: true, render: (t) => <p {...t("tag-panel-state ds-row")}>Tagging what you already had: 32 of 209.</p> },
       { name: "Progress", states: ["rest"], wide: true, render: (t) => <div className="ds-row"><div {...t("capture-status")}><div className="capture-status-bar"><div className="capture-status-fill" style={{ width: "62%" }} /></div><div className="capture-status-row"><p>Capturing superhuman.com</p></div></div></div> },
       { name: "Progress, done", states: ["rest"], wide: true, render: (t) => <div className="ds-row"><div {...t("capture-status capture-status-done")}><p>✓ Superhuman is in your library.</p></div></div> },

@@ -1145,7 +1145,7 @@ handed only its own groups (`byKind` in `app/page.js`).
 What it destroys is a *word*, which you may not notice is missing for weeks. So
 it asks first, with the exact number of saves (two tags on one save are one, so
 the counts on screen can't be added), and leaves an Undo that stays until you
-use it or leave the page.
+use it, close it or leave the page.
 
 The undo is held in the page rather than in a table, because a table for it
 would want a `user_id`, RLS, a policy, a scoped query and a sweeper for rows

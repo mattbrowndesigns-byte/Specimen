@@ -1165,6 +1165,20 @@ h1 {
   font-weight: 600;
 }
 
+.tag-undo-actions {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Pulled back by its own inside, so the X sits on the note's edge and the note
+   keeps the height its words give it. */
+.tag-undo-actions .icon-btn.icon-btn {
+  margin: -8px;
+  margin-left: 0;
+}
+
 .tag-undo .link-btn.link-btn {
   flex-shrink: 0;
   font-size: 14px;

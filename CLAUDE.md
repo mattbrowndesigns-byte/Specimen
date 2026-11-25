@@ -1138,21 +1138,14 @@ the table: capture, page, palette, fonts, style_history, is_hidden.
 **`resource_type` is a fifth facet and nothing else may touch it.** The other
 four describe how a page is *designed*; "Mega Footer" and "Brutalist" say
 nothing about Lucide. Sharing a vocabulary across the two libraries put words
-in the dashboard's chip strip that no website could ever match. `/api/tags`
-returns all five, so the dashboard splits the list and hands each tab only its
-own -- `designTags` to Websites and Components, `resourceTags` to Resources.
-`FilterModal` iterates a hardcoded `FACETS`, so the fifth stays out of the
-website filters by not being listed there. Add a sixth facet and both of those
-places need revisiting.
+in the dashboard's chip strip that no website could ever match. Each tab is
+handed only its own groups (`byKind` in `app/page.js`).
 
 **A merge is the one destructive edit here that doesn't look destructive.**
-Rename and delete both announce themselves; a merge is picked from a dropdown,
-takes one click, and what it destroys is a *word*, which you may not notice is
-missing until you go looking for it weeks later. So it now asks first, in the
-numbers that matter ("Move 8 saves from Playful onto Corporate, then delete
-Playful?"), and leaves an Undo on screen afterwards that stays until you use it
-or leave the page -- a toast that fades after five seconds is no use for a
-regret that arrives the next time you filter.
+What it destroys is a *word*, which you may not notice is missing for weeks. So
+it asks first, with the exact number of saves (two tags on one save are one, so
+the counts on screen can't be added), and leaves an Undo that stays until you
+use it or leave the page.
 
 The undo is held in the page rather than in a table, because a table for it
 would want a `user_id`, RLS, a policy, a scoped query and a sweeper for rows
@@ -1169,22 +1162,50 @@ Every id in an undo payload comes back from the browser, so the route re-reads
 each one scoped to the account before writing. Ids in a request body are
 exactly where a library gets tags hung off someone else's rows.
 
-**A tag's facet is not a label, so the page stopped offering to change it.**
-Manage Tags had a dropdown per row that could move a word into any of the four
-facets. A facet is the *question* the tag answers, and it is what the AI reads
-when it decides what it may pick next time, so a stray selection quietly
-rewrote a rule rather than editing a word. Nothing on that page needs to do
-that, and a tag filed under the wrong question is fixed by deleting it and
-typing it again. Merge is restricted to the same facet for the same reason:
-across facets it isn't a merge, it's that control wearing a merge's clothes.
+**A facet is a "group" on screen, and `lib/tagGroups.js` is the only list of
+them.** Six are built in; an account can add five (`CUSTOM_LIMIT`, hidden ones
+not counted). The key (`tag.facet`) of one it made is `g_` and eight characters,
+so a group can be renamed. `tag_group` holds those and any change to a built-in;
+no row means unchanged. Don't hardcode a facet list again: there were about
+twenty, and each new facet missed some. Pages read `groups` off `/api/tags` and
+use `groupsFor` / `tagRows`; AI passes use `loadVocabulary`
+(`lib/tagGroupsData.js`), whose `tagId()` is the only way an answer becomes a
+tag, because it refuses a hidden group and one kept by hand.
 
-**`resource_type` was missing from Manage Tags entirely.** The page built its
-sections from a hardcoded list of the four design facets, so the folders in the
-Resources tab -- which *are* `resource_type` tags -- could be filled by the AI
-and never renamed, merged or deleted by anyone. It's the fifth section now,
-headed "Folders", which is what the rest of the app calls them. This is the
-second time a fifth facet has had to be added somewhere by hand; grep the
-facet lists before adding a sixth.
+**Hidden means filtered where tags are read, not where they're drawn.**
+`visibleLinks` runs inside `attachTags` and `attachCapturesAndTags`, so cards,
+shares, exports and the MCP all follow. Links are never deleted, so showing a
+group again is exact. A group filled in by hand ("Only Me") is also dropped when
+`shared` is passed, like notes: it's where a client's name would be. Pass
+`shared: true` from anything a stranger reads. The demo seed skips every custom
+group for the same reason. Search still matches a hidden group's tags.
+
+**A built-in group can't be deleted, and Folders can't be hidden.** `page_type`
+sorts a site's own pages and `medium` carries the clip tags, so prompts still
+ask about a hidden built-in; only the linking stops. A tag still can't move
+between groups: the group is the question the AI reads.
+
+**A merged word is remembered in `tag_alias`,** so the AI proposing it tomorrow
+gets the tag it became, and a visual sorted before the merge and saved after
+still lands. Typing the word by hand takes it back. An undo restores the words,
+their links, the target's own name and any earlier aliases; its `TABLES` must
+list every kind a tag can be on. `visual` was missing until schema_m29, so undo
+silently dropped every visual. Tested by comparing the whole library before and
+after.
+
+**Renaming a tag to a name its group has is a 409 with `conflict`,** and the
+page opens the merge. It used to leave two tags with one name.
+
+**Filling a new group in on old saves is one request at a time
+(`lib/tagFill.js`).** Sixteen pictures each, forty minutes apart, at the end of
+the enrich queue and only on a run with nothing else to do. Progress is a cursor
+on the group, so it survives anything. A save already in the group is skipped.
+
+**The board is dragged with pointer events, not HTML5 drag.** A finger never
+drags, because it has to scroll; it selects. Tiles are small because a drag only
+works if both ends are on screen. `counts` on each tag is per kind, and
+`tagsFor` puts that kind's number in `usage_count`: the strips used to count
+every library's saves.
 
 **The three written pages are reached by strangers and are not public.**
 `SharedFooter` links to /features, /about and /faq precisely so someone without

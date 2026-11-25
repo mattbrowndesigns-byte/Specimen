@@ -6,15 +6,7 @@ import ResourceModal from "../_ui/ResourceModal";
 import UtilityBar from "../_ui/UtilityBar";
 import Favicon from "../_ui/Favicon";
 import SiteFooter from "../_ui/SiteFooter";
-
-const FACET_LABELS = {
-  vertical: "Vertical",
-  page_type: "Page Type",
-  block_pattern: "Block / Pattern",
-  aesthetic: "Aesthetic",
-  resource_type: "Type",
-  medium: "Medium",
-};
+import { BUILT_IN_GROUPS } from "@/lib/tagGroups";
 
 // Selection state is per section rather than one shared set: the three
 // sections take different actions (mark reviewed vs approve/reject), so a
@@ -62,6 +54,7 @@ export default function ReviewPage() {
   const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState(null);
   const [allTags, setAllTags] = useState([]);
+  const [groups, setGroups] = useState(BUILT_IN_GROUPS);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -93,6 +86,7 @@ export default function ReviewPage() {
       const data = await tagsRes.json();
       setPendingTags((data.tags || []).filter((t) => !t.is_approved));
       setAllTags((data.tags || []).filter((t) => t.is_approved));
+      setGroups(data.groups || BUILT_IN_GROUPS);
     }
     setLoaded(true);
   }
@@ -196,7 +190,7 @@ export default function ReviewPage() {
                     onChange={() => tagSelection.toggle(tag.id)}
                     label={`Select ${tag.label}`}
                   />
-                  <span className="tag-facet">{FACET_LABELS[tag.facet]}</span>
+                  <span className="tag-facet">{groups.find((g) => g.key === tag.facet)?.label}</span>
                   <span className="tag-label">{tag.label}</span>
                   <div className="tag-actions">
                     <button disabled={busy} onClick={() => approveTags([tag.id])}>
@@ -335,6 +329,7 @@ export default function ReviewPage() {
           <ResourceModal
             resource={editing.item}
             allTags={allTags}
+            groups={groups}
             onClose={() => setEditing(null)}
             onSaved={async () => {
               setEditing(null);
@@ -352,6 +347,7 @@ export default function ReviewPage() {
             item={editing.item}
             kind={editing.kind}
             allTags={allTags}
+            groups={groups}
             onClose={() => setEditing(null)}
             onSaved={async () => {
               setEditing(null);

@@ -37,6 +37,7 @@ const ADAPTER = {
 
 export default function WebsitesTab({
   allTags,
+  groups,
   refreshKey,
   onAdd,
   incomingQuery,
@@ -95,6 +96,7 @@ export default function WebsitesTab({
     <LibraryBrowser
       items={shown}
       allTags={allTags}
+      groups={groups}
       query={query}
       onQueryChange={setQuery}
       searchPlaceholder="Search name, summary, notes, tags, discovered pages…"

@@ -45,7 +45,7 @@ async function readSites(supabase, userId, ids) {
     query = query.in("id", ids);
   }
   const rows = checked("sites", await query.order("saved_at", { ascending: false }));
-  return attachCapturesAndTags(supabase, rows);
+  return attachCapturesAndTags(supabase, rows, { shared: true });
 }
 
 async function readComponents(supabase, userId, ids) {
@@ -55,7 +55,7 @@ async function readComponents(supabase, userId, ids) {
     query = query.in("id", ids);
   }
   const rows = checked("components", await query.order("created_at", { ascending: false }));
-  return attachTags(supabase, rows, "component");
+  return attachTags(supabase, rows, "component", { shared: true });
 }
 
 async function readResources(supabase, userId, ids) {
@@ -65,7 +65,7 @@ async function readResources(supabase, userId, ids) {
     query = query.in("id", ids);
   }
   const rows = checked("resources", await query.order("saved_at", { ascending: false }));
-  return attachTags(supabase, rows, "resource");
+  return attachTags(supabase, rows, "resource", { shared: true });
 }
 
 // Only a collection reaches visuals: no tab-level scope covers them yet.
@@ -79,7 +79,7 @@ async function readVisuals(supabase, userId, ids) {
     "visuals"
   );
   rows.sort((a, b) => String(b.saved_at).localeCompare(String(a.saved_at)) || a.id.localeCompare(b.id));
-  return attachTags(supabase, rows, "visual");
+  return attachTags(supabase, rows, "visual", { shared: true });
 }
 
 const GONE = () =>

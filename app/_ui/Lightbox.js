@@ -10,6 +10,7 @@ import VisualMedia from "./VisualMedia";
 import { platformOf, sourceLabel } from "@/lib/platforms";
 import { grabClip } from "@/lib/videoFrame";
 import { rankRelated } from "@/lib/related";
+import { BUILT_IN_GROUPS, tagRows } from "@/lib/tagGroups";
 
 // A saved visual, opened the way images are meant to be opened: over the
 // board, on a dark ground, fitted to the window, with a short caption under
@@ -24,8 +25,6 @@ import { rankRelated } from "@/lib/related";
 // It goes through ModalShell like every overlay here, made full-screen by
 // `.modal.lightbox`.
 
-const FACET_LABELS = { medium: "Medium", aesthetic: "Aesthetic", vertical: "Industry" };
-const FACETS = Object.keys(FACET_LABELS);
 const DETAILS_KEY = "specimen.visuals.details";
 // Matches the close transition in globals.css; the panel stays mounted this
 // long after Hide so it can slide out rather than vanish.
@@ -182,6 +181,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
   const [id, setId] = useState(startId);
   const [detail, setDetail] = useState(null);
   const [allTags, setAllTags] = useState([]);
+  const [groups, setGroups] = useState(BUILT_IN_GROUPS);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
   const [summaryDraft, setSummaryDraft] = useState("");
@@ -293,7 +293,10 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
   useEffect(() => {
     (async () => {
       const res = await fetch("/api/tags");
-      if (res.ok) setAllTags((await res.json()).tags || []);
+      if (!res.ok) return;
+      const data = await res.json();
+      setAllTags(data.tags || []);
+      setGroups(data.groups || BUILT_IN_GROUPS);
     })();
     try {
       setDetailsOpen(localStorage.getItem(DETAILS_KEY) === "open");
@@ -484,13 +487,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
 
   if (!visual) return null;
 
-  const tagsByFacet = FACETS.map((facet) => ({
-    facet,
-    assigned: (visual.tags || []).filter((t) => t.facet === facet),
-    available: allTags.filter(
-      (t) => t.facet === facet && t.is_approved && !(visual.tags || []).some((vt) => vt.id === t.id)
-    ),
-  }));
+  const tagsByFacet = tagRows(groups, "visual", visual.tags, allTags);
 
   return (
     <ModalShell label={visual.title || "Visual"} className={`lightbox${panelShown ? " lightbox-with-details" : ""}`} onClose={onClose}>
@@ -699,15 +696,15 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
 
           <section className="lightbox-panel-section detail-section">
             <h2>Tags</h2>
-            {tagsByFacet.map(({ facet, assigned, available }) => (
+            {tagsByFacet.map(({ facet, label, assigned, available }) => (
               <div className="facet-row" key={facet}>
-                <span className="facet-name">{FACET_LABELS[facet]}</span>
+                <span className="facet-name">{label}</span>
                 <TagCombobox
                   assigned={assigned}
                   available={available}
                   onAdd={(tagId) => addTag(tagId)}
                   onRemove={removeTag}
-                  onCreate={(label) => createTag(facet, label)}
+                  onCreate={(name) => createTag(facet, name)}
                 />
               </div>
             ))}
@@ -721,7 +718,7 @@ export default function Lightbox({ items, sequence, startId, onClose, onChange, 
                 className="link-btn"
                 onClick={() => regenerate("tags")}
                 disabled={Boolean(busy)}
-                data-tip="Replaces this image's medium, aesthetic and industry tags"
+                data-tip="Replaces the tags the AI chose for this image"
               >
                 {busy === "regenerate-tags" ? "Regenerating…" : "Regenerate"}
               </button>

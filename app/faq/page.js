@@ -46,7 +46,11 @@ const SECTIONS = [
       },
       {
         q: "Some tags look almost the same. Can I tidy them up?",
-        a: "Manage Tags is for exactly that: rename, merge or delete, and the AI's next pass uses your vocabulary rather than its own. Tags it proposes arrive unapproved and marked, so you decide whether a new word joins the library.",
+        a: "Manage Tags is for exactly that. Drag one tag onto another to merge them, or select a few, and it asks which name to keep. The AI remembers the words you merged away and uses the one you kept. Tags it proposes arrive unapproved and marked, so you decide whether a new word joins the library.",
+      },
+      {
+        q: "Can I sort my library a way that isn't there?",
+        a: "Add a group in Manage Tags. You name it, choose which libraries it's for, and say whether the AI fills it in or only you do. It starts with new saves unless you ask it to go back over what you have. You can have five of your own, which keeps the AI's picks sharp and the filters short. Hiding a group keeps its tags, so you can change your mind.",
       },
       {
         q: "Why do some pages have no tags at all?",
@@ -84,7 +88,7 @@ const SECTIONS = [
       },
       {
         q: "How do the tag filters combine?",
-        a: "Tags within one facet widen the search, tags across facets narrow it. Picking Ecommerce and Hospitality finds either; adding Dark finds either of those that are also dark.",
+        a: "Tags within one group widen the search, tags across groups narrow it. Picking Ecommerce and Hospitality finds either; adding Dark finds either of those that are also dark.",
       },
       {
         q: "What are folders, and how do things end up in them?",

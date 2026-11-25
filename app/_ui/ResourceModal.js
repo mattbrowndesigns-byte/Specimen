@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Sparkles, Trash2, X } from "lucide-react";
 import TagCombobox from "./TagCombobox";
 import ModalShell from "./ModalShell";
+import { groupsFor } from "@/lib/tagGroups";
 
 const FACET = "resource_type";
 
@@ -10,7 +11,7 @@ const FACET = "resource_type";
 // surface: the title, the sentence, the type and any notes. That's deliberate
 // — a resource is a link, and the reason it has no page of its own is that
 // there would be nothing on it worth the trip.
-export default function ResourceModal({ resource, allTags, onSaved, onDeleted, onClose }) {
+export default function ResourceModal({ resource, allTags, groups, onSaved, onDeleted, onClose }) {
   const [title, setTitle] = useState(resource.title || "");
   const [summary, setSummary] = useState(resource.summary || "");
   const [notes, setNotes] = useState(resource.notes || "");
@@ -53,11 +54,11 @@ export default function ResourceModal({ resource, allTags, onSaved, onDeleted, o
     await refreshTags();
   }
 
-  async function createTag(label) {
+  async function createTag(facet, label) {
     const res = await fetch("/api/tags", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ facet: FACET, label }),
+      body: JSON.stringify({ facet, label }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -127,9 +128,12 @@ export default function ResourceModal({ resource, allTags, onSaved, onDeleted, o
 
   // Pending proposals are offered too. Leaving them out is what made an
   // existing Job Board invisible to someone typing "Job".
-  const available = allTags.filter(
-    (t) => t.facet === FACET && !tags.some((at) => at.id === t.id)
-  );
+  const available = (facet) => allTags.filter((t) => t.facet === facet && !tags.some((at) => at.id === t.id));
+  // The folders, then any group the owner made.
+  const rows = [
+    { key: FACET, label: "Type" },
+    ...groupsFor(groups, "resource").filter((g) => g.key !== FACET),
+  ];
 
   return (
     <ModalShell label="Edit resource" wide onClose={onClose}>
@@ -157,18 +161,20 @@ export default function ResourceModal({ resource, allTags, onSaved, onDeleted, o
           <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} />
         </label>
 
-        <div className="field">
-          <span>Type</span>
-          <div className="facet-row">
-            <TagCombobox
-              assigned={tags}
-              available={available}
-              onAdd={addTag}
-              onRemove={removeTag}
-              onCreate={createTag}
-            />
+        {rows.map(({ key, label }) => (
+          <div className="field" key={key}>
+            <span>{label}</span>
+            <div className="facet-row">
+              <TagCombobox
+                assigned={tags.filter((t) => t.facet === key)}
+                available={available(key)}
+                onAdd={addTag}
+                onRemove={removeTag}
+                onCreate={(name) => createTag(key, name)}
+              />
+            </div>
           </div>
-        </div>
+        ))}
 
         <label className="field">
           <span>Notes</span>

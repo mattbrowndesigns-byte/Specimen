@@ -157,7 +157,7 @@ async function main() {
   const SOURCE = share.user_id;
   if (SOURCE === TARGET) throw new Error("DEMO_USER_ID is the showcase owner; refusing to overwrite it");
 
-  const [tags, allSites, allComponents, allResources, collections, allProjects, allVisuals] = await Promise.all([
+  const [allTags, allSites, allComponents, allResources, collections, allProjects, allVisuals] = await Promise.all([
     all(() => db.from("tag").select("*").eq("user_id", SOURCE).eq("is_approved", true)),
     all(() => db.from("site").select("*").eq("user_id", SOURCE).eq("is_hidden", false)),
     all(() => db.from("component").select("*").eq("user_id", SOURCE)),
@@ -166,6 +166,9 @@ async function main() {
     all(() => db.from("visual_project").select("*").eq("user_id", SOURCE).eq("state", "saved")),
     all(() => db.from("visual").select("*").eq("user_id", SOURCE)),
   ]);
+  // Groups somebody made stay with them: the demo is read by strangers, and a
+  // group of your own is where a client's name would be.
+  const tags = allTags.filter((t) => !t.facet.startsWith("g_"));
   const components = allComponents.filter((c) => c.source_url);
   const resources = allResources.filter(wanted);
   const projects = allProjects.filter((p) => p.url && wanted(p));

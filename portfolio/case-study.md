@@ -369,6 +369,20 @@ point their own AI at it and try. It stays read-only because the four tools
 that write are only given to a signed-in owner:
 https://specimen-gamma-six.vercel.app/api/mcp/demo
 
+## Letting people change the question
+
+> A tag answers a question. The hard part was letting someone add one without letting them ruin the answers.
+
+The tags page was every word in the library as a full-width row. 158 rows, three buttons each, 9,830 pixels of scrolling, and nothing saying how often a tag was used or which library it was for. Then someone on LinkedIn asked about sorting a library in a way that wasn't there, and the question underneath it was whether the groups should be mine to choose.
+
+The obvious fix was a tab per library. The data said no. Aesthetic is shared, and in my own library 380 of its 490 uses are on visuals, so merging two words under a tab called Websites would have changed three hundred visuals without saying so. The groups are a list on the left now, sorted by where they're used, with one group's tags beside it. The longest of them is 1,984 pixels on a laptop.
+
+Merging was a dropdown. I wanted to drag one tag onto another, like one folder into another, and that only works if both are on screen, which is why the rows became small tiles. Dragging one tag onto another means merge in Apple Photos and nest in Evernote, so it always asks, says exactly how many saves are involved, and lets you keep either name or type a new one. Selecting does the same thing for a phone or a keyboard.
+
+A merge also stays merged. The AI used to be free to propose the word you had just merged away. It's remembered now, and means the tag you kept. Testing the undo found one that had never worked: it brought the word back without any of the visuals that wore it. Every merge is now undone to a library that matches the one before it, link for link.
+
+A group of your own is a name, a question, the libraries it's for, and who fills it in. The question matters most, because it's what the AI reads. It tags new saves unless you ask it to go back, and going back sends sixteen pictures in one request, forty minutes apart, so a day of it still leaves room to save things. I checked one real batch against the pictures and all sixteen held up. You can hide any group and get it back as it was. And there are five, because every group is another question on every save and another section in every filter. Asking for a sixth shows you the five you have and how much you use them, which is the moment to decide whether one of them earned its place.
+
 ## The details I'm still pushing on
 
 None of these is a story on its own. Together they are most of the difference between a tool that works and one that feels finished, so I keep them written down: what looked wrong, what was actually wrong, and what changed.
@@ -443,7 +457,7 @@ Checking the page line by line against the code found a claim that wasn't true: 
 
 **Every button, hovered on purpose.** The Save button went white on white when you pointed at it, and it wasn't the first. Instead of looking for the next one, I had a script force the hover state on every control it could reach, on every page and dialog, in both themes, and measure the contrast. It found that one at 1.12 to 1, a Delete that turned grey, a disabled Merge that reacted, and a handful with no hover at all. After the fixes it finds nothing under 4.5 to 1.
 
-Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, and the browser button still have to be proven there.
+Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, the browser button, and tag groups of your own still have to be proven there.
 
 ## What I deliberately did not build
 
@@ -462,7 +476,7 @@ is the most important structural decision in the product.
 
 The tag vocabulary needs a periodic merge pass and the app does not prompt for
 one, so two family-only tags from an early version are still live and still
-matching everything. The merge tool exists. The reminder to use it does not.
+matching everything. Merging is a drag now. The reminder to do it still isn't there.
 
 ---
 

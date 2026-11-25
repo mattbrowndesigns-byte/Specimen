@@ -3,19 +3,12 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import TagCombobox from "./TagCombobox";
 import ModalShell from "./ModalShell";
-
-const FACET_LABELS = {
-  vertical: "Vertical",
-  page_type: "Page Type",
-  block_pattern: "Block / Pattern",
-  aesthetic: "Aesthetic",
-};
-const FACETS = Object.keys(FACET_LABELS);
+import { tagRows } from "@/lib/tagGroups";
 
 // Lets a queue item be corrected without leaving the queue: name, summary,
 // notes and tags, then mark it reviewed. `kind` is "sites" or "components",
 // which is also the API path segment for both.
-export default function ReviewEditModal({ item, kind, allTags, onClose, onSaved }) {
+export default function ReviewEditModal({ item, kind, allTags, groups, onClose, onSaved }) {
   const [name, setName] = useState(item.name || "");
   const [summary, setSummary] = useState(item.summary || "");
   const [notes, setNotes] = useState(item.notes || "");
@@ -83,13 +76,7 @@ export default function ReviewEditModal({ item, kind, allTags, onClose, onSaved 
     onSaved();
   }
 
-  const tagsByFacet = FACETS.map((facet) => ({
-    facet,
-    assigned: tags.filter((t) => t.facet === facet),
-    available: allTags.filter(
-      (t) => t.facet === facet && t.is_approved && !tags.some((at) => at.id === t.id),
-    ),
-  }));
+  const tagsByFacet = tagRows(groups, kind === "sites" ? "site" : "component", tags, allTags);
 
   const detailHref = kind === "sites" ? `/sites/${item.id}` : `/components/${item.id}`;
 
@@ -128,15 +115,15 @@ export default function ReviewEditModal({ item, kind, allTags, onClose, onSaved 
 
         <div className="field">
           <span>Tags</span>
-          {tagsByFacet.map(({ facet, assigned, available }) => (
+          {tagsByFacet.map(({ facet, label, assigned, available }) => (
             <div className="facet-row" key={facet}>
-              <span className="facet-name">{FACET_LABELS[facet]}</span>
+              <span className="facet-name">{label}</span>
               <TagCombobox
                 assigned={assigned}
                 available={available}
                 onAdd={addTag}
                 onRemove={removeTag}
-                onCreate={(label) => createTag(facet, label)}
+                onCreate={(name) => createTag(facet, name)}
               />
             </div>
           ))}

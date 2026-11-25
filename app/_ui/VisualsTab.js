@@ -15,13 +15,6 @@ import useFileDrop, { DropOverlay } from "./useFileDrop";
 import { startVisualUpload, useUploads } from "./uploads";
 import { useDemoVisuals, useIsDemo } from "./demoState";
 
-// The three questions a visual's tags answer, in the order the filter
-// modal lists them.
-const FILTER_FACETS = [
-  { id: "medium", label: "Medium" },
-  { id: "aesthetic", label: "Aesthetic" },
-  { id: "vertical", label: "Industry" },
-];
 import { GAP, SEQUENCE_KEY, SIZES, MasonrySkeleton, layout, useColumns } from "./masonry";
 
 // Same three sizes and icons as the other tabs' card grids.
@@ -64,7 +57,7 @@ function keepLanded(rows, prev, landed) {
   return [...prev.filter((v) => landed.has(v.id) && !ids.has(v.id)), ...rows];
 }
 
-export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onSearchElsewhere }) {
+export default function VisualsTab({ allTags, groups, incomingQuery, onIncomingUsed, onSearchElsewhere }) {
   const [loadedVisuals, setVisuals] = useState([]);
   const [pending, setPending] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -186,21 +179,23 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
     };
   }, [finished]);
 
-  // Medium chips, counted over visuals rather than over the whole account --
+  const chipGroup = groups[0]?.key;
+
+  // The first group's chips -- Medium, unless it's hidden -- counted over visuals rather than over the whole account --
   // the tags endpoint counts every kind of record, and a chip promising 4
   // that finds 1 is worse than no count.
   const chips = useMemo(() => {
     const counts = new Map();
     for (const v of visuals) {
       for (const t of v.tags || []) {
-        if (t.facet === "medium") counts.set(t.id, (counts.get(t.id) || 0) + 1);
+        if (t.facet === chipGroup) counts.set(t.id, (counts.get(t.id) || 0) + 1);
       }
     }
     return allTags
-      .filter((t) => t.facet === "medium" && counts.get(t.id))
+      .filter((t) => t.facet === chipGroup && counts.get(t.id))
       .map((t) => ({ ...t, count: counts.get(t.id) }))
       .sort((a, b) => b.count - a.count);
-  }, [visuals, allTags]);
+  }, [visuals, allTags, chipGroup]);
 
   const [stripRef, stripFade] = useEdgeFade([chips.length, selected.size]);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -216,13 +211,13 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
   const searchTerms = useMemo(() => {
     const words = [
       ...chips.map((c) => c.label),
-      ...allTags.filter((t) => t.facet !== "medium").map((t) => t.label),
+      ...allTags.filter((t) => t.facet !== chipGroup).map((t) => t.label),
       ...visuals.map((v) => v.project_title),
       ...visuals.map((v) => v.agency_name),
       ...visuals.map((v) => v.title),
     ].filter(Boolean);
     return [...new Set(words)];
-  }, [chips, allTags, visuals]);
+  }, [chips, allTags, visuals, chipGroup]);
 
   // Within one facet the chosen tags are alternatives, across facets they all
   // have to hold -- Signage or Editorial, and Minimal -- which is how the
@@ -403,7 +398,7 @@ export default function VisualsTab({ allTags, incomingQuery, onIncomingUsed, onS
       {filtersOpen && (
         <FilterModal
           allTags={filterOptions}
-          facets={FILTER_FACETS}
+          groups={groups}
           selectedTagIds={selected}
           onClose={() => setFiltersOpen(false)}
           onApply={(next) => {

@@ -39,6 +39,7 @@ const openedUploads = new Set();
 
 export default function ComponentsTab({
   allTags,
+  groups,
   refreshKey,
   onAdd,
   incomingQuery,
@@ -210,6 +211,7 @@ export default function ComponentsTab({
       <LibraryBrowser
         items={filtered}
         allTags={allTags}
+        groups={groups}
         query={query}
         onQueryChange={setQuery}
         searchPlaceholder="Search components by name, summary, notes or tag…"

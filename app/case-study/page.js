@@ -637,6 +637,32 @@ export default function CaseStudyPage() {
 
         <section className="prose-row">
           <div className="prose-section prose-row-aside">
+            <h2>Letting people change the question</h2>
+          </div>
+          <div className="prose-section">
+            <p className="case-point">
+              A tag answers a question. The hard part was letting someone add one without letting them ruin the answers.
+            </p>
+            <p>
+              The tags page was every word in the library as a full-width row. 158 rows, three buttons each, 9,830 pixels of scrolling, and nothing saying how often a tag was used or which library it was for. Then someone on LinkedIn asked about sorting a library in a way that wasn&rsquo;t there, and the question underneath it was whether the groups should be mine to choose.
+            </p>
+            <p>
+              The obvious fix was a tab per library. The data said no. Aesthetic is shared, and in my own library 380 of its 490 uses are on visuals, so merging two words under a tab called Websites would have changed three hundred visuals without saying so. The groups are a list on the left now, sorted by where they&rsquo;re used, with one group&rsquo;s tags beside it. The longest of them is 1,984 pixels on a laptop.
+            </p>
+            <p>
+              Merging was a dropdown. I wanted to drag one tag onto another, like one folder into another, and that only works if both are on screen, which is why the rows became small tiles. Dragging one tag onto another means merge in Apple Photos and nest in Evernote, so it always asks, says exactly how many saves are involved, and lets you keep either name or type a new one. Selecting does the same thing for a phone or a keyboard.
+            </p>
+            <p>
+              A merge also stays merged. The AI used to be free to propose the word you had just merged away. It&rsquo;s remembered now, and means the tag you kept. Testing the undo found one that had never worked: it brought the word back without any of the visuals that wore it. Every merge is now undone to a library that matches the one before it, link for link.
+            </p>
+            <p>
+              A group of your own is a name, a question, the libraries it&rsquo;s for, and who fills it in. The question matters most, because it&rsquo;s what the AI reads. It tags new saves unless you ask it to go back, and going back sends sixteen pictures in one request, forty minutes apart, so a day of it still leaves room to save things. I checked one real batch against the pictures and all sixteen held up. You can hide any group and get it back as it was. And there are five, because every group is another question on every save and another section in every filter. Asking for a sixth shows you the five you have and how much you use them, which is the moment to decide whether one of them earned its place.
+            </p>
+          </div>
+        </section>
+
+        <section className="prose-row">
+          <div className="prose-section prose-row-aside">
             <h2>The details I&rsquo;m still pushing on</h2>
           </div>
           <div className="prose-section">
@@ -775,7 +801,7 @@ export default function CaseStudyPage() {
               The Save button went white on white when you pointed at it, and it wasn&rsquo;t the first. Instead of looking for the next one, I had a script force the hover state on every control it could reach, on every page and dialog, in both themes, and measure the contrast. It found that one at 1.12 to 1, a Delete that turned grey, a disabled Merge that reacted, and a handful with no hover at all. After the fixes it finds nothing under 4.5 to 1.
             </p>
             <p>
-              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, and the browser button still have to be proven there.
+              Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, the browser button, and tag groups of your own still have to be proven there.
             </p>
           </div>
         </section>
@@ -812,7 +838,7 @@ export default function CaseStudyPage() {
             <p>
               The tag vocabulary needs a periodic merge pass and the app does not prompt for one,
               so two family-only tags from an early version are still live and still matching
-              everything. The merge tool exists. The reminder to use it does not.
+              everything. Merging is a drag now. The reminder to do it still isn&rsquo;t there.
             </p>
             <p>
               <a className="prose-link" href="/features">

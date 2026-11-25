@@ -5,6 +5,7 @@ import { runEnrichment } from "@/lib/enrich";
 import { runResourceEnrichment } from "@/lib/enrichResource";
 import { describeComponent } from "@/lib/componentCrop";
 import { dispatchAnalyze } from "@/lib/github";
+import { drainFill } from "@/lib/tagFill";
 
 // Enrichment has to finish inside this request, same as the two callbacks.
 export const maxDuration = 60;
@@ -86,6 +87,11 @@ export async function POST(request) {
   const componentResults = await drainComponents(supabase, outOfTime);
 
   const all = [...results, ...resourceResults, ...namingResults, ...componentResults];
+
+  // A new tag group being caught up on old saves, and only on a run with
+  // nothing else to do. It is one request that can take the whole minute, so
+  // it also needs the minute to itself.
+  if (!all.length) all.push(...(await drainFill(supabase)));
   return NextResponse.json({ ok: true, drained: all.length, results: all });
 }
 

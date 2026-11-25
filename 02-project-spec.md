@@ -266,7 +266,9 @@ A filtered list of records where `needs_review = true`. Editing and saving clear
 
 ### Tag management
 
-Rename, merge, delete, reassign facet. Approve or reject pending tags.
+Rename, merge, delete. Approve or reject pending tags.
+
+Since M29 (November 2026): groups (facets) can be renamed, hidden and, up to five, added. A tag can no longer move between them; see CLAUDE.md.
 
 ---
 

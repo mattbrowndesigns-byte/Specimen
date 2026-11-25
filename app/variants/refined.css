@@ -1362,8 +1362,69 @@
     background: var(--chip-strong-bg);
   }
 
-  & :is(.tag-edit-input, .tag-merge-select) {
-    border-radius: 8px;
+  & .tag-actions button.primary:not(.danger-btn) {
+    background: var(--invert-bg);
+    color: var(--invert-text);
+  }
+
+  & .tag-actions button.primary:not(.danger-btn):hover:not(:disabled) {
+    background: var(--invert-bg-hover);
+  }
+
+  & .tag-bar .tag-actions .link-btn.link-btn:not(.danger-btn),
+  & .tag-bar .tag-actions .link-btn.link-btn:not(.danger-btn):hover:not(:disabled) {
+    background: none;
+  }
+
+  & .tag-rail {
+    top: calc(var(--bar-h) + 20px);
+  }
+
+  & .tag-rail-item,
+  & .tag-rail-new {
+    border-radius: 999px;
+  }
+
+  & .tag-panel-head h2 {
+    font-family: var(--display);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  & :is(.tag-tile, .tag-add-input) {
+    border-radius: 12px;
+  }
+
+  & .tag-ghost {
+    border-radius: 999px;
+    box-shadow: var(--pop-shadow);
+  }
+
+  & .tag-bar {
+    border-color: transparent;
+    border-radius: 999px;
+    box-shadow: var(--pop-shadow);
+  }
+
+  & .tag-panel-state {
+    border-radius: var(--r-card);
+  }
+
+  & .tag-limit-list button {
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--chip-strong-bg);
+  }
+
+  & .tag-limit-list button:hover:not(:disabled) {
+    background: var(--border-strong);
+  }
+
+  @media (max-width: 760px) {
+    & .tag-bar {
+      border-radius: var(--r-panel);
+    }
   }
 
   & .tag-undo {

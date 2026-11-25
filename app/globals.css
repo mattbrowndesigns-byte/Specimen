@@ -1131,22 +1131,6 @@ h1 {
   flex: 1;
 }
 
-.tag-edit-input {
-  flex: 1;
-  font-size: 14px;
-  padding: 4px 8px;
-  border: 1px solid var(--text);
-  border-radius: 6px;
-}
-
-.tag-merge-select {
-  font-size: 13px;
-  padding: 4px 6px;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  background: var(--surface);
-}
-
 /* What this page is for, said once. Renaming a word here changes what the AI
    may pick next time, which is not something the list of words can say by
    being a list of words. */
@@ -1185,6 +1169,507 @@ h1 {
   flex-shrink: 0;
   font-size: 14px;
   font-weight: 500;
+}
+
+/* Groups beside one group's tags. The rail is as wide as its longest heading
+   and the panel takes the rest, so a wider window is more tags across. */
+.tag-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+
+.tag-rail {
+  position: sticky;
+  top: 76px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.tag-rail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tag-rail h2 {
+  margin: 0 0 4px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-faint);
+}
+
+.tag-rail-item,
+.tag-rail-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tag-rail-item {
+  justify-content: space-between;
+}
+
+.tag-rail-item:hover {
+  background: var(--surface-hover);
+}
+
+.tag-rail-item.active {
+  background: var(--field-bg);
+  font-weight: 600;
+}
+
+.tag-rail-count {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-faint);
+}
+
+.tag-rail-new {
+  color: var(--text-muted);
+}
+
+.tag-rail-new:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.tag-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+
+.tag-panel-head h2 {
+  margin: 0 0 2px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.tag-panel-head p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.tag-panel-head .tag-actions {
+  flex-shrink: 0;
+}
+
+.tag-panel-state {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--chip-bg);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.tag-hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+/* Said once, for the pointer you have. */
+.tag-hint-tap {
+  display: none;
+}
+
+@media (hover: none) {
+  .tag-hint-drag {
+    display: none;
+  }
+
+  .tag-hint-tap {
+    display: inline;
+  }
+}
+
+.tag-family + .tag-family {
+  margin-top: 22px;
+}
+
+.tag-family h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.tag-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(176px, 100%), 1fr));
+  gap: 8px;
+}
+
+.tag-tile,
+.tag-add-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.tag-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.tag-tile:hover {
+  border-color: var(--border-strong-hover);
+}
+
+.tag-tile-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tag-tile-count {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* Nothing wears it. It's still a word the AI may pick. */
+.tag-tile-unused {
+  background: none;
+  color: var(--text-muted);
+}
+
+.tag-tile-pending {
+  border-color: transparent;
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.tag-tile-pending .tag-tile-count {
+  color: inherit;
+}
+
+.tag-tile-on {
+  border-color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--text);
+}
+
+.tag-tile-lifted {
+  opacity: 0.4;
+}
+
+.tag-tile-over {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.tag-tile-add {
+  justify-content: flex-start;
+  gap: 6px;
+  border-style: dashed;
+  border-color: var(--border-strong);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.tag-tile-add:hover {
+  color: var(--text);
+}
+
+.tag-add-input:focus {
+  outline: none;
+  border-color: var(--text);
+}
+
+.tag-board-dragging,
+.tag-board-dragging .tag-tile {
+  cursor: grabbing;
+}
+
+/* Follows the pointer, under nothing. */
+.tag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  padding: 9px 14px;
+  border-radius: 8px;
+  background: var(--invert-bg);
+  color: var(--invert-text);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* What's selected and what can be done with it, kept in reach however far down
+   a long group you are. */
+.tag-bar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 10px 10px 10px 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.tag-bar-count {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tag-bar .tag-actions {
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.tag-bar .tag-actions .link-btn.link-btn {
+  padding: 5px 8px;
+  border: none;
+  background: none;
+}
+
+.tag-actions button.primary {
+  border-color: var(--invert-bg);
+  background: var(--invert-bg);
+  color: var(--invert-text);
+}
+
+.tag-actions button.primary:hover {
+  background: var(--invert-bg-hover);
+}
+
+.tag-actions button:has(svg) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tag-choices .chip-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* A step above the dialog, which --chip-bg isn't in dark. */
+.tag-choices .chip-filter:not(.chip-selected) {
+  background: var(--chip-strong-bg);
+}
+
+.tag-choices:last-child {
+  margin-bottom: 0;
+}
+
+.tag-choices + .field-hint {
+  margin-top: -4px;
+}
+
+.tag-dialog-note {
+  margin: 12px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.tag-dialog-count {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.tag-dialog-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tag-dialog-only {
+  margin-left: auto;
+}
+
+.tag-dialog .field-hint {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.tag-who {
+  width: fit-content;
+  margin-bottom: 6px;
+}
+
+.tag-fill-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.tag-limit-list {
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.tag-limit-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border-soft);
+}
+
+.tag-limit-list strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tag-limit-list small {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.tag-limit-list button {
+  padding: 6px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tag-limit-list button:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+/* The rail lies down into a strip, with its headings gone: five words across a
+   phone are five words, and four headings over them are a page. */
+@media (max-width: 760px) {
+  .tag-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .tag-rail {
+    position: static;
+    flex-direction: row;
+    gap: 6px;
+    margin: 0 calc(var(--grid-margin) * -1);
+    padding: 0 var(--grid-margin);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tag-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tag-rail-section {
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .tag-rail h2 {
+    display: none;
+  }
+
+  .tag-rail-item,
+  .tag-rail-new {
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: var(--field-bg);
+    white-space: nowrap;
+  }
+
+  .tag-rail-item.active {
+    background: var(--invert-bg);
+    color: var(--invert-text);
+  }
+
+  .tag-rail-item.active .tag-rail-count {
+    color: inherit;
+  }
+
+  /* Two across, so a long name takes a second line rather than an ellipsis:
+     under its family heading the end of it is the part that differs. */
+  .tag-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tag-tile {
+    height: auto;
+    min-height: 40px;
+    padding-block: 9px;
+  }
+
+  .tag-tile-name {
+    line-height: 1.25;
+    white-space: normal;
+  }
+
+  .tag-panel-head {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .tag-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .tag-bar .tag-actions {
+    flex-wrap: wrap;
+  }
 }
 
 .tag-actions {

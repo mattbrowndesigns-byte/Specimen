@@ -9,6 +9,7 @@ import SiteStyle from "../../../../_ui/SiteStyle";
 import DiscoveredPages from "../../../../_ui/DiscoveredPages";
 import { captureTimeline, formatCaptureDate } from "@/lib/captures";
 import CopyForAI from "../../../../_ui/CopyForAI";
+import { BUILT_IN_GROUPS, groupsFor } from "@/lib/tagGroups";
 
 // One saved site, as a stranger sees it.
 //
@@ -24,14 +25,6 @@ import CopyForAI from "../../../../_ui/CopyForAI";
 // returns a narrower row than the owner's own. The controls that are left all
 // act on what you are looking at rather than on the record -- switching
 // viewport, stepping back through the timeline, expanding the screenshot.
-
-const FACET_LABELS = {
-  vertical: "Vertical",
-  page_type: "Page Type",
-  block_pattern: "Block / Pattern",
-  aesthetic: "Aesthetic",
-};
-const FACETS = Object.keys(FACET_LABELS);
 
 export default function SharedSitePage({ params }) {
   const { token, id } = usePromise(params);
@@ -79,10 +72,17 @@ export default function SharedSitePage({ params }) {
   const capture = activeRun?.byViewport[viewport] || null;
   const hasMobile = Boolean(activeRun?.byViewport.mobile);
 
-  const tagsByFacet = FACETS.map((facet) => ({
-    facet,
-    assigned: (site.tags || []).filter((t) => t.facet === facet),
-  })).filter(({ assigned }) => assigned.length > 0);
+  // The groups come off the tags: each carries its group's name, and a hidden
+  // group's never left the server.
+  const named = new Map((site.tags || []).map((t) => [t.facet, t.group]));
+  const order = groupsFor(BUILT_IN_GROUPS, "site").map((g) => g.key);
+  const tagsByFacet = [...order, ...[...named.keys()].filter((f) => !order.includes(f))]
+    .filter((facet) => named.has(facet))
+    .map((facet) => ({
+      facet,
+      label: named.get(facet),
+      assigned: site.tags.filter((t) => t.facet === facet),
+    }));
 
   const name = site.name || site.domain;
 
@@ -219,9 +219,9 @@ export default function SharedSitePage({ params }) {
                     facets are the point: what it is for, what kind of page,
                     what is on it, how it looks. A flat row of words loses the
                     only structural decision this library makes. */}
-                {tagsByFacet.map(({ facet, assigned }) => (
+                {tagsByFacet.map(({ facet, label, assigned }) => (
                   <div className="facet-row" key={facet}>
-                    <span className="facet-name">{FACET_LABELS[facet]}</span>
+                    <span className="facet-name">{label}</span>
                     <span className="facet-tags">
                       {assigned.map((tag) => (
                         <span className="chip" key={tag.id}>

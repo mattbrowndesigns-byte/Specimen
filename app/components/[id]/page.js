@@ -10,20 +10,14 @@ import SaveActions from "../../_ui/SaveActions";
 import Favicon from "../../_ui/Favicon";
 import SiteFooter from "../../_ui/SiteFooter";
 import CopyForAI from "../../_ui/CopyForAI";
-
-const FACET_LABELS = {
-  vertical: "Vertical",
-  page_type: "Page Type",
-  block_pattern: "Block / Pattern",
-  aesthetic: "Aesthetic",
-};
-const FACETS = Object.keys(FACET_LABELS);
+import { BUILT_IN_GROUPS, tagRows } from "@/lib/tagGroups";
 
 export default function ComponentDetailPage({ params }) {
   const { id } = usePromise(params);
 
   const [component, setComponent] = useState(null);
   const [allTags, setAllTags] = useState([]);
+  const [groups, setGroups] = useState(BUILT_IN_GROUPS);
   const [summaryDraft, setSummaryDraft] = useState("");
   const [notesDraft, setNotesDraft] = useState("");
   const [nameDraft, setNameDraft] = useState("");
@@ -66,6 +60,7 @@ export default function ComponentDetailPage({ params }) {
     if (res.ok) {
       const data = await res.json();
       setAllTags(data.tags || []);
+      setGroups(data.groups || BUILT_IN_GROUPS);
     }
   }
 
@@ -183,13 +178,7 @@ export default function ComponentDetailPage({ params }) {
   // is as fair a crop as any part of it.
   const uploaded = !component.source_url;
 
-  const tagsByFacet = FACETS.map((facet) => ({
-    facet,
-    assigned: (component.tags || []).filter((t) => t.facet === facet),
-    available: allTags.filter(
-      (t) => t.facet === facet && t.is_approved && !(component.tags || []).some((ct) => ct.id === t.id)
-    ),
-  }));
+  const tagsByFacet = tagRows(groups, "component", component.tags, allTags);
 
   return (
     <>
@@ -381,15 +370,15 @@ export default function ComponentDetailPage({ params }) {
 
             <section className="detail-section">
               <h2>Tags</h2>
-              {tagsByFacet.map(({ facet, assigned, available }) => (
+              {tagsByFacet.map(({ facet, label, assigned, available }) => (
                 <div className="facet-row" key={facet}>
-                  <span className="facet-name">{FACET_LABELS[facet]}</span>
+                  <span className="facet-name">{label}</span>
                   <TagCombobox
                     assigned={assigned}
                     available={available}
                     onAdd={(tagId) => addTag(facet, tagId)}
                     onRemove={removeTag}
-                    onCreate={(label) => createTag(facet, label)}
+                    onCreate={(name) => createTag(facet, name)}
                   />
                 </div>
               ))}

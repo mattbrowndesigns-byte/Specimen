@@ -17,6 +17,7 @@ import SiteFooter from "./_ui/SiteFooter";
 import HeroRotator from "./_ui/HeroRotator";
 import ConnectNote from "./_ui/ConnectNote";
 import { addItem, cropFromSearch, cropUrl, jobFromSearch, resourceFromSearch } from "@/lib/addItem";
+import { BUILT_IN_GROUPS, KIND_IDS, groupsFor, tagsFor } from "@/lib/tagGroups";
 
 // The last upload that brought its tab forward. Outside the component,
 // because a panel can outlive a visit to another page, and coming back to the
@@ -33,6 +34,7 @@ function clearSearch() {
 export default function Home() {
   const [tab, setTab] = useState("websites");
   const [allTags, setAllTags] = useState([]);
+  const [groups, setGroups] = useState(BUILT_IN_GROUPS);
   const [jobs, setJobs] = useState([]);
   const [newResource, setNewResource] = useState(null);
   const [describeId, setDescribeId] = useState(null);
@@ -91,6 +93,7 @@ export default function Home() {
     if (res.ok) {
       const data = await res.json();
       setAllTags(data.tags || []);
+      setGroups(data.groups || BUILT_IN_GROUPS);
     }
   }, []);
 
@@ -98,28 +101,27 @@ export default function Home() {
     loadTags();
   }, [loadTags, refreshKey]);
 
-  // The tag vocabulary is one list from one endpoint, but the two libraries do
-  // not share it. resource_type describes what a tool IS; the other four
-  // describe how a page is DESIGNED, and neither set can ever match the other's
-  // records. Handing every tab the whole list put "Icons" in the websites chip
-  // strip, where clicking it could only ever return nothing.
+  // The tag vocabulary is one list from one endpoint, and each tab is handed
+  // only its own groups, counted over its own saves. Handing every tab the
+  // whole list put "Icons" in the websites chip strip, where clicking it could
+  // only ever return nothing.
   //
-  // The two lists also treat a pending proposal differently. The design chip
-  // strip is a filter over a reviewed vocabulary, so it stays approved-only. A
+  // A pending proposal is treated differently in one place. The other strips
+  // are filters over a reviewed vocabulary, so they stay approved-only. A
   // folder is where a resource LIVES: a resource whose only type is a pending
   // proposal had tags, so it wasn't Unsorted, and its folder wasn't in the
   // strip either -- it was nowhere. And the type picker has to offer the
   // proposal, or typing "Job Board" beside an existing Job Board offers to
   // create a second one.
-  const designTags = useMemo(
-    // medium is a visual's own facet, like resource_type is a resource's.
-    () => allTags.filter((t) => t.facet !== "resource_type" && t.facet !== "medium" && t.is_approved),
-    [allTags]
-  );
-  const resourceTags = useMemo(() => allTags.filter((t) => t.facet === "resource_type"), [allTags]);
-  const visualTags = useMemo(
-    () => allTags.filter((t) => ["medium", "aesthetic", "vertical"].includes(t.facet) && t.is_approved),
-    [allTags]
+  const byKind = useMemo(
+    () =>
+      Object.fromEntries(
+        KIND_IDS.map((kind) => [
+          kind,
+          { groups: groupsFor(groups, kind), tags: tagsFor(allTags, groups, kind, { pending: kind === "resource" }) },
+        ])
+      ),
+    [allTags, groups]
   );
 
   // An Add from another page arrives as ?job=… (a capture to watch) or
@@ -256,7 +258,8 @@ export default function Home() {
 
         {tab === "websites" && (
           <WebsitesTab
-            allTags={designTags}
+            allTags={byKind.site.tags}
+            groups={byKind.site.groups}
             refreshKey={refreshKey}
             onAdd={handleAdd}
             incomingQuery={incomingFor("websites")}
@@ -266,7 +269,8 @@ export default function Home() {
         )}
         {tab === "components" && (
           <ComponentsTab
-            allTags={designTags}
+            allTags={byKind.component.tags}
+            groups={byKind.component.groups}
             refreshKey={refreshKey}
             onAdd={handleAdd}
             incomingQuery={incomingFor("components")}
@@ -276,7 +280,8 @@ export default function Home() {
         )}
         {tab === "resources" && (
           <ResourcesTab
-            allTags={resourceTags}
+            allTags={byKind.resource.tags}
+            groups={byKind.resource.groups}
             refreshKey={refreshKey}
             onAdd={handleAdd}
             newResource={newResource}
@@ -289,7 +294,8 @@ export default function Home() {
         )}
         {tab === "visuals" && (
           <VisualsTab
-            allTags={visualTags}
+            allTags={byKind.visual.tags}
+            groups={byKind.visual.groups}
             incomingQuery={incomingFor("visuals")}
             onIncomingUsed={clearHandoff}
             onSearchElsewhere={searchElsewhere}

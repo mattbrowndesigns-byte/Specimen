@@ -54,10 +54,13 @@ const PAGE_SIZE = 40;
 // state you have to go looking for: the whole point of the strip is that
 // everything is somewhere, and the things that are nowhere are the ones that
 // need you.
+// The group the folder strip is drawn from.
+const FOLDER = "resource_type";
 const UNSORTED = "__unsorted__";
 
 export default function ResourcesTab({
   allTags,
+  groups,
   refreshKey,
   onAdd,
   newResource,
@@ -214,11 +217,11 @@ export default function ResourcesTab({
   }, [describeId, newResource, describe, onResourceHandled]);
 
   const folders = useMemo(() => {
-    const types = allTags.filter((t) => t.facet === "resource_type");
+    const types = allTags.filter((t) => t.facet === FOLDER);
     const counts = new Map();
     let unsorted = 0;
     for (const resource of resources) {
-      const tags = resource.tags || [];
+      const tags = (resource.tags || []).filter((t) => t.facet === FOLDER);
       if (!tags.length) unsorted += 1;
       for (const tag of tags) counts.set(tag.id, (counts.get(tag.id) || 0) + 1);
     }
@@ -285,24 +288,32 @@ export default function ResourcesTab({
     const options = folders.used.map((tag) => ({
       id: tag.id,
       label: tag.label,
-      facet: "resource_type",
+      facet: FOLDER,
       usage_count: tag.count,
     }));
     if (folders.unsorted > 0) {
-      options.push({ id: UNSORTED, label: "Unsorted", facet: "resource_type", usage_count: folders.unsorted });
+      options.push({ id: UNSORTED, label: "Unsorted", facet: FOLDER, usage_count: folders.unsorted });
     }
-    return options;
-  }, [folders]);
+    // Any group the owner made, after the folders.
+    return [...options, ...allTags.filter((t) => t.facet !== FOLDER)];
+  }, [folders, allTags]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = resources;
 
     if (selected.size > 0) {
+      // Folders are an OR, and so is any other group; between them it's an AND,
+      // the same as every other tab.
+      const byFacet = {};
+      for (const tag of allTags) if (selected.has(tag.id)) (byFacet[tag.facet] ||= new Set()).add(tag.id);
+      if (selected.has(UNSORTED)) byFacet[FOLDER] ||= new Set();
       list = list.filter((r) => {
-        const tags = r.tags || [];
-        if (!tags.length) return selected.has(UNSORTED);
-        return tags.some((t) => selected.has(t.id));
+        const ids = new Set((r.tags || []).map((t) => t.id));
+        return Object.entries(byFacet).every(([facet, wanted]) => {
+          if (facet === FOLDER && selected.has(UNSORTED) && !(r.tags || []).some((t) => t.facet === FOLDER)) return true;
+          return [...wanted].some((tagId) => ids.has(tagId));
+        });
       });
     }
 
@@ -765,7 +776,7 @@ export default function ResourcesTab({
       {filtersOpen && (
         <FilterModal
           allTags={filterOptions}
-          facets={[{ id: "resource_type", label: "Folders" }]}
+          groups={groups}
           selectedTagIds={selected}
           onClose={() => setFiltersOpen(false)}
           onApply={(next) => {
@@ -779,6 +790,7 @@ export default function ResourcesTab({
         <ResourceModal
           resource={editing}
           allTags={allTags}
+          groups={groups}
           onSaved={applyEdit}
           onDeleted={removeResource}
           onClose={() => setEditing(null)}

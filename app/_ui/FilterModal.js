@@ -3,18 +3,11 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import ModalShell from "./ModalShell";
 
-// The website filters. A caller with a different vocabulary passes its own
-// list -- the Resources tab passes one section, its folders -- so the fifth
-// facet stays out of here by not being listed, as it always has.
-const DESIGN_FACETS = [
-  { id: "vertical", label: "Vertical" },
-  { id: "page_type", label: "Page Type" },
-  { id: "block_pattern", label: "Block / Pattern" },
-  { id: "aesthetic", label: "Aesthetic" },
-];
-
+// `groups` is the sections, in order: what the caller's kind of save is tagged
+// with, from groupsFor.
+//
 // Edits a draft copy so closing without applying leaves the grid untouched.
-export default function FilterModal({ allTags, selectedTagIds, onApply, onClose, facets = DESIGN_FACETS }) {
+export default function FilterModal({ allTags, selectedTagIds, onApply, onClose, groups }) {
   const [draft, setDraft] = useState(new Set(selectedTagIds));
 
   function toggle(id) {
@@ -36,18 +29,18 @@ export default function FilterModal({ allTags, selectedTagIds, onApply, onClose,
       </div>
 
       <div className="modal-body">
-        {facets.map((facet) => {
+        {groups.map((group) => {
           // A word nothing is filed under can only filter the grid down to
           // nothing, so it isn't offered. It stays in the vocabulary -- the AI
           // still picks from it -- it just has no business in a filter yet.
           // One that is already applied stays, or there'd be no way to lift it.
           const tags = allTags.filter(
-            (t) => t.facet === facet.id && ((t.usage_count || 0) > 0 || selectedTagIds.has(t.id))
+            (t) => t.facet === group.key && ((t.usage_count || 0) > 0 || selectedTagIds.has(t.id))
           );
           if (!tags.length) return null;
           return (
-            <section key={facet.id}>
-              <h3>{facet.label}</h3>
+            <section key={group.key}>
+              <h3>{group.label}</h3>
               <div className="modal-options">
                 {tags.map((tag) => (
                   <label key={tag.id}>

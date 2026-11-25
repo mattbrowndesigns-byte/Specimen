@@ -87,6 +87,7 @@ function sortItems(items, sortId, adapter) {
 export default function LibraryBrowser({
   items,
   allTags,
+  groups,
   query,
   onQueryChange,
   searchPlaceholder,
@@ -556,6 +557,7 @@ export default function LibraryBrowser({
       {filtersOpen && (
         <FilterModal
           allTags={sortedTags}
+          groups={groups}
           selectedTagIds={selectedTagIds}
           onClose={() => setFiltersOpen(false)}
           onApply={(next) => {

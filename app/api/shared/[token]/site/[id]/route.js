@@ -50,7 +50,7 @@ export async function GET(request, { params }) {
     .single();
   if (error || !site) return GONE();
 
-  const [withExtras] = await attachCapturesAndTags(supabase, [site]);
+  const [withExtras] = await attachCapturesAndTags(supabase, [site], { shared: true });
 
   // attachCapturesAndTags carries capture_state and capture_error onto the row
   // for the owner's own grid. Neither belongs in a public payload, and letting

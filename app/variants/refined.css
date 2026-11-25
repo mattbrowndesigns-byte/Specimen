@@ -618,6 +618,14 @@
     margin-bottom: 0;
   }
 
+  /* And in a list row: without this the rule above outweighs the row's own, so
+     the chips started 14px in from the summary and stopped 14px above the
+     picture's bottom edge. */
+  & .row-item .card-tags {
+    padding: 0;
+    margin-bottom: 0;
+  }
+
   & .chip {
     font-weight: 500;
   }
@@ -643,6 +651,14 @@
   & .row-thumb,
   & .row-thumb img {
     border-radius: 10px;
+  }
+
+  /* A 24px title, 8, two 18px lines and the chips leave the widest gap above
+     the chips, which is where the row's slack belongs. Add to any of them and
+     check it against the picture's 101px. */
+  & .row-summary {
+    margin-top: 8px;
+    line-height: 18px;
   }
 
   & .row-name {

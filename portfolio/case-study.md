@@ -467,6 +467,8 @@ It found its own gaps, because it compares each state with the one at rest. Ther
 
 The missing states went first, because adding them changes nothing at rest. Filling them in turned up a difference I hadn't drawn: a button that can't be pressed and one that's busy had always looked alike. One fades now. The other keeps its label readable and breathes, because "Re-capturing..." can stand for a minute. A form that says what's wrong now marks which field. One of the 19 wasn't a gap. The tab you're already on still doesn't react to the pointer, because pressing it does nothing.
 
+**List rows that stopped lining up.** In list view the tags sat a little to the right of the text and short of the picture's bottom edge, with the empty space left underneath them. A rule I'd written for cards was outweighing the one for rows. The tags now start where the summary starts and end where the picture ends, so the loose space falls between them. Checking it on a phone turned up something worse: the buttons sat on top of the titles, and the four tabs ran the page off the side. Both have their own phone layout now.
+
 Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, the browser button, tag groups of your own and the design system page still have to be proven there.
 
 ## What I deliberately did not build

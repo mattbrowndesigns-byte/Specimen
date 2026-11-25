@@ -817,6 +817,10 @@ export default function CaseStudyPage() {
             <p>
               The missing states went first, because adding them changes nothing at rest. Filling them in turned up a difference I hadn&rsquo;t drawn: a button that can&rsquo;t be pressed and one that&rsquo;s busy had always looked alike. One fades now. The other keeps its label readable and breathes, because &ldquo;Re-capturing&hellip;&rdquo; can stand for a minute. A form that says what&rsquo;s wrong now marks which field. One of the 19 wasn&rsquo;t a gap. The tab you&rsquo;re already on still doesn&rsquo;t react to the pointer, because pressing it does nothing.
             </p>
+            <h3>List rows that stopped lining up</h3>
+            <p>
+              In list view the tags sat a little to the right of the text and short of the picture&rsquo;s bottom edge, with the empty space left underneath them. A rule I&rsquo;d written for cards was outweighing the one for rows. The tags now start where the summary starts and end where the picture ends, so the loose space falls between them. Checking it on a phone turned up something worse: the buttons sat on top of the titles, and the four tabs ran the page off the side. Both have their own phone layout now.
+            </p>
             <p>
               Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, the browser button, tag groups of your own and the design system page still have to be proven there.
             </p>

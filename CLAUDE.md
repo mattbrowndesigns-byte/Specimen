@@ -1583,6 +1583,13 @@ below and outside. The chips are pushed to the foot of
 the body with `margin-top: auto`, so their bottom edge lands on the picture's
 rather than wherever the summary stopped -- measured 0.0px apart.
 
+Refined undid that for weeks: its `.card-tags` inset is (0,3,0) and outweighed the
+row's own rule, so chips sat 14px in and 14px up. Refined restates the row's now.
+24 + 8 + two 18px lines + chips leaves 14.3 above the chips, the widest gap in the
+row. At 640px and under the row is a grid: picture, title and controls, then the
+sentence and wrapped tags across it. Below 520 the tabs drop their icons, because
+four of them ran the page off a phone.
+
 **Letting the thumb stretch and take its width from its height is a trap.** It
 reads better in the source and it was the first attempt: `align-self: stretch`,
 `width: auto`, `aspect-ratio: 16/9`. A flex line's cross size comes from its

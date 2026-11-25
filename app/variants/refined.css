@@ -732,6 +732,12 @@
       grid-column: 1 / -1;
       margin-top: 12px;
     }
+
+    /* A list row shows a set number of tags rather than measuring, so on a
+       phone they take a second line instead of being cut off. */
+    & .row-item .card-tags {
+      flex-wrap: wrap;
+    }
   }
 
   & .row-name {

@@ -211,13 +211,13 @@ export default function VisualsTab({ allTags, groups, incomingQuery, onIncomingU
   const searchTerms = useMemo(() => {
     const words = [
       ...chips.map((c) => c.label),
-      ...allTags.filter((t) => t.facet !== chipGroup).map((t) => t.label),
+      ...filterOptions.filter((t) => t.facet !== chipGroup && t.usage_count > 0).map((t) => t.label),
       ...visuals.map((v) => v.project_title),
       ...visuals.map((v) => v.agency_name),
       ...visuals.map((v) => v.title),
     ].filter(Boolean);
     return [...new Set(words)];
-  }, [chips, allTags, visuals, chipGroup]);
+  }, [chips, filterOptions, visuals, chipGroup]);
 
   // Within one facet the chosen tags are alternatives, across facets they all
   // have to hold -- Signage or Editorial, and Minimal -- which is how the

@@ -1377,7 +1377,7 @@
   }
 
   & .tag-rail {
-    top: calc(var(--bar-h) + 20px);
+    top: min(calc(var(--bar-h) + 20px), calc(100vh - var(--rail-h, 0px) - 24px));
   }
 
   & .tag-rail,

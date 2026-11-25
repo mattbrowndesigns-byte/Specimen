@@ -1188,16 +1188,12 @@ h1 {
   background: var(--surface);
 }
 
-/* Stays beside a long group, and scrolls inside itself on a short window. */
+/* Stays beside a long group. Taller than the window, it sticks by its foot, so
+   the page's scroll reaches all of it and it never needs one of its own. */
 .tag-rail {
   position: sticky;
-  top: 76px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  max-height: calc(100vh - 100px);
-  overflow-y: auto;
-  padding: 22px 14px 0;
+  top: min(76px, calc(100vh - var(--rail-h, 0px) - 24px));
+  padding: 10px 14px 14px;
 }
 
 .tag-panel {
@@ -1208,26 +1204,75 @@ h1 {
   display: none;
 }
 
-.tag-rail-section {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
 .tag-rail-section + .tag-rail-section {
-  padding-top: 16px;
   border-top: 1px solid var(--border);
 }
 
 .tag-rail h2 {
+  margin: 0;
+}
+
+.tag-rail-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 0 0 6px;
-  padding: 0 18px;
-  font-size: 13px;
-  font-weight: 500;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 18px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tag-rail-head:hover {
+  color: var(--text);
+}
+
+.tag-rail-chevron {
+  margin-left: auto;
   color: var(--text-faint);
+  transition: transform 0.18s ease;
+}
+
+.tag-rail-head[aria-expanded="true"] .tag-rail-chevron {
+  transform: rotate(180deg);
+}
+
+/* Rows rather than height, so it opens to whatever it holds. Hidden as well as
+   shut, or a closed group's buttons are still in the tab order. */
+.tag-rail-fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows 0.2s ease, visibility 0.2s;
+}
+
+.tag-rail-fold > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tag-rail-section.open .tag-rail-fold {
+  grid-template-rows: 1fr;
+  visibility: visible;
+}
+
+.tag-rail-section.open .tag-rail-fold > div {
+  padding-bottom: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tag-rail-fold,
+  .tag-rail-chevron {
+    transition: none;
+  }
 }
 
 /* One weight, held or not: going bold on the press changes the word. */
@@ -1272,13 +1317,9 @@ h1 {
   color: var(--text-muted);
 }
 
-/* In reach on a window too short for the whole list. */
 .tag-rail-foot {
-  position: sticky;
-  bottom: 0;
-  padding: 14px 0;
+  padding-top: 14px;
   border-top: 1px solid var(--border);
-  background: var(--surface);
 }
 
 .tag-rail-new {
@@ -1549,41 +1590,6 @@ h1 {
   font-weight: 600;
 }
 
-.tag-unused {
-  margin-top: 32px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
-}
-
-.tag-unused-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.tag-unused-toggle:hover {
-  color: var(--text);
-}
-
-.tag-unused-toggle svg {
-  transition: transform 0.15s ease;
-}
-
-.tag-unused-toggle[aria-expanded="true"] svg {
-  transform: rotate(180deg);
-}
-
-.tag-unused .tag-hint {
-  margin: 8px 0 18px;
-}
-
 /* What's selected and what can be done with it, kept in reach however far down
    a long group you are. */
 .tag-bar {
@@ -1767,10 +1773,9 @@ h1 {
 
   .tag-rail {
     position: static;
+    display: flex;
     flex-flow: row wrap;
     gap: 8px;
-    max-height: none;
-    overflow: visible;
   }
 
   .tag-rail-foot {
@@ -1810,8 +1815,10 @@ h1 {
     display: none;
   }
 
-  .tag-rail-section.current {
+  .tag-rail-section.current,
+  .tag-rail-section.current :is(.tag-rail-fold, .tag-rail-fold > div) {
     display: contents;
+    visibility: visible;
   }
 
   .tag-rail h2 {

@@ -4,9 +4,12 @@ import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED } from "@/lib/ownership";
 import { allRows, allRowsIn } from "@/lib/paging";
 import { loadGroups, missing } from "@/lib/tagGroupsData";
+import { claimStarter, withStarterMark } from "@/lib/tagStarters";
 import { KIND_IDS, slugify } from "@/lib/tagGroups";
 
-// The vocabulary and the groups it's in. A hidden group's tags stay out, so
+// The tags this account has and the groups they're in. A starter word nothing
+// wears isn't one: the AI reads those from the database, and no page has any
+// use for them. A hidden group's tags stay out, so
 // nothing that offers tags has to know groups can be hidden. `?all=1` is the
 // Tags page, which shows them, and says how big each library is.
 export async function GET(request) {
@@ -19,15 +22,19 @@ export async function GET(request) {
   try {
     const [groups, tags] = await Promise.all([
       loadGroups(supabase, user.id),
-      allRows(
-        () =>
-          supabase
-            .from("tag")
-            .select("id, slug, label, facet, is_approved")
-            .eq("user_id", user.id)
-            .order("facet", { ascending: true })
-            .order("label", { ascending: true }),
-        "the tags"
+      withStarterMark(
+        (columns) =>
+          allRows(
+            () =>
+              supabase
+                .from("tag")
+                .select(columns)
+                .eq("user_id", user.id)
+                .order("facet", { ascending: true })
+                .order("label", { ascending: true }),
+            "the tags"
+          ),
+        "id, slug, label, facet, is_approved"
       ),
     ]);
 
@@ -52,7 +59,7 @@ export async function GET(request) {
 
     const body = {
       groups,
-      tags: offered.map((tag) => {
+      tags: offered.filter((tag) => counts.has(tag.id) || !tag.is_starter).map(({ is_starter, ...tag }) => {
         const byKind = counts.get(tag.id) || {};
         return { ...tag, counts: byKind, usage_count: Object.values(byKind).reduce((a, n) => a + n, 0) };
       }),
@@ -110,6 +117,7 @@ export async function POST(request) {
   // unchanged -- which left a word the owner had just chosen still amber, and
   // still out of the vocabulary the AI may pick from.
   if (existing) {
+    await claimStarter(supabase, user.id, existing.id);
     if (existing.is_approved) {
       return NextResponse.json({ tag: { ...existing, usage_count: 0 } });
     }

@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Eye, EyeOff, Pencil, Plus } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, Pencil, Plus } from "lucide-react";
 import UtilityBar from "../_ui/UtilityBar";
 import SiteFooter from "../_ui/SiteFooter";
 import TagBoard, { familiesOf } from "../_ui/TagBoard";
@@ -49,12 +49,30 @@ function railSections(groups) {
   return [...sections, { id: "hidden", label: "Hidden", Icon: EyeOff, items: hidden }].filter((s) => s.items.length);
 }
 
+// Which of them are open, remembered on this device.
+const OPEN_KEY = "specimen.tags.open";
+
+// The list stays beside a long group without scrolling inside itself: when it's
+// taller than the window, sticking by its foot instead of its top means the
+// page's own scroll reaches all of it.
+function useRailHeight() {
+  const [node, setNode] = useState(null);
+  useEffect(() => {
+    if (!node) return;
+    const observer = new ResizeObserver(() => node.style.setProperty("--rail-h", `${node.offsetHeight}px`));
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [node]);
+  return setNode;
+}
+
 export default function TagsPage() {
   const [data, setData] = useState(null); // { groups, tags, sizes }
   const [error, setError] = useState(null);
   const [current, setCurrent] = useState(null); // { key, kind }
-  const [showUnused, setShowUnused] = useState(false);
-  // Added on this visit, so a tag you've just typed isn't folded away.
+  const [opened, setOpened] = useState(() => new Set(["site"]));
+  const railRef = useRailHeight();
+  // Added on this visit, so a tag you've just typed is on the tab you typed it on.
   const [fresh, setFresh] = useState(() => new Set());
   const [selected, setSelected] = useState(() => new Set());
   const [dialog, setDialog] = useState(null);
@@ -111,30 +129,49 @@ export default function TagsPage() {
         .sort((a, b) => a.label.localeCompare(b.label)),
     [tags, group, kind]
   );
-  // A tag nothing wears isn't a mistake to clean up: the AI only picks from
-  // tags that exist, so deleting the unused ones is deciding it may never use
-  // them. It's just not worth looking at, so it's folded away. A group with no
-  // use anywhere yet has nothing to fold them behind.
-  const isUsed = (t) => t.here > 0 || !t.is_approved || fresh.has(t.id);
-  const anyUsed = groupTags.some((t) => t.usage_count > 0);
-  const usedTags = anyUsed ? groupTags.filter(isUsed) : groupTags;
-  const unusedTags = anyUsed ? groupTags.filter((t) => !isUsed(t)) : [];
+  // On this tab: what something here wears, and what's waiting to be. A word of
+  // your own that nothing wears anywhere has no tab yet, so it's on all of
+  // them. The AI's unused words never get this far (lib/tagStarters.js).
+  const isHere = (t) => t.here > 0 || !t.usage_count || !t.is_approved || fresh.has(t.id);
+  const shownTags = groupTags.filter(isHere);
   const pending = tags.filter((t) => !t.is_approved && groups.some((g) => g.key === t.facet && !g.hidden));
-  const picked = groupTags.filter((t) => selected.has(t.id));
+  const picked = shownTags.filter((t) => selected.has(t.id));
   const close = useCallback(() => setDialog(null), []);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(OPEN_KEY) || "null");
+      if (Array.isArray(saved)) setOpened(new Set(saved));
+    } catch {
+      // Websites, then.
+    }
+  }, []);
+
+  function keepOpened(next) {
+    setOpened(next);
+    try {
+      localStorage.setItem(OPEN_KEY, JSON.stringify([...next]));
+    } catch {
+      // Forgotten when you leave.
+    }
+  }
+
+  function toggleSection(id) {
+    const next = new Set(opened);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    keepOpened(next);
+  }
 
   function open(key, nextKind) {
     setCurrent({ key, kind: nextKind });
     setSelected(new Set());
-    setShowUnused(false);
+    if (nextKind && !opened.has(nextKind) && !hiddenHere) keepOpened(new Set(opened).add(nextKind));
   }
 
   // The number beside a group: the tags you'll see when you open it.
-  function tagsOn({ group: g, kind: k }) {
-    const list = tags.filter((t) => t.facet === g.key);
-    const used = list.filter((t) => (k ? t.counts?.[k] : t.usage_count) || !t.is_approved);
-    return list.some((t) => t.usage_count) ? used.length : list.length;
-  }
+  const tagsOn = ({ group: g, kind: k }) =>
+    tags.filter((t) => t.facet === g.key && (!k || t.counts?.[k] || !t.usage_count || !t.is_approved)).length;
 
   function toggle(id) {
     setSelected((prev) => {
@@ -290,8 +327,8 @@ export default function TagsPage() {
         </div>
 
         <p className="tag-page-note">
-          Every tag in your library, by group. Rename one and everything wearing it follows. The AI picks from these, so
-          tidying here is how you teach it.
+          Tags appear as you save things. Rename one and everything wearing it follows, and the AI uses your word from
+          then on.
         </p>
 
         {error && <p className="error">{error}</p>}
@@ -335,7 +372,7 @@ export default function TagsPage() {
 
         {group && (
           <div className="tag-layout">
-            <nav className="tag-rail" aria-label="Tag groups">
+            <nav className="tag-rail" aria-label="Tag groups" ref={railRef}>
               {/* A phone gets the tabs as tabs: one strip of every group would
                   say Industry three times with nothing to tell them apart. */}
               <div className="tag-rail-tabs">
@@ -352,30 +389,41 @@ export default function TagsPage() {
               </div>
               {sections.map((section) => (
                 <div
-                  className={`tag-rail-section${section.id === place.section ? " current" : ""}`}
+                  className={`tag-rail-section${section.id === place.section ? " current" : ""}${opened.has(section.id) ? " open" : ""}`}
                   key={section.id}
                 >
                   <h2>
-                    <section.Icon size={14} aria-hidden="true" />
-                    {section.label}
+                    <button
+                      className="tag-rail-head"
+                      aria-expanded={opened.has(section.id)}
+                      onClick={() => toggleSection(section.id)}
+                    >
+                      <section.Icon size={16} aria-hidden="true" />
+                      {section.label}
+                      <ChevronDown className="tag-rail-chevron" size={16} aria-hidden="true" />
+                    </button>
                   </h2>
-                  {section.items.map((item) => {
-                    const here = section.id === place.section && item.group.key === group.key && item.kind === place.kind;
-                    return (
-                      <button
-                        key={`${item.group.key}:${item.kind}`}
-                        className={`tag-rail-item${here ? " active" : ""}`}
-                        aria-current={here ? "true" : undefined}
-                        onClick={() => open(item.group.key, item.kind)}
-                      >
-                        <span>
-                          {item.group.label}
-                          {item.off && <small> on {kindLabel(item.kind)}</small>}
-                        </span>
-                        <span className="tag-rail-count">{tagsOn(item)}</span>
-                      </button>
-                    );
-                  })}
+                  <div className="tag-rail-fold">
+                    <div>
+                      {section.items.map((item) => {
+                        const here = section.id === place.section && item.group.key === group.key && item.kind === place.kind;
+                        return (
+                          <button
+                            key={`${item.group.key}:${item.kind}`}
+                            className={`tag-rail-item${here ? " active" : ""}`}
+                            aria-current={here ? "true" : undefined}
+                            onClick={() => open(item.group.key, item.kind)}
+                          >
+                            <span>
+                              {item.group.label}
+                              {item.off && <small> on {kindLabel(item.kind)}</small>}
+                            </span>
+                            <span className="tag-rail-count">{tagsOn(item) || ""}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               ))}
               <div className="tag-rail-foot">
@@ -429,7 +477,7 @@ export default function TagsPage() {
                 </p>
               )}
 
-              {groupTags.length > 1 && (
+              {shownTags.length > 1 && (
                 <p className="tag-hint">
                   <span className="tag-hint-drag">Drag a tag onto another to merge them, or select a few.</span>
                   <span className="tag-hint-tap">Tap tags to select them, then merge, rename or delete.</span>
@@ -438,20 +486,12 @@ export default function TagsPage() {
 
               <TagBoard
                 key={`${place.section}:${group.key}`}
-                families={familiesOf(usedTags, group)}
-                empty={groupTags.length === 0}
+                families={familiesOf(shownTags, group)}
+                empty={shownTags.length === 0}
                 selected={selected}
                 onToggle={toggle}
                 onMerge={(ids, targetId) => merge([...ids, targetId].map(byId).filter(Boolean))}
                 onAdd={addTag}
-                unused={unusedTags}
-                unusedLabel={kind ? `Not used on ${kindList([kind])} yet` : "Not used yet"}
-                showUnused={showUnused}
-                onShowUnused={() => {
-                  // A selection you can't see is one you'd delete by accident.
-                  if (showUnused) setSelected((prev) => new Set([...prev].filter((id) => !unusedTags.some((t) => t.id === id))));
-                  setShowUnused(!showUnused);
-                }}
               />
 
               {picked.length > 0 && (

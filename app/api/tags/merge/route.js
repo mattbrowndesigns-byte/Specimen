@@ -5,6 +5,7 @@ import { UNAUTHORIZED, NOT_FOUND } from "@/lib/ownership";
 import { allRows, allRowsIn } from "@/lib/paging";
 import { missing } from "@/lib/tagGroupsData";
 import { slugify } from "@/lib/tagGroups";
+import { absorbStarter, unseenTagIds } from "@/lib/tagStarters";
 
 const keyOf = (link) => `${link.target_type}:${link.target_id}`;
 
@@ -84,13 +85,15 @@ export async function POST(request) {
     if (slugify(name) !== slugify(target.label)) {
       const { data: siblings, error } = await supabase
         .from("tag")
-        .select("id, label")
+        .select("id, label, slug, facet")
         .eq("user_id", user.id)
         .eq("facet", target.facet);
       if (error) throw new Error(error.message);
       const merging = new Set([...sources, targetId]);
       const taken = siblings.find((t) => !merging.has(t.id) && slugify(t.label) === slugify(name));
-      if (taken) {
+      if (taken && (await unseenTagIds(supabase, user.id)).has(taken.id)) {
+        await absorbStarter(supabase, user.id, taken, targetId);
+      } else if (taken) {
         return NextResponse.json(
           { error: `There's already a tag called ${taken.label}. Select it as well to merge all of them.` },
           { status: 409 }

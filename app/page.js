@@ -97,9 +97,13 @@ export default function Home() {
     }
   }, []);
 
+  // On a tab change and when an upload lands as well: a tag exists for the
+  // page once something wears it, and the first save of a kind brings its
+  // group's first tags with it.
+  const uploading = uploads.length;
   useEffect(() => {
     loadTags();
-  }, [loadTags, refreshKey]);
+  }, [loadTags, refreshKey, tab, uploading]);
 
   // The tag vocabulary is one list from one endpoint, and each tab is handed
   // only its own groups, counted over its own saves. Handing every tab the

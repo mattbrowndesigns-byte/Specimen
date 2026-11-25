@@ -1204,9 +1204,21 @@ on the group, so it survives anything. A save already in the group is skipped.
 **The Tags page lists groups by tab, so a shared one is under several.** A
 "Shared" heading was tried and nobody looked under it. Counts are that tab's, so
 every dialog that changes a tag says where else it reaches (`countsByKind`), and
-Hide asks whether it means this tab (`kinds`) or all of them. Unused tags are
-folded, never removed: the AI picks from a closed list, so deleting them decides
-it may never use them. Roughly a third of a starter vocabulary is unused.
+Hide asks whether it means this tab (`kinds`) or all of them. The sections are dropdowns,
+and the rail never scrolls inside itself: `--rail-h` lets one taller than the
+window stick by its foot.
+
+**A starter word isn't a tag until something wears it (`tag.is_starter`,
+`schema_m30`).** Accounts are seeded with ~150 so the AI stays consistent, and a
+new library opened showing all of them. `/api/tags` drops the unworn ones, which
+is every page; the AI reads the table and still gets them. Typing one in claims
+it; a rename or merge onto one absorbs it, since refusing would name a tag nobody
+has seen. `lib/tagStarters.js`, and it falls back to showing them before m30.
+Seeds must go through `upsertStarters`. A tag can now arrive between page loads,
+so the dashboard re-reads tags on a tab change and an upload.
+
+**The prompts list tag names, not slugs (`tagging.values`).** A rename keeps the
+slug, so the AI went on reading the old word and filing by it.
 
 **The board is dragged with pointer events, not HTML5 drag.** A finger never
 drags, because it has to scroll; it selects. Never more than four tiles across,

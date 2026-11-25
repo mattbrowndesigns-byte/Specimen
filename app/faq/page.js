@@ -46,7 +46,7 @@ const SECTIONS = [
       },
       {
         q: "Some tags look almost the same. Can I tidy them up?",
-        a: "Manage Tags is for exactly that. Drag one tag onto another to merge them, or select a few, and it asks which name to keep. The AI remembers the words you merged away and uses the one you kept. Tags it proposes arrive unapproved and marked, so you decide whether a new word joins the library.",
+        a: "Manage Tags is for exactly that. Drag one tag onto another to merge them, or select a few, and it asks which name to keep. The AI remembers the words you merged away and uses the one you kept. When nothing it knows fits a block, a style or a folder, it proposes a new tag, which arrives marked so you decide whether it stays.",
       },
       {
         q: "Can I sort my library a way that isn't there?",

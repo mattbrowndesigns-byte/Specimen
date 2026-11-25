@@ -29,6 +29,9 @@ export default function FilterModal({ allTags, selectedTagIds, onApply, onClose,
       </div>
 
       <div className="modal-body">
+        {!allTags.some((t) => t.usage_count > 0) && (
+          <p className="empty-small">Nothing to filter by yet. Tags appear here as you save things.</p>
+        )}
         {groups.map((group) => {
           // A word nothing is filed under can only filter the grid down to
           // nothing, so it isn't offered. It stays in the vocabulary -- the AI

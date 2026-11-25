@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND } from "@/lib/ownership";
 import { slugify } from "@/lib/tagGroups";
+import { absorbStarter, unseenTagIds } from "@/lib/tagStarters";
 
 // A tag's name and whether it's approved. Not its group: that is the question
 // it answers, and changing it rewrote a rule the AI reads.
@@ -49,7 +50,9 @@ export async function PATCH(request, { params }) {
       .neq("id", id);
     if (siblingError) return NextResponse.json({ error: siblingError.message }, { status: 500 });
     const taken = siblings.find((t) => slugify(t.label) === slug);
-    if (taken) {
+    if (taken && (await unseenTagIds(supabase, user.id)).has(taken.id)) {
+      await absorbStarter(supabase, user.id, { ...taken, facet: tag.facet }, id);
+    } else if (taken) {
       return NextResponse.json(
         { error: `There's already a tag called ${taken.label}.`, conflict: { id: taken.id, label: taken.label } },
         { status: 409 }

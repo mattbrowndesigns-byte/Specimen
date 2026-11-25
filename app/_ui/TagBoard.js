@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, GripVertical, Plus } from "lucide-react";
+import { GripVertical, Plus } from "lucide-react";
 
 // One group's tags, small enough that a big group fits on a screen or two.
 // That is what makes dragging one onto another possible at all: as full-width
@@ -17,18 +17,7 @@ const DRAG_PX = 6;
 const EDGE_PX = 70;
 const SCROLL_PX = 14;
 
-export default function TagBoard({
-  families,
-  empty,
-  selected,
-  onToggle,
-  onMerge,
-  onAdd,
-  unused,
-  unusedLabel,
-  showUnused,
-  onShowUnused,
-}) {
+export default function TagBoard({ families, empty, selected, onToggle, onMerge, onAdd }) {
   const [drag, setDrag] = useState(null); // { ids, label }
   const [over, setOver] = useState(null);
   const ghostRef = useRef(null);
@@ -148,21 +137,7 @@ export default function TagBoard({
           </div>
         </div>
       )}
-      {unused.length > 0 && (
-        <div className="tag-unused">
-          <button type="button" className="tag-unused-toggle" aria-expanded={showUnused} onClick={onShowUnused}>
-            <ChevronDown size={16} aria-hidden="true" />
-            {unusedLabel} ({unused.length})
-          </button>
-          {showUnused && (
-            <>
-              <p className="tag-hint">The AI can still pick these. Delete one to stop it.</p>
-              <div className="tag-tiles">{unused.map(tile)}</div>
-            </>
-          )}
-        </div>
-      )}
-      {empty && <p className="empty-small">No tags here yet. Add the first one.</p>}
+      {empty && <p className="empty-small">No tags here yet. They appear as you save things, or you can add one.</p>}
 
       {drag &&
         createPortal(

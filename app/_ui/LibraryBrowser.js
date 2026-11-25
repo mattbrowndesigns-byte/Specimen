@@ -192,6 +192,13 @@ export default function LibraryBrowser({
     [allTags]
   );
 
+  // What the strip offers: a chip nothing wears can only empty the grid. One
+  // that's already on stays, or there'd be no way to take it off.
+  const stripTags = useMemo(
+    () => sortedTags.filter((t) => t.usage_count > 0 || selectedTagIds.has(t.id)),
+    [sortedTags, selectedTagIds]
+  );
+
   // Chips within a facet are an OR; across facets they're an AND.
   const visible = useMemo(() => {
     if (selectedTagIds.size === 0) return items;
@@ -219,7 +226,8 @@ export default function LibraryBrowser({
   // "what this library is mostly about" rather than as an alphabet. Names come
   // after, because a tag finds a shelf and a name finds one thing.
   const searchTerms = useMemo(() => {
-    const tags = [...allTags]
+    const tags = allTags
+      .filter((t) => t.usage_count > 0)
       .sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0))
       .map((tag) => tag.label);
     const names = items.map((item) => adapter.name(item)).filter(Boolean);
@@ -276,7 +284,7 @@ export default function LibraryBrowser({
         </button>
       </div>
 
-      {sortedTags.length > 0 && (
+      {stripTags.length > 0 && (
         <div
           className={`chip-strip${stripFade}`}
           ref={stripRef}
@@ -287,7 +295,7 @@ export default function LibraryBrowser({
               Clear
             </button>
           )}
-          {sortedTags.map((tag) => (
+          {stripTags.map((tag) => (
             <button
               key={tag.id}
               className={`chip chip-filter${selectedTagIds.has(tag.id) ? " chip-selected" : ""}`}

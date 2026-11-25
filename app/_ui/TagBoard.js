@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Plus } from "lucide-react";
+import { GripVertical, Plus } from "lucide-react";
 
 // One group's tags, small enough that a big group fits on a screen or two.
 // That is what makes dragging one onto another possible at all: as full-width
@@ -113,6 +113,7 @@ export default function TagBoard({ tags, families, selected, onToggle, onMerge, 
       onPointerDown={(e) => start(e, tag)}
       onClick={() => !swallowClick.current && onToggle(tag.id)}
     >
+      <GripVertical className="tag-tile-grip" size={14} aria-hidden="true" />
       <span className="tag-tile-name">{tag.label}</span>
       <span className="tag-tile-count">{tag.usage_count || 0}</span>
     </button>

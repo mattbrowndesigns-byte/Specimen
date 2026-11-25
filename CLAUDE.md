@@ -1202,8 +1202,9 @@ the enrich queue and only on a run with nothing else to do. Progress is a cursor
 on the group, so it survives anything. A save already in the group is skipped.
 
 **The board is dragged with pointer events, not HTML5 drag.** A finger never
-drags, because it has to scroll; it selects. Tiles are small because a drag only
-works if both ends are on screen. `counts` on each tag is per kind, and
+drags, because it has to scroll; it selects. Never more than four tiles across,
+at any width, and never a full-width row: a drag only works if both ends are on
+screen. `counts` on each tag is per kind, and
 `tagsFor` puts that kind's number in `usage_count`: the strips used to count
 every library's saves.
 

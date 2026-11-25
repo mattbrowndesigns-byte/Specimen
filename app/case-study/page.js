@@ -647,7 +647,7 @@ export default function CaseStudyPage() {
               The tags page was every word in the library as a full-width row. 158 rows, three buttons each, 9,830 pixels of scrolling, and nothing saying how often a tag was used or which library it was for. Then someone on LinkedIn asked about sorting a library in a way that wasn&rsquo;t there, and the question underneath it was whether the groups should be mine to choose.
             </p>
             <p>
-              The obvious fix was a tab per library. The data said no. Aesthetic is shared, and in my own library 380 of its 490 uses are on visuals, so merging two words under a tab called Websites would have changed three hundred visuals without saying so. The groups are a list on the left now, sorted by where they&rsquo;re used, with one group&rsquo;s tags beside it. The longest of them is 1,984 pixels on a laptop.
+              The obvious fix was a tab per library. The data said no. Aesthetic is shared, and in my own library 380 of its 490 uses are on visuals, so merging two words under a tab called Websites would have changed three hundred visuals without saying so. The groups are a list on the left now, sorted by where they&rsquo;re used, with one group&rsquo;s tags beside it.
             </p>
             <p>
               Merging was a dropdown. I wanted to drag one tag onto another, like one folder into another, and that only works if both are on screen, which is why the rows became small tiles. Dragging one tag onto another means merge in Apple Photos and nest in Evernote, so it always asks, says exactly how many saves are involved, and lets you keep either name or type a new one. Selecting does the same thing for a phone or a keyboard.
@@ -795,6 +795,10 @@ export default function CaseStudyPage() {
             <h3>Cropping looked like the home page</h3>
             <p>
               Cropping a component happened on the dashboard, under the headline and the tabs, so a step in saving something looked like going home. It has its own page now, with the same three beats as picking images: a loading bar over grey shapes, the thing to choose from, then the result. The box had a fault too. It was measured in screen pixels once, when the image loaded, so zooming or resizing left it working to a size the image no longer was. It is kept as a share of the image now, which is right at any size.
+            </p>
+            <h3>The tags page, with room to aim</h3>
+            <p>
+              The first version of this page did the job and looked unfinished. The title, the list and the tags sat almost on top of each other, six tags across, with Hide and Edit at the far edge of the screen from the group they change. The list and the tags each have a holding shape now, the page opens with room under its title, the two buttons sit beside the group&rsquo;s name, and there are never more than four tags across at any width. The longest group grew from 1,984 to 3,063 pixels for it, which is worth it when the thing you do there is aim.
             </p>
             <h3>Every button, hovered on purpose</h3>
             <p>

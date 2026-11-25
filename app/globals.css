@@ -1135,9 +1135,9 @@ h1 {
    may pick next time, which is not something the list of words can say by
    being a list of words. */
 .tag-page-note {
-  margin: -8px 0 20px;
+  margin: -8px 0 40px;
   max-width: 34em;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   color: var(--text-muted);
 }
@@ -1171,21 +1171,37 @@ h1 {
   font-weight: 500;
 }
 
-/* Groups beside one group's tags. The rail is as wide as its longest heading
-   and the panel takes the rest, so a wider window is more tags across. */
+/* Groups beside one group's tags, each in a holding shape of its own: on bare
+   page the list floated beside the tiles, and the two read as one scatter of
+   small pills under the title. */
 .tag-layout {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  gap: 40px;
+  grid-template-columns: 264px minmax(0, 1fr);
+  gap: 24px;
   align-items: start;
 }
 
+.tag-rail,
+.tag-panel {
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+/* Stays beside a long group, and scrolls inside itself on a short window. */
 .tag-rail {
   position: sticky;
   top: 76px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 24px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  padding: 24px 16px 16px;
+}
+
+.tag-panel {
+  padding: 32px;
 }
 
 .tag-rail-section {
@@ -1202,24 +1218,20 @@ h1 {
   color: var(--text-faint);
 }
 
-.tag-rail-item,
-.tag-rail-new {
+.tag-rail-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: 15px;
   text-align: left;
   cursor: pointer;
-}
-
-.tag-rail-item {
-  justify-content: space-between;
 }
 
 .tag-rail-item:hover {
@@ -1227,7 +1239,7 @@ h1 {
 }
 
 .tag-rail-item.active {
-  background: var(--field-bg);
+  background: var(--chip-strong-bg);
   font-weight: 600;
 }
 
@@ -1237,52 +1249,75 @@ h1 {
   color: var(--text-faint);
 }
 
-.tag-rail-new {
+.tag-rail-item.active .tag-rail-count {
   color: var(--text-muted);
+}
+
+.tag-rail-foot {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.tag-rail-new {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 .tag-rail-new:hover {
   background: var(--surface-hover);
-  color: var(--text);
 }
 
 .tag-panel-head {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tag-panel-title {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-bottom: 8px;
 }
 
 .tag-panel-head h2 {
-  margin: 0 0 2px;
-  font-size: 20px;
+  margin: 0;
+  font-size: 22px;
   font-weight: 600;
 }
 
 .tag-panel-head p {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   color: var(--text-muted);
 }
 
-.tag-panel-head .tag-actions {
-  flex-shrink: 0;
-}
-
 .tag-panel-state {
-  margin: 0 0 14px;
-  padding: 10px 14px;
-  border-radius: 8px;
+  margin: 0 0 24px;
+  padding: 12px 16px;
+  border-radius: 10px;
   background: var(--chip-bg);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
 }
 
 .tag-hint {
-  margin: 0 0 16px;
-  font-size: 13px;
+  margin: 0 0 24px;
+  font-size: 14px;
   color: var(--text-faint);
 }
 
@@ -1302,40 +1337,48 @@ h1 {
 }
 
 .tag-family + .tag-family {
-  margin-top: 22px;
+  margin-top: 32px;
 }
 
 .tag-family h3 {
-  margin: 0 0 8px;
-  font-size: 13px;
+  margin: 0 0 12px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--text-muted);
 }
 
+/* Never more than four across. Auto-fill on the width alone gave six on a
+   laptop and nine on a monitor, which is a wall of words; the second number in
+   max() is a quarter of the row, so four is as many as fit. */
 .tag-tiles {
+  --tile-gap: 12px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(176px, 100%), 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(max(min(200px, 100%), (100% - 3 * var(--tile-gap)) / 4), 1fr)
+  );
+  gap: var(--tile-gap);
 }
 
 .tag-tile,
 .tag-add-input {
   width: 100%;
-  height: 40px;
-  padding: 0 14px;
-  border: 1px solid var(--border-soft);
-  border-radius: 8px;
-  background: var(--surface);
+  height: 52px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--chip-bg);
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .tag-tile {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   text-align: left;
   cursor: grab;
   user-select: none;
@@ -1347,6 +1390,21 @@ h1 {
   border-color: var(--border-strong-hover);
 }
 
+/* In the tile's own padding, so nothing moves when it arrives. */
+.tag-tile-grip {
+  position: absolute;
+  left: 3px;
+  color: var(--text-faint);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+@media (hover: hover) {
+  .tag-tile:hover .tag-tile-grip {
+    opacity: 1;
+  }
+}
+
 .tag-tile-name {
   overflow: hidden;
   white-space: nowrap;
@@ -1355,12 +1413,13 @@ h1 {
 
 .tag-tile-count {
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-faint);
 }
 
 /* Nothing wears it. It's still a word the AI may pick. */
 .tag-tile-unused {
+  border-color: var(--border);
   background: none;
   color: var(--text-muted);
 }
@@ -1392,7 +1451,7 @@ h1 {
 
 .tag-tile-add {
   justify-content: flex-start;
-  gap: 6px;
+  gap: 8px;
   border-style: dashed;
   border-color: var(--border-strong);
   background: none;
@@ -1438,9 +1497,9 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 20px;
-  padding: 10px 10px 10px 18px;
-  border: 1px solid var(--border);
+  margin-top: 28px;
+  padding: 10px 12px 10px 20px;
+  border: 1px solid var(--border-strong);
   border-radius: 14px;
   background: var(--surface);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
@@ -1593,19 +1652,36 @@ h1 {
 /* The rail lies down into a strip, with its headings gone: five words across a
    phone are five words, and four headings over them are a page. */
 @media (max-width: 760px) {
+  .tag-page-note {
+    margin-bottom: 28px;
+  }
+
   .tag-layout {
     grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
+    gap: 28px;
+  }
+
+  .tag-rail,
+  .tag-panel {
+    padding: 0;
+    border: none;
+    background: none;
   }
 
   .tag-rail {
     position: static;
     flex-direction: row;
     gap: 6px;
+    max-height: none;
     margin: 0 calc(var(--grid-margin) * -1);
     padding: 0 var(--grid-margin);
     overflow-x: auto;
     scrollbar-width: none;
+  }
+
+  .tag-rail-foot {
+    padding: 0;
+    border: none;
   }
 
   .tag-rail::-webkit-scrollbar {
@@ -1624,9 +1700,19 @@ h1 {
   .tag-rail-item,
   .tag-rail-new {
     flex-shrink: 0;
+    width: auto;
+    height: auto;
+    padding: 8px 14px;
+    border: 1px solid transparent;
     border-radius: 999px;
     background: var(--field-bg);
+    font-size: 14px;
     white-space: nowrap;
+  }
+
+  .tag-rail-new {
+    border: 1px dashed var(--border-strong);
+    background: none;
   }
 
   .tag-rail-item.active {
@@ -1646,18 +1732,13 @@ h1 {
 
   .tag-tile {
     height: auto;
-    min-height: 40px;
-    padding-block: 9px;
+    min-height: 48px;
+    padding: 10px 14px;
   }
 
   .tag-tile-name {
     line-height: 1.25;
     white-space: normal;
-  }
-
-  .tag-panel-head {
-    flex-direction: column;
-    gap: 12px;
   }
 
   .tag-bar {

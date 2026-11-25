@@ -1380,14 +1380,37 @@
     top: calc(var(--bar-h) + 20px);
   }
 
-  & .tag-rail-item,
+  & .tag-rail,
+  & .tag-panel {
+    border-radius: var(--r-panel);
+  }
+
+  & .tag-rail-item {
+    border-radius: 999px;
+  }
+
+  /* Outlined, where a secondary button is usually filled grey: the held group
+     above it is already a grey pill. */
   & .tag-rail-new {
     border-radius: 999px;
+    background: none;
+  }
+
+  & .tag-rail-new:hover {
+    background: var(--chip-strong-bg);
+  }
+
+  & .tag-panel-title .tag-actions button:not(.danger-btn) {
+    background: var(--chip-strong-bg);
+  }
+
+  & .tag-panel-title .tag-actions button:not(.danger-btn):hover:not(:disabled) {
+    background: var(--border-strong);
   }
 
   & .tag-panel-head h2 {
     font-family: var(--display);
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 800;
     letter-spacing: -0.02em;
   }
@@ -1402,7 +1425,6 @@
   }
 
   & .tag-bar {
-    border-color: transparent;
     border-radius: 999px;
     box-shadow: var(--pop-shadow);
   }
@@ -1422,6 +1444,16 @@
   }
 
   @media (max-width: 760px) {
+    & .tag-rail,
+    & .tag-panel {
+      border-radius: 0;
+    }
+
+    & .tag-rail-new {
+      border-color: var(--border-strong);
+      background: none;
+    }
+
     & .tag-bar {
       border-radius: var(--r-panel);
     }

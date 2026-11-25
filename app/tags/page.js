@@ -296,38 +296,42 @@ export default function TagsPage() {
                   ))}
                 </div>
               ))}
-              <button className="tag-rail-new" onClick={newGroup}>
-                <Plus size={15} />
-                New Group
-              </button>
+              <div className="tag-rail-foot">
+                <button className="tag-rail-new" onClick={newGroup}>
+                  <Plus size={15} />
+                  New Group
+                </button>
+              </div>
             </nav>
 
             <section className="tag-panel" aria-label={group.label}>
               <header className="tag-panel-head">
-                <div>
+                {/* Beside the name rather than at the far edge: on a wide
+                    screen that was a thousand pixels from what they act on. */}
+                <div className="tag-panel-title">
                   <h2>{group.label}</h2>
-                  <p>
-                    {group.question && <>{group.question} </>}
-                    Used on {kindList(group.kinds)}.
-                    {group.filled_by === "me" && " You fill this one in."}
-                  </p>
+                  {!group.locked && (
+                    <div className="tag-actions">
+                      <button onClick={() => setDialog({ type: "group", group })}>
+                        <Pencil size={14} /> Edit
+                      </button>
+                      {group.hidden ? (
+                        <button onClick={() => show(group)}>
+                          <Eye size={14} /> Show Again
+                        </button>
+                      ) : (
+                        <button onClick={() => setDialog({ type: "hide" })}>
+                          <EyeOff size={14} /> Hide
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {!group.locked && (
-                  <div className="tag-actions">
-                    {group.hidden ? (
-                      <button onClick={() => show(group)}>
-                        <Eye size={14} /> Show Again
-                      </button>
-                    ) : (
-                      <button onClick={() => setDialog({ type: "hide" })}>
-                        <EyeOff size={14} /> Hide
-                      </button>
-                    )}
-                    <button onClick={() => setDialog({ type: "group", group })}>
-                      <Pencil size={14} /> Edit
-                    </button>
-                  </div>
-                )}
+                <p>
+                  {group.question && <>{group.question} </>}
+                  Used on {kindList(group.kinds)}.
+                  {group.filled_by === "me" && " You fill this one in."}
+                </p>
               </header>
 
               {group.hidden && (

@@ -420,6 +420,27 @@
     color: var(--text);
   }
 
+  /* Four tabs with their icons come to 474px and pushed the whole page
+     sideways on a phone. The words are the part that can't be spared. The
+     scroll is for the narrowest screens only. */
+  @media (max-width: 520px) {
+    & .tab-switcher {
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    & .tab-switcher.tab-switcher button {
+      flex: 1 0 auto;
+      justify-content: center;
+      padding: 0 8px;
+      font-size: 13px;
+    }
+
+    & .tab-switcher button svg {
+      display: none;
+    }
+  }
+
   & .search-input {
     font-size: 15px;
     letter-spacing: -0.005em;
@@ -659,6 +680,61 @@
   & .row-summary {
     margin-top: 8px;
     line-height: 18px;
+  }
+
+  /* Beside a 180px picture a phone has a sliver left for words, and the three
+     controls sat on top of them. A smaller picture, the title and controls
+     beside it, and the sentence and tags across the row underneath. */
+  @media (max-width: 640px) {
+    & .row-item {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
+      column-gap: 12px;
+    }
+
+    & .row-item .row-thumb {
+      width: 100%;
+      grid-row: 1 / span 2;
+    }
+
+    & .row-body:not(.skeleton-lines) {
+      display: contents;
+    }
+
+    & .row-body .row-title {
+      grid-column: 2;
+      flex-wrap: wrap;
+      gap: 2px 8px;
+    }
+
+    & .row-title .row-name {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    & .row-title .row-domain {
+      display: none;
+    }
+
+    & .row-item .row-actions {
+      grid-column: 2;
+      grid-row: 2;
+      align-self: end;
+      margin: 0 0 -6px -8px;
+    }
+
+    & .row-body .row-summary,
+    & .row-item .card-tags {
+      grid-column: 1 / -1;
+    }
+
+    & .row-item .card-tags {
+      margin-top: 10px;
+    }
   }
 
   & .row-name {

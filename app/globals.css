@@ -2332,17 +2332,17 @@ h1 {
   margin-bottom: 10px;
 }
 
-/* Already in the library: said in the box, where the eye is, above the two
-   answers to it. */
-/* In a holding shape of its own, with the field's corners: loose under the
-   field it read as a stray line. The amber is a wash of the queued states'
+/* A notice: something worth knowing before you go on, that isn't an error.
+   First used for "already in the library", said in the Add box where the eye
+   is, above the two answers to it. In a holding shape of its own: loose under
+   a field it read as a stray line. The amber is a wash of the queued states'
    text colour rather than their solid fill, which in dark mode was a brown
-   slab heavier than the button under it. */
-.add-pop-note {
+   slab heavier than the button under it. Margins belong to the caller. */
+.notice {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 0 12px;
+  margin: 0;
   padding: 10px 12px 10px 10px;
   border: 1px solid color-mix(in srgb, var(--warn-text) 18%, transparent);
   border-radius: 12px;
@@ -2354,7 +2354,7 @@ h1 {
 
 /* The icon in a square of its own, centred on the text however many lines it
    runs to, so a two-line note has something of its height beside it. */
-.add-pop-note-icon {
+.notice-icon {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
@@ -2369,8 +2369,12 @@ h1 {
 /* Trimmed to the capitals and the baseline, so the space above the words and
    below them is the space you see. A line box carries more room above the
    capitals than below the baseline, which sat the text low in its holder. */
-.add-pop-note-text {
+.notice-text {
   text-box: trim-both cap alphabetic;
+}
+
+.add-pop .notice {
+  margin-bottom: 12px;
 }
 
 .add-pop-actions {

@@ -180,11 +180,11 @@ export default function AddMenu({ onSubmit, variant }) {
           />
           {existing ? (
             <>
-              <p className="add-pop-note" role="status">
-                <span className="add-pop-note-icon" aria-hidden="true">
+              <p className="notice" role="status">
+                <span className="notice-icon" aria-hidden="true">
                   <CircleAlert size={16} />
                 </span>
-                <span className="add-pop-note-text">
+                <span className="notice-text">
                   {existing.savedAt
                     ? `You saved this page on ${new Date(existing.savedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}.`
                     : existing.message}

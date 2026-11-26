@@ -188,6 +188,19 @@
   & body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Helvetica Neue", sans-serif;
   }
+}
+
+/* A control doesn't inherit its typeface: the browser hands it a default of
+   its own, Arial in Chromium, which has a regular and a bold and nothing in
+   between. So most buttons were set in a face the rest of the app never uses,
+   a 500 label came out regular and a 600 one bold -- too light beside too
+   heavy, the bold one wide enough to read as tracked out. Weightless on
+   purpose: anything that names its own family still wins. */
+:where(:root[data-variant="refined"]) :where(button, input, select, textarea) {
+  font-family: inherit;
+}
+
+:root[data-variant="refined"] {
 
   /* Focus you can see, on every control, in one colour. The original had a
      considered ring on the search field and the browser default everywhere

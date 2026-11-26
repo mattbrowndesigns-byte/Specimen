@@ -2614,9 +2614,16 @@ at two sizes on different screens. The written pages (`.prose-page`) keep their 
 scale in numbers. Checked by reading every text node on 32 screens at two widths, so
 compare rendered text, not the stylesheet: the stylesheet said 29 sizes, the screen 13.
 
-**Every button label is 500, the main one included.** The fill says which
-one is primary; a 600 primary beside a 500 secondary read as a different face,
-wider and looser, rather than the same button filled in. The dashboard's tabs
+**Every button label is 500, the main one included, and in the app's face.**
+Controls don't inherit a typeface: the browser hands them its own, Arial in
+Chromium, which has a regular and a bold and nothing between. So for months
+most buttons were Arial, a 500 label rendered regular and a 600 one bold --
+too light beside too heavy, the bold one wide enough to read as tracked out.
+`:where(:root[data-variant="refined"]) :where(button, input, select,
+textarea) { font-family: inherit }` fixes it at zero specificity, so anything
+naming its own family still wins; 500 is then SF's real Medium, the middle the
+owner asked for. The Original still renders Arial, frozen like the rest of it.
+The fill says which button is primary, not the weight. The dashboard's tabs
 and the Tags page's section heads stay 600: one is navigation, the other a
 heading. The Add box's answers share its width.
 

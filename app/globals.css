@@ -2334,14 +2334,20 @@ h1 {
 
 /* Already in the library: said in the box, where the eye is, above the two
    answers to it. */
+/* In a holding shape of its own, tinted the soft amber the queued states wear,
+   with the field's corners: loose under the field it read as a stray line. */
 .add-pop-note {
   display: flex;
   align-items: flex-start;
   gap: 8px;
   margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--warn-bg-hover);
+  border-radius: 12px;
+  background: var(--warn-bg);
   font-size: var(--type-small);
   line-height: 1.45;
-  color: var(--text-secondary);
+  color: var(--text);
 }
 
 /* The soft amber the queued states wear: a notice, not an error. Nudged down

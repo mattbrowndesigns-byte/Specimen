@@ -2663,8 +2663,13 @@ both the message and the status. Websites past `SITES_NOW` (3) in one call go
 to the capture queue like an import, because each one is a page fetch inside a
 60s request; resources past `RESOURCES_NOW` (3) are queued for enrichment,
 because each is a Gemini request out of twenty a day. The MCP dedupes on the
-normalised URL and hands back what's there; the Add box still doesn't check,
-which was left alone as a separate decision.
+normalised URL and hands back what's there. The Add box checks too, and says so
+in the box (`existing` on a 409, shown by `AddMenu`): a resource's message used to
+be printed at the top of the page, behind the box, so a repeat save looked
+broken. A website page is refused with Open It; a different page of the same site
+saves as normal. A page captured for components before offers Crop From It or
+Capture Again (`again: true`), since it can rightly give up another block. Visuals
+already reopen the picker with what you kept marked.
 
 A collection named in a write is matched exactly, ignoring case, and made if
 missing -- never the partial match `findCollectionId` uses for reads, because

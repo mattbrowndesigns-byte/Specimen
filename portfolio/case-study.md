@@ -473,6 +473,8 @@ The missing states went first, because adding them changes nothing at rest. Fill
 
 There are nine now, each named for its job, and the names are what the styles use. 276 hand-typed sizes point at one. Eleven pixels went altogether, which is where every tag on a card was set, so those are easier to read. The frozen designs use the same names with their old numbers, and a check of every piece of text in the Original, before and after, found none that moved.
 
+**A save that looked broken.** Saving a link I already had did nothing at all. The app had noticed and written a message, but at the top of the page, behind the box I was typing in. Now the box itself says it's already saved and offers to open it. The same goes for a website page I already have; another page on the same site still saves. A page I've cut components from before offers two answers instead, crop another from the capture I have or take a new one, because one page can hold several blocks worth keeping.
+
 Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, the browser button, tag groups of your own and the design system page still have to be proven there.
 
 ## What I deliberately did not build

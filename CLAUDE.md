@@ -2622,6 +2622,14 @@ control's radius, height and fill on 32 screens, not by looking. `.select-box` i
 us everywhere, with an indeterminate state for a part-picked list; the browser's own was
 a different object in dark mode.
 
+**Four of the current design's greys are other greys by an older name.** `--chip-bg` is
+`--field-bg`, `--surface-soft` is `--surface-hover`, `--text-body` is `--text` and
+`--text-faint` is `--text-muted`, written as `var()` in `refined.css` so the Original keeps
+its own. Use the new name in anything new. `--stage` and `--surface-sunken` share light
+values with the hover and field greys but stay their own tokens, because dark mode needs
+them apart. The design page skips a bare `var()` alias when it counts look-alikes. Text
+now has three greys, and all three pass on every fill.
+
 **Unavailable and working are two states, and every control has both.** The end of
 `refined.css` holds them: anything `:disabled` is at half strength, and a disabled button
 with `aria-busy` keeps its label readable and breathes. So a button whose label turns into

@@ -836,6 +836,10 @@ export default function CaseStudyPage() {
             <p>
               With the text agreeing, the controls that didn&rsquo;t stood out. A script read the corners, height and fill of every button on every screen, and found a dozen still in the first design&rsquo;s square shape, among them the Add popover&rsquo;s Submit, Import and Sign in. Every button is now a capsule of one of three kinds: solid for the one thing a screen is for, filled grey for the rest, small inside a row or a panel. The review queue&rsquo;s ticks were the browser&rsquo;s own, which looked like something else in dark mode. There is one tick now, with a state for a list that is partly picked.
             </p>
+            <h3>Fewer greys</h3>
+            <p>
+              Light mode had seven greys between the page and the borders, a shade or two apart, and text had five. Four of them now point at another, so a chip and a field are one grey, body copy is the title&rsquo;s ink, and the faintest text, which failed contrast on a chip, is the muted grey. Two more moved a shade in light mode only, because dark mode needs them apart. I rendered the draft on six screens in both themes before writing any of it, and the version that shipped matches that draft to the pixel.
+            </p>
             <p>
               Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, the browser button, tag groups of your own and the design system page still have to be proven there.
             </p>

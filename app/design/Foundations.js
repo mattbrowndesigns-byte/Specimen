@@ -61,7 +61,8 @@ const FAMILIES = [["Surfaces", "Fills"], ["Borders"], ["Text"], ["Brand"], ["Inv
 function nearlyTheSame(colours) {
   const out = [];
   for (const family of FAMILIES) {
-    const names = family.filter((n) => colours[n]?.a === 1);
+    // A name that is only another name is the same colour on purpose.
+    const names = family.filter((n) => colours[n]?.a === 1 && !colours[n].alias);
     for (let i = 0; i < names.length; i++)
       for (let j = i + 1; j < names.length; j++) {
         const d = distance(colours[names[i]], colours[names[j]]);

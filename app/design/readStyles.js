@@ -213,19 +213,24 @@ export const toHex = ({ r, g, b }) =>
 // defined from another comes out right.
 export function resolveColours(tokens) {
   const host = document.createElement("div");
-  host.style.cssText = "position:absolute;visibility:hidden;pointer-events:none";
+  // A colour no token has, so a value that isn't a colour (and so falls back
+  // to the inherited one) can be told apart.
+  host.style.cssText = "position:absolute;visibility:hidden;pointer-events:none;color:rgb(1, 2, 3)";
   for (const [name, value] of Object.entries(tokens)) host.style.setProperty(name, value);
   document.body.appendChild(host);
   const out = {};
   for (const [name, value] of Object.entries(tokens)) {
     // Anything with a var() in it "supports" every property, so those have to
     // look like a colour as well.
-    if (/var\(/.test(value) ? !/^rgba?\(var/.test(value) : !CSS.supports("color", value)) continue;
+    // A bare var() is one token standing for another; whether that one is a
+    // colour is what the probe below finds out.
+    const alias = /^var\(--[\w-]+\)$/.test(value);
+    if (!alias && (/var\(/.test(value) ? !/^rgba?\(var/.test(value) : !CSS.supports("color", value))) continue;
     const probe = document.createElement("span");
     probe.style.color = `var(${name})`;
     host.appendChild(probe);
     const colour = parseColour(getComputedStyle(probe).color);
-    if (colour) out[name] = colour;
+    if (colour && getComputedStyle(probe).color !== "rgb(1, 2, 3)") out[name] = alias ? { ...colour, alias: true } : colour;
   }
   host.remove();
   return out;

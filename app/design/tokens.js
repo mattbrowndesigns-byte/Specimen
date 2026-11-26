@@ -7,7 +7,7 @@ export const TOKEN_GROUPS = [
     tokens: {
       "--bg": "The page",
       "--surface": "Cards, dialogs, panels, the bar",
-      "--surface-soft": "A step off a surface",
+      "--surface-soft": "The hover grey, by an older name",
       "--surface-sunken": "Wells and tracks",
       "--surface-hover": "A row or button under the pointer",
       "--stage": "Behind a screenshot",
@@ -19,7 +19,7 @@ export const TOKEN_GROUPS = [
     note: "Filled controls and chips.",
     tokens: {
       "--field-bg": "Search, filled buttons, the held tab",
-      "--chip-bg": "Chips, tag tiles, text fields",
+      "--chip-bg": "The field grey, by an older name",
       "--chip-strong-bg": "A chip or button on a surface, the held group",
       "--seg-active": "The held option in a switch",
     },
@@ -42,10 +42,10 @@ export const TOKEN_GROUPS = [
     note: "Strongest first. Each should clear 4.5 on the page and on a card.",
     tokens: {
       "--text": "Titles and controls",
-      "--text-body": "Running copy",
+      "--text-body": "Main text, by an older name",
       "--text-secondary": "Supporting copy",
       "--text-muted": "Labels",
-      "--text-faint": "Counts and hints",
+      "--text-faint": "Muted text, by an older name",
     },
   },
   {

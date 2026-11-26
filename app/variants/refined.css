@@ -51,12 +51,16 @@
   --bg: #fbfbfd;
   --surface: #fff;
   --surface-rgb: 255, 255, 255;
-  --surface-soft: #f7f7f9;
-  --surface-sunken: #efeff3;
-  --surface-sunken-rgb: 239, 239, 243;
+  /* Seven greys between the page and the borders differed by one to four
+     shades in light mode, so some are now another's name. Where dark mode
+     needs them apart (wells sit below the page there, and a screenshot
+     needs its own ground) only the light value moved. */
+  --surface-soft: var(--surface-hover);
+  --surface-sunken: #eeeef2;
+  --surface-sunken-rgb: 238, 238, 242;
   --surface-hover: #f2f2f5;
 
-  --chip-bg: #efeff2;
+  --chip-bg: var(--field-bg);
   --chip-strong-bg: #e5e5e9;
   --field-bg: #eeeef2;
 
@@ -66,18 +70,20 @@
   --border-strong-hover: #bcbcc2;
 
   --text: #1d1d1f;
-  --text-body: #2b2b2e;
+  /* Three text greys, not five. Body copy was one shade off titles, and the
+     faintest failed contrast on a chip (4.42 against 4.5). */
+  --text-body: var(--text);
   --text-secondary: #46464b;
   --text-muted: #5b5b61;
-  --text-faint: #6e6e73;
+  --text-faint: var(--text-muted);
 
   --invert-bg: #1d1d1f;
   --invert-bg-hover: #36363a;
 
   --overlay: rgba(12, 12, 14, 0.4);
 
-  --stage: #f1f1f4;
-  --stage-rgb: 241, 241, 244;
+  --stage: #f2f2f5;
+  --stage-rgb: 242, 242, 245;
 
   /* The selected segment of every segmented control -- view, size,
      desktop/mobile -- which in the original took --surface and so in dark mode
@@ -139,12 +145,12 @@
   --bg: #0a0a0b;
   --surface: #161618;
   --surface-rgb: 22, 22, 24;
-  --surface-soft: #1c1c1f;
+  --surface-soft: var(--surface-hover);
   --surface-sunken: #060607;
   --surface-sunken-rgb: 6, 6, 7;
   --surface-hover: #222225;
 
-  --chip-bg: #1f1f22;
+  --chip-bg: var(--field-bg);
   --chip-strong-bg: #2a2a2e;
   --field-bg: #1c1c1f;
 
@@ -154,10 +160,10 @@
   --border-strong-hover: #4a4a51;
 
   --text: #f5f5f7;
-  --text-body: #e2e2e6;
+  --text-body: var(--text);
   --text-secondary: #babac1;
   --text-muted: #9e9ea6;
-  --text-faint: #8c8c94;
+  --text-faint: var(--text-muted);
 
   --invert-bg: #f5f5f7;
   --invert-bg-hover: #e0e0e4;

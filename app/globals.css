@@ -2340,7 +2340,7 @@ h1 {
    slab heavier than the button under it. Margins belong to the caller. */
 .notice {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   margin: 0;
   padding: 10px 12px 10px 10px;
@@ -2352,8 +2352,9 @@ h1 {
   color: var(--text);
 }
 
-/* The icon in a square of its own, centred on the text however many lines it
-   runs to, so a two-line note has something of its height beside it. */
+/* The icon in a square of its own, held in the top-left corner with the same
+   10px above it as beside it. Centred on a two-line note it floated free of
+   both edges and belonged to neither. */
 .notice-icon {
   display: inline-flex;
   flex-shrink: 0;
@@ -2367,9 +2368,13 @@ h1 {
 }
 
 /* Trimmed to the capitals and the baseline, so the space above the words and
-   below them is the space you see. A line box carries more room above the
-   capitals than below the baseline, which sat the text low in its holder. */
+   below them is the space you see -- a line box carries more room above the
+   capitals than below the baseline, which sat the text low in its holder.
+   Then padded by half of what the icon has over a capital, so the first line
+   sits on the icon's middle and the last line has the same air under it. */
 .notice-text {
+  flex: 1;
+  padding-block: calc((30px - 1cap) / 2);
   text-box: trim-both cap alphabetic;
 }
 

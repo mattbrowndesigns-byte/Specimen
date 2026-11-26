@@ -322,8 +322,7 @@
     height: 34px;
     padding: 0 16px 0 14px;
     border-radius: 999px;
-    font-weight: 600;
-    letter-spacing: -0.005em;
+    font-weight: 500;
   }
 
   & :is(.bell-pop, .more-pop, .add-pop, .sort-pop, .search-pop) {
@@ -839,7 +838,7 @@
   }
 
   & .modal-foot .modal-apply {
-    font-weight: 600;
+    font-weight: 500;
   }
 
   /* Filter options are pills, the same control as the chip strip they stand
@@ -1089,7 +1088,7 @@
   }
 
   & .visit-btn {
-    font-weight: 600;
+    font-weight: 500;
   }
 
   & .visit-btn:hover {
@@ -1673,7 +1672,7 @@
 
   & .save-form button {
     border-radius: 999px;
-    font-weight: 600;
+    font-weight: 500;
   }
 
   & .bulk-actions button:not(.danger-btn) {
@@ -2367,7 +2366,7 @@
   & .crop-actions button.crop-save {
     background: var(--invert-bg);
     color: var(--invert-text);
-    font-weight: 600;
+    font-weight: 500;
   }
 
   & .crop-actions button.crop-save:hover:not(:disabled) {
@@ -2671,7 +2670,10 @@
   }
 
   /* The Add popover's two answers are a dialog's two answers. */
+  /* Shared out across the box's width: pushed right, they left a gap on the
+     left that belonged to nothing. */
   & .add-pop-actions button {
+    flex: 1;
     height: 36px;
     padding: 0 16px;
     border-color: transparent;
@@ -2688,7 +2690,6 @@
     border-color: var(--accent-solid);
     background: var(--accent-solid);
     color: var(--accent-solid-text);
-    font-weight: 600;
   }
 
   & .add-pop-actions button.primary:hover:not(:disabled) {
@@ -2696,9 +2697,12 @@
     background: var(--accent-solid-hover);
   }
 
-  /* The one thing to press on its page. */
-  & :is(.import-actions button, .pick-bar .primary, .pick-failed-actions .primary, .auth-submit, .prose-cta-link) {
-    font-weight: 600;
+  /* The one thing to press on its page is told by its fill, not its weight:
+     every button label is 500. A 600 primary beside a 500 secondary read as
+     a different face, wider and looser, rather than as the same button
+     filled in. */
+  & :is(.import-actions button, .pick-bar .primary, .pick-failed-actions .primary, .auth-submit, .prose-cta-link, .ai-status button) {
+    font-weight: 500;
   }
 
   & .pick-cancel {

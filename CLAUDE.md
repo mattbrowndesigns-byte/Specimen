@@ -2614,6 +2614,12 @@ at two sizes on different screens. The written pages (`.prose-page`) keep their 
 scale in numbers. Checked by reading every text node on 32 screens at two widths, so
 compare rendered text, not the stylesheet: the stylesheet said 29 sizes, the screen 13.
 
+**Every button label is 500, the main one included.** The fill says which
+one is primary; a 600 primary beside a 500 secondary read as a different face,
+wider and looser, rather than the same button filled in. The dashboard's tabs
+and the Tags page's section heads stay 600: one is navigation, the other a
+heading. The Add box's answers share its width.
+
 **Every button is a capsule in three kinds, and there is one tick.** Solid for the one
 main action (orange in a dialog or popover, ink on a page), filled grey for the rest, 30px
 for small ones in a row or panel. The block "Every button is a capsule" in `refined.css`
@@ -2642,9 +2648,11 @@ no hover on purpose.
 `--warn-text` at 7% with an 18% hairline, never the queued states' solid fill
 (in dark mode that was a brown slab heavier than the button under it); the
 icon in a 30px square at 14%, centred on however many lines the text runs to;
-the text trimmed with `text-box: trim-both cap alphabetic`, because a line box
-carries more room above the capitals than below the baseline and sat the words
-low. It sets no margin -- the caller does (`.add-pop .notice`). First worn by
+the icon held top-left at 10px from both edges (centred on a long note it
+belonged to neither), and the text trimmed with `text-box: trim-both cap
+alphabetic` -- a line box carries more room above the capitals than below the
+baseline and sat the words low -- then padded `(30px - 1cap) / 2` so the first
+line sits on the icon's middle. It sets no margin -- the caller does (`.add-pop .notice`). First worn by
 "You saved this page on…" in the Add box, and on /design under Feedback.
 
 **Clipboard writes have to start inside the click.** Safari ends the click's

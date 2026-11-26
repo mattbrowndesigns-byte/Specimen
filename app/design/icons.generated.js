@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  CircleAlert,
   CircleQuestionMark,
   Clock,
   Compass,
@@ -79,6 +80,7 @@ export const ICONS = [
   { name: "ChevronDown", Icon: ChevronDown, files: 3 },
   { name: "ChevronLeft", Icon: ChevronLeft, files: 1 },
   { name: "ChevronRight", Icon: ChevronRight, files: 1 },
+  { name: "CircleAlert", Icon: CircleAlert, files: 1 },
   { name: "CircleQuestionMark", Icon: CircleQuestionMark, files: 2 },
   { name: "Clock", Icon: Clock, files: 1 },
   { name: "Compass", Icon: Compass, files: 1 },
@@ -130,5 +132,5 @@ export const ICONS = [
   { name: "Upload", Icon: Upload, files: 2 },
   { name: "UserPlus", Icon: UserPlus, files: 1 },
   { name: "UserRound", Icon: UserRound, files: 1 },
-  { name: "X", Icon: X, files: 17 },
+  { name: "X", Icon: X, files: 18 },
 ];

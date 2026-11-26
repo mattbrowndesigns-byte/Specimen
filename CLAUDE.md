@@ -2630,6 +2630,15 @@ with `aria-busy` keeps its label readable and breathes. So a button whose label 
 fault. Every hover needs `:not(:disabled)` or it answers on a dead button. A held tab has
 no hover on purpose.
 
+**Something worth knowing that isn't an error is a `.notice`.** A wash of
+`--warn-text` at 7% with an 18% hairline, never the queued states' solid fill
+(in dark mode that was a brown slab heavier than the button under it); the
+icon in a 30px square at 14%, centred on however many lines the text runs to;
+the text trimmed with `text-box: trim-both cap alphabetic`, because a line box
+carries more room above the capitals than below the baseline and sat the words
+low. It sets no margin -- the caller does (`.add-pop .notice`). First worn by
+"You saved this page on…" in the Add box, and on /design under Feedback.
+
 **Clipboard writes have to start inside the click.** Safari ends the click's
 permission while the export is being fetched, so `fetch` then `writeText`
 fails there silently. `copyMarkdown` hands the clipboard a `ClipboardItem`

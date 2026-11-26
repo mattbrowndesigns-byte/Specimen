@@ -137,6 +137,9 @@ export default function Home() {
     const requestedTab = new URLSearchParams(window.location.search).get("tab");
     if (requestedTab && KINDS.some((k) => k.tab === requestedTab)) {
       setTab(requestedTab);
+      // A search to run there: Add's "Show It" for a resource you already have.
+      const query = new URLSearchParams(window.location.search).get("q");
+      if (query) setHandoff({ tab: requestedTab, query });
       clearSearch();
       return;
     }
@@ -165,10 +168,11 @@ export default function Home() {
   // Add is in the utility bar rather than inside a tab, so saving never depends
   // on which tab happens to be open. A component or a visual goes to a page of
   // its own, since choosing is the next thing you'll do.
-  async function handleAdd(kind, url) {
+  async function handleAdd(kind, url, options) {
     setError(null);
     try {
-      const result = await addItem(kind, url);
+      const result = await addItem(kind, url, options);
+      if (result.existing) return result;
       if (result.error) {
         setError(result.error);
         return false;

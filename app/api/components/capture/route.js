@@ -4,6 +4,7 @@ import { dispatchCapture } from "@/lib/github";
 import { currentUser } from "@/lib/supabaseServer";
 import { UNAUTHORIZED, NOT_FOUND, ownsComponent, ownsTag } from "@/lib/ownership";
 import { CROP_AHEAD } from "@/lib/importAhead";
+import { normalizeForCompare } from "@/lib/importLinks";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,14 @@ export async function POST(request) {
   const domain = parsed.hostname.replace(/^www\./, "");
   const supabase = supabaseAdmin();
 
+  // A page you've captured before can give up another block, so this asks
+  // rather than refuses: crop again from the capture you have, which is
+  // instant, or take a new one if the page has changed. `again` is the second.
+  if (!body.again) {
+    const previous = await capturedBefore(supabase, user.id, parsed.toString());
+    if (previous) return NextResponse.json(previous, { status: 409 });
+  }
+
   const { data: capture, error } = await supabase
     .from("component_capture")
     // The name is what keeps it on the crop list if you leave before cropping:
@@ -107,4 +116,34 @@ export async function POST(request) {
   }
 
   return NextResponse.json({ capture }, { status: 201 });
+}
+
+// The newest capture of this page that can still be cropped, and how many
+// components have been cut from the page, or null if it has never been captured.
+async function capturedBefore(supabase, userId, url) {
+  const key = normalizeForCompare(url);
+  const [captures, components] = await Promise.all([
+    supabase
+      .from("component_capture")
+      .select("id, url, created_at")
+      .eq("user_id", userId)
+      .eq("status", "ready")
+      .not("full_url", "is", null)
+      .order("created_at", { ascending: false }),
+    supabase.from("component").select("source_url").eq("user_id", userId),
+  ]);
+  if (captures.error || components.error) {
+    // Not knowing is no reason to stop someone capturing a page.
+    console.error("Component capture: couldn't check for an earlier one", (captures.error || components.error).message);
+    return null;
+  }
+  const capture = (captures.data || []).find((c) => c.url && normalizeForCompare(c.url) === key);
+  if (!capture) return null;
+  const count = (components.data || []).filter((c) => c.source_url && normalizeForCompare(c.source_url) === key).length;
+  return {
+    error: count
+      ? `You've cut ${count === 1 ? "a component" : `${count} components`} from this page before. Crop another from that capture, or take a new one if the page has changed.`
+      : "You've captured this page before. Crop from that capture, or take a new one if the page has changed.",
+    existing: { kind: "component", id: capture.id, href: `/components/crop/${capture.id}` },
+  };
 }

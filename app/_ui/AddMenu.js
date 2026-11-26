@@ -33,6 +33,9 @@ export default function AddMenu({ onSubmit, variant }) {
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  // What the library already has at this address, said in the box: shown
+  // anywhere else it was behind the box, and the save looked broken.
+  const [existing, setExisting] = useState(null);
   const router = useRouter();
   const pathname = usePathname();
   const wrapRef = useRef(null);
@@ -63,6 +66,7 @@ export default function AddMenu({ onSubmit, variant }) {
     setKind(null);
     setUrl("");
     setDragOver(false);
+    setExisting(null);
   }
 
   // While this is open, a file dropped beside the box goes nowhere instead of
@@ -119,13 +123,20 @@ export default function AddMenu({ onSubmit, variant }) {
     upload([...e.dataTransfer.files]);
   }
 
-  async function submit(e) {
-    e.preventDefault();
+  async function submit(e, options) {
+    e?.preventDefault();
     if (!url.trim() || busy) return;
     setBusy(true);
-    const ok = await onSubmit(kind, url.trim());
+    const result = await onSubmit(kind, url.trim(), options);
     setBusy(false);
-    if (ok) close();
+    if (result?.existing) setExisting(result.existing);
+    else if (result) close();
+  }
+
+  function show() {
+    const href = existing.href;
+    close();
+    window.location.href = href;
   }
 
   return (
@@ -160,18 +171,47 @@ export default function AddMenu({ onSubmit, variant }) {
             id="add-url"
             ref={inputRef}
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              setExisting(null);
+            }}
             placeholder="https://"
             disabled={busy}
           />
-          <div className="add-pop-actions">
-            <button type="button" onClick={close} disabled={busy}>
-              Cancel
-            </button>
-            <button type="submit" className="primary" disabled={busy} aria-busy={busy}>
-              {busy ? "Starting…" : "Submit"}
-            </button>
-          </div>
+          {existing ? (
+            <>
+              <p className="add-pop-note" role="status">
+                {existing.savedAt
+                  ? `You saved this page on ${new Date(existing.savedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}.`
+                  : existing.message}
+              </p>
+              {/* A page you've captured can give up another block, so there
+                  the other answer is a second capture rather than Cancel. */}
+              <div className="add-pop-actions">
+                {existing.kind === "component" ? (
+                  <button type="button" onClick={(e) => submit(e, { again: true })} disabled={busy} aria-busy={busy}>
+                    {busy ? "Starting…" : "Capture Again"}
+                  </button>
+                ) : (
+                  <button type="button" onClick={close}>
+                    Cancel
+                  </button>
+                )}
+                <button type="button" className="primary" onClick={show} disabled={busy} autoFocus>
+                  {existing.kind === "component" ? "Crop From It" : existing.kind === "site" ? "Open It" : "Show It"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="add-pop-actions">
+              <button type="button" onClick={close} disabled={busy}>
+                Cancel
+              </button>
+              <button type="submit" className="primary" disabled={busy} aria-busy={busy}>
+                {busy ? "Starting…" : "Submit"}
+              </button>
+            </div>
+          )}
 
           {UPLOADS[kind] && (
             <div className="add-pop-upload">

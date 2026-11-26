@@ -19,9 +19,10 @@ import { addItem, jobHandoffUrl, resourceHandoffUrl } from "@/lib/addItem";
 export default function UtilityBar({ onAdd, onError }) {
   const demo = useIsDemo();
 
-  async function handleAdd(kind, url) {
-    if (onAdd) return onAdd(kind, url);
-    const result = await addItem(kind, url);
+  async function handleAdd(kind, url, options) {
+    if (onAdd) return onAdd(kind, url, options);
+    const result = await addItem(kind, url, options);
+    if (result.existing) return result;
     if (result.error) {
       onError?.(result.error);
       return false;

@@ -2332,6 +2332,15 @@ h1 {
   margin-bottom: 10px;
 }
 
+/* Already in the library: said in the box, where the eye is, above the two
+   answers to it. */
+.add-pop-note {
+  margin: 0 0 12px;
+  font-size: var(--type-small);
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
 .add-pop-actions {
   display: flex;
   justify-content: flex-end;

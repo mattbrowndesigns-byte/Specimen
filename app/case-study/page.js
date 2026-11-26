@@ -832,6 +832,10 @@ export default function CaseStudyPage() {
             <p>
               Saving a link I already had did nothing at all. The app had noticed and written a message, but at the top of the page, behind the box I was typing in. Now the box itself says it&rsquo;s already saved and offers to open it. The same goes for a website page I already have; another page on the same site still saves. A page I&rsquo;ve cut components from before offers two answers instead, crop another from the capture I have or take a new one, because one page can hold several blocks worth keeping.
             </p>
+            <h3>One button, three kinds</h3>
+            <p>
+              With the text agreeing, the controls that didn&rsquo;t stood out. A script read the corners, height and fill of every button on every screen, and found a dozen still in the first design&rsquo;s square shape, among them the Add popover&rsquo;s Submit, Import and Sign in. Every button is now a capsule of one of three kinds: solid for the one thing a screen is for, filled grey for the rest, small inside a row or a panel. The review queue&rsquo;s ticks were the browser&rsquo;s own, which looked like something else in dark mode. There is one tick now, with a state for a list that is partly picked.
+            </p>
             <p>
               Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies&rsquo; looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, the browser button, tag groups of your own and the design system page still have to be proven there.
             </p>

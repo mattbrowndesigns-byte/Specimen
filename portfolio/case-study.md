@@ -475,6 +475,8 @@ There are nine now, each named for its job, and the names are what the styles us
 
 **A save that looked broken.** Saving a link I already had did nothing at all. The app had noticed and written a message, but at the top of the page, behind the box I was typing in. Now the box itself says it's already saved and offers to open it. The same goes for a website page I already have; another page on the same site still saves. A page I've cut components from before offers two answers instead, crop another from the capture I have or take a new one, because one page can hold several blocks worth keeping.
 
+**One button, three kinds.** With the text agreeing, the controls that didn't stood out. A script read the corners, height and fill of every button on every screen, and found a dozen still in the first design's square shape, among them the Add popover's Submit, Import and Sign in. Every button is now a capsule of one of three kinds: solid for the one thing a screen is for, filled grey for the rest, small inside a row or a panel. The review queue's ticks were the browser's own, which looked like something else in dark mode. There is one tick now, with a state for a list that is partly picked.
+
 Still open: Intercom stays slightly soft, because no bigger version of its mark exists anywhere. Case studies' looping videos are confirmed on the live app, and uploading your own images is live too. Importing components and visuals from a bookmarks file, uploading a component or a clip, the browser button, tag groups of your own and the design system page still have to be proven there.
 
 ## What I deliberately did not build

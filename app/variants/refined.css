@@ -948,34 +948,48 @@
     box-shadow: none;
   }
 
-  /* The same grey box, as a tick. */
-  & .tag-dialog .select-box {
+  /* One tick, drawn by us, everywhere one appears: a grey box that fills with
+     the inverted ink when it's on. The review queue's used to be the browser's
+     own, which in dark mode is a different object in a different grey. */
+  & .select-box {
     appearance: none;
-    display: grid;
+    -webkit-appearance: none;
+    display: inline-grid;
     place-items: center;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
+    margin: 0;
     border: 1px solid var(--border-strong-hover);
-    border-radius: 6px;
+    border-radius: 5px;
     background: var(--chip-bg);
+    transition: background-color 0.12s var(--ease), border-color 0.12s var(--ease);
   }
 
-  & .tag-dialog .select-box:checked {
+  & .select-box:is(:checked, :indeterminate) {
     border-color: var(--invert-bg);
     background: var(--invert-bg);
   }
 
-  & .tag-dialog .select-box:checked::after {
+  & .select-box:checked::after {
     content: "";
-    width: 5px;
-    height: 10px;
+    width: 4px;
+    height: 9px;
     margin-top: -2px;
     border: solid var(--invert-text);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
   }
 
-  & .tag-dialog .select-box:focus-visible {
+  /* Some of a list, not none of it. */
+  & .select-box:indeterminate::after {
+    content: "";
+    width: 8px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--invert-text);
+  }
+
+  & .select-box:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px var(--ring);
   }
@@ -2529,32 +2543,10 @@
     box-shadow: none;
   }
 
-  /* Ticks. The browser draws the review queue's, and an edge can't be put on
-     those, so they get a halo. */
-  & .select-box {
-    border-radius: 4px;
-  }
-
-  & .select-box:hover:not(:disabled) {
-    box-shadow: 0 0 0 4px var(--chip-strong-bg);
-  }
-
-  & .select-box:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-  }
-
-  & .tag-dialog .select-box {
-    border-radius: 6px;
-  }
-
-  & .tag-dialog .select-box:hover:not(:disabled),
-  & label:hover > .select-box:not(:disabled, :checked) {
+  /* Ticks answer the pointer on their edge, and so does the line they label. */
+  & .select-box:hover:not(:disabled, :checked, :indeterminate),
+  & label:hover > .select-box:not(:disabled, :checked, :indeterminate) {
     border-color: var(--text-muted);
-  }
-
-  & .tag-dialog .select-box:hover:not(:disabled, :focus-visible) {
-    box-shadow: none;
   }
 
   /* An open folder closes when it's pressed, so it answers the pointer. A held
@@ -2645,6 +2637,114 @@
         flex: 1 0 100%;
       }
     }
+  }
+}
+
+/* Every button is a capsule
+   ===========================================================================
+   The ones still wearing the original's 6-8px corners, found by reading every
+   control on every screen. Three kinds, and each says which it is: the one
+   main action is solid (orange in a dialog or a popover, ink on a page), the
+   others are filled grey, and the small ones in a row or a panel are 30px. */
+:root[data-variant="refined"] {
+  & :is(
+      .add-pop-actions button,
+      .import-actions button,
+      .pick-bar .primary,
+      .pick-failed-actions .primary,
+      .pick-cancel,
+      .auth-submit,
+      .shared-cta-btn,
+      .prose-cta-link,
+      .share-copy,
+      .connect-copy.connect-copy,
+      .connect-revoke.connect-revoke,
+      .invite-form select
+    ) {
+    border-radius: 999px;
+  }
+
+  /* The Add popover's two answers are a dialog's two answers. */
+  & .add-pop-actions button {
+    height: 36px;
+    padding: 0 16px;
+    border-color: transparent;
+    background: var(--field-bg);
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  & .add-pop-actions button:hover:not(:disabled) {
+    background: var(--chip-strong-bg);
+  }
+
+  & .add-pop-actions button.primary {
+    border-color: var(--accent-solid);
+    background: var(--accent-solid);
+    color: var(--accent-solid-text);
+    font-weight: 600;
+  }
+
+  & .add-pop-actions button.primary:hover:not(:disabled) {
+    border-color: var(--accent-solid-hover);
+    background: var(--accent-solid-hover);
+  }
+
+  /* The one thing to press on its page. */
+  & :is(.import-actions button, .pick-bar .primary, .pick-failed-actions .primary, .auth-submit, .prose-cta-link) {
+    font-weight: 600;
+  }
+
+  & .pick-cancel {
+    border-color: transparent;
+    background: var(--field-bg);
+    font-weight: 500;
+  }
+
+  & .pick-cancel:hover {
+    background: var(--chip-strong-bg);
+  }
+
+  & :is(.connect-copy.connect-copy, .connect-revoke.connect-revoke) {
+    height: 30px;
+    padding: 0 14px;
+    border-color: transparent;
+    background: var(--field-bg);
+    font-weight: 500;
+  }
+
+  & :is(.connect-copy.connect-copy, .connect-revoke.connect-revoke):hover {
+    background: var(--chip-strong-bg);
+  }
+
+  /* A small button in a panel's head is the same size as one in a panel. */
+  & .tag-panel-title .tag-actions button {
+    height: 30px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  /* The select beside the invite field wears the field's own shape. */
+  & .invite-form select {
+    padding-left: 16px;
+    border-color: transparent;
+    background-color: var(--field-bg);
+  }
+
+  /* Sign in / I have an invite is a switch like every other one. */
+  & .auth-switch {
+    border-radius: 999px;
+    background: var(--field-bg);
+  }
+
+  & .auth-switch button {
+    border-radius: 999px;
+  }
+
+  & .auth-switch button.active {
+    background: var(--seg-active);
+    box-shadow: var(--seg-shadow);
+    font-weight: 500;
   }
 }
 

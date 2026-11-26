@@ -52,11 +52,10 @@ export const COMPONENTS = [
       { name: "Tags", states: ["rest", "hover", "focus"], render: (t) => (
         <div className="combobox ds-wide"><div {...t("combobox-field")}><span className="combobox-chip">Editorial<button tabIndex={-1} aria-label="Remove">×</button></span><span className="combobox-chip chip-pending">Reference<button tabIndex={-1} aria-label="Remove">×</button></span><input placeholder="Add tags…" readOnly tabIndex={-1} /></div></div>
       ) },
-      { name: "Tick", states: ["rest", "hover", "focus", "disabled"], render: (t) => <input {...t("select-box")} type="checkbox" readOnly /> },
+      { name: "Tick", note: "One, wherever a list can be picked from", states: ["rest", "hover", "focus", "disabled"], render: (t) => <input {...t("select-box")} type="checkbox" readOnly /> },
       { name: "Tick, on", states: ["rest", "disabled"], render: (t) => <input {...t("select-box")} type="checkbox" checked readOnly /> },
-      { name: "Tick in a dialog", states: ["rest", "focus"], render: (t) => <div className="tag-dialog"><input {...t("select-box")} type="checkbox" checked readOnly /></div> },
       { name: "Drop box", note: "Files", states: ["rest", "hover"], render: (t) => <div {...t("drop-box ds-wide")}>Drop images or clips here</div> },
-      { name: "Select", note: "Only on Invites", states: FIELD, render: (t) => <form className="save-form ds-wide"><select {...t("")}><option>1 code</option></select></form> },
+      { name: "Select", note: "Only on Invites", states: FIELD, render: (t) => <form className="save-form invite-form ds-wide"><select {...t("")}><option>1 code</option></select></form> },
       { name: "One-line form", note: "A new collection, a new invite", states: FIELD, render: (t) => <form className="save-form ds-wide"><input {...t("")} placeholder="Name a collection" readOnly /></form> },
       { name: "Add’s address", states: FIELD, render: (t) => <div className="add-pop-form ds-wide"><input {...t("")} placeholder="https://" defaultValue="" /></div> },
     ],

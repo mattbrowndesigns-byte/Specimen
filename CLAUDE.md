@@ -2614,6 +2614,14 @@ at two sizes on different screens. The written pages (`.prose-page`) keep their 
 scale in numbers. Checked by reading every text node on 32 screens at two widths, so
 compare rendered text, not the stylesheet: the stylesheet said 29 sizes, the screen 13.
 
+**Every button is a capsule in three kinds, and there is one tick.** Solid for the one
+main action (orange in a dialog or popover, ink on a page), filled grey for the rest, 30px
+for small ones in a row or panel. The block "Every button is a capsule" in `refined.css`
+caught the last dozen still on the original's 6-8px corners, found by reading every
+control's radius, height and fill on 32 screens, not by looking. `.select-box` is drawn by
+us everywhere, with an indeterminate state for a part-picked list; the browser's own was
+a different object in dark mode.
+
 **Unavailable and working are two states, and every control has both.** The end of
 `refined.css` holds them: anything `:disabled` is at half strength, and a disabled button
 with `aria-busy` keeps its label readable and breathes. So a button whose label turns into

@@ -2334,28 +2334,43 @@ h1 {
 
 /* Already in the library: said in the box, where the eye is, above the two
    answers to it. */
-/* In a holding shape of its own, tinted the soft amber the queued states wear,
-   with the field's corners: loose under the field it read as a stray line. */
+/* In a holding shape of its own, with the field's corners: loose under the
+   field it read as a stray line. The amber is a wash of the queued states'
+   text colour rather than their solid fill, which in dark mode was a brown
+   slab heavier than the button under it. */
 .add-pop-note {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   margin: 0 0 12px;
-  padding: 10px 12px;
-  border: 1px solid var(--warn-bg-hover);
+  padding: 10px 12px 10px 10px;
+  border: 1px solid color-mix(in srgb, var(--warn-text) 18%, transparent);
   border-radius: 12px;
-  background: var(--warn-bg);
+  background: color-mix(in srgb, var(--warn-text) 7%, transparent);
   font-size: var(--type-small);
   line-height: 1.45;
   color: var(--text);
 }
 
-/* The soft amber the queued states wear: a notice, not an error. Nudged down
-   so its middle sits on the first line's, whatever the line height. */
-.add-pop-note svg {
+/* The icon in a square of its own, centred on the text however many lines it
+   runs to, so a two-line note has something of its height beside it. */
+.add-pop-note-icon {
+  display: inline-flex;
   flex-shrink: 0;
-  margin-top: calc((1.45em - 16px) / 2);
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--warn-text) 14%, transparent);
   color: var(--warn-text);
+}
+
+/* Trimmed to the capitals and the baseline, so the space above the words and
+   below them is the space you see. A line box carries more room above the
+   capitals than below the baseline, which sat the text low in its holder. */
+.add-pop-note-text {
+  text-box: trim-both cap alphabetic;
 }
 
 .add-pop-actions {

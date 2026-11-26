@@ -181,8 +181,10 @@ export default function AddMenu({ onSubmit, variant }) {
           {existing ? (
             <>
               <p className="add-pop-note" role="status">
-                <CircleAlert size={16} aria-hidden="true" />
-                <span>
+                <span className="add-pop-note-icon" aria-hidden="true">
+                  <CircleAlert size={16} />
+                </span>
+                <span className="add-pop-note-text">
                   {existing.savedAt
                     ? `You saved this page on ${new Date(existing.savedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}.`
                     : existing.message}
@@ -200,7 +202,7 @@ export default function AddMenu({ onSubmit, variant }) {
                     Cancel
                   </button>
                 )}
-                <button type="button" className="primary" onClick={show} disabled={busy} autoFocus>
+                <button type="button" className="primary" onClick={show} disabled={busy}>
                   {existing.kind === "component" ? "Crop From It" : existing.kind === "site" ? "Open It" : "Show It"}
                 </button>
               </div>

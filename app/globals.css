@@ -2335,10 +2335,21 @@ h1 {
 /* Already in the library: said in the box, where the eye is, above the two
    answers to it. */
 .add-pop-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin: 0 0 12px;
   font-size: var(--type-small);
   line-height: 1.45;
   color: var(--text-secondary);
+}
+
+/* The soft amber the queued states wear: a notice, not an error. Nudged down
+   so its middle sits on the first line's, whatever the line height. */
+.add-pop-note svg {
+  flex-shrink: 0;
+  margin-top: calc((1.45em - 16px) / 2);
+  color: var(--warn-text);
 }
 
 .add-pop-actions {

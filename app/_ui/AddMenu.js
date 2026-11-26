@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ImageUp, Plus } from "lucide-react";
+import { CircleAlert, ImageUp, Plus } from "lucide-react";
 import { KINDS } from "./kinds";
 import { startComponentUpload, startVisualUpload } from "./uploads";
 import { ACCEPT_ATTR, UPLOAD_HINT, hasFiles } from "@/lib/uploadClient";
@@ -181,9 +181,12 @@ export default function AddMenu({ onSubmit, variant }) {
           {existing ? (
             <>
               <p className="add-pop-note" role="status">
-                {existing.savedAt
-                  ? `You saved this page on ${new Date(existing.savedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}.`
-                  : existing.message}
+                <CircleAlert size={16} aria-hidden="true" />
+                <span>
+                  {existing.savedAt
+                    ? `You saved this page on ${new Date(existing.savedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}.`
+                    : existing.message}
+                </span>
               </p>
               {/* A page you've captured can give up another block, so there
                   the other answer is a second capture rather than Cancel. */}
